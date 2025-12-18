@@ -95,183 +95,195 @@
             </div>
         </header>
 
-        <!-- Welcome Message Container -->
-        <section class="welcome-container">
-            <div class="welcome-content">
+        <!-- Container 1: Welcome Section (nicht einklappbar) -->
+        <section class="main-container">
+            <div class="container-content">
                 <h2 class="welcome-title">Willkommen, <span id="user-name">Zanobo 123</span></h2>
                 <p class="welcome-subtitle">Maschinenüberwachung</p>
             </div>
         </section>
 
-        <!-- Main Action Cards -->
-        <section class="action-cards">
-            <!-- Scan Machine Card -->
-            <section class="action-container collapsible">
-                <div class="action-header section-header" data-target="scan-machine-content">
-                    <div class="action-header-content">
-                        <div class="card-icon-small">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                <rect x="7" y="7" width="3" height="3"/>
-                                <rect x="14" y="7" width="3" height="3"/>
-                                <rect x="7" y="14" width="3" height="3"/>
-                                <rect x="14" y="14" width="3" height="3"/>
-                                <path d="M3 9h18M9 3v18M15 3v18M3 15h18"/>
-                            </svg>
+        <!-- Container 2: Hauptaktionen (mit einklappbaren Unter-Containern) -->
+        <section class="main-container">
+            <div class="container-content">
+                <!-- Scan Machine -->
+                <div class="sub-container collapsible">
+                    <div class="sub-header section-header" data-target="scan-machine-content">
+                        <div class="sub-header-content">
+                            <div class="sub-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <rect x="7" y="7" width="3" height="3"/>
+                                    <rect x="14" y="7" width="3" height="3"/>
+                                    <rect x="7" y="14" width="3" height="3"/>
+                                    <rect x="14" y="14" width="3" height="3"/>
+                                    <path d="M3 9h18M9 3v18M15 3v18M3 15h18"/>
+                                </svg>
+                            </div>
+                            <h4 class="sub-title">Maschine scannen</h4>
                         </div>
-                        <h4 class="action-title">Maschine scannen</h4>
+                        <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
-                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </div>
-                <div id="scan-machine-content" class="collapsible-content" style="display: none;">
-                    <div class="action-card-content">
-                        <p class="card-description">Identifiziere Maschine via QR-Code</p>
-                        <button class="card-action-btn" id="scan-btn">Scannen</button>
+                    <div id="scan-machine-content" class="collapsible-content" style="display: none;">
+                        <div class="sub-content">
+                            <p class="sub-description">Identifiziere Maschine via QR-Code</p>
+                            <button class="action-btn" id="scan-btn">Scannen</button>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Record Reference Card -->
-            <section class="action-container collapsible">
-                <div class="action-header section-header" data-target="record-reference-content">
-                    <div class="action-header-content">
-                        <div class="card-icon-small">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                <line x1="12" y1="19" x2="12" y2="23"/>
-                                <line x1="8" y1="23" x2="16" y2="23"/>
-                            </svg>
+                <!-- Record Reference -->
+                <div class="sub-container collapsible">
+                    <div class="sub-header section-header" data-target="record-reference-content">
+                        <div class="sub-header-content">
+                            <div class="sub-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                            </div>
+                            <h4 class="sub-title">Referenz aufnehmen</h4>
                         </div>
-                        <h4 class="action-title">Referenz aufnehmen</h4>
+                        <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
-                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </div>
-                <div id="record-reference-content" class="collapsible-content" style="display: none;">
-                    <div class="action-card-content">
-                        <p class="card-description">10-Sekunden Referenzaufnahme</p>
-                        <button class="card-action-btn" id="record-btn">Aufnehmen</button>
+                    <div id="record-reference-content" class="collapsible-content" style="display: none;">
+                        <div class="sub-content">
+                            <p class="sub-description">10-Sekunden Referenzaufnahme</p>
+                            <button class="action-btn" id="record-btn">Aufnehmen</button>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Run Diagnosis Card -->
-            <section class="action-container collapsible">
-                <div class="action-header section-header" data-target="run-diagnosis-content">
-                    <div class="action-header-content">
-                        <div class="card-icon-small">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                                <polyline points="17 6 23 6 23 12"/>
-                            </svg>
+                <!-- Run Diagnosis -->
+                <div class="sub-container collapsible">
+                    <div class="sub-header section-header" data-target="run-diagnosis-content">
+                        <div class="sub-header-content">
+                            <div class="sub-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                    <polyline points="17 6 23 6 23 12"/>
+                                </svg>
+                            </div>
+                            <h4 class="sub-title">Diagnose starten</h4>
                         </div>
-                        <h4 class="action-title">Diagnose starten</h4>
+                        <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
-                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </div>
-                <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
-                    <div class="action-card-content">
-                        <p class="card-description">Live-Analyse durchführen</p>
-                        <button class="card-action-btn" id="diagnose-btn">Analysieren</button>
+                    <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
+                        <div class="sub-content">
+                            <p class="sub-description">Live-Analyse durchführen</p>
+                            <button class="action-btn" id="diagnose-btn">Analysieren</button>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </section>
 
-        <!-- Machine Overview Section -->
-        <section class="overview-section collapsible">
-            <div class="section-header" data-target="machine-overview">
-                <h3 class="section-title">Maschinenübersicht</h3>
+        <!-- Container 3: Maschinenübersicht -->
+        <section class="main-container collapsible">
+            <div class="main-header section-header" data-target="machine-overview">
+                <h3 class="container-title">Maschinenübersicht</h3>
                 <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </div>
-            <div id="machine-overview" class="collapsible-content">
-                <div class="machine-list">
-                    <!-- Example Machine Items -->
-                    <div class="machine-item">
-                        <div class="machine-info">
-                            <h4 class="machine-name">Zanobo 123</h4>
-                            <p class="machine-status status-healthy">Healthy</p>
-                            <p class="machine-time">Letzte Prüfung vor 3min</p>
+            <div id="machine-overview" class="collapsible-content" style="display: none;">
+                <div class="container-content">
+                    <div class="machine-list">
+                        <!-- Example Machine Items -->
+                        <div class="machine-item">
+                            <div class="machine-info">
+                                <h4 class="machine-name">Zanobo 123</h4>
+                                <p class="machine-status status-healthy">Healthy</p>
+                                <p class="machine-time">Letzte Prüfung vor 3min</p>
+                            </div>
+                            <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
                         </div>
-                        <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </div>
-                    <div class="machine-item">
-                        <div class="machine-info">
-                            <h4 class="machine-name">Zanobo 9</h4>
-                            <p class="machine-status status-uncertain">Uncertain</p>
-                            <p class="machine-time">Letzte Prüfung vor 12min</p>
+                        <div class="machine-item">
+                            <div class="machine-info">
+                                <h4 class="machine-name">Zanobo 9</h4>
+                                <p class="machine-status status-uncertain">Uncertain</p>
+                                <p class="machine-time">Letzte Prüfung vor 12min</p>
+                            </div>
+                            <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
                         </div>
-                        <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
+                        <button class="add-reference-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Neue Referenz
+                        </button>
                     </div>
-                    <button class="add-reference-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        Neue Referenz
-                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- Quick Check Button -->
-        <button class="quick-check-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-            </svg>
-            Quick Check
-        </button>
+        <!-- Container 4: Quick Check -->
+        <section class="main-container">
+            <div class="container-content">
+                <button class="quick-check-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                    </svg>
+                    Quick Check
+                </button>
+            </div>
+        </section>
 
-        <!-- History Section -->
-        <section class="history-section collapsible">
-            <div class="section-header" data-target="history">
-                <h3 class="section-title">Historie</h3>
+        <!-- Container 5: Historie -->
+        <section class="main-container collapsible">
+            <div class="main-header section-header" data-target="history">
+                <h3 class="container-title">Historie</h3>
                 <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </div>
             <div id="history" class="collapsible-content" style="display: none;">
-                <div class="history-list">
-                    <p class="empty-state">Noch keine Messungen vorhanden</p>
+                <div class="container-content">
+                    <div class="history-list">
+                        <p class="empty-state">Noch keine Messungen vorhanden</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Settings Section -->
-        <section class="settings-section collapsible">
-            <div class="section-header" data-target="settings">
-                <h3 class="section-title">Einstellungen</h3>
+        <!-- Container 6: Einstellungen -->
+        <section class="main-container collapsible">
+            <div class="main-header section-header" data-target="settings">
+                <h3 class="container-title">Einstellungen</h3>
                 <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </div>
             <div id="settings" class="collapsible-content" style="display: none;">
-                <div class="settings-list">
-                    <div class="setting-item">
-                        <label for="confidence-threshold">Vertrauensschwelle</label>
-                        <input type="range" id="confidence-threshold" min="0" max="100" value="75">
-                        <span id="confidence-value">75%</span>
-                    </div>
-                    <div class="setting-item">
-                        <label for="recording-duration">Aufnahmedauer</label>
-                        <select id="recording-duration">
-                            <option value="5">5 Sekunden</option>
-                            <option value="10" selected>10 Sekunden</option>
-                            <option value="15">15 Sekunden</option>
-                        </select>
+                <div class="container-content">
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <label for="confidence-threshold">Vertrauensschwelle</label>
+                            <input type="range" id="confidence-threshold" min="0" max="100" value="75">
+                            <span id="confidence-value">75%</span>
+                        </div>
+                        <div class="setting-item">
+                            <label for="recording-duration">Aufnahmedauer</label>
+                            <select id="recording-duration">
+                                <option value="5">5 Sekunden</option>
+                                <option value="10" selected>10 Sekunden</option>
+                                <option value="15">15 Sekunden</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
