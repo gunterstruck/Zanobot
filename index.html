@@ -35,71 +35,77 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo-section">
-                <div class="logo">
-                    <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Brain/Head Icon with Sound Waves -->
-                        <circle cx="50" cy="45" r="30" stroke="var(--primary-color)" stroke-width="2.5" fill="none"/>
-                        <!-- Brain connections -->
-                        <circle cx="45" cy="35" r="3" fill="var(--primary-color)"/>
-                        <circle cx="55" cy="35" r="3" fill="var(--primary-color)"/>
-                        <circle cx="50" cy="45" r="3" fill="var(--primary-color)"/>
-                        <circle cx="45" cy="52" r="3" fill="var(--primary-color)"/>
-                        <circle cx="55" cy="52" r="3" fill="var(--primary-color)"/>
-                        <line x1="45" y1="35" x2="50" y2="45" stroke="var(--primary-color)" stroke-width="1.5"/>
-                        <line x1="55" y1="35" x2="50" y2="45" stroke="var(--primary-color)" stroke-width="1.5"/>
-                        <line x1="50" y1="45" x2="45" y2="52" stroke="var(--primary-color)" stroke-width="1.5"/>
-                        <line x1="50" y1="45" x2="55" y2="52" stroke="var(--primary-color)" stroke-width="1.5"/>
-                        <!-- Sound waves -->
-                        <path d="M 15 30 Q 12 35 15 40" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
-                        <path d="M 10 25 Q 5 35 10 45" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
-                        <path d="M 20 35 L 18 38 L 20 41" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
-                        <circle cx="25" cy="38" r="1.5" fill="var(--primary-color)"/>
-                    </svg>
-                </div>
-                <div class="branding">
-                    <h1 class="brand-title">ZANOBO</h1>
-                    <p class="brand-subtitle">AI ASSISTANT</p>
-                </div>
-            </div>
-
-            <!-- Theme Switcher -->
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="dark" title="Dunkler Modus">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-                <button class="theme-btn" data-theme="light" title="Heller Modus">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"/>
-                        <line x1="12" y1="1" x2="12" y2="3"/>
-                        <line x1="12" y1="21" x2="12" y2="23"/>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                        <line x1="1" y1="12" x2="3" y2="12"/>
-                        <line x1="21" y1="12" x2="23" y2="12"/>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                </button>
-                <button class="theme-btn active" data-theme="brand" title="Zanobot Design">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                        <path d="M2 17l10 5 10-5"/>
-                        <path d="M2 12l10 5 10-5"/>
-                    </svg>
-                </button>
-            </div>
-        </header>
-
-        <!-- Container 1: Welcome Section (nicht einklappbar) -->
+        <!-- Container 1: Header & Welcome Section (nicht einklappbar) -->
         <section class="main-container">
             <div class="container-content">
-                <h2 class="welcome-title">Willkommen, <span id="user-name">Zanobo 123</span></h2>
-                <p class="welcome-subtitle">Maschinenüberwachung</p>
+                <!-- Header -->
+                <div class="header-inline">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Brain/Head Icon with Sound Waves -->
+                                <circle cx="50" cy="45" r="30" stroke="var(--primary-color)" stroke-width="2.5" fill="none"/>
+                                <!-- Brain connections -->
+                                <circle cx="45" cy="35" r="3" fill="var(--primary-color)"/>
+                                <circle cx="55" cy="35" r="3" fill="var(--primary-color)"/>
+                                <circle cx="50" cy="45" r="3" fill="var(--primary-color)"/>
+                                <circle cx="45" cy="52" r="3" fill="var(--primary-color)"/>
+                                <circle cx="55" cy="52" r="3" fill="var(--primary-color)"/>
+                                <line x1="45" y1="35" x2="50" y2="45" stroke="var(--primary-color)" stroke-width="1.5"/>
+                                <line x1="55" y1="35" x2="50" y2="45" stroke="var(--primary-color)" stroke-width="1.5"/>
+                                <line x1="50" y1="45" x2="45" y2="52" stroke="var(--primary-color)" stroke-width="1.5"/>
+                                <line x1="50" y1="45" x2="55" y2="52" stroke="var(--primary-color)" stroke-width="1.5"/>
+                                <!-- Sound waves -->
+                                <path d="M 15 30 Q 12 35 15 40" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
+                                <path d="M 10 25 Q 5 35 10 45" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
+                                <path d="M 20 35 L 18 38 L 20 41" stroke="var(--primary-color)" stroke-width="2" fill="none"/>
+                                <circle cx="25" cy="38" r="1.5" fill="var(--primary-color)"/>
+                            </svg>
+                        </div>
+                        <div class="branding">
+                            <h1 class="brand-title">ZANOBO</h1>
+                            <p class="brand-subtitle">AI ASSISTANT</p>
+                        </div>
+                    </div>
+
+                    <!-- Theme Switcher -->
+                    <div class="theme-switcher">
+                        <button class="theme-btn" data-theme="dark" title="Dunkler Modus">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
+                        </button>
+                        <button class="theme-btn" data-theme="light" title="Heller Modus">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"/>
+                                <line x1="12" y1="1" x2="12" y2="3"/>
+                                <line x1="12" y1="21" x2="12" y2="23"/>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                                <line x1="1" y1="12" x2="3" y2="12"/>
+                                <line x1="21" y1="12" x2="23" y2="12"/>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                            </svg>
+                        </button>
+                        <button class="theme-btn active" data-theme="brand" title="Zanobot Design">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="header-divider"></div>
+
+                <!-- Welcome Section -->
+                <div class="welcome-section-inline">
+                    <h2 class="welcome-title">Willkommen, <span id="user-name">Zanobo 123</span></h2>
+                    <p class="welcome-subtitle">Maschinenüberwachung</p>
+                </div>
             </div>
         </section>
 
