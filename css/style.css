@@ -409,6 +409,123 @@ body {
     transform: scale(0.98);
 }
 
+/* Secondary button variant */
+.secondary-btn {
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.secondary-btn:hover {
+    background: var(--text-secondary);
+    color: var(--bg-primary);
+    border-color: var(--text-secondary);
+}
+
+/* Machine Selection Options */
+.machine-selection-option {
+    background: rgba(17, 40, 64, 0.4);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.machine-selection-option:last-of-type {
+    margin-bottom: 0;
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.option-header svg {
+    flex-shrink: 0;
+}
+
+.option-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.option-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-md);
+}
+
+.option-divider {
+    position: relative;
+    text-align: center;
+    margin: var(--spacing-lg) 0;
+}
+
+.option-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--divider-color);
+}
+
+.option-divider span {
+    position: relative;
+    display: inline-block;
+    padding: 0 var(--spacing-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Input Groups */
+.input-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.machine-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(17, 40, 64, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: var(--font-primary);
+    transition: all 0.2s ease;
+}
+
+.machine-input::placeholder {
+    color: var(--text-muted);
+}
+
+.machine-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(17, 40, 64, 0.8);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* Action button with icon */
+.action-btn svg {
+    margin-right: 0.25rem;
+}
+
 /* ===================================
    COLLAPSIBLE SECTIONS
    =================================== */

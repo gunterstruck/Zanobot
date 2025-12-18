@@ -83,10 +83,16 @@ class ZanobotApp {
      * Setup main action buttons
      */
     setupActionButtons() {
-        // Scan Machine Button
+        // Scan Machine Button (QR Code)
         const scanBtn = document.getElementById('scan-btn');
         if (scanBtn) {
             scanBtn.addEventListener('click', () => this.scanMachine());
+        }
+
+        // Create Machine Button (Manual Entry)
+        const createMachineBtn = document.getElementById('create-machine-btn');
+        if (createMachineBtn) {
+            createMachineBtn.addEventListener('click', () => this.createMachine());
         }
 
         // Record Reference Button
@@ -279,7 +285,54 @@ class ZanobotApp {
                 barcode: '1GB4-636A0-Ba1'
             };
             console.log('Machine scanned:', this.currentMachine);
+            alert(`Maschine erfolgreich gescannt!\n\nName: ${this.currentMachine.name}\nID: ${this.currentMachine.id}`);
         }, 1000);
+    }
+
+    /**
+     * Create machine manually
+     */
+    createMachine() {
+        console.log('💾 Creating machine manually...');
+
+        const nameInput = document.getElementById('machine-name-input');
+        const idInput = document.getElementById('machine-id-input');
+
+        if (!nameInput) {
+            console.error('Machine name input not found');
+            return;
+        }
+
+        const machineName = nameInput.value.trim();
+        const machineId = idInput ? idInput.value.trim() : '';
+
+        // Validate input
+        if (!machineName) {
+            alert('Bitte geben Sie einen Maschinennamen ein.');
+            nameInput.focus();
+            return;
+        }
+
+        // Create machine object
+        this.currentMachine = {
+            id: machineId || 'ZANOBO-' + Math.floor(Math.random() * 1000),
+            name: machineName,
+            barcode: machineId || '1GB4-636A0-Ba1',
+            createdAt: new Date().toISOString()
+        };
+
+        // TODO: Save to localStorage or API
+        console.log('Machine created:', this.currentMachine);
+
+        // Show success message
+        alert(`Maschine erfolgreich angelegt!\n\nName: ${this.currentMachine.name}\nID: ${this.currentMachine.id}`);
+
+        // Clear inputs
+        nameInput.value = '';
+        if (idInput) idInput.value = '';
+
+        // Update UI to show the new machine
+        this.loadMachineData();
     }
 
     /**
