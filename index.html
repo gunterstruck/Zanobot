@@ -95,62 +95,93 @@
             </div>
         </header>
 
-        <!-- Welcome Message -->
-        <section class="welcome-section">
-            <h2 class="welcome-title">Willkommen, <span id="user-name">Zanobo 123</span></h2>
-            <p class="welcome-subtitle">Maschinenüberwachung</p>
+        <!-- Welcome Message Container -->
+        <section class="welcome-container">
+            <div class="welcome-content">
+                <h2 class="welcome-title">Willkommen, <span id="user-name">Zanobo 123</span></h2>
+                <p class="welcome-subtitle">Maschinenüberwachung</p>
+            </div>
         </section>
 
         <!-- Main Action Cards -->
         <section class="action-cards">
-            <h3 class="section-title">Schnellzugriff</h3>
-
-            <div class="card-grid">
-                <!-- Scan Machine Card -->
-                <div class="action-card" id="scan-machine-card">
-                    <div class="card-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <rect x="7" y="7" width="3" height="3"/>
-                            <rect x="14" y="7" width="3" height="3"/>
-                            <rect x="7" y="14" width="3" height="3"/>
-                            <rect x="14" y="14" width="3" height="3"/>
-                            <path d="M3 9h18M9 3v18M15 3v18M3 15h18"/>
-                        </svg>
+            <!-- Scan Machine Card -->
+            <section class="action-container collapsible">
+                <div class="action-header section-header" data-target="scan-machine-content">
+                    <div class="action-header-content">
+                        <div class="card-icon-small">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <rect x="7" y="7" width="3" height="3"/>
+                                <rect x="14" y="7" width="3" height="3"/>
+                                <rect x="7" y="14" width="3" height="3"/>
+                                <rect x="14" y="14" width="3" height="3"/>
+                                <path d="M3 9h18M9 3v18M15 3v18M3 15h18"/>
+                            </svg>
+                        </div>
+                        <h4 class="action-title">Maschine scannen</h4>
                     </div>
-                    <h4 class="card-title">Maschine scannen</h4>
-                    <p class="card-description">Identifiziere Maschine via QR-Code</p>
-                    <button class="card-action-btn" id="scan-btn">Scannen</button>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
                 </div>
-
-                <!-- Record Reference Card -->
-                <div class="action-card" id="record-reference-card">
-                    <div class="card-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" y1="19" x2="12" y2="23"/>
-                            <line x1="8" y1="23" x2="16" y2="23"/>
-                        </svg>
+                <div id="scan-machine-content" class="collapsible-content" style="display: none;">
+                    <div class="action-card-content">
+                        <p class="card-description">Identifiziere Maschine via QR-Code</p>
+                        <button class="card-action-btn" id="scan-btn">Scannen</button>
                     </div>
-                    <h4 class="card-title">Referenz aufnehmen</h4>
-                    <p class="card-description">10-Sekunden Referenzaufnahme</p>
-                    <button class="card-action-btn" id="record-btn">Aufnehmen</button>
                 </div>
+            </section>
 
-                <!-- Run Diagnosis Card -->
-                <div class="action-card" id="run-diagnosis-card">
-                    <div class="card-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                            <polyline points="17 6 23 6 23 12"/>
-                        </svg>
+            <!-- Record Reference Card -->
+            <section class="action-container collapsible">
+                <div class="action-header section-header" data-target="record-reference-content">
+                    <div class="action-header-content">
+                        <div class="card-icon-small">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                        </div>
+                        <h4 class="action-title">Referenz aufnehmen</h4>
                     </div>
-                    <h4 class="card-title">Diagnose starten</h4>
-                    <p class="card-description">Live-Analyse durchführen</p>
-                    <button class="card-action-btn" id="diagnose-btn">Analysieren</button>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
                 </div>
-            </div>
+                <div id="record-reference-content" class="collapsible-content" style="display: none;">
+                    <div class="action-card-content">
+                        <p class="card-description">10-Sekunden Referenzaufnahme</p>
+                        <button class="card-action-btn" id="record-btn">Aufnehmen</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Run Diagnosis Card -->
+            <section class="action-container collapsible">
+                <div class="action-header section-header" data-target="run-diagnosis-content">
+                    <div class="action-header-content">
+                        <div class="card-icon-small">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                <polyline points="17 6 23 6 23 12"/>
+                            </svg>
+                        </div>
+                        <h4 class="action-title">Diagnose starten</h4>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
+                    <div class="action-card-content">
+                        <p class="card-description">Live-Analyse durchführen</p>
+                        <button class="card-action-btn" id="diagnose-btn">Analysieren</button>
+                    </div>
+                </div>
+            </section>
         </section>
 
         <!-- Machine Overview Section -->

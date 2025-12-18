@@ -251,8 +251,20 @@ body {
 /* ===================================
    WELCOME SECTION
    =================================== */
-.welcome-section {
+.welcome-container {
     margin-bottom: var(--spacing-lg);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.welcome-content {
+    display: flex;
+    flex-direction: column;
 }
 
 .welcome-title {
@@ -286,80 +298,77 @@ body {
    =================================== */
 .action-cards {
     margin-bottom: var(--spacing-xl);
-}
-
-.card-grid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-md);
-    grid-template-columns: 1fr;
 }
 
-@media (min-width: 640px) {
-    .card-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.action-card {
+.action-container {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
-    position: relative;
+    transition: all 0.3s ease;
     overflow: hidden;
 }
 
-.action-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.action-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg), var(--glow-primary);
+.action-container:hover {
     border-color: var(--primary-color);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
 }
 
-.action-card:hover::before {
-    opacity: 1;
+.action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--spacing-md) var(--spacing-lg);
+    transition: background 0.2s ease;
 }
 
-.card-icon {
-    margin-bottom: var(--spacing-md);
+.action-header:hover {
+    background: rgba(0, 212, 255, 0.05);
 }
 
-.card-icon svg {
+.action-header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.card-icon-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon-small svg {
     display: block;
-    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3));
 }
 
-.card-title {
+.action-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
+    margin: 0;
+}
+
+.action-card-content {
+    padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }
 
 .card-description {
     font-size: 0.875rem;
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
-    flex-grow: 1;
+    margin: 0;
 }
 
 .card-action-btn {
@@ -381,7 +390,7 @@ body {
     background: var(--primary-color);
     color: var(--bg-primary);
     box-shadow: var(--glow-strong);
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 .card-action-btn:active {
