@@ -299,6 +299,17 @@ body {
     margin: 0;
 }
 
+/* Header with Icon */
+.header-with-icon {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.header-with-icon svg {
+    flex-shrink: 0;
+}
+
 /* Welcome Section Specific */
 .welcome-title {
     font-size: 1.5rem;
