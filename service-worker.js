@@ -3,18 +3,17 @@
  * Handles caching, offline functionality, and PWA features
  */
 
-const CACHE_VERSION = 'zanobot-v1.0.7';
+const CACHE_VERSION = 'zanobot-v1.0.8';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/js/app.js',
-    '/js/theme-bootstrap.js',
-    '/config.json',
-    '/manifest.json'
+    './index.html',
+    './css/style.css',
+    './js/app.js',
+    './js/theme-bootstrap.js',
+    './config.json',
+    './manifest.json'
 ];
 
 // Assets to cache on first request (runtime caching)
@@ -32,9 +31,20 @@ self.addEventListener('install', (event) => {
 
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => {
+            .then(async (cache) => {
                 console.log('[SW] Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
+
+                // Cache each file individually to handle errors gracefully
+                const cachePromises = STATIC_ASSETS.map(async (url) => {
+                    try {
+                        await cache.add(url);
+                        console.log('[SW] Cached:', url);
+                    } catch (error) {
+                        console.warn('[SW] Failed to cache:', url, error);
+                    }
+                });
+
+                await Promise.all(cachePromises);
             })
             .then(() => {
                 console.log('[SW] Installation complete');
