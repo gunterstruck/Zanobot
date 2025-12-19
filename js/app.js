@@ -20,6 +20,7 @@ class ZanobotApp {
         this.mediaStream = null;
         this.recordingStartTime = null;
         this.animationFrameId = null;
+        this.deferredPrompt = null;
 
         this.init();
     }
@@ -47,6 +48,7 @@ class ZanobotApp {
         this.setupCollapsibleSections();
         this.setupModals();
         this.setupSettings();
+        this.setupPWA();
         this.checkMicrophonePermission();
         this.loadMachineData();
 
@@ -675,6 +677,118 @@ class ZanobotApp {
      */
     showAbout() {
         alert('Über Zanobot\n\nZanobot ist ein KI-gestützter Assistent für die akustische Überwachung von Maschinen.\n\nMit Hilfe von Audio-Fingerprinting und maschinellem Lernen können Anomalien in Maschinen frühzeitig erkannt werden.');
+    }
+
+    /**
+     * Setup PWA Install functionality
+     */
+    setupPWA() {
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('📱 PWA install prompt available');
+
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+
+            // Stash the event so it can be triggered later
+            this.deferredPrompt = e;
+
+            // Show the install button
+            this.showInstallButton();
+        });
+
+        // Listen for successful installation
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA installed successfully');
+            this.deferredPrompt = null;
+            this.hideInstallButton();
+
+            // Show success message
+            alert('Zanobot wurde erfolgreich installiert! 🎉\n\nSie können die App jetzt vom Startbildschirm aus öffnen.');
+        });
+
+        // Check if app is already installed (standalone mode)
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            console.log('✅ App is running in standalone mode (installed)');
+        }
+    }
+
+    /**
+     * Show PWA install button
+     */
+    showInstallButton() {
+        // Check if install button already exists
+        let installBtn = document.getElementById('pwa-install-btn');
+
+        if (!installBtn) {
+            // Create install button
+            installBtn = document.createElement('button');
+            installBtn.id = 'pwa-install-btn';
+            installBtn.className = 'pwa-install-button';
+            installBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>App installieren</span>
+            `;
+            installBtn.title = 'Zanobot als App installieren';
+
+            // Add click handler
+            installBtn.addEventListener('click', () => this.promptInstall());
+
+            // Insert button into header
+            const header = document.querySelector('.header-inline');
+            if (header) {
+                header.appendChild(installBtn);
+            } else {
+                // Fallback: append to body
+                document.body.appendChild(installBtn);
+            }
+        }
+
+        installBtn.style.display = 'flex';
+    }
+
+    /**
+     * Hide PWA install button
+     */
+    hideInstallButton() {
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+            installBtn.style.display = 'none';
+        }
+    }
+
+    /**
+     * Prompt the user to install the PWA
+     */
+    async promptInstall() {
+        if (!this.deferredPrompt) {
+            console.log('⚠️ No install prompt available');
+            return;
+        }
+
+        console.log('📱 Showing install prompt');
+
+        // Show the install prompt
+        this.deferredPrompt.prompt();
+
+        // Wait for the user to respond to the prompt
+        const { outcome } = await this.deferredPrompt.userChoice;
+
+        console.log(`User response to install prompt: ${outcome}`);
+
+        if (outcome === 'accepted') {
+            console.log('✅ User accepted the install prompt');
+        } else {
+            console.log('❌ User dismissed the install prompt');
+        }
+
+        // Clear the deferredPrompt so it can only be used once
+        this.deferredPrompt = null;
+        this.hideInstallButton();
     }
 }
 

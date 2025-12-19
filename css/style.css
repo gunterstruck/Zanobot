@@ -1125,6 +1125,74 @@ body {
 }
 
 /* ===================================
+   PWA INSTALL BUTTON
+   =================================== */
+.pwa-install-button {
+    display: none; /* Hidden by default, shown when PWA is installable */
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.625rem 1.25rem;
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--glow-primary);
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.pwa-install-button:hover {
+    background: var(--primary-hover);
+    box-shadow: var(--glow-strong);
+    transform: translateY(-2px);
+}
+
+.pwa-install-button:active {
+    transform: translateY(0);
+}
+
+.pwa-install-button svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.pwa-install-button span {
+    font-weight: 600;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .pwa-install-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+    }
+
+    .pwa-install-button svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pwa-install-button span {
+        display: none; /* Hide text on very small screens */
+    }
+
+    .pwa-install-button {
+        padding: 0.625rem;
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        justify-content: center;
+    }
+}
+
+/* ===================================
    ANIMATIONS
    =================================== */
 @keyframes fadeIn {
