@@ -3,7 +3,7 @@
  * Handles caching, offline functionality, and PWA features
  */
 
-const CACHE_VERSION = 'zanobot-v1.0.5';
+const CACHE_VERSION = 'zanobot-v1.0.6';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Assets to cache on install
