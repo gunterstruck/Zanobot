@@ -38,6 +38,17 @@ export class HealthGauge {
   }
 
   /**
+   * Draw gauge with score and status (Real-time compatible)
+   *
+   * @param score - Health score (0-100)
+   * @param status - Status label (optional, auto-calculated if omitted)
+   */
+  public draw(score: number, status?: string): void {
+    this.score = Math.max(0, Math.min(100, score));
+    this.render();
+  }
+
+  /**
    * Update and render the gauge with new score
    *
    * @param score - Health score (0-100)

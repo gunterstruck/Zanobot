@@ -52,6 +52,30 @@ export function extractFeatures(
 }
 
 /**
+ * Extract features from a raw audio chunk (for real-time processing)
+ *
+ * Optimized for live stream processing - no AudioBuffer overhead.
+ * Use this for real-time feedback loops where chunks are continuously processed.
+ *
+ * @param samples - Raw audio samples (Float32Array)
+ * @param config - DSP configuration
+ * @returns Feature vector
+ */
+export function extractFeaturesFromChunk(
+  samples: Float32Array,
+  config: DSPConfig = DEFAULT_DSP_CONFIG
+): FeatureVector {
+  const chunk: AudioChunk = {
+    samples,
+    startTime: 0,
+    duration: samples.length / config.sampleRate,
+    normalized: false,
+  };
+
+  return extractChunkFeatures(chunk, config);
+}
+
+/**
  * Extract features from a single audio chunk
  *
  * Steps:
