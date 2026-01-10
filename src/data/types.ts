@@ -61,12 +61,14 @@ export interface FeatureVector {
  * Diagnosis Result
  */
 export interface DiagnosisResult {
+  id: string;
   machineId: string;
   timestamp: number;
   healthScore: number;           // 0-100%
-  cosineSimilarity: number;      // Raw cosine value
+  status: 'healthy' | 'uncertain' | 'faulty' | string; // Allow string for flexibility
   confidence: number;            // 0-100% (model quality indicator)
-  status: 'healthy' | 'uncertain' | 'faulty';
+  rawCosineSimilarity?: number;  // Raw cosine value (optional for real-time)
+  metadata?: Record<string, any>; // Flexible metadata
   analysis?: {
     frequencyAnomalies?: Array<{ frequency: number; deviation: number }>;
     hint?: string;

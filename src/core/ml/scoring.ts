@@ -63,6 +63,40 @@ export function classifyHealthStatus(score: number): 'healthy' | 'uncertain' | '
 }
 
 /**
+ * Get classification details for a health score
+ *
+ * @param score - Health score [0, 100]
+ * @returns Classification details with confidence and recommendation
+ */
+export function getClassificationDetails(score: number): {
+  status: 'healthy' | 'uncertain' | 'faulty';
+  confidence: number;
+  recommendation: string;
+} {
+  const status = classifyHealthStatus(score);
+
+  let confidence: number;
+  let recommendation: string;
+
+  if (status === 'healthy') {
+    confidence = Math.min(100, 70 + (score - 75) * 1.2);
+    recommendation = 'Machine is operating normally. Continue regular monitoring.';
+  } else if (status === 'uncertain') {
+    confidence = 50 + (score - 50) * 0.8;
+    recommendation = 'Machine shows some deviation. Schedule inspection to verify condition.';
+  } else {
+    confidence = Math.max(20, 50 - (50 - score) * 0.6);
+    recommendation = 'Machine shows significant deviation. Immediate inspection recommended.';
+  }
+
+  return {
+    status,
+    confidence: Math.round(confidence),
+    recommendation,
+  };
+}
+
+/**
  * Calculate confidence score based on model quality
  *
  * Higher confidence when:
@@ -122,10 +156,11 @@ export function generateDiagnosisResult(
   const confidence = calculateConfidence(model, cosineSimilarities);
 
   return {
+    id: `diag-${Date.now()}`,
     machineId,
     timestamp: Date.now(),
     healthScore: Math.round(healthScore * 10) / 10, // Round to 1 decimal
-    cosineSimilarity: Math.round(avgCosine * 10000) / 10000, // Round to 4 decimals
+    rawCosineSimilarity: Math.round(avgCosine * 10000) / 10000, // Round to 4 decimals
     confidence: Math.round(confidence * 10) / 10,
     status,
     analysis: generateAnalysisHints(healthScore, status),
