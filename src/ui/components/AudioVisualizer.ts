@@ -115,8 +115,9 @@ export class AudioVisualizer {
     // @ts-ignore - Type mismatch between browser types
     this.analyser.getByteFrequencyData(this.dataArray);
 
-    // Clear canvas with dark background
-    this.ctx.fillStyle = '#0a0a0a';
+    // Clear canvas with theme-aware background
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-bg').trim();
+    this.ctx.fillStyle = bgColor || '#0a0a0a';
     this.ctx.fillRect(0, 0, width, height);
 
     // Draw grid lines (optional, for professional look)
@@ -136,7 +137,9 @@ export class AudioVisualizer {
    * Draw background grid
    */
   private drawGrid(width: number, height: number): void {
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    // Use theme-aware grid color
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-grid').trim();
+    this.ctx.strokeStyle = gridColor || 'rgba(255, 255, 255, 0.05)';
     this.ctx.lineWidth = 1;
 
     // Horizontal lines (amplitude)
@@ -267,39 +270,69 @@ export class AudioVisualizer {
       this.ctx.lineTo(width, height);
       this.ctx.closePath();
 
-      // Fill with subtle gradient
+      // Fill with subtle gradient (theme-aware)
+      const computedStyle = getComputedStyle(document.documentElement);
+      const fillTop = computedStyle.getPropertyValue('--viz-fill-top').trim();
+      const fillBottom = computedStyle.getPropertyValue('--viz-fill-bottom').trim();
+      const vizPrimary = computedStyle.getPropertyValue('--viz-primary').trim();
+
       const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)'); // Blue top
-      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)'); // Transparent bottom
+      gradient.addColorStop(0, fillTop || 'rgba(59, 130, 246, 0.3)');
+      gradient.addColorStop(1, fillBottom || 'rgba(59, 130, 246, 0.05)');
 
       this.ctx.fillStyle = gradient;
       this.ctx.fill();
 
-      // Stroke line
-      this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+      // Stroke line (theme-aware)
+      this.ctx.strokeStyle = vizPrimary || 'rgba(59, 130, 246, 0.8)';
       this.ctx.lineWidth = 2;
       this.ctx.stroke();
     }
   }
 
   /**
-   * Get color based on intensity (Green → Yellow → Red)
+   * Get color based on intensity (Theme-aware gradient)
    *
    * @param intensity - Normalized value (0-1)
    * @returns CSS color string
    */
   private getIntensityColor(intensity: number): string {
-    if (intensity < 0.3) {
-      // Low: Green
-      return `rgba(34, 197, 94, ${0.4 + intensity * 2})`;
-    } else if (intensity < 0.6) {
-      // Medium: Yellow/Orange
-      const ratio = (intensity - 0.3) / 0.3;
-      return `rgba(${Math.round(34 + ratio * 220)}, ${Math.round(197 - ratio * 50)}, 94, ${0.6 + intensity})`;
-    } else {
-      // High: Red
-      return `rgba(239, 68, 68, ${0.7 + intensity * 0.3})`;
+    // Get theme colors from CSS variables
+    const computedStyle = getComputedStyle(document.documentElement);
+    const primaryColor = computedStyle.getPropertyValue('--primary-color').trim();
+    const accentColor = computedStyle.getPropertyValue('--accent-color').trim();
+
+    // For low intensity, use primary color
+    if (intensity < 0.5) {
+      // Extract RGB from hex or use fallback
+      const rgb = this.hexToRgb(primaryColor) || { r: 0, g: 243, b: 255 };
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.3 + intensity})`;
     }
+    // For high intensity, blend to accent color (orange in neon theme)
+    else {
+      const rgb = this.hexToRgb(accentColor) || { r: 255, g: 136, b: 0 };
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.6 + intensity * 0.4})`;
+    }
+  }
+
+  /**
+   * Convert hex color to RGB
+   * @param hex - Hex color string (e.g., "#00f3ff")
+   * @returns RGB object or null
+   */
+  private hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Parse hex
+    if (hex.length === 6) {
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16)
+      };
+    }
+    return null;
   }
 
   /**
@@ -317,8 +350,11 @@ export class AudioVisualizer {
       { pos: 1, text: '22k' },
     ];
 
+    // Use theme-aware text color
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-text').trim();
+
     this.ctx.font = '10px system-ui, sans-serif';
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.fillStyle = textColor || 'rgba(255, 255, 255, 0.4)';
     this.ctx.textAlign = 'center';
 
     labels.forEach((label) => {
@@ -341,16 +377,18 @@ export class AudioVisualizer {
     const width = this.canvas.width / (window.devicePixelRatio || 1);
     const height = this.canvas.height / (window.devicePixelRatio || 1);
 
-    // Clear canvas
-    this.ctx.fillStyle = '#0a0a0a';
+    // Clear canvas with theme-aware background
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-bg').trim();
+    this.ctx.fillStyle = bgColor || '#0a0a0a';
     this.ctx.fillRect(0, 0, width, height);
 
     // Get channel data
     const channelData = audioBuffer.getChannelData(0);
     const step = Math.ceil(channelData.length / width);
 
-    // Draw waveform
-    this.ctx.strokeStyle = '#3b82f6';
+    // Draw waveform (theme-aware)
+    const vizPrimary = getComputedStyle(document.documentElement).getPropertyValue('--viz-primary').trim();
+    this.ctx.strokeStyle = vizPrimary || '#3b82f6';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
 
@@ -370,8 +408,9 @@ export class AudioVisualizer {
 
     this.ctx.stroke();
 
-    // Draw center line
-    this.ctx.strokeStyle = '#333333';
+    // Draw center line (theme-aware)
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-grid').trim();
+    this.ctx.strokeStyle = gridColor || '#333333';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(0, height / 2);

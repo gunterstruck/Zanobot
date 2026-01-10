@@ -7,20 +7,177 @@
    CSS VARIABLES & THEME SYSTEM
    =================================== */
 :root {
-    /* Brand Colors (Zanobot Cyan/Teal Theme) */
+    /* Spacing (Theme-Independent) */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+
+    /* Border Radius (Theme-Independent) */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    /* Typography (Theme-Independent) */
+    --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+
+    /* Default Theme: Brand (Zanobot Original) */
     --primary-color: #00D4FF;
     --primary-hover: #00B8E6;
     --secondary-color: #40E0D0;
     --accent-color: #00FFC6;
 
-    /* Background Colors */
     --bg-primary: #0A1929;
     --bg-secondary: #0D1F31;
     --bg-tertiary: #112840;
     --bg-card: rgba(17, 40, 64, 0.6);
     --bg-modal: rgba(10, 25, 41, 0.95);
 
-    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0BEC5;
+    --text-muted: #78909C;
+
+    --status-healthy: #00E676;
+    --status-warning: #FFB74D;
+    --status-error: #FF5252;
+    --status-uncertain: #FFA726;
+
+    --border-color: rgba(0, 212, 255, 0.2);
+    --divider-color: rgba(255, 255, 255, 0.1);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
+    --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
+
+    /* Visualizer Colors (Theme-Aware) */
+    --viz-bg: #0a0a0a;
+    --viz-grid: rgba(255, 255, 255, 0.05);
+    --viz-primary: rgba(59, 130, 246, 0.8);
+    --viz-fill-top: rgba(59, 130, 246, 0.3);
+    --viz-fill-bottom: rgba(59, 130, 246, 0.05);
+    --viz-text: rgba(255, 255, 255, 0.4);
+}
+
+/* ===================================
+   THEME: NEON INDUSTRIAL (Cyberpunk)
+   Vibe: Dark machinery, OLED display, futuristic high-tech
+   =================================== */
+[data-theme="neon"] {
+    /* Core Colors */
+    --primary-color: #00f3ff;         /* Neon Cyan/Electric Blue */
+    --primary-hover: #00d4e6;
+    --secondary-color: #00b8ff;
+    --accent-color: #ff8800;          /* Neon Orange - für Warnings & Record */
+
+    /* Backgrounds - Ultra Dark */
+    --bg-primary: #0f172a;            /* Very dark slate */
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-card: rgba(30, 41, 59, 0.6);
+    --bg-modal: rgba(15, 23, 42, 0.98);
+
+    /* Text */
+    --text-primary: #f8fafc;          /* Almost white */
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    /* Status Colors */
+    --status-healthy: #00ff88;        /* Neon green */
+    --status-warning: #ffa500;        /* Neon orange */
+    --status-error: #ff3366;          /* Neon red/pink */
+    --status-uncertain: #ffaa00;
+
+    /* Borders & Effects */
+    --border-color: rgba(0, 243, 255, 0.3);
+    --divider-color: rgba(248, 250, 252, 0.1);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --glow-primary: 0 0 25px rgba(0, 243, 255, 0.4);
+    --glow-strong: 0 0 40px rgba(0, 243, 255, 0.6);
+
+    /* Visualizer Colors */
+    --viz-bg: #000000;
+    --viz-grid: rgba(0, 243, 255, 0.08);
+    --viz-primary: rgba(0, 243, 255, 0.9);
+    --viz-fill-top: rgba(0, 243, 255, 0.4);
+    --viz-fill-bottom: rgba(0, 243, 255, 0.08);
+    --viz-text: rgba(0, 243, 255, 0.5);
+}
+
+/* ===================================
+   THEME: DAYLIGHT (High Contrast)
+   Vibe: Construction site in sunlight, technical datasheet
+   =================================== */
+[data-theme="light"] {
+    /* Core Colors */
+    --primary-color: #0f172a;         /* Dark engineer blue (high contrast) */
+    --primary-hover: #1e293b;
+    --secondary-color: #334155;
+    --accent-color: #ea580c;          /* Signal orange */
+
+    /* Backgrounds - Light */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-modal: rgba(255, 255, 255, 0.98);
+
+    /* Text - Dark for contrast */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    /* Status Colors */
+    --status-healthy: #16a34a;        /* Darker green for readability */
+    --status-warning: #f59e0b;
+    --status-error: #dc2626;
+    --status-uncertain: #f97316;
+
+    /* Borders & Effects */
+    --border-color: rgba(15, 23, 42, 0.15);
+    --divider-color: rgba(0, 0, 0, 0.08);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --glow-primary: 0 0 20px rgba(15, 23, 42, 0.15);
+    --glow-strong: 0 0 30px rgba(15, 23, 42, 0.2);
+
+    /* Visualizer Colors */
+    --viz-bg: #f8fafc;
+    --viz-grid: rgba(15, 23, 42, 0.1);
+    --viz-primary: rgba(15, 23, 42, 0.9);
+    --viz-fill-top: rgba(15, 23, 42, 0.3);
+    --viz-fill-bottom: rgba(15, 23, 42, 0.05);
+    --viz-text: rgba(15, 23, 42, 0.5);
+}
+
+/* ===================================
+   THEME: BRAND (Zanobot Original)
+   Vibe: Corporate identity, balanced, professional cyan/teal
+   =================================== */
+[data-theme="brand"] {
+    /* Core Colors - Original Zanobot */
+    --primary-color: #00D4FF;
+    --primary-hover: #00B8E6;
+    --secondary-color: #40E0D0;
+    --accent-color: #00FFC6;
+
+    /* Backgrounds */
+    --bg-primary: #0A1929;
+    --bg-secondary: #0D1F31;
+    --bg-tertiary: #112840;
+    --bg-card: rgba(17, 40, 64, 0.6);
+    --bg-modal: rgba(10, 25, 41, 0.95);
+
+    /* Text */
     --text-primary: #FFFFFF;
     --text-secondary: #B0BEC5;
     --text-muted: #78909C;
@@ -31,58 +188,23 @@
     --status-error: #FF5252;
     --status-uncertain: #FFA726;
 
-    /* Border & Divider */
+    /* Borders & Effects */
     --border-color: rgba(0, 212, 255, 0.2);
     --divider-color: rgba(255, 255, 255, 0.1);
 
-    /* Shadows & Glassmorphism */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
     --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
 
-    /* Spacing */
-    --spacing-xs: 0.5rem;
-    --spacing-sm: 1rem;
-    --spacing-md: 1.5rem;
-    --spacing-lg: 2rem;
-    --spacing-xl: 3rem;
-
-    /* Border Radius */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-
-    /* Typography */
-    --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
-}
-
-/* Light Theme */
-[data-theme="light"] {
-    --bg-primary: #F5F7FA;
-    --bg-secondary: #FFFFFF;
-    --bg-tertiary: #E8EDF2;
-    --bg-card: rgba(255, 255, 255, 0.9);
-    --bg-modal: rgba(255, 255, 255, 0.98);
-
-    --text-primary: #1A1A1A;
-    --text-secondary: #546E7A;
-    --text-muted: #90A4AE;
-
-    --border-color: rgba(0, 212, 255, 0.3);
-    --divider-color: rgba(0, 0, 0, 0.1);
-
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
-}
-
-/* Dark Theme (Default) - explicitly defined */
-[data-theme="dark"] {
-    /* Already defined in :root, but can override here if needed */
+    /* Visualizer Colors */
+    --viz-bg: #0a0a0a;
+    --viz-grid: rgba(0, 212, 255, 0.08);
+    --viz-primary: rgba(0, 212, 255, 0.8);
+    --viz-fill-top: rgba(0, 212, 255, 0.3);
+    --viz-fill-bottom: rgba(0, 212, 255, 0.05);
+    --viz-text: rgba(0, 212, 255, 0.4);
 }
 
 /* ===================================
@@ -1125,6 +1247,46 @@ body {
 }
 
 /* ===================================
+   ACCENT BUTTONS (Record & Stop)
+   Per UX-Spec: Orange accent for critical actions
+   =================================== */
+#record-btn {
+    background: var(--accent-color);
+    color: var(--bg-primary);
+    border-color: var(--accent-color);
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(255, 136, 0, 0.3);
+}
+
+#record-btn:hover {
+    background: var(--accent-color);
+    color: var(--bg-primary);
+    box-shadow: 0 0 30px rgba(255, 136, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+#stop-recording-btn {
+    background: var(--accent-color);
+    color: var(--bg-primary);
+    border: 2px solid var(--accent-color);
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(255, 136, 0, 0.3);
+}
+
+#stop-recording-btn:hover {
+    background: var(--accent-color);
+    box-shadow: 0 0 30px rgba(255, 136, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+/* Save Reference Button - Primary Color */
+#save-reference-btn {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    border: none;
+}
+
+/* ===================================
    PWA INSTALL BUTTON
    =================================== */
 .pwa-install-button {
@@ -1472,6 +1634,219 @@ select:focus-visible {
     .scanner-hint {
         font-size: 0.75rem;
         padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}
+
+/* ===================================
+   THEME SWITCHER (Header Quick Toggle)
+   =================================== */
+.theme-switcher {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: var(--primary-color);
+}
+
+.theme-switcher:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    box-shadow: var(--glow-primary);
+    transform: translateY(-2px);
+}
+
+.theme-switcher:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.theme-switcher svg {
+    transition: transform 0.3s ease;
+}
+
+.theme-switcher:hover svg {
+    transform: rotate(30deg);
+}
+
+/* ===================================
+   THEME SELECTION (Settings)
+   =================================== */
+.setting-category {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.setting-category-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.settings-divider {
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        var(--divider-color) 20%,
+        var(--divider-color) 80%,
+        transparent
+    );
+    margin: var(--spacing-md) 0;
+}
+
+.theme-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.theme-card {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+        to right,
+        var(--primary-color),
+        var(--accent-color)
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.theme-card:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-card);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--glow-primary);
+}
+
+.theme-card:hover::before {
+    opacity: 1;
+}
+
+.theme-card.active {
+    border-color: var(--primary-color);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-lg), var(--glow-strong);
+}
+
+.theme-card.active::before {
+    opacity: 1;
+}
+
+.theme-card.active::after {
+    content: '✓';
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    width: 28px;
+    height: 28px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: var(--glow-primary);
+}
+
+.theme-card-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.theme-card-content {
+    flex: 1;
+}
+
+.theme-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.theme-card-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.theme-card-colors {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.theme-color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-primary);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
+}
+
+.theme-card:hover .theme-color-dot {
+    transform: scale(1.15);
+}
+
+/* Database/Settings Stats */
+.setting-stats {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.setting-stats strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Responsive Theme Cards */
+@media (min-width: 768px) {
+    .theme-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--spacing-md);
     }
 }
 
