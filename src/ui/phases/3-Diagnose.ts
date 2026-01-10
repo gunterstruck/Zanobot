@@ -99,6 +99,11 @@ export class DiagnosePhase {
       this.lastProcessedStatus = 'UNKNOWN';
       this.scoreHistory.clear();
 
+      // Reset ring buffer to prevent contamination from previous runs
+      this.ringBuffer.fill(0);
+      this.ringBufferWritePos = 0;
+      this.smartStartActive = true;
+
       // Request microphone access using central helper (same as Phase 2!)
       this.mediaStream = await getRawAudioStream();
 
@@ -149,7 +154,49 @@ export class DiagnosePhase {
     } catch (error) {
       console.error('Diagnosis error:', error);
       alert('Failed to access microphone. Please grant permission.');
+
+      // Cleanup on error
+      this.cleanup();
     }
+  }
+
+  /**
+   * Cleanup resources (AudioContext, MediaStream, etc.)
+   */
+  private cleanup(): void {
+    // Stop processing
+    this.isProcessing = false;
+
+    // Clear interval
+    if (this.processingInterval) {
+      clearInterval(this.processingInterval);
+      this.processingInterval = null;
+    }
+
+    // Disconnect audio processor
+    if (this.scriptProcessor) {
+      this.scriptProcessor.disconnect();
+      this.scriptProcessor = null;
+    }
+
+    // Stop visualizer
+    if (this.visualizer) {
+      this.visualizer.stop();
+    }
+
+    // Stop media stream tracks
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((track) => track.stop());
+      this.mediaStream = null;
+    }
+
+    // Close audio context
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    console.log('🧹 Cleanup complete');
   }
 
   /**
@@ -333,27 +380,8 @@ export class DiagnosePhase {
   private stopRecording(): void {
     console.log('⏹️ Stopping diagnosis...');
 
-    // Stop processing
-    this.isProcessing = false;
-
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
-    }
-
-    // Disconnect audio processing
-    if (this.scriptProcessor) {
-      this.scriptProcessor.disconnect();
-      this.scriptProcessor = null;
-    }
-
-    if (this.visualizer) {
-      this.visualizer.stop();
-    }
-
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-    }
+    // Cleanup resources
+    this.cleanup();
 
     // Save final diagnosis ONLY if we have valid measurement data
     if (this.hasValidMeasurement) {
@@ -524,20 +552,24 @@ export class DiagnosePhase {
   }
 
   /**
-   * Cleanup
+   * Destroy phase and cleanup all resources
    */
   public destroy(): void {
-    this.stopRecording();
+    this.cleanup();
 
+    // Destroy visualizer
     if (this.visualizer) {
       this.visualizer.destroy();
-    }
-
-    if (this.audioContext) {
-      this.audioContext.close();
+      this.visualizer = null;
     }
 
     // Clear score history
     this.scoreHistory.clear();
+
+    // Reset Smart Start manager
+    if (this.smartStartManager) {
+      this.smartStartManager.reset();
+      this.smartStartManager = null;
+    }
   }
 }

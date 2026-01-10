@@ -18,6 +18,9 @@ interface Complex {
 /**
  * Perform FFT on real-valued input signal
  *
+ * Uses iterative Cooley-Tukey algorithm with bit-reversal.
+ * Prevents stack overflow for large inputs.
+ *
  * @param signal - Input time-domain signal (must be power of 2 length)
  * @returns Complex frequency-domain representation
  */
@@ -32,12 +35,89 @@ export function fft(signal: Float32Array): Complex[] {
   // Convert real signal to complex
   const complex: Complex[] = Array.from(signal, (real) => ({ real, imag: 0 }));
 
-  // Perform FFT
-  return fftRecursive(complex);
+  // Perform iterative FFT (no recursion, no stack overflow)
+  return fftIterative(complex);
+}
+
+/**
+ * Iterative FFT implementation (Cooley-Tukey with bit-reversal)
+ *
+ * Advantages over recursive:
+ * - No stack overflow for large inputs
+ * - Better performance (no function call overhead)
+ * - More memory efficient
+ *
+ * Algorithm:
+ * 1. Bit-reversal permutation
+ * 2. Butterfly operations in log2(n) stages
+ */
+function fftIterative(x: Complex[]): Complex[] {
+  const n = x.length;
+  const result = [...x]; // Copy input
+
+  // Step 1: Bit-reversal permutation
+  const numBits = Math.log2(n);
+  for (let i = 0; i < n; i++) {
+    const reversed = reverseBits(i, numBits);
+    if (reversed > i) {
+      // Swap
+      [result[i], result[reversed]] = [result[reversed], result[i]];
+    }
+  }
+
+  // Step 2: Butterfly operations (bottom-up)
+  for (let size = 2; size <= n; size *= 2) {
+    const halfSize = size / 2;
+    const step = (2 * Math.PI) / size;
+
+    for (let i = 0; i < n; i += size) {
+      for (let j = 0; j < halfSize; j++) {
+        // Twiddle factor: e^(-2πij/size)
+        const angle = -step * j;
+        const twiddle: Complex = {
+          real: Math.cos(angle),
+          imag: Math.sin(angle),
+        };
+
+        // Butterfly operation
+        const evenIdx = i + j;
+        const oddIdx = i + j + halfSize;
+
+        const t = complexMultiply(twiddle, result[oddIdx]);
+        const even = result[evenIdx];
+
+        result[evenIdx] = complexAdd(even, t);
+        result[oddIdx] = complexSubtract(even, t);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Reverse bits of a number
+ *
+ * Used for bit-reversal permutation in iterative FFT.
+ *
+ * @param num - Number to reverse
+ * @param numBits - Number of bits to consider
+ * @returns Bit-reversed number
+ */
+function reverseBits(num: number, numBits: number): number {
+  let reversed = 0;
+  for (let i = 0; i < numBits; i++) {
+    reversed = (reversed << 1) | (num & 1);
+    num >>= 1;
+  }
+  return reversed;
 }
 
 /**
  * Recursive FFT implementation (Cooley-Tukey)
+ *
+ * @deprecated Use iterative implementation instead (fftIterative)
+ * Kept for reference and potential fallback.
  */
 function fftRecursive(x: Complex[]): Complex[] {
   const n = x.length;

@@ -63,9 +63,28 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'dsp': ['./src/core/dsp/fft.ts', './src/core/dsp/features.ts'],
-          'ml': ['./src/core/ml/gmia.ts', './src/core/ml/scoring.ts', './src/core/ml/mathUtils.ts']
+        manualChunks(id) {
+          // Split DSP modules into separate chunk
+          if (id.includes('src/core/dsp')) {
+            return 'dsp';
+          }
+          // Split ML modules into separate chunk
+          if (id.includes('src/core/ml')) {
+            return 'ml';
+          }
+          // Split database modules
+          if (id.includes('src/data')) {
+            return 'data';
+          }
+          // Vendor libraries (html5-qrcode, idb)
+          if (id.includes('node_modules')) {
+            if (id.includes('html5-qrcode')) {
+              return 'vendor-qr';
+            }
+            if (id.includes('idb')) {
+              return 'vendor-idb';
+            }
+          }
         }
       }
     }

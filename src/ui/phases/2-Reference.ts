@@ -96,7 +96,46 @@ export class ReferencePhase {
     } catch (error) {
       console.error('Recording error:', error);
       alert('Failed to access microphone. Please grant permission.');
+
+      // Cleanup on error
+      this.cleanup();
     }
+  }
+
+  /**
+   * Cleanup resources (AudioContext, MediaStream, etc.)
+   */
+  private cleanup(): void {
+    // Stop media recorder if active
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
+    }
+
+    // Stop visualizer
+    if (this.visualizer) {
+      this.visualizer.stop();
+    }
+
+    // Stop media stream tracks
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach((track) => track.stop());
+      this.mediaStream = null;
+    }
+
+    // Disconnect script processor
+    if (this.scriptProcessor) {
+      this.scriptProcessor.disconnect();
+      this.scriptProcessor = null;
+    }
+
+    // Close audio context
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    console.log('🧹 Reference phase cleanup complete');
   }
 
   /**
@@ -166,17 +205,7 @@ export class ReferencePhase {
    * Stop recording
    */
   private stopRecording(): void {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-    }
-
-    if (this.visualizer) {
-      this.visualizer.stop();
-    }
-
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-    }
+    this.cleanup();
   }
 
   /**
@@ -356,15 +385,25 @@ export class ReferencePhase {
   }
 
   /**
-   * Cleanup
+   * Destroy phase and cleanup all resources
    */
   public destroy(): void {
-    this.stopRecording();
+    this.cleanup();
+
+    // Destroy visualizer
     if (this.visualizer) {
       this.visualizer.destroy();
+      this.visualizer = null;
     }
-    if (this.audioContext) {
-      this.audioContext.close();
+
+    // Reset Smart Start manager
+    if (this.smartStartManager) {
+      this.smartStartManager.reset();
+      this.smartStartManager = null;
     }
+
+    // Clear audio chunks
+    this.audioChunks = [];
+    this.recordedBlob = null;
   }
 }
