@@ -13,6 +13,12 @@ import { extractFeatures, DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
 import { trainGMIA } from '@core/ml/gmia.js';
 import { updateMachineModel } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
+import {
+  getRawAudioStream,
+  SmartStartManager,
+  getSmartStartStatusMessage,
+  DEFAULT_SMART_START_CONFIG,
+} from '@core/audio/audioHelper.js';
 import type { Machine, TrainingData } from '@data/types.js';
 
 export class ReferencePhase {
@@ -23,6 +29,10 @@ export class ReferencePhase {
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
   private recordingDuration: number = 10; // seconds
+  private smartStartManager: SmartStartManager | null = null;
+  private scriptProcessor: ScriptProcessorNode | null = null;
+  private isRecordingActive: boolean = false;
+  private recordedBlob: Blob | null = null; // For reference audio export
 
   constructor(machine: Machine) {
     this.machine = machine;
@@ -39,19 +49,14 @@ export class ReferencePhase {
   }
 
   /**
-   * Start recording reference audio
+   * Start recording reference audio with Smart Start
    */
   private async startRecording(): Promise<void> {
     try {
-      // Request microphone access
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          sampleRate: 44100,
-        },
-      });
+      console.log('🎙️ Phase 2: Starting reference recording with Smart Start...');
+
+      // Request microphone access using central helper
+      this.mediaStream = await getRawAudioStream();
 
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: 44100 });
@@ -66,32 +71,95 @@ export class ReferencePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      // Setup media recorder
-      this.audioChunks = [];
-      this.mediaRecorder = new MediaRecorder(this.mediaStream);
+      // Initialize Smart Start Manager
+      this.smartStartManager = new SmartStartManager(DEFAULT_SMART_START_CONFIG, {
+        onStateChange: (state) => {
+          const statusMsg = getSmartStartStatusMessage(state);
+          this.updateStatusMessage(statusMsg);
+        },
+        onRecordingStart: () => {
+          console.log('✅ Smart Start: Recording started!');
+          this.updateStatusMessage('Aufnahme läuft');
+          this.actuallyStartRecording();
+        },
+        onTimeout: () => {
+          alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+          this.stopRecording();
+        },
+      });
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.audioChunks.push(event.data);
-        }
-      };
+      // Setup audio processing for Smart Start
+      this.setupSmartStartProcessing();
 
-      this.mediaRecorder.onstop = () => this.processRecording();
-
-      // Start recording
-      this.mediaRecorder.start();
-
-      // Update timer
-      this.startTimer();
-
-      // Auto-stop after duration
-      setTimeout(() => {
-        this.stopRecording();
-      }, this.recordingDuration * 1000);
+      // Start Smart Start sequence
+      this.smartStartManager.start();
     } catch (error) {
       console.error('Recording error:', error);
       alert('Failed to access microphone. Please grant permission.');
     }
+  }
+
+  /**
+   * Setup audio processing for Smart Start (warm-up + signal detection)
+   */
+  private setupSmartStartProcessing(): void {
+    if (!this.audioContext || !this.mediaStream) {
+      return;
+    }
+
+    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+    this.scriptProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
+
+    this.scriptProcessor.onaudioprocess = (event) => {
+      if (!this.smartStartManager) return;
+
+      const inputData = event.inputBuffer.getChannelData(0);
+      const shouldRecord = this.smartStartManager.processAudio(inputData);
+
+      // Smart Start will trigger actuallyStartRecording() when ready
+    };
+
+    source.connect(this.scriptProcessor);
+    this.scriptProcessor.connect(this.audioContext.destination);
+  }
+
+  /**
+   * Actually start recording after Smart Start completes
+   */
+  private actuallyStartRecording(): void {
+    if (!this.mediaStream) {
+      return;
+    }
+
+    // Disconnect Smart Start processor
+    if (this.scriptProcessor) {
+      this.scriptProcessor.disconnect();
+      this.scriptProcessor = null;
+    }
+
+    // Setup media recorder
+    this.audioChunks = [];
+    this.mediaRecorder = new MediaRecorder(this.mediaStream);
+    this.isRecordingActive = true;
+
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        this.audioChunks.push(event.data);
+      }
+    };
+
+    this.mediaRecorder.onstop = () => this.processRecording();
+
+    // Start recording
+    this.mediaRecorder.start();
+
+    // Update timer
+    this.startTimer();
+
+    // Auto-stop after duration
+    setTimeout(() => {
+      this.stopRecording();
+    }, this.recordingDuration * 1000);
   }
 
   /**
@@ -122,6 +190,7 @@ export class ReferencePhase {
 
       // Create blob from chunks
       const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+      this.recordedBlob = blob; // Save for export
 
       // Convert to AudioBuffer
       const arrayBuffer = await blob.arrayBuffer();
@@ -153,11 +222,78 @@ export class ReferencePhase {
 
       // Update UI
       this.hideRecordingModal();
-      alert(`Reference model trained successfully!\nMachine: ${this.machine.name}`);
+
+      // Show success with option to download reference audio
+      this.showSuccessWithExport();
     } catch (error) {
       console.error('Processing error:', error);
       alert('Failed to process recording. Please try again.');
       this.hideRecordingModal();
+    }
+  }
+
+  /**
+   * Show success message with reference audio export option
+   */
+  private showSuccessWithExport(): void {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `${this.machine.id}_REF_${timestamp}.webm`;
+
+    const shouldDownload = confirm(
+      `✅ Referenzmodell erfolgreich trainiert!\n\n` +
+      `Maschine: ${this.machine.name}\n\n` +
+      `Möchten Sie die Referenz-Audiodatei herunterladen?\n` +
+      `(Empfohlen für Backup)`
+    );
+
+    if (shouldDownload && this.recordedBlob) {
+      this.exportReferenceAudio(filename);
+    }
+  }
+
+  /**
+   * Export reference audio as downloadable file
+   */
+  private exportReferenceAudio(filename: string): void {
+    if (!this.recordedBlob) {
+      alert('Keine Audiodatei zum Exportieren verfügbar.');
+      return;
+    }
+
+    try {
+      const url = URL.createObjectURL(this.recordedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log(`📥 Reference audio exported: ${filename}`);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Fehler beim Exportieren der Audiodatei.');
+    }
+  }
+
+  /**
+   * Update status message in UI
+   */
+  private updateStatusMessage(message: string): void {
+    const statusElement = document.getElementById('recording-status');
+    if (statusElement) {
+      statusElement.textContent = message;
+    }
+
+    // Also update modal title if needed
+    const modalTitle = document.querySelector('#recording-modal .modal-header h3');
+    if (modalTitle && message.includes('Kalibrierung')) {
+      modalTitle.textContent = 'Referenzaufnahme - Kalibrierung';
+    } else if (modalTitle && message.includes('Warte')) {
+      modalTitle.textContent = 'Referenzaufnahme - Warte auf Signal';
+    } else if (modalTitle && message.includes('Aufnahme')) {
+      modalTitle.textContent = 'Referenzaufnahme - Läuft';
     }
   }
 
@@ -168,6 +304,16 @@ export class ReferencePhase {
     const modal = document.getElementById('recording-modal');
     if (modal) {
       modal.style.display = 'flex';
+    }
+
+    // Add status message element if it doesn't exist
+    const modalBody = document.querySelector('#recording-modal .modal-body');
+    if (modalBody && !document.getElementById('recording-status')) {
+      const statusDiv = document.createElement('div');
+      statusDiv.id = 'recording-status';
+      statusDiv.className = 'recording-status';
+      statusDiv.textContent = 'Initialisierung...';
+      modalBody.insertBefore(statusDiv, modalBody.firstChild);
     }
 
     // Setup stop button
