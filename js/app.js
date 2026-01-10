@@ -57,28 +57,99 @@ class ZanobotApp {
 
     /**
      * Theme Switcher Setup
+     * Handles both Quick-Toggle (Header) and Theme Cards (Settings)
      */
     setupThemeSwitcher() {
-        const themeBtns = document.querySelectorAll('.theme-btn');
+        const quickToggle = document.getElementById('quick-theme-toggle');
+        const themeCards = document.querySelectorAll('.theme-card');
+        const themes = ['neon', 'light', 'brand'];
 
-        themeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const theme = btn.dataset.theme;
+        // Quick-Toggle Button (cycles through themes)
+        if (quickToggle) {
+            quickToggle.addEventListener('click', () => {
+                const currentTheme = window.ZanobotTheme.getTheme();
+                const currentIndex = themes.indexOf(currentTheme);
+                const nextIndex = (currentIndex + 1) % themes.length;
+                const nextTheme = themes[nextIndex];
+
+                window.ZanobotTheme.setTheme(nextTheme);
+                this.updateThemeUI(nextTheme);
+
+                console.log(`🎨 Theme switched: ${currentTheme} → ${nextTheme}`);
+            });
+        }
+
+        // Theme Cards (Settings)
+        themeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const theme = card.dataset.theme;
                 window.ZanobotTheme.setTheme(theme);
+                this.updateThemeUI(theme);
 
-                // Update active state
-                themeBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                console.log(`🎨 Theme selected: ${theme}`);
             });
         });
 
-        // Set initial active button
+        // Set initial UI state
         const currentTheme = window.ZanobotTheme.getTheme();
-        themeBtns.forEach(btn => {
-            if (btn.dataset.theme === currentTheme) {
-                btn.classList.add('active');
+        this.updateThemeUI(currentTheme);
+    }
+
+    /**
+     * Update theme UI (active states)
+     * @param {string} theme - Theme name (neon, light, brand)
+     */
+    updateThemeUI(theme) {
+        // Update theme cards
+        const themeCards = document.querySelectorAll('.theme-card');
+        themeCards.forEach(card => {
+            if (card.dataset.theme === theme) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
             }
         });
+
+        // Update quick-toggle icon (optional: change icon based on theme)
+        const quickToggle = document.getElementById('quick-theme-toggle');
+        if (quickToggle) {
+            const svg = quickToggle.querySelector('svg');
+            if (svg) {
+                // Change icon based on theme
+                if (theme === 'neon') {
+                    svg.innerHTML = `
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                    `;
+                } else if (theme === 'light') {
+                    svg.innerHTML = `
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    `;
+                } else if (theme === 'brand') {
+                    svg.innerHTML = `
+                        <circle cx="12" cy="12" r="9"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                    `;
+                }
+            }
+
+            // Update tooltip
+            const themeNames = {
+                'neon': 'Neon Industrial',
+                'light': 'Daylight',
+                'brand': 'Zanobot'
+            };
+            quickToggle.title = `Aktuell: ${themeNames[theme]} (klicken zum Wechseln)`;
+        }
     }
 
     /**

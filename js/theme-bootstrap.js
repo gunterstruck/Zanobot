@@ -10,7 +10,8 @@
     // Configuration
     const CONFIG_PATH = 'config.json';
     const THEME_STORAGE_KEY = 'zanobot-theme';
-    const DEFAULT_THEME = 'brand';
+    const DEFAULT_THEME = 'neon'; // Neon Industrial is the default (as per UX requirements)
+    const AVAILABLE_THEMES = ['neon', 'light', 'brand'];
 
     /**
      * Get stored theme preference or default
@@ -84,13 +85,13 @@
     }
 
     /**
-     * Detect system theme preference
+     * Detect system theme preference (maps to our themes)
      */
     function getSystemTheme() {
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
+            return 'neon'; // Dark mode → Neon Industrial
         }
-        return 'light';
+        return 'light'; // Light mode → Daylight
     }
 
     /**
@@ -112,10 +113,9 @@
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             mediaQuery.addEventListener('change', (e) => {
-                const currentTheme = getStoredTheme();
                 // Only auto-switch if user hasn't manually selected a theme
                 if (!localStorage.getItem(THEME_STORAGE_KEY)) {
-                    applyTheme(e.matches ? 'dark' : 'light');
+                    applyTheme(e.matches ? 'neon' : 'light');
                 }
             });
         }
@@ -127,11 +127,11 @@
     window.ZanobotTheme = {
         /**
          * Set theme
-         * @param {string} theme - 'light', 'dark', or 'brand'
+         * @param {string} theme - 'neon', 'light', or 'brand'
          */
         setTheme: function(theme) {
-            if (!['light', 'dark', 'brand'].includes(theme)) {
-                console.warn('Invalid theme:', theme);
+            if (!AVAILABLE_THEMES.includes(theme)) {
+                console.warn('Invalid theme:', theme, '- Available:', AVAILABLE_THEMES);
                 return;
             }
 
@@ -163,14 +163,50 @@
         },
 
         /**
-         * Toggle between themes
+         * Toggle between themes (cycles through neon → light → brand)
          */
         toggleTheme: function() {
-            const themes = ['brand', 'dark', 'light'];
             const currentTheme = getStoredTheme();
-            const currentIndex = themes.indexOf(currentTheme);
-            const nextIndex = (currentIndex + 1) % themes.length;
-            this.setTheme(themes[nextIndex]);
+            const currentIndex = AVAILABLE_THEMES.indexOf(currentTheme);
+            const nextIndex = (currentIndex + 1) % AVAILABLE_THEMES.length;
+            this.setTheme(AVAILABLE_THEMES[nextIndex]);
+            return AVAILABLE_THEMES[nextIndex];
+        },
+
+        /**
+         * Get available themes
+         * @returns {string[]}
+         */
+        getAvailableThemes: function() {
+            return [...AVAILABLE_THEMES];
+        },
+
+        /**
+         * Get theme display name
+         * @param {string} theme - Theme key
+         * @returns {string} Display name
+         */
+        getThemeDisplayName: function(theme) {
+            const names = {
+                'neon': 'Neon Industrial',
+                'light': 'Daylight',
+                'brand': 'Zanobot'
+            };
+            return names[theme] || theme;
+        },
+
+        /**
+         * Get theme description
+         * @param {string} theme - Theme key
+         * @returns {string} Description
+         */
+        getThemeDescription: function(theme) {
+            const descriptions = {
+                'neon': 'Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.',
+                'light': 'Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.',
+                'brand': 'Original Zanobot Design. Ausgewogen & professionell.'
+            };
+            return descriptions[theme] || '';
         },
 
         /**
