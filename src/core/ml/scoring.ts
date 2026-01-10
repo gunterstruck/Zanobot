@@ -221,3 +221,99 @@ export function calculateDegradation(previousScore: number, currentScore: number
   const degradation = previousScore - currentScore;
   return Math.round(degradation * 10) / 10;
 }
+
+/**
+ * UI Post-Processing Filter for score smoothing
+ *
+ * Implements the filtering strategy from Technical Report (p.12):
+ * 1. Take last 10 calculated scores
+ * 2. Sort by value
+ * 3. Remove 2 highest values
+ * 4. Remove 2 lowest values
+ * 5. Calculate mean of remaining 6 values
+ *
+ * This prevents display "jitter" and provides stable readings.
+ *
+ * @param scores - Array of recent health scores (should contain at least 10 values)
+ * @returns Filtered (smoothed) health score
+ */
+export function filterHealthScoreForDisplay(scores: number[]): number {
+  // Need at least 10 scores for proper filtering
+  if (scores.length < 10) {
+    // Fallback: return mean of available scores
+    if (scores.length === 0) return 0;
+    return scores.reduce((sum, val) => sum + val, 0) / scores.length;
+  }
+
+  // Take last 10 scores
+  const last10 = scores.slice(-10);
+
+  // Sort ascending
+  const sorted = [...last10].sort((a, b) => a - b);
+
+  // Remove 2 lowest (indices 0, 1) and 2 highest (indices 8, 9)
+  const trimmed = sorted.slice(2, 8);
+
+  // Calculate mean of remaining 6 values
+  const mean = trimmed.reduce((sum, val) => sum + val, 0) / trimmed.length;
+
+  return Math.round(mean * 10) / 10; // Round to 1 decimal
+}
+
+/**
+ * Score History Manager
+ *
+ * Manages a rolling buffer of health scores for filtering.
+ */
+export class ScoreHistory {
+  private scores: number[] = [];
+  private maxSize: number = 10;
+
+  /**
+   * Add a new score to the history
+   *
+   * @param score - Health score to add
+   */
+  addScore(score: number): void {
+    this.scores.push(score);
+
+    // Keep only last maxSize scores
+    if (this.scores.length > this.maxSize) {
+      this.scores.shift();
+    }
+  }
+
+  /**
+   * Get filtered score for display
+   *
+   * @returns Filtered health score
+   */
+  getFilteredScore(): number {
+    return filterHealthScoreForDisplay(this.scores);
+  }
+
+  /**
+   * Get all scores
+   *
+   * @returns Array of all scores
+   */
+  getAllScores(): number[] {
+    return [...this.scores];
+  }
+
+  /**
+   * Clear all scores
+   */
+  clear(): void {
+    this.scores = [];
+  }
+
+  /**
+   * Check if history has enough scores for reliable filtering
+   *
+   * @returns True if >= 10 scores available
+   */
+  hasFullHistory(): boolean {
+    return this.scores.length >= 10;
+  }
+}

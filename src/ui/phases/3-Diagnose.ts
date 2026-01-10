@@ -12,11 +12,11 @@
 
 import { extractFeatures, DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
 import { inferGMIA } from '@core/ml/gmia.js';
-import { generateDiagnosisResult } from '@core/ml/scoring.js';
+import { generateDiagnosisResult, calculateHealthScore, filterHealthScoreForDisplay, classifyHealthStatus } from '@core/ml/scoring.js';
 import { saveDiagnosis } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
-import type { Machine } from '@data/types.js';
+import type { Machine, DiagnosisResult } from '@data/types.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -147,28 +147,51 @@ export class DiagnosePhase {
       // Perform inference
       console.log('🧠 Running GMIA inference...');
       const cosineSimilarities = inferGMIA(this.machine.referenceModel, features);
-      console.log(`   Cosine similarities calculated`);
+      console.log(`   Cosine similarities: ${cosineSimilarities.length} values`);
 
-      // Generate diagnosis result
+      // Calculate individual health scores for each chunk
+      const individualScores = cosineSimilarities.map(cosine =>
+        calculateHealthScore(cosine, this.machine.referenceModel!.scalingConstant)
+      );
+
+      // Apply UI Post-Processing Filter (Report p.12)
+      // Take last 10 scores, remove 2 highest/lowest, calculate mean
+      const filteredScore = individualScores.length >= 10
+        ? filterHealthScoreForDisplay(individualScores)
+        : individualScores.reduce((sum, s) => sum + s, 0) / individualScores.length;
+
+      console.log(`   Individual scores: ${individualScores.length}`);
+      console.log(`   Raw score range: ${Math.min(...individualScores).toFixed(1)}-${Math.max(...individualScores).toFixed(1)}%`);
+      console.log(`   Filtered score: ${filteredScore.toFixed(1)}%`);
+
+      // Generate diagnosis result with filtered score
       const diagnosis = generateDiagnosisResult(
         this.machine.referenceModel,
         cosineSimilarities,
         this.machine.id
       );
 
+      // Override with filtered score for display
+      // Reclassify status based on filtered score
+      const finalDiagnosis: DiagnosisResult = {
+        ...diagnosis,
+        healthScore: filteredScore,
+        status: classifyHealthStatus(filteredScore),
+      };
+
       console.log(`✅ Diagnosis complete:`);
-      console.log(`   Health Score: ${diagnosis.healthScore}%`);
-      console.log(`   Status: ${diagnosis.status}`);
-      console.log(`   Confidence: ${diagnosis.confidence}%`);
+      console.log(`   Health Score: ${finalDiagnosis.healthScore}%`);
+      console.log(`   Status: ${finalDiagnosis.status}`);
+      console.log(`   Confidence: ${finalDiagnosis.confidence}%`);
 
       // Save to database
-      await saveDiagnosis(diagnosis);
+      await saveDiagnosis(finalDiagnosis);
 
       // Hide recording modal
       this.hideRecordingModal();
 
       // Show results
-      this.showResults(diagnosis);
+      this.showResults(finalDiagnosis);
     } catch (error) {
       console.error('Processing error:', error);
       alert('Failed to process recording. Please try again.');
