@@ -84,11 +84,86 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
       // Migration from v1 to v2: Fix keyPath if upgrading from old version
       if (db.objectStoreNames.contains('diagnoses') && oldVersion < 2) {
         console.log('🔄 Migrating diagnoses store: fixing keyPath from timestamp to id');
-        db.deleteObjectStore('diagnoses');
-        const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
-        diagnosisStore.createIndex('by-machine', 'machineId');
-        diagnosisStore.createIndex('by-timestamp', 'timestamp');
-        diagnosisStore.createIndex('by-status', 'status');
+
+        try {
+          // Step 1: Create temporary store for backup
+          const tempStore = db.createObjectStore('diagnoses_temp', { keyPath: 'id' });
+
+          // Step 2: Copy all data from old store to temp store
+          const oldStore = transaction.objectStore('diagnoses');
+          const cursorRequest = oldStore.openCursor();
+          let migratedCount = 0;
+
+          cursorRequest.onsuccess = (event) => {
+            const cursor = (event.target as IDBRequest).result;
+            if (cursor) {
+              const record = cursor.value as DiagnosisResult;
+
+              // Ensure record has 'id' field (add if missing)
+              if (!record.id) {
+                record.id = `diag-${record.timestamp}`;
+              }
+
+              // Add to temp store
+              tempStore.add(record);
+              migratedCount++;
+
+              cursor.continue();
+            } else {
+              console.log(`   📦 Backed up ${migratedCount} diagnoses`);
+            }
+          };
+
+          cursorRequest.onerror = () => {
+            console.error('   ❌ Cursor error during backup:', cursorRequest.error);
+          };
+
+          // Step 3: Delete old store
+          db.deleteObjectStore('diagnoses');
+
+          // Step 4: Rename temp store to 'diagnoses'
+          // Note: IndexedDB doesn't support renaming, so we create new and copy again
+          const newStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
+          newStore.createIndex('by-machine', 'machineId');
+          newStore.createIndex('by-timestamp', 'timestamp');
+          newStore.createIndex('by-status', 'status');
+
+          // Copy from temp to new store
+          const tempCursor = tempStore.openCursor();
+          let restoredCount = 0;
+
+          tempCursor.onsuccess = (event) => {
+            const cursor = (event.target as IDBRequest).result;
+            if (cursor) {
+              newStore.add(cursor.value);
+              restoredCount++;
+              cursor.continue();
+            } else {
+              // Step 5: Delete temp store
+              db.deleteObjectStore('diagnoses_temp');
+              console.log(`   ✅ Migrated ${restoredCount} diagnoses to new schema`);
+            }
+          };
+
+          tempCursor.onerror = () => {
+            console.error('   ❌ Failed to restore data:', tempCursor.error);
+            // Clean up temp store even on error
+            if (db.objectStoreNames.contains('diagnoses_temp')) {
+              db.deleteObjectStore('diagnoses_temp');
+            }
+          };
+        } catch (error) {
+          console.error('   ❌ Migration error:', error);
+          // Fallback: Just recreate the store (data loss, but app doesn't break)
+          if (db.objectStoreNames.contains('diagnoses')) {
+            db.deleteObjectStore('diagnoses');
+          }
+          const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
+          diagnosisStore.createIndex('by-machine', 'machineId');
+          diagnosisStore.createIndex('by-timestamp', 'timestamp');
+          diagnosisStore.createIndex('by-status', 'status');
+          console.warn('   ⚠️ Data could not be migrated. Old diagnoses may be lost.');
+        }
       }
     },
   });

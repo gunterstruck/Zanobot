@@ -15,10 +15,12 @@ import { updateMachineModel } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import {
   getRawAudioStream,
-  SmartStartManager,
   getSmartStartStatusMessage,
-  DEFAULT_SMART_START_CONFIG,
 } from '@core/audio/audioHelper.js';
+import {
+  AudioWorkletManager,
+  isAudioWorkletSupported,
+} from '@core/audio/audioWorkletHelper.js';
 import type { Machine, TrainingData } from '@data/types.js';
 
 export class ReferencePhase {
@@ -29,10 +31,10 @@ export class ReferencePhase {
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
   private recordingDuration: number = 10; // seconds
-  private smartStartManager: SmartStartManager | null = null;
-  private scriptProcessor: ScriptProcessorNode | null = null;
+  private audioWorkletManager: AudioWorkletManager | null = null;
   private isRecordingActive: boolean = false;
   private recordedBlob: Blob | null = null; // For reference audio export
+  private useAudioWorklet: boolean = true;
 
   constructor(machine: Machine) {
     this.machine = machine;
@@ -55,6 +57,12 @@ export class ReferencePhase {
     try {
       console.log('🎙️ Phase 2: Starting reference recording with Smart Start...');
 
+      // Check AudioWorklet support
+      this.useAudioWorklet = isAudioWorkletSupported();
+      if (!this.useAudioWorklet) {
+        console.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
+      }
+
       // Request microphone access using central helper
       this.mediaStream = await getRawAudioStream();
 
@@ -71,28 +79,36 @@ export class ReferencePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      // Initialize Smart Start Manager
-      this.smartStartManager = new SmartStartManager(DEFAULT_SMART_START_CONFIG, {
-        onStateChange: (state) => {
-          const statusMsg = getSmartStartStatusMessage(state);
-          this.updateStatusMessage(statusMsg);
-        },
-        onRecordingStart: () => {
-          console.log('✅ Smart Start: Recording started!');
-          this.updateStatusMessage('Aufnahme läuft');
-          this.actuallyStartRecording();
-        },
-        onTimeout: () => {
-          alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
-          this.stopRecording();
-        },
-      });
+      if (this.useAudioWorklet) {
+        // Initialize AudioWorklet Manager
+        this.audioWorkletManager = new AudioWorkletManager({
+          bufferSize: 16384,
+          onSmartStartStateChange: (state) => {
+            const statusMsg = getSmartStartStatusMessage(state);
+            this.updateStatusMessage(statusMsg);
+          },
+          onSmartStartComplete: (rms) => {
+            console.log(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+            this.updateStatusMessage('Aufnahme läuft');
+            this.actuallyStartRecording();
+          },
+          onSmartStartTimeout: () => {
+            alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+            this.stopRecording();
+          },
+        });
 
-      // Setup audio processing for Smart Start
-      this.setupSmartStartProcessing();
+        // Initialize AudioWorklet
+        await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
-      // Start Smart Start sequence
-      this.smartStartManager.start();
+        // Start Smart Start sequence
+        this.audioWorkletManager.startSmartStart();
+      } else {
+        // Fallback: Start recording immediately without Smart Start
+        console.log('⏭️ Skipping Smart Start (AudioWorklet not supported)');
+        this.updateStatusMessage('Aufnahme läuft');
+        setTimeout(() => this.actuallyStartRecording(), 500);
+      }
     } catch (error) {
       console.error('Recording error:', error);
       alert('Failed to access microphone. Please grant permission.');
@@ -117,16 +133,16 @@ export class ReferencePhase {
       this.visualizer.stop();
     }
 
+    // Cleanup AudioWorklet
+    if (this.audioWorkletManager) {
+      this.audioWorkletManager.cleanup();
+      this.audioWorkletManager = null;
+    }
+
     // Stop media stream tracks
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
-    }
-
-    // Disconnect script processor
-    if (this.scriptProcessor) {
-      this.scriptProcessor.disconnect();
-      this.scriptProcessor = null;
     }
 
     // Close audio context
@@ -139,30 +155,6 @@ export class ReferencePhase {
   }
 
   /**
-   * Setup audio processing for Smart Start (warm-up + signal detection)
-   */
-  private setupSmartStartProcessing(): void {
-    if (!this.audioContext || !this.mediaStream) {
-      return;
-    }
-
-    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-    this.scriptProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
-
-    this.scriptProcessor.onaudioprocess = (event) => {
-      if (!this.smartStartManager) return;
-
-      const inputData = event.inputBuffer.getChannelData(0);
-      const shouldRecord = this.smartStartManager.processAudio(inputData);
-
-      // Smart Start will trigger actuallyStartRecording() when ready
-    };
-
-    source.connect(this.scriptProcessor);
-    this.scriptProcessor.connect(this.audioContext.destination);
-  }
-
-  /**
    * Actually start recording after Smart Start completes
    */
   private actuallyStartRecording(): void {
@@ -170,10 +162,9 @@ export class ReferencePhase {
       return;
     }
 
-    // Disconnect Smart Start processor
-    if (this.scriptProcessor) {
-      this.scriptProcessor.disconnect();
-      this.scriptProcessor = null;
+    // Stop AudioWorklet Smart Start
+    if (this.audioWorkletManager) {
+      this.audioWorkletManager.stop();
     }
 
     // Setup media recorder
@@ -394,12 +385,6 @@ export class ReferencePhase {
     if (this.visualizer) {
       this.visualizer.destroy();
       this.visualizer = null;
-    }
-
-    // Reset Smart Start manager
-    if (this.smartStartManager) {
-      this.smartStartManager.reset();
-      this.smartStartManager = null;
     }
 
     // Clear audio chunks

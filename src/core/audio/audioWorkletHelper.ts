@@ -13,6 +13,7 @@
 export interface AudioWorkletConfig {
   bufferSize: number;
   onAudioData?: (writePos: number) => void;
+  onAudioChunk?: (chunk: Float32Array) => void;
   onSmartStartStateChange?: (state: SmartStartState) => void;
   onSmartStartComplete?: (rms: number) => void;
   onSmartStartTimeout?: () => void;
@@ -84,6 +85,14 @@ export class AudioWorkletManager {
         this.currentWritePos = message.writePos;
         if (this.config.onAudioData) {
           this.config.onAudioData(message.writePos);
+        }
+        break;
+
+      case 'audio-chunk':
+        // Receive audio chunk from worklet (zero-copy transfer)
+        if (message.chunk && this.config.onAudioChunk) {
+          const chunk = new Float32Array(message.chunk);
+          this.config.onAudioChunk(chunk);
         }
         break;
 

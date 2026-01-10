@@ -117,12 +117,14 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         const elapsed = now - this.warmUpStartTime;
         const remaining = Math.max(0, this.warmUpDuration - elapsed);
 
-        // Send status update
-        this.port.postMessage({
-          type: 'smart-start-state',
-          phase: 'warmup',
-          remainingWarmUp: remaining
-        });
+        // Send status update (throttled - every 100ms)
+        if (Math.floor(elapsed / 100) !== Math.floor((elapsed - 10) / 100)) {
+          this.port.postMessage({
+            type: 'smart-start-state',
+            phase: 'warmup',
+            remainingWarmUp: remaining
+          });
+        }
 
         if (elapsed >= this.warmUpDuration) {
           // Warm-up complete, start waiting for signal
@@ -180,13 +182,31 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         this.writePos = (this.writePos + 1) % this.bufferSize;
       }
 
-      // Notify main thread that we have new audio data
-      // Only send notification every 128 samples to reduce overhead
-      if (this.writePos % 128 === 0) {
+      // Send audio chunk to main thread for real-time processing
+      // Transfer a copy of the data every ~14553 samples (330ms at 44.1kHz)
+      // This matches the DSP window size for feature extraction
+      const targetChunkSize = 14553;
+
+      if (this.writePos % targetChunkSize === 0 && this.writePos >= targetChunkSize) {
+        // Extract latest chunk
+        const chunk = new Float32Array(targetChunkSize);
+
+        let readPos = this.writePos - targetChunkSize;
+        if (readPos < 0) {
+          readPos += this.bufferSize;
+        }
+
+        for (let i = 0; i < targetChunkSize; i++) {
+          chunk[i] = this.ringBuffer[readPos];
+          readPos = (readPos + 1) % this.bufferSize;
+        }
+
+        // Transfer chunk to main thread
         this.port.postMessage({
-          type: 'audio-data-ready',
+          type: 'audio-chunk',
+          chunk: chunk.buffer,
           writePos: this.writePos
-        });
+        }, [chunk.buffer]); // Transfer ownership for zero-copy
       }
     }
 
