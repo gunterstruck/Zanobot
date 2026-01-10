@@ -57,7 +57,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
   }
 
   dbInstance = await openDB<ZanobotDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion, newVersion, transaction) {
       // Create machines store
       if (!db.objectStoreNames.contains('machines')) {
         const machineStore = db.createObjectStore('machines', { keyPath: 'id' });
@@ -72,14 +72,18 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
         recordingStore.createIndex('by-timestamp', 'timestamp');
       }
 
-      // Create diagnoses store
+      // Create or migrate diagnoses store
       if (!db.objectStoreNames.contains('diagnoses')) {
+        // Fresh install: create with correct keyPath
         const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
         diagnosisStore.createIndex('by-machine', 'machineId');
         diagnosisStore.createIndex('by-timestamp', 'timestamp');
         diagnosisStore.createIndex('by-status', 'status');
-      } else if (db.version === 2) {
-        // Migration: Recreate diagnoses store with correct keyPath (id instead of timestamp)
+      }
+
+      // Migration from v1 to v2: Fix keyPath if upgrading from old version
+      if (db.objectStoreNames.contains('diagnoses') && oldVersion < 2) {
+        console.log('🔄 Migrating diagnoses store: fixing keyPath from timestamp to id');
         db.deleteObjectStore('diagnoses');
         const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
         diagnosisStore.createIndex('by-machine', 'machineId');
