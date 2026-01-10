@@ -24,19 +24,18 @@ import {
 import { saveDiagnosis } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
+import { getRawAudioStream, getSmartStartStatusMessage } from '@core/audio/audioHelper.js';
 import {
-  getRawAudioStream,
-  SmartStartManager,
-  getSmartStartStatusMessage,
-  DEFAULT_SMART_START_CONFIG,
-} from '@core/audio/audioHelper.js';
+  AudioWorkletManager,
+  isAudioWorkletSupported,
+} from '@core/audio/audioWorkletHelper.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 
 export class DiagnosePhase {
   private machine: Machine;
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
-  private scriptProcessor: ScriptProcessorNode | null = null;
+  private audioWorkletManager: AudioWorkletManager | null = null;
   private visualizer: AudioVisualizer | null = null;
   private healthGauge: HealthGauge | null = null;
 
@@ -45,17 +44,14 @@ export class DiagnosePhase {
   private ringBuffer: Float32Array;
   private ringBufferWritePos: number = 0;
   private scoreHistory: ScoreHistory;
-  private processingInterval: number | null = null;
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
   private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
-  private smartStartManager: SmartStartManager | null = null;
-  private smartStartActive: boolean = true; // Start with Smart Start enabled
+  private useAudioWorklet: boolean = true;
 
   // Configuration
   private chunkSize: number; // 330ms in samples
   private sampleRate: number = 44100;
-  private updateFrequency: number = 300; // ms (3-4x per second)
 
   constructor(machine: Machine) {
     this.machine = machine;
@@ -93,6 +89,12 @@ export class DiagnosePhase {
 
       console.log('🔴 Starting REAL-TIME diagnosis with Smart Start...');
 
+      // Check AudioWorklet support
+      this.useAudioWorklet = isAudioWorkletSupported();
+      if (!this.useAudioWorklet) {
+        console.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
+      }
+
       // Reset state for new diagnosis
       this.hasValidMeasurement = false;
       this.lastProcessedScore = 0;
@@ -102,7 +104,6 @@ export class DiagnosePhase {
       // Reset ring buffer to prevent contamination from previous runs
       this.ringBuffer.fill(0);
       this.ringBufferWritePos = 0;
-      this.smartStartActive = true;
 
       // Request microphone access using central helper (same as Phase 2!)
       this.mediaStream = await getRawAudioStream();
@@ -127,30 +128,46 @@ export class DiagnosePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      // Initialize Smart Start Manager (same config as Phase 2!)
-      this.smartStartManager = new SmartStartManager(DEFAULT_SMART_START_CONFIG, {
-        onStateChange: (state) => {
-          const statusMsg = getSmartStartStatusMessage(state);
-          this.updateSmartStartStatus(statusMsg);
-        },
-        onRecordingStart: () => {
-          console.log('✅ Smart Start: Diagnosis started!');
-          this.updateSmartStartStatus('Diagnose läuft');
-          this.smartStartActive = false; // Disable Smart Start, start real processing
-        },
-        onTimeout: () => {
-          alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
-          this.stopRecording();
-        },
-      });
+      if (this.useAudioWorklet) {
+        // Initialize AudioWorklet Manager
+        this.audioWorkletManager = new AudioWorkletManager({
+          bufferSize: this.chunkSize * 2,
+          onAudioChunk: (chunk) => {
+            // Real-time audio chunk received from worklet
+            if (this.isProcessing) {
+              this.processChunkDirectly(chunk);
+            }
+          },
+          onSmartStartStateChange: (state) => {
+            const statusMsg = getSmartStartStatusMessage(state);
+            this.updateSmartStartStatus(statusMsg);
+          },
+          onSmartStartComplete: (rms) => {
+            console.log(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+            this.updateSmartStartStatus('Diagnose läuft');
+            this.isProcessing = true; // Start processing incoming chunks
+          },
+          onSmartStartTimeout: () => {
+            alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+            this.stopRecording();
+          },
+        });
 
-      // Setup audio processing pipeline (with Smart Start integration)
-      this.setupAudioProcessing();
+        // Initialize AudioWorklet
+        await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
-      // Start Smart Start sequence
-      this.smartStartManager.start();
+        // Start Smart Start sequence
+        this.audioWorkletManager.startSmartStart();
+      } else {
+        // Fallback: Start processing immediately without Smart Start
+        console.log('⏭️ Skipping Smart Start (AudioWorklet not supported)');
+        this.updateSmartStartStatus('Diagnose läuft');
+        this.isProcessing = true;
+        // Note: Without AudioWorklet, real-time processing won't work optimally
+        alert('AudioWorklet nicht unterstützt. Diagnose-Funktionalität eingeschränkt.');
+      }
 
-      console.log('✅ Real-time diagnosis initialized with Smart Start!');
+      console.log('✅ Real-time diagnosis initialized!');
     } catch (error) {
       console.error('Diagnosis error:', error);
       alert('Failed to access microphone. Please grant permission.');
@@ -167,16 +184,10 @@ export class DiagnosePhase {
     // Stop processing
     this.isProcessing = false;
 
-    // Clear interval
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
-    }
-
-    // Disconnect audio processor
-    if (this.scriptProcessor) {
-      this.scriptProcessor.disconnect();
-      this.scriptProcessor = null;
+    // Cleanup AudioWorklet
+    if (this.audioWorkletManager) {
+      this.audioWorkletManager.cleanup();
+      this.audioWorkletManager = null;
     }
 
     // Stop visualizer
@@ -200,131 +211,54 @@ export class DiagnosePhase {
   }
 
   /**
-   * Setup audio processing with ScriptProcessorNode (with Smart Start integration)
-   */
-  private setupAudioProcessing(): void {
-    if (!this.audioContext || !this.mediaStream) {
-      return;
-    }
-
-    // Create source from microphone
-    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-
-    // Create ScriptProcessorNode (buffer size: 4096 samples)
-    this.scriptProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
-
-    // Process incoming audio data
-    this.scriptProcessor.onaudioprocess = (event) => {
-      const inputData = event.inputBuffer.getChannelData(0);
-
-      // Phase 1: Smart Start processing (warm-up + signal trigger)
-      if (this.smartStartActive && this.smartStartManager) {
-        const shouldStart = this.smartStartManager.processAudio(inputData);
-        if (shouldStart) {
-          // Smart Start complete, begin real-time processing
-          this.isProcessing = true;
-          this.startProcessingLoop();
-        }
-        return;
-      }
-
-      // Phase 2: Real-time diagnosis processing
-      if (!this.isProcessing) return;
-
-      // Write to ring buffer for analysis
-      this.writeToRingBuffer(inputData);
-    };
-
-    // Connect: source → processor → destination (for monitoring)
-    source.connect(this.scriptProcessor);
-    this.scriptProcessor.connect(this.audioContext.destination);
-  }
-
-  /**
-   * Write incoming audio to ring buffer
-   */
-  private writeToRingBuffer(samples: Float32Array): void {
-    for (let i = 0; i < samples.length; i++) {
-      this.ringBuffer[this.ringBufferWritePos] = samples[i];
-      this.ringBufferWritePos = (this.ringBufferWritePos + 1) % this.ringBuffer.length;
-    }
-  }
-
-  /**
-   * Read latest chunk from ring buffer
-   */
-  private readLatestChunk(): Float32Array {
-    const chunk = new Float32Array(this.chunkSize);
-
-    // Read backwards from current write position
-    let readPos = this.ringBufferWritePos - this.chunkSize;
-    if (readPos < 0) {
-      readPos += this.ringBuffer.length;
-    }
-
-    for (let i = 0; i < this.chunkSize; i++) {
-      chunk[i] = this.ringBuffer[readPos];
-      readPos = (readPos + 1) % this.ringBuffer.length;
-    }
-
-    return chunk;
-  }
-
-  /**
-   * Start processing loop (3-4x per second)
-   */
-  private startProcessingLoop(): void {
-    this.processingInterval = window.setInterval(() => {
-      this.processChunk();
-    }, this.updateFrequency);
-  }
-
-  /**
-   * Process current audio chunk and update UI
+   * Process audio chunk directly (called from AudioWorklet)
    *
-   * Pipeline:
-   * 1. Get latest 330ms from ring buffer
-   * 2. Extract features
-   * 3. GMIA inference
-   * 4. Calculate health score
-   * 5. Apply filtering (last 10 scores)
-   * 6. Update HealthGauge
+   * This is the NEW real-time processing pipeline using AudioWorklet.
+   * Receives chunks directly from the audio thread.
+   *
+   * @param chunk - Audio chunk from AudioWorklet (4096 samples)
    */
-  private processChunk(): void {
+  private processChunkDirectly(chunk: Float32Array): void {
     if (!this.machine.referenceModel) {
       return;
     }
 
     try {
-      // Step 1: Get latest chunk from ring buffer
-      const chunk = this.readLatestChunk();
+      // Ensure chunk is large enough for feature extraction (330ms = ~14553 samples at 44.1kHz)
+      if (chunk.length < this.chunkSize) {
+        // Buffer too small, wait for more data
+        return;
+      }
 
-      // Step 2: Extract features (Energy Spectral Densities)
-      const featureVector = extractFeaturesFromChunk(chunk, DEFAULT_DSP_CONFIG);
+      // Use only the required chunk size for feature extraction
+      const processingChunk = chunk.slice(0, this.chunkSize);
 
-      // Step 3: GMIA inference (cosine similarity)
+      // Step 1: Extract features (Energy Spectral Densities)
+      const featureVector = extractFeaturesFromChunk(processingChunk, DEFAULT_DSP_CONFIG);
+
+      // Step 2: GMIA inference (cosine similarity)
       const cosineSimilarities = inferGMIA(this.machine.referenceModel, [featureVector]);
       const cosineSimilarity = cosineSimilarities[0];
 
-      // Step 4: Calculate raw health score
+      // Step 3: Calculate raw health score
       const rawScore = calculateHealthScore(
         cosineSimilarity,
         this.machine.referenceModel.scalingConstant
       );
 
-      // Step 5: Add to history for filtering
+      // Step 4: Add to history for filtering
       this.scoreHistory.addScore(rawScore);
 
-      // Step 6: Get filtered score (trimmed mean of last 10)
+      // Step 5: Get filtered score (trimmed mean of last 10)
       const filteredScore = this.scoreHistory.getFilteredScore();
 
-      // Step 7: Classify status
+      // Step 6: Classify status
       const status = classifyHealthStatus(filteredScore);
 
-      // Step 8: Update UI in real-time
+      // Step 7: Update UI in real-time
       this.updateLiveDisplay(filteredScore, status);
 
-      // Step 9: Store for final save
+      // Step 8: Store for final save
       this.lastProcessedScore = filteredScore;
       this.lastProcessedStatus = status;
       this.hasValidMeasurement = true; // Mark that we have valid data
@@ -337,6 +271,7 @@ export class DiagnosePhase {
       console.error('Chunk processing error:', error);
     }
   }
+
 
   /**
    * Update Smart Start status message
@@ -565,11 +500,5 @@ export class DiagnosePhase {
 
     // Clear score history
     this.scoreHistory.clear();
-
-    // Reset Smart Start manager
-    if (this.smartStartManager) {
-      this.smartStartManager.reset();
-      this.smartStartManager = null;
-    }
   }
 }
