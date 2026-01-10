@@ -1,5 +1,30 @@
 {
+  "name": "zanobot",
+  "version": "2.0.0",
+  "description": "Zanobot - Industrial Machine Diagnostics PWA using GMIA Algorithm",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
-    "sharp": "^0.34.5"
-  }
+    "idb": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1"
+  },
+  "keywords": [
+    "pwa",
+    "machine-diagnostics",
+    "audio-analysis",
+    "gmia",
+    "typescript"
+  ],
+  "author": "Zanobot Team",
+  "license": "MIT"
 }
