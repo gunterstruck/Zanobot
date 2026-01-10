@@ -48,6 +48,7 @@ export class DiagnosePhase {
   private processingInterval: number | null = null;
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
+  private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
   private smartStartManager: SmartStartManager | null = null;
   private smartStartActive: boolean = true; // Start with Smart Start enabled
 
@@ -91,6 +92,12 @@ export class DiagnosePhase {
       }
 
       console.log('🔴 Starting REAL-TIME diagnosis with Smart Start...');
+
+      // Reset state for new diagnosis
+      this.hasValidMeasurement = false;
+      this.lastProcessedScore = 0;
+      this.lastProcessedStatus = 'UNKNOWN';
+      this.scoreHistory.clear();
 
       // Request microphone access using central helper (same as Phase 2!)
       this.mediaStream = await getRawAudioStream();
@@ -273,6 +280,7 @@ export class DiagnosePhase {
       // Step 9: Store for final save
       this.lastProcessedScore = filteredScore;
       this.lastProcessedStatus = status;
+      this.hasValidMeasurement = true; // Mark that we have valid data
 
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
@@ -347,8 +355,13 @@ export class DiagnosePhase {
       this.mediaStream.getTracks().forEach((track) => track.stop());
     }
 
-    // Save final diagnosis
-    this.saveFinalDiagnosis();
+    // Save final diagnosis ONLY if we have valid measurement data
+    if (this.hasValidMeasurement) {
+      this.saveFinalDiagnosis();
+    } else {
+      console.log('⚠️ No valid measurement data - skipping save');
+      this.hideRecordingModal();
+    }
   }
 
   /**

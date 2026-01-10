@@ -42,7 +42,7 @@ interface ZanobotDB extends DBSchema {
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented for keyPath fix: timestamp → id
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -74,7 +74,14 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
 
       // Create diagnoses store
       if (!db.objectStoreNames.contains('diagnoses')) {
-        const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'timestamp' });
+        const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
+        diagnosisStore.createIndex('by-machine', 'machineId');
+        diagnosisStore.createIndex('by-timestamp', 'timestamp');
+        diagnosisStore.createIndex('by-status', 'status');
+      } else if (db.version === 2) {
+        // Migration: Recreate diagnoses store with correct keyPath (id instead of timestamp)
+        db.deleteObjectStore('diagnoses');
+        const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
         diagnosisStore.createIndex('by-machine', 'machineId');
         diagnosisStore.createIndex('by-timestamp', 'timestamp');
         diagnosisStore.createIndex('by-status', 'status');
@@ -143,7 +150,7 @@ export async function deleteMachine(id: string): Promise<void> {
   // Delete associated diagnoses
   const diagnoses = await db.getAllFromIndex('diagnoses', 'by-machine', id);
   for (const diagnosis of diagnoses) {
-    await db.delete('diagnoses', diagnosis.timestamp as any); // timestamp is the key
+    await db.delete('diagnoses', diagnosis.id); // id is the key
   }
 
   console.log(`🗑️ Machine deleted: ${id}`);
