@@ -50,8 +50,10 @@ export function fft(signal: Float32Array): Complex[] {
  * Algorithm:
  * 1. Bit-reversal permutation
  * 2. Butterfly operations in log2(n) stages
+ *
+ * @internal - Exported only for testing purposes
  */
-function fftIterative(x: Complex[]): Complex[] {
+export function fftIterative(x: Complex[]): Complex[] {
   const n = x.length;
   const result = [...x]; // Copy input
 
@@ -117,9 +119,10 @@ function reverseBits(num: number, numBits: number): number {
  * Recursive FFT implementation (Cooley-Tukey)
  *
  * @deprecated Use iterative implementation instead (fftIterative)
- * Kept for reference and potential fallback.
+ * Kept for reference and validation testing.
+ * @internal - Exported only for testing purposes
  */
-function fftRecursive(x: Complex[]): Complex[] {
+export function fftRecursive(x: Complex[]): Complex[] {
   const n = x.length;
 
   // Base case
