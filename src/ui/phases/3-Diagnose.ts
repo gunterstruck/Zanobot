@@ -24,6 +24,12 @@ import {
 import { saveDiagnosis } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
+import {
+  getRawAudioStream,
+  SmartStartManager,
+  getSmartStartStatusMessage,
+  DEFAULT_SMART_START_CONFIG,
+} from '@core/audio/audioHelper.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 
 export class DiagnosePhase {
@@ -42,6 +48,8 @@ export class DiagnosePhase {
   private processingInterval: number | null = null;
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
+  private smartStartManager: SmartStartManager | null = null;
+  private smartStartActive: boolean = true; // Start with Smart Start enabled
 
   // Configuration
   private chunkSize: number; // 330ms in samples
@@ -72,7 +80,7 @@ export class DiagnosePhase {
   }
 
   /**
-   * Start real-time diagnosis
+   * Start real-time diagnosis with Smart Start
    */
   private async startDiagnosis(): Promise<void> {
     try {
@@ -82,17 +90,10 @@ export class DiagnosePhase {
         return;
       }
 
-      console.log('🔴 Starting REAL-TIME diagnosis...');
+      console.log('🔴 Starting REAL-TIME diagnosis with Smart Start...');
 
-      // Request microphone access
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          sampleRate: this.sampleRate,
-        },
-      });
+      // Request microphone access using central helper (same as Phase 2!)
+      this.mediaStream = await getRawAudioStream();
 
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
@@ -114,13 +115,30 @@ export class DiagnosePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      // Setup audio processing pipeline
+      // Initialize Smart Start Manager (same config as Phase 2!)
+      this.smartStartManager = new SmartStartManager(DEFAULT_SMART_START_CONFIG, {
+        onStateChange: (state) => {
+          const statusMsg = getSmartStartStatusMessage(state);
+          this.updateSmartStartStatus(statusMsg);
+        },
+        onRecordingStart: () => {
+          console.log('✅ Smart Start: Diagnosis started!');
+          this.updateSmartStartStatus('Diagnose läuft');
+          this.smartStartActive = false; // Disable Smart Start, start real processing
+        },
+        onTimeout: () => {
+          alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+          this.stopRecording();
+        },
+      });
+
+      // Setup audio processing pipeline (with Smart Start integration)
       this.setupAudioProcessing();
 
-      // Start processing loop (3-4x per second)
-      this.startProcessingLoop();
+      // Start Smart Start sequence
+      this.smartStartManager.start();
 
-      console.log('✅ Real-time diagnosis started!');
+      console.log('✅ Real-time diagnosis initialized with Smart Start!');
     } catch (error) {
       console.error('Diagnosis error:', error);
       alert('Failed to access microphone. Please grant permission.');
@@ -128,7 +146,7 @@ export class DiagnosePhase {
   }
 
   /**
-   * Setup audio processing with ScriptProcessorNode
+   * Setup audio processing with ScriptProcessorNode (with Smart Start integration)
    */
   private setupAudioProcessing(): void {
     if (!this.audioContext || !this.mediaStream) {
@@ -143,19 +161,29 @@ export class DiagnosePhase {
 
     // Process incoming audio data
     this.scriptProcessor.onaudioprocess = (event) => {
-      if (!this.isProcessing) return;
-
       const inputData = event.inputBuffer.getChannelData(0);
 
-      // Write to ring buffer
+      // Phase 1: Smart Start processing (warm-up + signal trigger)
+      if (this.smartStartActive && this.smartStartManager) {
+        const shouldStart = this.smartStartManager.processAudio(inputData);
+        if (shouldStart) {
+          // Smart Start complete, begin real-time processing
+          this.isProcessing = true;
+          this.startProcessingLoop();
+        }
+        return;
+      }
+
+      // Phase 2: Real-time diagnosis processing
+      if (!this.isProcessing) return;
+
+      // Write to ring buffer for analysis
       this.writeToRingBuffer(inputData);
     };
 
     // Connect: source → processor → destination (for monitoring)
     source.connect(this.scriptProcessor);
     this.scriptProcessor.connect(this.audioContext.destination);
-
-    this.isProcessing = true;
   }
 
   /**
@@ -252,6 +280,21 @@ export class DiagnosePhase {
       }
     } catch (error) {
       console.error('Chunk processing error:', error);
+    }
+  }
+
+  /**
+   * Update Smart Start status message
+   */
+  private updateSmartStartStatus(message: string): void {
+    const statusElement = document.getElementById('smart-start-status');
+    if (statusElement) {
+      statusElement.textContent = message;
+
+      // Hide once recording starts
+      if (message.includes('läuft')) {
+        statusElement.style.display = 'none';
+      }
     }
   }
 
@@ -381,12 +424,13 @@ export class DiagnosePhase {
       modalTitle.textContent = 'Live Diagnosis - Find Sweet Spot';
     }
 
-    // Add live score display
+    // Add Smart Start status and live score display
     const modalBody = document.querySelector('#recording-modal .modal-body');
     if (modalBody && !document.getElementById('live-health-score')) {
       const liveDisplay = document.createElement('div');
       liveDisplay.className = 'live-display';
       liveDisplay.innerHTML = `
+        <div id="smart-start-status" class="smart-start-status">Initialisierung...</div>
         <div class="live-score-container">
           <p class="live-hint">Move phone closer to machine for optimal signal</p>
           <p class="live-score-label">Current Health Score:</p>

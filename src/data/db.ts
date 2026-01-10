@@ -325,5 +325,56 @@ export async function exportData(): Promise<{
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
+  console.log('📦 Data exported successfully');
+
   return { machines, recordings, diagnoses };
+}
+
+/**
+ * Import data (restore from backup)
+ *
+ * @param data - Data to import
+ * @param merge - If true, merge with existing data; if false, replace all data
+ */
+export async function importData(
+  data: {
+    machines?: Machine[];
+    recordings?: Recording[];
+    diagnoses?: DiagnosisResult[];
+  },
+  merge: boolean = false
+): Promise<void> {
+  const db = await initDB();
+
+  // If not merging, clear existing data first
+  if (!merge) {
+    await clearAllData();
+    console.log('🗑️ Existing data cleared for import');
+  }
+
+  // Import machines
+  if (data.machines) {
+    for (const machine of data.machines) {
+      await db.put('machines', machine);
+    }
+    console.log(`📥 Imported ${data.machines.length} machines`);
+  }
+
+  // Import recordings
+  if (data.recordings) {
+    for (const recording of data.recordings) {
+      await db.put('recordings', recording);
+    }
+    console.log(`📥 Imported ${data.recordings.length} recordings`);
+  }
+
+  // Import diagnoses
+  if (data.diagnoses) {
+    for (const diagnosis of data.diagnoses) {
+      await db.put('diagnoses', diagnosis);
+    }
+    console.log(`📥 Imported ${data.diagnoses.length} diagnoses`);
+  }
+
+  console.log('✅ Data import complete');
 }
