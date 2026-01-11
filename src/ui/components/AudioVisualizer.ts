@@ -11,6 +11,8 @@
  * - Shows machine acoustic signatures (peaks, resonances)
  */
 
+import { logger } from '@utils/logger.js';
+
 export class AudioVisualizer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -71,7 +73,7 @@ export class AudioVisualizer {
     const bufferLength = this.analyser.frequencyBinCount; // fftSize / 2
     this.dataArray = new Uint8Array(bufferLength);
 
-    console.log(`📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins`);
+    logger.debug(`📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins`);
 
     // Start rendering at 60 FPS
     this.render();

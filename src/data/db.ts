@@ -9,6 +9,7 @@
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import type { Machine, Recording, DiagnosisResult, GMIAModel } from './types.js';
+import { logger } from '@utils/logger.js';
 
 /**
  * Database schema definition
@@ -83,7 +84,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
 
       // Migration from v1 to v2: Fix keyPath if upgrading from old version
       if (db.objectStoreNames.contains('diagnoses') && oldVersion < 2) {
-        console.log('🔄 Migrating diagnoses store: fixing keyPath from timestamp to id');
+        logger.info('🔄 Migrating diagnoses store: fixing keyPath from timestamp to id');
 
         try {
           // Step 1: Create temporary store for backup
@@ -110,12 +111,12 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
 
               cursor.continue();
             } else {
-              console.log(`   📦 Backed up ${migratedCount} diagnoses`);
+              logger.info(`   📦 Backed up ${migratedCount} diagnoses`);
             }
           };
 
           cursorRequest.onerror = () => {
-            console.error('   ❌ Cursor error during backup:', cursorRequest.error);
+            logger.error('   ❌ Cursor error during backup:', cursorRequest.error);
           };
 
           // Step 3: Delete old store
@@ -141,19 +142,19 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
             } else {
               // Step 5: Delete temp store
               db.deleteObjectStore('diagnoses_temp');
-              console.log(`   ✅ Migrated ${restoredCount} diagnoses to new schema`);
+              logger.info(`   ✅ Migrated ${restoredCount} diagnoses to new schema`);
             }
           };
 
           tempCursor.onerror = () => {
-            console.error('   ❌ Failed to restore data:', tempCursor.error);
+            logger.error('   ❌ Failed to restore data:', tempCursor.error);
             // Clean up temp store even on error
             if (db.objectStoreNames.contains('diagnoses_temp')) {
               db.deleteObjectStore('diagnoses_temp');
             }
           };
         } catch (error) {
-          console.error('   ❌ Migration error:', error);
+          logger.error('   ❌ Migration error:', error);
           // Fallback: Just recreate the store (data loss, but app doesn't break)
           if (db.objectStoreNames.contains('diagnoses')) {
             db.deleteObjectStore('diagnoses');
@@ -162,13 +163,13 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
           diagnosisStore.createIndex('by-machine', 'machineId');
           diagnosisStore.createIndex('by-timestamp', 'timestamp');
           diagnosisStore.createIndex('by-status', 'status');
-          console.warn('   ⚠️ Data could not be migrated. Old diagnoses may be lost.');
+          logger.warn('   ⚠️ Data could not be migrated. Old diagnoses may be lost.');
         }
       }
     },
   });
 
-  console.log('✅ Database initialized');
+  logger.info('✅ Database initialized');
 
   return dbInstance;
 }
@@ -185,7 +186,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
 export async function saveMachine(machine: Machine): Promise<void> {
   const db = await initDB();
   await db.put('machines', machine);
-  console.log(`💾 Machine saved: ${machine.id}`);
+  logger.info(`💾 Machine saved: ${machine.id}`);
 }
 
 /**
@@ -232,7 +233,7 @@ export async function deleteMachine(id: string): Promise<void> {
     await db.delete('diagnoses', diagnosis.id); // id is the key
   }
 
-  console.log(`🗑️ Machine deleted: ${id}`);
+  logger.info(`🗑️ Machine deleted: ${id}`);
 }
 
 /**
@@ -252,7 +253,7 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
   machine.referenceModel = model;
   await db.put('machines', machine);
 
-  console.log(`🧠 Model updated for machine: ${machineId}`);
+  logger.info(`🧠 Model updated for machine: ${machineId}`);
 }
 
 // ============================================================================
@@ -267,7 +268,7 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
 export async function saveRecording(recording: Recording): Promise<void> {
   const db = await initDB();
   await db.put('recordings', recording);
-  console.log(`🎙️ Recording saved: ${recording.id}`);
+  logger.info(`🎙️ Recording saved: ${recording.id}`);
 }
 
 /**
@@ -312,7 +313,7 @@ export async function saveDiagnosis(diagnosis: DiagnosisResult): Promise<void> {
     await db.put('machines', machine);
   }
 
-  console.log(`📊 Diagnosis saved for machine: ${diagnosis.machineId}`);
+  logger.info(`📊 Diagnosis saved for machine: ${diagnosis.machineId}`);
 }
 
 /**
@@ -373,7 +374,7 @@ export async function clearAllData(): Promise<void> {
   await db.clear('recordings');
   await db.clear('diagnoses');
 
-  console.log('🗑️ All data cleared');
+  logger.info('🗑️ All data cleared');
 }
 
 /**
@@ -411,7 +412,7 @@ export async function exportData(): Promise<{
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
-  console.log('📦 Data exported successfully');
+  logger.info('📦 Data exported successfully');
 
   return { machines, recordings, diagnoses };
 }
@@ -435,7 +436,7 @@ export async function importData(
   // If not merging, clear existing data first
   if (!merge) {
     await clearAllData();
-    console.log('🗑️ Existing data cleared for import');
+    logger.info('🗑️ Existing data cleared for import');
   }
 
   // Import machines
@@ -443,7 +444,7 @@ export async function importData(
     for (const machine of data.machines) {
       await db.put('machines', machine);
     }
-    console.log(`📥 Imported ${data.machines.length} machines`);
+    logger.info(`📥 Imported ${data.machines.length} machines`);
   }
 
   // Import recordings
@@ -451,7 +452,7 @@ export async function importData(
     for (const recording of data.recordings) {
       await db.put('recordings', recording);
     }
-    console.log(`📥 Imported ${data.recordings.length} recordings`);
+    logger.info(`📥 Imported ${data.recordings.length} recordings`);
   }
 
   // Import diagnoses
@@ -459,8 +460,8 @@ export async function importData(
     for (const diagnosis of data.diagnoses) {
       await db.put('diagnoses', diagnosis);
     }
-    console.log(`📥 Imported ${data.diagnoses.length} diagnoses`);
+    logger.info(`📥 Imported ${data.diagnoses.length} diagnoses`);
   }
 
-  console.log('✅ Data import complete');
+  logger.info('✅ Data import complete');
 }

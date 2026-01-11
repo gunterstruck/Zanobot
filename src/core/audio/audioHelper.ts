@@ -9,6 +9,8 @@
  * - Ensures identical audio parameters across Phase 2 and Phase 3
  */
 
+import { logger } from '@utils/logger.js';
+
 /**
  * Standard audio constraints for raw, unprocessed audio
  *
@@ -82,13 +84,13 @@ export async function getRawAudioStream(): Promise<MediaStream> {
     // Try exact constraints first
     return await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
   } catch (error) {
-    console.warn('⚠️ Exact constraints failed, using fallback:', error);
+    logger.warn('⚠️ Exact constraints failed, using fallback:', error);
 
     try {
       // Fall back to simple boolean constraints
       return await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS_FALLBACK);
     } catch (fallbackError) {
-      console.error('❌ Failed to get audio stream:', fallbackError);
+      logger.error('❌ Failed to get audio stream:', fallbackError);
       throw new Error('Failed to access microphone. Please grant permission and ensure no other app is using it.');
     }
   }
@@ -152,7 +154,7 @@ export class SmartStartManager {
    * Start the Smart Start sequence
    */
   public start(): void {
-    console.log('🚀 Smart Start: Beginning warm-up period...');
+    logger.info('🚀 Smart Start: Beginning warm-up period...');
     this.warmUpStartTime = Date.now();
     this.state = {
       phase: 'warmup',
@@ -179,7 +181,7 @@ export class SmartStartManager {
       this.state.remainingWarmUp = Math.max(0, this.config.warmUpDuration - elapsed);
 
       if (elapsed >= this.config.warmUpDuration) {
-        console.log('✅ Warm-up complete. Waiting for signal...');
+        logger.info('✅ Warm-up complete. Waiting for signal...');
         this.state.phase = 'waiting';
         this.waitStartTime = now;
         this.notifyStateChange();
@@ -195,7 +197,7 @@ export class SmartStartManager {
 
       // Check for timeout
       if (waitElapsed >= this.config.maxWaitTime) {
-        console.warn('⏱️ Signal timeout - no signal detected');
+        logger.warn('⏱️ Signal timeout - no signal detected');
         if (this.onTimeout) {
           this.onTimeout();
         }
@@ -206,7 +208,7 @@ export class SmartStartManager {
       const rms = calculateRMS(samples);
 
       if (rms >= this.config.signalThreshold) {
-        console.log(`🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${this.config.signalThreshold})`);
+        logger.info(`🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${this.config.signalThreshold})`);
         this.state.phase = 'recording';
         this.state.signalDetected = true;
         this.notifyStateChange();
@@ -259,7 +261,7 @@ export class SmartStartManager {
    * Skip warm-up and signal trigger (for manual start)
    */
   public skipToRecording(): void {
-    console.log('⏭️ Skipping to recording phase');
+    logger.info('⏭️ Skipping to recording phase');
     this.state = {
       phase: 'recording',
       remainingWarmUp: 0,

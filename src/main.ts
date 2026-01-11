@@ -11,6 +11,7 @@
 import { initDB, getDBStats } from '@data/db.js';
 import { Router } from './ui/router.js';
 import { notify } from '@utils/notifications.js';
+import { logger } from '@utils/logger.js';
 
 class ZanobotApp {
   private router: Router | null = null;
@@ -23,8 +24,8 @@ class ZanobotApp {
    * Initialize application
    */
   private async init(): Promise<void> {
-    console.log('🤖 Zanobot AI Assistant starting...');
-    console.log('   Version: 2.0.0 (GMIA Algorithm)');
+    logger.info('🤖 Zanobot AI Assistant starting...');
+    logger.info('   Version: 2.0.0 (GMIA Algorithm)');
 
     // Wait for DOM
     if (document.readyState === 'loading') {
@@ -40,16 +41,16 @@ class ZanobotApp {
   private async setup(): Promise<void> {
     try {
       // Initialize database
-      console.log('📦 Initializing database...');
+      logger.info('📦 Initializing database...');
       await initDB();
 
       const stats = await getDBStats();
-      console.log(`   Machines: ${stats.machines}`);
-      console.log(`   Recordings: ${stats.recordings}`);
-      console.log(`   Diagnoses: ${stats.diagnoses}`);
+      logger.info(`   Machines: ${stats.machines}`);
+      logger.info(`   Recordings: ${stats.recordings}`);
+      logger.info(`   Diagnoses: ${stats.diagnoses}`);
 
       // Initialize router (3-phase flow)
-      console.log('🔀 Initializing router...');
+      logger.info('🔀 Initializing router...');
       this.router = new Router();
 
       // Setup UI interactions
@@ -59,9 +60,9 @@ class ZanobotApp {
       // Register service worker
       this.registerServiceWorker();
 
-      console.log('✅ Zanobot initialized successfully!');
+      logger.info('✅ Zanobot initialized successfully!');
     } catch (error) {
-      console.error('❌ Initialization failed:', error);
+      logger.error('❌ Initialization failed:', error);
       notify.error('App konnte nicht initialisiert werden', error as Error, {
         title: 'Initialisierungsfehler',
         duration: 0
@@ -139,10 +140,10 @@ class ZanobotApp {
         navigator.serviceWorker
           .register('/service-worker.js')
           .then((registration) => {
-            console.log('✅ Service Worker registered:', registration);
+            logger.info('✅ Service Worker registered:', registration);
           })
           .catch((error) => {
-            console.error('❌ Service Worker registration failed:', error);
+            logger.error('❌ Service Worker registration failed:', error);
           });
       });
     }

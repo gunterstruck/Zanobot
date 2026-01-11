@@ -11,6 +11,7 @@ import { IdentifyPhase } from './phases/1-Identify.js';
 import { ReferencePhase } from './phases/2-Reference.js';
 import { DiagnosePhase } from './phases/3-Diagnose.js';
 import type { Machine } from '@data/types.js';
+import { logger } from '@utils/logger.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -31,7 +32,7 @@ export class Router {
    * Called when a machine is selected in Phase 1
    */
   private onMachineSelected(machine: Machine): void {
-    console.log(`🤖 Machine selected: ${machine.name} (${machine.id})`);
+    logger.info(`🤖 Machine selected: ${machine.name} (${machine.id})`);
 
     this.currentMachine = machine;
 
