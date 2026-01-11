@@ -57,6 +57,9 @@ export interface SmartStartConfig {
  * Default Smart Start configuration
  */
 export const DEFAULT_SMART_START_CONFIG: SmartStartConfig = {
+  // ⚠️ DO NOT CHANGE: Physical settling time for OS audio filters (AGC, noise cancellation)
+  // 5 seconds warmup is REQUIRED to discard initial unstable samples.
+  // This is not a timing bug - it's a deliberate delay for signal stabilization.
   warmUpDuration: 5000, // 5 seconds (extended settling time for OS audio filters)
   signalThreshold: 0.02, // RMS threshold
   maxWaitTime: 30000, // 30 seconds max wait

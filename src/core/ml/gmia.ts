@@ -31,6 +31,10 @@ import { logger } from '@utils/logger.js';
 /**
  * Regularization parameter from Technical Report (p.25)
  * "regularization factor lambda was set of 10^9"
+ *
+ * ⚠️ DO NOT CHANGE: Scientific constant from Siemens Report (p.25, Equation 2)
+ * Regularization parameter MUST be exactly 10^9 for GMIA algorithm correctness.
+ * Any modification will break the mathematical foundation of the system.
  */
 const LAMBDA = 1e9;
 
