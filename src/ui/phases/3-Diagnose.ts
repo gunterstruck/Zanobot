@@ -20,6 +20,7 @@ import {
   ScoreHistory,
   classifyHealthStatus,
   getClassificationDetails,
+  classifyDiagnosticState,
 } from '@core/ml/scoring.js';
 import { saveDiagnosis } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
@@ -46,6 +47,7 @@ export class DiagnosePhase {
   private scoreHistory: ScoreHistory;
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
+  private lastDetectedState: string = 'UNKNOWN'; // MULTICLASS: Store detected state
   private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
   private useAudioWorklet: boolean = true;
 
@@ -78,8 +80,8 @@ export class DiagnosePhase {
    */
   private async startDiagnosis(): Promise<void> {
     try {
-      // Check if machine has reference model
-      if (!this.machine.referenceModel) {
+      // Check if machine has reference models (multiclass)
+      if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         notify.error('Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.');
         return;
       }
@@ -96,6 +98,7 @@ export class DiagnosePhase {
       this.hasValidMeasurement = false;
       this.lastProcessedScore = 0;
       this.lastProcessedStatus = 'UNKNOWN';
+      this.lastDetectedState = 'UNKNOWN'; // MULTICLASS: Reset detected state
       this.scoreHistory.clear();
 
       // Request microphone access using central helper (same as Phase 2!)
@@ -147,7 +150,7 @@ export class DiagnosePhase {
             this.isProcessing = true; // Start processing incoming chunks
           },
           onSmartStartTimeout: () => {
-            notify.warning('Kein Signal erkannt', 'Bitte näher an die Maschine gehen und erneut versuchen.');
+            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
             this.stopRecording();
           },
         });
@@ -163,7 +166,7 @@ export class DiagnosePhase {
         this.updateSmartStartStatus('Diagnose läuft');
         this.isProcessing = true;
         // Note: Without AudioWorklet, real-time processing won't work optimally
-        notify.warning('AudioWorklet nicht unterstützt', 'Diagnose-Funktionalität eingeschränkt.');
+        notify.warning('Diagnose-Funktionalität eingeschränkt.', { title: 'AudioWorklet nicht unterstützt' });
       }
 
       logger.info('✅ Real-time diagnosis initialized!');
@@ -190,6 +193,7 @@ export class DiagnosePhase {
     this.hasValidMeasurement = false;
     this.lastProcessedScore = 0;
     this.lastProcessedStatus = 'UNKNOWN';
+    this.lastDetectedState = 'UNKNOWN'; // MULTICLASS: Reset detected state
 
     // Cleanup AudioWorklet
     if (this.audioWorkletManager) {
@@ -223,16 +227,13 @@ export class DiagnosePhase {
    * This is the NEW real-time processing pipeline using AudioWorklet.
    * Receives chunks directly from the audio thread.
    *
+   * MULTICLASS MODE: Uses classifyDiagnosticState() to compare against all trained models.
+   *
    * @param chunk - Audio chunk from AudioWorklet (4096 samples)
    */
   private processChunkDirectly(chunk: Float32Array): void {
-    // Validate reference model exists and has required fields
-    if (!this.machine.referenceModel) {
-      return;
-    }
-
-    if (!this.machine.referenceModel.weightVector || !this.machine.referenceModel.scalingConstant) {
-      logger.error('❌ Invalid reference model: missing weightVector or scalingConstant');
+    // Validate reference models exist
+    if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
       return;
     }
 
@@ -249,36 +250,29 @@ export class DiagnosePhase {
       // Step 1: Extract features (Energy Spectral Densities)
       const featureVector = extractFeaturesFromChunk(processingChunk, DEFAULT_DSP_CONFIG);
 
-      // Step 2: GMIA inference (cosine similarity)
-      const cosineSimilarities = inferGMIA(this.machine.referenceModel, [featureVector]);
-      const cosineSimilarity = cosineSimilarities[0];
+      // Step 2: MULTICLASS CLASSIFICATION
+      // Compare against all trained models and find best match
+      const diagnosis = classifyDiagnosticState(this.machine.referenceModels, featureVector);
 
-      // Step 3: Calculate raw health score
-      const rawScore = calculateHealthScore(
-        cosineSimilarity,
-        this.machine.referenceModel.scalingConstant
-      );
+      // Step 3: Add score to history for filtering
+      this.scoreHistory.addScore(diagnosis.healthScore);
 
-      // Step 4: Add to history for filtering
-      this.scoreHistory.addScore(rawScore);
-
-      // Step 5: Get filtered score (trimmed mean of last 10)
+      // Step 4: Get filtered score (trimmed mean of last 10)
       const filteredScore = this.scoreHistory.getFilteredScore();
 
-      // Step 6: Classify status
-      const status = classifyHealthStatus(filteredScore);
+      // Step 5: Update UI in real-time with detected state
+      const detectedState = diagnosis.metadata?.detectedState || 'UNKNOWN';
+      this.updateLiveDisplay(filteredScore, diagnosis.status, detectedState);
 
-      // Step 7: Update UI in real-time
-      this.updateLiveDisplay(filteredScore, status);
-
-      // Step 8: Store for final save
+      // Step 6: Store for final save (but use unfiltered diagnosis result)
       this.lastProcessedScore = filteredScore;
-      this.lastProcessedStatus = status;
+      this.lastProcessedStatus = diagnosis.status;
+      this.lastDetectedState = detectedState; // MULTICLASS: Store detected state
       this.hasValidMeasurement = true; // Mark that we have valid data
 
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
-        logger.debug(`📊 Live Score: ${filteredScore.toFixed(1)}% (${status})`);
+        logger.debug(`📊 Live Score: ${filteredScore.toFixed(1)}% | State: ${detectedState} (${diagnosis.status})`);
       }
     } catch (error) {
       logger.error('Chunk processing error:', error);
@@ -316,8 +310,10 @@ export class DiagnosePhase {
 
   /**
    * Update live display (HealthGauge)
+   *
+   * MULTICLASS: Shows detected state label (e.g., "Baseline", "Unwucht", etc.)
    */
-  private updateLiveDisplay(score: number, status: string): void {
+  private updateLiveDisplay(score: number, status: string, detectedState?: string): void {
     if (this.healthGauge) {
       this.healthGauge.draw(score, status);
     }
@@ -330,7 +326,12 @@ export class DiagnosePhase {
 
     const statusElement = document.getElementById('live-status');
     if (statusElement) {
-      statusElement.textContent = status;
+      // MULTICLASS: Show detected state in addition to status
+      if (detectedState && detectedState !== 'UNKNOWN') {
+        statusElement.textContent = `${status} | ${detectedState}`;
+      } else {
+        statusElement.textContent = status;
+      }
       statusElement.className = `live-status status-${status.toLowerCase()}`;
     }
   }
@@ -355,19 +356,32 @@ export class DiagnosePhase {
 
   /**
    * Save final diagnosis result
+   *
+   * MULTICLASS: Includes detected state in metadata
    */
   private async saveFinalDiagnosis(): Promise<void> {
     try {
-      if (!this.machine.referenceModel) {
-        throw new Error('No reference model available');
+      if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
+        throw new Error('No reference models available');
       }
 
       // Use the last processed (filtered) score
       const finalScore = this.lastProcessedScore;
       const finalStatus = this.lastProcessedStatus;
+      const detectedState = this.lastDetectedState;
 
       // Get classification details
       const classification = getClassificationDetails(finalScore);
+
+      // MULTICLASS: Generate hint based on detected state
+      let hint = classification.recommendation;
+      if (detectedState !== 'UNKNOWN') {
+        if (finalStatus === 'healthy') {
+          hint = `Maschine läuft im Normalzustand "${detectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
+        } else if (finalStatus === 'faulty') {
+          hint = `Fehlerzustand erkannt: "${detectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
+        }
+      }
 
       // Create diagnosis result
       const diagnosis: DiagnosisResult = {
@@ -382,10 +396,16 @@ export class DiagnosePhase {
           processingMode: 'real-time',
           totalScores: this.scoreHistory.getAllScores().length,
           scoreHistory: this.scoreHistory.getAllScores().slice(-10),
+          detectedState, // MULTICLASS: Store detected state
+          multiclassMode: true,
+          evaluatedModels: this.machine.referenceModels.length,
+        },
+        analysis: {
+          hint,
         },
       };
 
-      logger.info(`💾 Saving final diagnosis: ${finalScore.toFixed(1)}% (${finalStatus})`);
+      logger.info(`💾 Saving final diagnosis: ${finalScore.toFixed(1)}% | State: ${detectedState} (${finalStatus})`);
 
       // Save to database
       await saveDiagnosis(diagnosis);
@@ -486,7 +506,13 @@ export class DiagnosePhase {
     // Update status
     const resultStatus = document.getElementById('result-status');
     if (resultStatus) {
-      resultStatus.textContent = diagnosis.status;
+      // MULTICLASS: Show detected state if available
+      const detectedState = diagnosis.metadata?.detectedState;
+      if (detectedState && detectedState !== 'UNKNOWN') {
+        resultStatus.textContent = `${diagnosis.status} | ${detectedState}`;
+      } else {
+        resultStatus.textContent = diagnosis.status;
+      }
       resultStatus.className = `result-status status-${diagnosis.status.toLowerCase()}`;
     }
 
@@ -499,8 +525,14 @@ export class DiagnosePhase {
     // Update analysis hint
     const analysisHint = document.getElementById('analysis-hint');
     if (analysisHint) {
-      const classification = getClassificationDetails(diagnosis.healthScore);
-      analysisHint.textContent = classification.recommendation;
+      // MULTICLASS: Use diagnosis.analysis.hint if available (contains detected state info)
+      if (diagnosis.analysis?.hint) {
+        analysisHint.textContent = diagnosis.analysis.hint;
+      } else {
+        // Fallback to old method
+        const classification = getClassificationDetails(diagnosis.healthScore);
+        analysisHint.textContent = classification.recommendation;
+      }
     }
 
     // Show modal

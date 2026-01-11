@@ -110,7 +110,7 @@ export class ReferencePhase {
             this.actuallyStartRecording();
           },
           onSmartStartTimeout: () => {
-            notify.warning('Kein Signal erkannt', 'Bitte näher an die Maschine gehen und erneut versuchen.');
+            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
             this.stopRecording();
           },
         });
@@ -353,7 +353,7 @@ export class ReferencePhase {
    */
   private exportReferenceAudio(filename: string): void {
     if (!this.recordedBlob) {
-      notify.warning('Keine Audiodatei verfügbar', 'Bitte zuerst eine Referenzaufnahme erstellen.');
+      notify.warning('Bitte zuerst eine Referenzaufnahme erstellen.', { title: 'Keine Audiodatei verfügbar' });
       return;
     }
 
@@ -628,11 +628,16 @@ export class ReferencePhase {
     this.recordedBlob = null;
 
     // Show info message
-    notify.info('Aufnahme verworfen', 'Sie können eine neue Referenzaufnahme starten.');
+    notify.info('Sie können eine neue Referenzaufnahme starten.', { title: 'Aufnahme verworfen' });
   }
 
   /**
    * Handle "Save" button click - train model and save to database
+   *
+   * MULTICLASS WORKFLOW:
+   * 1. First recording: Always labeled "Baseline" (healthy state)
+   * 2. Additional recordings: User provides custom label (e.g., "Unwucht", "Lagerschaden")
+   * 3. After save: Show list of trained states + "Train Another State" button
    *
    * IMPORTANT: If quality is BAD, show additional confirmation warning
    */
@@ -660,21 +665,63 @@ export class ReferencePhase {
     }
 
     try {
+      // MULTICLASS: Determine label based on number of existing models
+      let label: string;
+
+      if (this.machine.referenceModels.length === 0) {
+        // First recording: Always "Baseline" (healthy state)
+        label = 'Baseline';
+        logger.info('First recording - using label: "Baseline"');
+      } else {
+        // Additional recordings: Ask user for label
+        const userLabel = prompt(
+          'Geben Sie einen Namen für diesen Maschinenzustand ein:\n\n' +
+          'Beispiele:\n' +
+          '• Unwucht simuliert\n' +
+          '• Lagerschaden\n' +
+          '• Lüfterfehler\n' +
+          '• Überlast',
+          ''
+        );
+
+        if (!userLabel || userLabel.trim() === '') {
+          logger.info('User cancelled - no label provided');
+          notify.warning('Bitte einen Namen eingeben', { title: 'Abgebrochen' });
+          return;
+        }
+
+        label = userLabel.trim();
+        logger.info(`Additional recording - using label: "${label}"`);
+      }
+
       logger.info('💾 Saving reference model...');
 
       // Train GMIA model
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
 
+      // Add label to model
+      model.label = label;
+
       // Save model to database
       await updateMachineModel(this.machine.id, model);
 
-      logger.info('✅ Reference model trained and saved!');
+      logger.info(`✅ Reference model "${label}" trained and saved!`);
+
+      // Reload machine to get updated referenceModels array
+      const { getMachine } = await import('@data/db.js');
+      const updatedMachine = await getMachine(this.machine.id);
+      if (updatedMachine) {
+        this.machine = updatedMachine;
+      }
 
       // Hide review modal
       this.hideReviewModal();
 
       // Show success with option to download reference audio
       this.showSuccessWithExport();
+
+      // Show multiclass status (list of trained states + "Train Another" button)
+      this.showMulticlassStatus();
 
       // Clear stored data
       this.currentAudioBuffer = null;
@@ -688,6 +735,74 @@ export class ReferencePhase {
         duration: 0
       });
     }
+  }
+
+  /**
+   * Show multiclass training status
+   *
+   * Displays:
+   * - List of all trained states (with labels and dates)
+   * - "Train Another State" button
+   */
+  private showMulticlassStatus(): void {
+    // Find or create status container
+    let statusContainer = document.getElementById('multiclass-status');
+    if (!statusContainer) {
+      // Create container if it doesn't exist
+      const parentContainer = document.querySelector('.phase-content');
+      if (!parentContainer) return;
+
+      statusContainer = document.createElement('div');
+      statusContainer.id = 'multiclass-status';
+      statusContainer.className = 'multiclass-status';
+      parentContainer.appendChild(statusContainer);
+    }
+
+    // Clear existing content
+    statusContainer.innerHTML = '';
+
+    // Title
+    const title = document.createElement('h3');
+    title.textContent = 'Trainierte Zustände';
+    statusContainer.appendChild(title);
+
+    // List of trained states
+    const stateList = document.createElement('ul');
+    stateList.className = 'state-list';
+
+    this.machine.referenceModels.forEach((model, index) => {
+      const li = document.createElement('li');
+      li.className = 'state-item';
+
+      const date = new Date(model.trainingDate);
+      const dateStr = date.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      li.innerHTML = `
+        <span class="state-label">${model.label}</span>
+        <span class="state-date">${dateStr}</span>
+      `;
+
+      stateList.appendChild(li);
+    });
+
+    statusContainer.appendChild(stateList);
+
+    // "Train Another State" button
+    const trainAnotherBtn = document.createElement('button');
+    trainAnotherBtn.id = 'train-another-btn';
+    trainAnotherBtn.className = 'btn btn-secondary';
+    trainAnotherBtn.textContent = 'Weiteren Zustand trainieren';
+    trainAnotherBtn.onclick = () => this.startRecording();
+    statusContainer.appendChild(trainAnotherBtn);
+
+    // Show container
+    statusContainer.style.display = 'block';
   }
 
   /**

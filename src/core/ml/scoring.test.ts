@@ -14,12 +14,14 @@ import {
   ScoreHistory,
   calculateScoreStatistics,
   calculateDegradation,
+  classifyDiagnosticState,
 } from './scoring.js';
-import type { GMIAModel } from '@data/types.js';
+import type { GMIAModel, FeatureVector } from '@data/types.js';
 
 describe('Health Scoring', () => {
   const mockModel: GMIAModel = {
     machineId: 'test-machine',
+    label: 'Baseline',
     weightVector: new Float64Array([1, 2, 3]),
     regularization: 1e9,
     scalingConstant: 2.5,
@@ -261,6 +263,171 @@ describe('Health Scoring', () => {
       const degradation = calculateDegradation(80, 80);
 
       expect(degradation).toBe(0);
+    });
+  });
+
+  describe('classifyDiagnosticState() - MULTICLASS DIAGNOSIS', () => {
+    // Create test models with different characteristics
+    const baselineModel: GMIAModel = {
+      machineId: 'test-machine',
+      label: 'Baseline',
+      weightVector: new Float64Array([1.0, 0.5, 0.3]),
+      regularization: 1e9,
+      scalingConstant: 2.5,
+      featureDimension: 3,
+      trainingDate: Date.now(),
+      trainingDuration: 10,
+      sampleRate: 44100,
+      metadata: {
+        meanCosineSimilarity: 0.95,
+        targetScore: 0.9,
+      },
+    };
+
+    const faultModel1: GMIAModel = {
+      machineId: 'test-machine',
+      label: 'Unwucht',
+      weightVector: new Float64Array([0.3, 1.0, 0.5]),
+      regularization: 1e9,
+      scalingConstant: 2.5,
+      featureDimension: 3,
+      trainingDate: Date.now(),
+      trainingDuration: 10,
+      sampleRate: 44100,
+      metadata: {
+        meanCosineSimilarity: 0.95,
+        targetScore: 0.9,
+      },
+    };
+
+    const faultModel2: GMIAModel = {
+      machineId: 'test-machine',
+      label: 'Lagerschaden',
+      weightVector: new Float64Array([0.5, 0.3, 1.0]),
+      regularization: 1e9,
+      scalingConstant: 2.5,
+      featureDimension: 3,
+      trainingDate: Date.now(),
+      trainingDuration: 10,
+      sampleRate: 44100,
+      metadata: {
+        meanCosineSimilarity: 0.95,
+        targetScore: 0.9,
+      },
+    };
+
+    it('should select model with highest score', () => {
+      const models = [baselineModel, faultModel1, faultModel2];
+
+      // Feature vector that matches baseline model closely
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.95, 0.48, 0.29]),
+        absoluteFeatures: new Float64Array([0.95, 0.48, 0.29]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      // Should match Baseline (highest similarity)
+      expect(result.metadata?.detectedState).toBe('Baseline');
+      expect(result.status).toBe('healthy');
+    });
+
+    it('should detect fault state when feature matches fault model', () => {
+      const models = [baselineModel, faultModel1, faultModel2];
+
+      // Feature vector that matches fault model 1 (Unwucht)
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.29, 0.95, 0.48]),
+        absoluteFeatures: new Float64Array([0.29, 0.95, 0.48]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      // Should match Unwucht (fault state)
+      expect(result.metadata?.detectedState).toBe('Unwucht');
+      expect(result.status).toBe('faulty');
+    });
+
+    it('should detect UNKNOWN for low scores (< 70%)', () => {
+      const models = [baselineModel, faultModel1, faultModel2];
+
+      // Feature vector with very low similarity to all models
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.1, 0.1, 0.1]),
+        absoluteFeatures: new Float64Array([0.1, 0.1, 0.1]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      // Should be UNKNOWN (anomaly that doesn't match any known state)
+      expect(result.metadata?.detectedState).toBe('UNKNOWN');
+      expect(result.status).toBe('UNKNOWN');
+      expect(result.healthScore).toBeLessThan(70);
+    });
+
+    it('should evaluate all models and store count in metadata', () => {
+      const models = [baselineModel, faultModel1, faultModel2];
+
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.5, 0.5, 0.5]),
+        absoluteFeatures: new Float64Array([0.5, 0.5, 0.5]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      expect(result.metadata?.multiclassMode).toBe(true);
+      expect(result.metadata?.evaluatedModels).toBe(3);
+    });
+
+    it('should throw error if no models provided', () => {
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.5, 0.5, 0.5]),
+        absoluteFeatures: new Float64Array([0.5, 0.5, 0.5]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      expect(() => classifyDiagnosticState([], featureVector)).toThrow();
+    });
+
+    it('should include analysis hint with detected state', () => {
+      const models = [baselineModel, faultModel1];
+
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.95, 0.48, 0.29]),
+        absoluteFeatures: new Float64Array([0.95, 0.48, 0.29]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      expect(result.analysis?.hint).toBeDefined();
+      expect(result.analysis?.hint).toContain('Baseline');
+    });
+
+    it('should work with single model (backward compatibility)', () => {
+      const models = [baselineModel];
+
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.95, 0.48, 0.29]),
+        absoluteFeatures: new Float64Array([0.95, 0.48, 0.29]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      expect(result.metadata?.detectedState).toBe('Baseline');
+      expect(result.metadata?.evaluatedModels).toBe(1);
     });
   });
 });

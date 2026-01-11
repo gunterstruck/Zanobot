@@ -107,14 +107,15 @@ export class Router {
       userName.textContent = machine.name;
     }
 
-    // Show reference status
+    // Show reference status (MULTICLASS)
     const recordSection = document.getElementById('record-reference-content');
     if (recordSection) {
       const description = recordSection.querySelector('.sub-description');
       if (description) {
-        if (machine.referenceModel) {
-          const date = new Date(machine.referenceModel.trainingDate).toLocaleDateString();
-          description.textContent = `Referenz vorhanden (${date}) - Neue Aufnahme erstellen`;
+        if (machine.referenceModels && machine.referenceModels.length > 0) {
+          const count = machine.referenceModels.length;
+          const latestDate = new Date(machine.referenceModels[machine.referenceModels.length - 1].trainingDate).toLocaleDateString();
+          description.textContent = `${count} Zustand${count > 1 ? 'e' : ''} trainiert (zuletzt: ${latestDate}) - Weitere hinzufügen`;
         } else {
           description.textContent = '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)';
         }
@@ -126,7 +127,7 @@ export class Router {
     if (diagnoseSection) {
       const description = diagnoseSection.querySelector('.sub-description');
       if (description) {
-        if (machine.referenceModel) {
+        if (machine.referenceModels && machine.referenceModels.length > 0) {
           description.textContent = 'Live-Analyse durchführen';
         } else {
           description.textContent = '⚠️ Bitte erst Referenz aufnehmen';

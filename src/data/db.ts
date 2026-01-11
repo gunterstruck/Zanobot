@@ -43,7 +43,7 @@ interface ZanobotDB extends DBSchema {
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 2; // Incremented for keyPath fix: timestamp → id
+const DB_VERSION = 3; // Incremented for multiclass diagnosis: referenceModel → referenceModels[]
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -110,6 +110,30 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
             diagnosisStore.createIndex('by-timestamp', 'timestamp');
             diagnosisStore.createIndex('by-status', 'status');
           }
+        }
+      }
+
+      // Migration from v2 to v3: Multiclass diagnosis - HARD RESET
+      // Breaking change: referenceModel → referenceModels[] + label field
+      // We cannot migrate old single-model data to multiclass, so we clear everything
+      if (oldVersion < 3) {
+        logger.warn('🔄 Migrating database from v2 to v3 (Multiclass Diagnosis)');
+        logger.warn('   ⚠️ BREAKING CHANGE: referenceModel → referenceModels[]');
+        logger.warn('   ⚠️ All existing data will be cleared (machines, recordings, diagnoses)');
+
+        try {
+          // Clear all stores to start fresh
+          const machineStore = transaction.objectStore('machines');
+          const recordingStore = transaction.objectStore('recordings');
+          const diagnosisStore = transaction.objectStore('diagnoses');
+
+          machineStore.clear();
+          recordingStore.clear();
+          diagnosisStore.clear();
+
+          logger.info('   ✅ Database reset complete - ready for multiclass diagnosis');
+        } catch (error) {
+          logger.error('   ❌ Migration error:', error);
         }
       }
     },
@@ -183,10 +207,10 @@ export async function deleteMachine(id: string): Promise<void> {
 }
 
 /**
- * Update machine's reference model
+ * Add a reference model to a machine's model collection
  *
  * @param machineId - Machine ID
- * @param model - GMIA model
+ * @param model - GMIA model to add
  */
 export async function updateMachineModel(machineId: string, model: GMIAModel): Promise<void> {
   const db = await initDB();
@@ -196,10 +220,11 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
     throw new Error(`Machine not found: ${machineId}`);
   }
 
-  machine.referenceModel = model;
+  // Add model to the collection
+  machine.referenceModels.push(model);
   await db.put('machines', machine);
 
-  logger.info(`🧠 Model updated for machine: ${machineId}`);
+  logger.info(`🧠 Model '${model.label}' added to machine: ${machineId}`);
 }
 
 // ============================================================================

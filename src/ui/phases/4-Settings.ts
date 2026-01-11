@@ -80,7 +80,7 @@ export class SettingsPhase {
       logger.info(`✅ Database exported: ${filename}`);
       notify.success(
         `Datei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`,
-        'Datenbank exportiert'
+        { title: 'Datenbank exportiert' }
       );
     } catch (error) {
       logger.error('Export error:', error);
@@ -151,7 +151,7 @@ export class SettingsPhase {
 
           notify.success(
             `Maschinen: ${stats.machines}\nAufnahmen: ${stats.recordings}\nDiagnosen: ${stats.diagnoses}\n\nModus: ${merge ? 'Zusammengeführt' : 'Ersetzt'}`,
-            'Datenbank importiert'
+            { title: 'Datenbank importiert' }
           );
 
           // Refresh stats display
@@ -206,7 +206,7 @@ export class SettingsPhase {
 
       await clearAllData();
 
-      notify.success('Alle Daten wurden gelöscht', 'Datenbank geleert');
+      notify.success('Alle Daten wurden gelöscht', { title: 'Datenbank geleert' });
 
       // Refresh stats display
       this.showStats();
