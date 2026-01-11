@@ -10,6 +10,7 @@
 
 import { initDB, getDBStats } from '@data/db.js';
 import { Router } from './ui/router.js';
+import { notify } from '@utils/notifications.js';
 
 class ZanobotApp {
   private router: Router | null = null;
@@ -61,7 +62,10 @@ class ZanobotApp {
       console.log('✅ Zanobot initialized successfully!');
     } catch (error) {
       console.error('❌ Initialization failed:', error);
-      alert('Failed to initialize app. Please refresh the page.');
+      notify.error('App konnte nicht initialisiert werden', error as Error, {
+        title: 'Initialisierungsfehler',
+        duration: 0
+      });
     }
   }
 
