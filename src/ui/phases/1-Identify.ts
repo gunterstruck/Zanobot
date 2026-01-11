@@ -125,6 +125,8 @@ export class IdentifyPhase {
     } catch (error: any) {
       logger.error('Failed to start scanner:', error);
       this.isScanning = false;
+      // Clean up scanner instance on error to prevent stale state
+      this.html5QrCode = null;
 
       // Check if it's a permission error
       if (error?.name === 'NotAllowedError' || error?.message?.includes('Permission')) {

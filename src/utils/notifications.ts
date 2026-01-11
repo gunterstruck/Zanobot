@@ -53,7 +53,13 @@ class NotificationManager {
     error?: Error | unknown,
     options?: Partial<NotificationOptions>
   ): void {
-    this.show('error', { message, ...options });
+    // Include error details in notification if available
+    let fullMessage = message;
+    if (error && error instanceof Error && error.message) {
+      fullMessage = `${message}\n\nDetails: ${error.message}`;
+    }
+
+    this.show('error', { message: fullMessage, ...options });
 
     if (error) {
       logger.error('❌ Error:', error, message);

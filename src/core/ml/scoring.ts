@@ -299,6 +299,11 @@ export function filterHealthScoreForDisplay(scores: number[]): number {
   // Remove 2 lowest (indices 0, 1) and 2 highest (indices 8, 9)
   const trimmed = sorted.slice(2, 8);
 
+  // Guard against empty array (should not happen, but prevents division by zero)
+  if (trimmed.length === 0) {
+    return sorted.reduce((sum, val) => sum + val, 0) / sorted.length;
+  }
+
   // Calculate mean of remaining 6 values
   const mean = trimmed.reduce((sum, val) => sum + val, 0) / trimmed.length;
 

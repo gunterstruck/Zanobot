@@ -29,7 +29,9 @@ class ZanobotApp {
 
     // Wait for DOM
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.setup());
+      document.addEventListener('DOMContentLoaded', async () => {
+        await this.setup();
+      });
     } else {
       await this.setup();
     }
