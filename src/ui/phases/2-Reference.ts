@@ -32,11 +32,13 @@ export class ReferencePhase {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
-  private recordingDuration: number = 10; // seconds
+  private recordingDuration: number = 15; // seconds (5s warmup + 10s actual recording)
+  private warmUpDuration: number = 5; // seconds (settling time for OS audio filters)
   private audioWorkletManager: AudioWorkletManager | null = null;
   private isRecordingActive: boolean = false;
   private recordedBlob: Blob | null = null; // For reference audio export
   private useAudioWorklet: boolean = true;
+  private recordingStartTime: number = 0; // Track when actual recording started
 
   constructor(machine: Machine) {
     this.machine = machine;
@@ -161,6 +163,9 @@ export class ReferencePhase {
 
   /**
    * Actually start recording after Smart Start completes
+   *
+   * Important: We record the FULL 15 seconds (including warmup) for debugging,
+   * but only use the last 10 seconds (after warmup) for training.
    */
   private actuallyStartRecording(): void {
     if (!this.mediaStream) {
@@ -176,6 +181,7 @@ export class ReferencePhase {
     this.audioChunks = [];
     this.mediaRecorder = new MediaRecorder(this.mediaStream);
     this.isRecordingActive = true;
+    this.recordingStartTime = Date.now();
 
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
@@ -188,10 +194,10 @@ export class ReferencePhase {
     // Start recording
     this.mediaRecorder.start();
 
-    // Update timer
+    // Update timer (shows dual-phase UI)
     this.startTimer();
 
-    // Auto-stop after duration
+    // Auto-stop after full duration (15 seconds)
     setTimeout(() => {
       this.stopRecording();
     }, this.recordingDuration * 1000);
@@ -206,6 +212,10 @@ export class ReferencePhase {
 
   /**
    * Process recorded audio and train model
+   *
+   * CRITICAL IMPLEMENTATION:
+   * - File download: Full 15 seconds (for engineer debugging)
+   * - Model training: Only seconds 5-15 (after OS audio filters have settled)
    */
   private async processRecording(): Promise<void> {
     try {
@@ -213,7 +223,7 @@ export class ReferencePhase {
         throw new Error('Audio context not initialized');
       }
 
-      // Create blob from chunks
+      // Create blob from chunks (FULL 15 seconds for download)
       const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
       this.recordedBlob = blob; // Save for export
 
@@ -223,9 +233,39 @@ export class ReferencePhase {
 
       logger.info(`🎙️ Recording complete: ${audioBuffer.duration.toFixed(2)}s`);
 
-      // Extract features
-      logger.info('📊 Extracting features...');
-      const features = extractFeatures(audioBuffer, DEFAULT_DSP_CONFIG);
+      // IMPORTANT: Slice audio buffer to remove warmup period
+      // We only want to train on the stable signal (after 5 seconds)
+      const sampleRate = audioBuffer.sampleRate;
+      const warmupSamples = Math.floor(this.warmUpDuration * sampleRate);
+      const totalSamples = audioBuffer.length;
+      const trainingSamples = totalSamples - warmupSamples;
+
+      logger.info(`📊 Slicing audio buffer:`);
+      logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s`);
+      logger.info(`   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`);
+      logger.info(`   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`);
+
+      // Create new AudioBuffer with only the training portion
+      const trainingBuffer = this.audioContext.createBuffer(
+        audioBuffer.numberOfChannels,
+        trainingSamples,
+        sampleRate
+      );
+
+      // Copy data from original buffer (starting at warmupSamples offset)
+      for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+        const originalData = audioBuffer.getChannelData(channel);
+        const trainingData = trainingBuffer.getChannelData(channel);
+
+        // Copy samples from offset to end
+        for (let i = 0; i < trainingSamples; i++) {
+          trainingData[i] = originalData[warmupSamples + i];
+        }
+      }
+
+      // Extract features from the SLICED buffer (only stable signal)
+      logger.info('📊 Extracting features from stable signal...');
+      const features = extractFeatures(trainingBuffer, DEFAULT_DSP_CONFIG);
       logger.info(`   Extracted ${features.length} feature vectors`);
 
       // Prepare training data
@@ -364,19 +404,42 @@ export class ReferencePhase {
   }
 
   /**
-   * Start recording timer
+   * Start recording timer with dual-phase UI
+   *
+   * Phase 1 (0-5s): "Stabilisierung..." (warmup, audio saved but not used for training)
+   * Phase 2 (5-15s): "Aufnahme..." (actual recording used for training)
    */
   private startTimer(): void {
     let elapsed = 0;
     const timerElement = document.getElementById('recording-timer');
+    const statusElement = document.getElementById('recording-status');
 
     const interval = setInterval(() => {
       elapsed++;
 
-      if (timerElement) {
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      // Update phase-specific UI
+      if (elapsed <= this.warmUpDuration) {
+        // Phase 1: Stabilisierung (0-5s)
+        if (statusElement) {
+          const remaining = this.warmUpDuration - elapsed + 1;
+          statusElement.textContent = `Stabilisierung... ${remaining}s`;
+        }
+        if (timerElement) {
+          timerElement.textContent = '--:--';
+        }
+      } else {
+        // Phase 2: Aufnahme (5-15s)
+        const recordingElapsed = elapsed - this.warmUpDuration;
+        const recordingTotal = this.recordingDuration - this.warmUpDuration;
+
+        if (statusElement) {
+          statusElement.textContent = `Aufnahme läuft...`;
+        }
+        if (timerElement) {
+          const minutes = Math.floor(recordingElapsed / 60);
+          const seconds = recordingElapsed % 60;
+          timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} / ${Math.floor(recordingTotal / 60).toString().padStart(2, '0')}:${(recordingTotal % 60).toString().padStart(2, '0')}`;
+        }
       }
 
       if (elapsed >= this.recordingDuration) {

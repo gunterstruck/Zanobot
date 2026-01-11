@@ -57,7 +57,7 @@ export interface SmartStartConfig {
  * Default Smart Start configuration
  */
 export const DEFAULT_SMART_START_CONFIG: SmartStartConfig = {
-  warmUpDuration: 2000, // 2 seconds
+  warmUpDuration: 5000, // 5 seconds (extended settling time for OS audio filters)
   signalThreshold: 0.02, // RMS threshold
   maxWaitTime: 30000, // 30 seconds max wait
 };
@@ -282,7 +282,7 @@ export function getSmartStartStatusMessage(state: SmartStartState): string {
   switch (state.phase) {
     case 'warmup':
       const seconds = Math.ceil(state.remainingWarmUp / 1000);
-      return `Kalibrierung... ${seconds}s`;
+      return `Akustische Stabilisierung... ${seconds}s`;
     case 'waiting':
       return 'Warte auf Signal...';
     case 'recording':
