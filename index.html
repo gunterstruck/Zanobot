@@ -167,6 +167,41 @@
                             Speichern
                         </button>
                     </div>
+
+                    <!-- Hardware Intelligence Card -->
+                    <div class="hardware-info-card">
+                        <div class="hardware-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="2" width="6" height="12" rx="3"/>
+                                <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="22"/>
+                                <line x1="8" y1="22" x2="16" y2="22"/>
+                            </svg>
+                            <h5 class="hardware-title">Audio Hardware</h5>
+                        </div>
+                        <div class="hardware-content">
+                            <div class="hardware-status">
+                                <div id="hardware-status-icon" class="hardware-icon">
+                                    <!-- Icon will be set dynamically -->
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 6v6l4 2"/>
+                                    </svg>
+                                </div>
+                                <div class="hardware-info">
+                                    <div id="hardware-device-label" class="hardware-device">Erkenne Mikrofon...</div>
+                                    <div id="hardware-status-text" class="hardware-message">Initialisiere Hardware-Check</div>
+                                </div>
+                            </div>
+                            <button class="action-btn secondary-btn" id="change-microphone-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                                </svg>
+                                Anderes Mikrofon wählen
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -646,6 +681,30 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-secondary" id="view-history-btn">View History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Microphone Selection -->
+    <div id="microphone-selection-modal" class="modal" style="display: none;">
+        <div class="modal-content microphone-modal-content">
+            <div class="modal-header">
+                <h3>Mikrofon auswählen</h3>
+                <button class="close-modal-btn" id="close-microphone-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">
+                    Wählen Sie das beste Mikrofon für die Maschinendiagnose.
+                    Vermeiden Sie Headsets und Bluetooth-Geräte, da diese für Sprache optimiert sind.
+                </p>
+                <div id="microphone-device-list" class="microphone-device-list">
+                    <!-- Device items will be added dynamically -->
+                </div>
             </div>
         </div>
     </div>

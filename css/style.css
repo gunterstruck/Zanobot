@@ -1986,6 +1986,196 @@ select:focus-visible {
 }
 
 /* ===================================
+   HARDWARE INTELLIGENCE
+   =================================== */
+
+/* Hardware Info Card */
+.hardware-info-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.hardware-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.hardware-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.hardware-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.hardware-status {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.hardware-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hardware-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.hardware-device {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hardware-message {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+/* Microphone Selection Modal */
+.microphone-modal-content {
+    max-width: 600px;
+    width: 100%;
+}
+
+.modal-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.microphone-device-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 2px; /* Prevent box-shadow clipping */
+}
+
+.microphone-device-item {
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.microphone-device-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    box-shadow: var(--glow-primary);
+}
+
+.microphone-device-item.selected {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb, 0, 212, 255), 0.1);
+}
+
+.device-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    min-width: 0;
+}
+
+.device-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.device-icon.status-good {
+    background: rgba(0, 230, 118, 0.15);
+    color: var(--status-healthy);
+}
+
+.device-icon.status-warning {
+    background: rgba(255, 183, 77, 0.15);
+    color: var(--status-warning);
+}
+
+.device-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.device-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.device-status {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.device-checkmark {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hardware-info-card {
+        padding: var(--spacing-sm);
+    }
+
+    .hardware-status {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .device-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .device-icon {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
