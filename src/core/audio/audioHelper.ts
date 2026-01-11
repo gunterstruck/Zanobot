@@ -28,6 +28,22 @@ export const AUDIO_CONSTRAINTS = {
 };
 
 /**
+ * Build audio constraints with optional device ID
+ *
+ * @param deviceId - Optional specific device ID to use
+ * @returns Audio constraints object
+ */
+export function buildAudioConstraints(deviceId?: string): MediaStreamConstraints {
+  const baseConstraints = { ...AUDIO_CONSTRAINTS };
+
+  if (deviceId) {
+    (baseConstraints.audio as any).deviceId = { exact: deviceId };
+  }
+
+  return baseConstraints;
+}
+
+/**
  * Fallback constraints if exact: false throws errors
  * Some browsers don't support the exact syntax
  */
@@ -80,18 +96,26 @@ export interface SmartStartState {
  * Attempts to use exact constraints first, falls back to simple booleans
  * if the browser doesn't support exact syntax.
  *
+ * @param deviceId - Optional specific device ID to use
  * @returns MediaStream with raw audio
  */
-export async function getRawAudioStream(): Promise<MediaStream> {
+export async function getRawAudioStream(deviceId?: string): Promise<MediaStream> {
   try {
+    // Build constraints with optional device ID
+    const constraints = buildAudioConstraints(deviceId);
+
     // Try exact constraints first
-    return await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+    return await navigator.mediaDevices.getUserMedia(constraints);
   } catch (error) {
     logger.warn('⚠️ Exact constraints failed, using fallback:', error);
 
     try {
       // Fall back to simple boolean constraints
-      return await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS_FALLBACK);
+      const fallbackConstraints = { ...AUDIO_CONSTRAINTS_FALLBACK };
+      if (deviceId) {
+        (fallbackConstraints.audio as any).deviceId = { exact: deviceId };
+      }
+      return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
     } catch (fallbackError) {
       logger.error('❌ Failed to get audio stream:', fallbackError);
       throw new Error('Failed to access microphone. Please grant permission and ensure no other app is using it.');

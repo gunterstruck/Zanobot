@@ -12,12 +12,19 @@ import { notify } from '@utils/notifications.js';
 import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
+import { HardwareCheck, type AudioQualityReport, type AudioDeviceInfo } from '@core/audio/HardwareCheck.js';
+import { getRawAudioStream } from '@core/audio/audioHelper.js';
 
 export class IdentifyPhase {
   private onMachineSelected: (machine: Machine) => void;
   private html5QrCode: Html5Qrcode | null = null;
   private scannerModal: HTMLElement | null = null;
   private isScanning: boolean = false;
+
+  // Hardware Intelligence
+  private currentAudioStream: MediaStream | null = null;
+  private selectedDeviceId: string | undefined = undefined;
+  private audioQualityReport: AudioQualityReport | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -60,6 +67,15 @@ export class IdentifyPhase {
         }
       });
     }
+
+    // Hardware Intelligence: Change Microphone Button
+    const changeMicBtn = document.getElementById('change-microphone-btn');
+    if (changeMicBtn) {
+      changeMicBtn.addEventListener('click', () => this.showMicrophoneSelection());
+    }
+
+    // Initialize hardware check
+    this.initializeHardwareCheck();
   }
 
   /**
@@ -400,5 +416,245 @@ export class IdentifyPhase {
    */
   private showError(message: string): void {
     notify.error(message);
+  }
+
+  /**
+   * ========================================
+   * HARDWARE INTELLIGENCE
+   * ========================================
+   */
+
+  /**
+   * Initialize hardware check on page load
+   */
+  private async initializeHardwareCheck(): Promise<void> {
+    try {
+      // Request audio stream to check current device
+      this.currentAudioStream = await getRawAudioStream(this.selectedDeviceId);
+
+      // Get current device info
+      const currentDevice = await HardwareCheck.getCurrentDevice(this.currentAudioStream);
+
+      if (currentDevice) {
+        // Get audio track settings for sample rate
+        const audioTrack = this.currentAudioStream.getAudioTracks()[0];
+        const settings = audioTrack.getSettings();
+        const sampleRate = settings.sampleRate || 44100;
+
+        // Analyze hardware
+        this.audioQualityReport = HardwareCheck.analyzeCurrentDevice(
+          currentDevice.label,
+          sampleRate
+        );
+
+        // Update UI
+        this.updateHardwareInfoCard();
+      }
+    } catch (error) {
+      logger.error('Failed to initialize hardware check:', error);
+      // Don't block user flow - just log the error
+    }
+  }
+
+  /**
+   * Update hardware info card in UI
+   */
+  private updateHardwareInfoCard(): void {
+    if (!this.audioQualityReport) {
+      return;
+    }
+
+    const statusIcon = document.getElementById('hardware-status-icon');
+    const deviceLabel = document.getElementById('hardware-device-label');
+    const statusText = document.getElementById('hardware-status-text');
+
+    if (!statusIcon || !deviceLabel || !statusText) {
+      return;
+    }
+
+    // Update device label
+    deviceLabel.textContent = this.audioQualityReport.deviceLabel;
+
+    // Update status icon and text
+    if (this.audioQualityReport.status === 'good') {
+      statusIcon.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      `;
+      statusText.textContent = this.audioQualityReport.reason;
+      statusText.style.color = 'var(--status-healthy)';
+    } else {
+      statusIcon.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--status-warning)" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      `;
+      statusText.textContent = this.audioQualityReport.reason;
+      statusText.style.color = 'var(--status-warning)';
+    }
+  }
+
+  /**
+   * Show microphone selection modal
+   */
+  private async showMicrophoneSelection(): Promise<void> {
+    try {
+      const devices = await HardwareCheck.getAvailableDevices();
+
+      // Get or create modal
+      let modal = document.getElementById('microphone-selection-modal');
+      if (!modal) {
+        logger.error('Microphone selection modal not found in DOM');
+        return;
+      }
+
+      // Populate device list
+      const deviceList = document.getElementById('microphone-device-list');
+      if (!deviceList) {
+        logger.error('Device list container not found');
+        return;
+      }
+
+      deviceList.innerHTML = '';
+
+      devices.forEach((device) => {
+        const deviceItem = document.createElement('div');
+        deviceItem.className = 'microphone-device-item';
+        deviceItem.dataset.deviceId = device.deviceId;
+
+        // Check if this is the currently selected device
+        const isSelected =
+          this.selectedDeviceId === device.deviceId ||
+          (!this.selectedDeviceId && device.deviceId === 'default');
+
+        if (isSelected) {
+          deviceItem.classList.add('selected');
+        }
+
+        // Analyze this device
+        const tempReport = HardwareCheck.analyzeCurrentDevice(device.label, 44100);
+        const statusClass = tempReport.status === 'good' ? 'status-good' : 'status-warning';
+
+        deviceItem.innerHTML = `
+          <div class="device-info">
+            <div class="device-icon ${statusClass}">
+              ${
+                tempReport.status === 'good'
+                  ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>`
+                  : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>`
+              }
+            </div>
+            <div class="device-details">
+              <div class="device-name">${device.label}</div>
+              <div class="device-status">${tempReport.reason}</div>
+            </div>
+          </div>
+          ${
+            isSelected
+              ? '<div class="device-checkmark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
+              : ''
+          }
+        `;
+
+        deviceItem.addEventListener('click', () => this.selectMicrophone(device));
+        deviceList.appendChild(deviceItem);
+      });
+
+      // Show modal
+      modal.style.display = 'flex';
+
+      // Setup close handlers
+      const closeBtn = document.getElementById('close-microphone-modal');
+      if (closeBtn) {
+        closeBtn.onclick = () => this.closeMicrophoneModal();
+      }
+
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          this.closeMicrophoneModal();
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to show microphone selection:', error);
+      this.showError('Fehler beim Laden der Mikrofone');
+    }
+  }
+
+  /**
+   * Select a microphone
+   */
+  private async selectMicrophone(device: AudioDeviceInfo): Promise<void> {
+    try {
+      logger.info(`Selecting microphone: ${device.label}`);
+
+      // Stop current stream
+      if (this.currentAudioStream) {
+        this.currentAudioStream.getTracks().forEach((track) => track.stop());
+      }
+
+      // Update selected device
+      this.selectedDeviceId = device.deviceId;
+
+      // Get new stream with selected device
+      this.currentAudioStream = await getRawAudioStream(device.deviceId);
+
+      // Re-analyze hardware
+      const audioTrack = this.currentAudioStream.getAudioTracks()[0];
+      const settings = audioTrack.getSettings();
+      const sampleRate = settings.sampleRate || 44100;
+
+      this.audioQualityReport = HardwareCheck.analyzeCurrentDevice(device.label, sampleRate);
+
+      // Update UI
+      this.updateHardwareInfoCard();
+
+      // Close modal
+      this.closeMicrophoneModal();
+
+      // Notify user
+      notify.success(`Mikrofon gewechselt: ${device.label}`);
+    } catch (error) {
+      logger.error('Failed to select microphone:', error);
+      this.showError('Fehler beim Wechseln des Mikrofons');
+    }
+  }
+
+  /**
+   * Close microphone selection modal
+   */
+  private closeMicrophoneModal(): void {
+    const modal = document.getElementById('microphone-selection-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  /**
+   * Get selected device ID for recording
+   * Called by other phases that need to record audio
+   */
+  public getSelectedDeviceId(): string | undefined {
+    return this.selectedDeviceId;
+  }
+
+  /**
+   * Cleanup on phase exit
+   */
+  public cleanup(): void {
+    if (this.currentAudioStream) {
+      this.currentAudioStream.getTracks().forEach((track) => track.stop());
+      this.currentAudioStream = null;
+    }
   }
 }
