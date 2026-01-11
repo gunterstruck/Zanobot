@@ -11,6 +11,7 @@
 
 import { extractFeatures, DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
 import { trainGMIA } from '@core/ml/gmia.js';
+import { assessRecordingQuality } from '@core/ml/qualityCheck.js';
 import { updateMachineModel } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import {
@@ -22,7 +23,7 @@ import {
   isAudioWorkletSupported,
 } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
-import type { Machine, TrainingData } from '@data/types.js';
+import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
 export class ReferencePhase {
@@ -39,6 +40,12 @@ export class ReferencePhase {
   private recordedBlob: Blob | null = null; // For reference audio export
   private useAudioWorklet: boolean = true;
   private recordingStartTime: number = 0; // Track when actual recording started
+
+  // Phase 2: Review Modal State
+  private currentAudioBuffer: AudioBuffer | null = null;
+  private currentFeatures: FeatureVector[] = [];
+  private currentQualityResult: QualityResult | null = null;
+  private currentTrainingData: TrainingData | null = null;
 
   constructor(machine: Machine) {
     this.machine = machine;
@@ -211,11 +218,17 @@ export class ReferencePhase {
   }
 
   /**
-   * Process recorded audio and train model
+   * Process recorded audio and show review modal
+   *
+   * PHASE 2 WORKFLOW:
+   * 1. Extract features from post-warmup audio (seconds 5-15)
+   * 2. Assess recording quality
+   * 3. Show review modal with audio player and quality assessment
+   * 4. Wait for user decision (Save or Discard)
    *
    * CRITICAL IMPLEMENTATION:
-   * - File download: Full 15 seconds (for engineer debugging)
-   * - Model training: Only seconds 5-15 (after OS audio filters have settled)
+   * - File blob: Full 15 seconds (for playback and debugging)
+   * - Feature extraction: Only seconds 5-15 (after OS audio filters have settled)
    */
   private async processRecording(): Promise<void> {
     try {
@@ -268,7 +281,10 @@ export class ReferencePhase {
       const features = extractFeatures(trainingBuffer, DEFAULT_DSP_CONFIG);
       logger.info(`   Extracted ${features.length} feature vectors`);
 
-      // Prepare training data
+      // PHASE 2: Assess recording quality
+      const qualityResult = assessRecordingQuality(features);
+
+      // Prepare training data (but don't train yet - wait for user approval)
       const trainingData: TrainingData = {
         featureVectors: features.map((f) => f.features),
         machineId: this.machine.id,
@@ -277,19 +293,17 @@ export class ReferencePhase {
         config: DEFAULT_DSP_CONFIG,
       };
 
-      // Train GMIA model
-      const model = trainGMIA(trainingData, this.machine.id);
+      // Store for later use
+      this.currentAudioBuffer = audioBuffer;
+      this.currentFeatures = features;
+      this.currentQualityResult = qualityResult;
+      this.currentTrainingData = trainingData;
 
-      // Save model to database
-      await updateMachineModel(this.machine.id, model);
-
-      logger.info('✅ Reference model trained and saved!');
-
-      // Update UI
+      // Hide recording modal
       this.hideRecordingModal();
 
-      // Show success with option to download reference audio
-      this.showSuccessWithExport();
+      // PHASE 2: Show review modal instead of saving directly
+      this.showReviewModal();
     } catch (error) {
       logger.error('Processing error:', error);
       notify.error('Aufnahme konnte nicht verarbeitet werden', error as Error, {
@@ -446,6 +460,219 @@ export class ReferencePhase {
         clearInterval(interval);
       }
     }, 1000);
+  }
+
+  /**
+   * PHASE 2: Show review modal with audio player and quality assessment
+   */
+  private showReviewModal(): void {
+    if (!this.recordedBlob || !this.currentQualityResult) {
+      logger.error('Cannot show review modal: missing data');
+      return;
+    }
+
+    const modal = document.getElementById('review-modal');
+    if (!modal) {
+      logger.error('Review modal element not found');
+      return;
+    }
+
+    // Setup audio player
+    const audioElement = document.getElementById('review-audio') as HTMLAudioElement;
+    const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement;
+
+    if (audioElement && audioSource) {
+      const audioUrl = URL.createObjectURL(this.recordedBlob);
+      audioSource.src = audioUrl;
+      audioElement.load();
+    }
+
+    // Update quality indicator
+    this.updateQualityIndicator(this.currentQualityResult);
+
+    // Setup event listeners for buttons
+    const discardBtn = document.getElementById('review-discard-btn');
+    const saveBtn = document.getElementById('review-save-btn');
+
+    if (discardBtn) {
+      discardBtn.onclick = () => this.handleReviewDiscard();
+    }
+
+    if (saveBtn) {
+      saveBtn.onclick = () => this.handleReviewSave();
+    }
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    logger.info('🔍 Review modal displayed');
+  }
+
+  /**
+   * Hide review modal
+   */
+  private hideReviewModal(): void {
+    const modal = document.getElementById('review-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+
+    // Clean up audio URL
+    const audioElement = document.getElementById('review-audio') as HTMLAudioElement;
+    if (audioElement) {
+      audioElement.pause();
+      const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement;
+      if (audioSource && audioSource.src) {
+        URL.revokeObjectURL(audioSource.src);
+        audioSource.src = '';
+      }
+    }
+  }
+
+  /**
+   * Update quality indicator UI based on assessment result
+   */
+  private updateQualityIndicator(qualityResult: QualityResult): void {
+    // Update score
+    const scoreElement = document.getElementById('quality-score');
+    if (scoreElement) {
+      scoreElement.textContent = qualityResult.score.toString();
+    }
+
+    // Update rating text and icon
+    const ratingElement = document.getElementById('quality-rating-text');
+    const iconElement = document.getElementById('quality-icon');
+
+    if (ratingElement && iconElement) {
+      // Clear existing classes and content
+      ratingElement.className = 'quality-rating';
+      iconElement.className = 'quality-icon';
+      iconElement.innerHTML = '';
+
+      switch (qualityResult.rating) {
+        case 'GOOD':
+          ratingElement.classList.add('good');
+          ratingElement.textContent = '✓ Signal stabil';
+          iconElement.classList.add('good');
+          iconElement.innerHTML = '✓';
+          break;
+
+        case 'OK':
+          ratingElement.classList.add('ok');
+          ratingElement.textContent = '⚠ Leichte Unruhe';
+          iconElement.classList.add('ok');
+          iconElement.innerHTML = '⚠';
+          break;
+
+        case 'BAD':
+          ratingElement.classList.add('bad');
+          ratingElement.textContent = '✗ Warnung: Signal instabil!';
+          iconElement.classList.add('bad');
+          iconElement.innerHTML = '✗';
+          break;
+      }
+    }
+
+    // Show/hide issues
+    const issuesContainer = document.getElementById('quality-issues');
+    const issuesList = document.getElementById('quality-issues-list');
+
+    if (issuesContainer && issuesList) {
+      if (qualityResult.issues.length > 0) {
+        // Clear existing issues
+        issuesList.innerHTML = '';
+
+        // Add each issue
+        qualityResult.issues.forEach((issue) => {
+          const li = document.createElement('li');
+          li.textContent = issue;
+          issuesList.appendChild(li);
+        });
+
+        issuesContainer.style.display = 'block';
+      } else {
+        issuesContainer.style.display = 'none';
+      }
+    }
+  }
+
+  /**
+   * Handle "Discard" button click - discard recording and start over
+   */
+  private handleReviewDiscard(): void {
+    logger.info('🗑️ User discarded recording');
+
+    // Hide review modal
+    this.hideReviewModal();
+
+    // Clear stored data
+    this.currentAudioBuffer = null;
+    this.currentFeatures = [];
+    this.currentQualityResult = null;
+    this.currentTrainingData = null;
+    this.recordedBlob = null;
+
+    // Show info message
+    notify.info('Aufnahme verworfen', 'Sie können eine neue Referenzaufnahme starten.');
+  }
+
+  /**
+   * Handle "Save" button click - train model and save to database
+   *
+   * IMPORTANT: If quality is BAD, show additional confirmation warning
+   */
+  private async handleReviewSave(): Promise<void> {
+    if (!this.currentTrainingData || !this.currentQualityResult) {
+      logger.error('Cannot save: missing training data or quality result');
+      return;
+    }
+
+    // PHASE 2 REQUIREMENT: Show extra confirmation for BAD quality
+    if (this.currentQualityResult.rating === 'BAD') {
+      const confirmed = confirm(
+        '⚠️ WARNUNG: Schlechte Aufnahmequalität\n\n' +
+        'Die Qualität dieser Aufnahme ist schlecht. Das Training könnte unzuverlässig sein.\n\n' +
+        'Probleme:\n' +
+        this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n') +
+        '\n\n' +
+        'Möchten Sie trotzdem speichern?'
+      );
+
+      if (!confirmed) {
+        logger.info('User cancelled save due to bad quality warning');
+        return;
+      }
+    }
+
+    try {
+      logger.info('💾 Saving reference model...');
+
+      // Train GMIA model
+      const model = trainGMIA(this.currentTrainingData, this.machine.id);
+
+      // Save model to database
+      await updateMachineModel(this.machine.id, model);
+
+      logger.info('✅ Reference model trained and saved!');
+
+      // Hide review modal
+      this.hideReviewModal();
+
+      // Show success with option to download reference audio
+      this.showSuccessWithExport();
+
+      // Clear stored data
+      this.currentAudioBuffer = null;
+      this.currentFeatures = [];
+      this.currentQualityResult = null;
+      this.currentTrainingData = null;
+    } catch (error) {
+      logger.error('Save error:', error);
+      notify.error('Speichern fehlgeschlagen', error as Error, {
+        title: 'Fehler beim Speichern',
+        duration: 0
+      });
+    }
   }
 
   /**

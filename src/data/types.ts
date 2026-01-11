@@ -58,6 +58,21 @@ export interface FeatureVector {
 }
 
 /**
+ * Recording Quality Assessment Result
+ * Used to evaluate reference recordings before saving
+ */
+export interface QualityResult {
+  score: number;                 // 0-100 (higher is better)
+  rating: 'GOOD' | 'OK' | 'BAD'; // Qualitative rating
+  issues: string[];              // List of detected issues (empty if GOOD)
+  metadata?: {
+    variance: number;            // Spectral variance across time
+    stability: number;           // Signal stability metric
+    outlierCount: number;        // Number of outlier frames detected
+  };
+}
+
+/**
  * Diagnosis Result
  */
 export interface DiagnosisResult {

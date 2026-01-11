@@ -474,6 +474,73 @@
         </div>
     </div>
 
+    <!-- Modal for Review Recording (Phase 2) -->
+    <div id="review-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Aufnahme prüfen</h3>
+                <p class="modal-subtitle">Qualitätskontrolle</p>
+            </div>
+            <div class="modal-body">
+                <!-- Audio Player -->
+                <div class="review-audio-player">
+                    <h4 class="review-section-title">Aufnahme anhören</h4>
+                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;">
+                        <source id="review-audio-source" type="audio/webm">
+                        Ihr Browser unterstützt keine Audio-Wiedergabe.
+                    </audio>
+                    <p class="review-info">15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)</p>
+                </div>
+
+                <!-- Quality Assessment -->
+                <div class="review-quality">
+                    <h4 class="review-section-title">Qualitätsbewertung</h4>
+
+                    <!-- Quality Traffic Light -->
+                    <div class="quality-indicator" id="quality-indicator">
+                        <div class="quality-icon" id="quality-icon">
+                            <!-- Icon will be set dynamically -->
+                        </div>
+                        <div class="quality-details">
+                            <p class="quality-score">
+                                Qualität: <strong id="quality-score">--</strong>%
+                            </p>
+                            <p class="quality-rating" id="quality-rating-text">
+                                <!-- Rating text will be set dynamically -->
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Quality Issues (if any) -->
+                    <div class="quality-issues" id="quality-issues" style="display: none;">
+                        <h5>Erkannte Probleme:</h5>
+                        <ul id="quality-issues-list">
+                            <!-- Issues will be added dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="review-discard-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Verwerfen / Neu
+                </button>
+                <button class="modal-btn btn-primary" id="review-save-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Als Referenz speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for QR/Barcode Scanner -->
     <div id="scanner-modal" class="modal" style="display: none;">
         <div class="modal-content scanner-modal-content">
