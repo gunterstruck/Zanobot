@@ -642,6 +642,16 @@ export class ReferencePhase {
    * IMPORTANT: If quality is BAD, show additional confirmation warning
    */
   private async handleReviewSave(): Promise<void> {
+    // Validate machine data
+    if (!this.machine || !this.machine.id) {
+      logger.error('Cannot save: machine data is invalid or missing');
+      notify.error('Maschinendaten fehlen', new Error('Machine ID missing'), {
+        title: 'Fehler',
+        duration: 0
+      });
+      return;
+    }
+
     if (!this.currentTrainingData || !this.currentQualityResult) {
       logger.error('Cannot save: missing training data or quality result');
       return;

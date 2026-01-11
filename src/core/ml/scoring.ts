@@ -157,7 +157,7 @@ export function generateDiagnosisResult(
   const confidence = calculateConfidence(model, cosineSimilarities);
 
   // Generate unique ID with timestamp + random suffix to prevent collisions
-  const uniqueId = `diag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const uniqueId = `diag-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
   return {
     id: uniqueId,
@@ -429,7 +429,7 @@ export function classifyDiagnosticState(
 
   // Generate diagnosis result
   const diagnosis: DiagnosisResult = {
-    id: `diag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `diag-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     machineId: bestModel?.machineId || models[0].machineId,
     timestamp: Date.now(),
     healthScore: Math.round(bestScore * 10) / 10,
