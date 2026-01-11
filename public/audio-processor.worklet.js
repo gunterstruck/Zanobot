@@ -195,36 +195,32 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       // This matches the DSP window size for feature extraction
       const CHUNK_SIZE_330MS_AT_44100HZ = 14553;
 
-      // Only send chunks if we have enough data written and at proper intervals
-      // Check if we have accumulated enough samples for a complete chunk
-      if (this.samplesWritten >= CHUNK_SIZE_330MS_AT_44100HZ) {
-        const availableSamples = Math.min(this.samplesWritten, this.bufferSize);
-        const samplesFromLastChunk = (this.samplesWritten - CHUNK_SIZE_330MS_AT_44100HZ) % CHUNK_SIZE_330MS_AT_44100HZ;
+      // Simple modulo-based triggering on fixed grid
+      // samplesWritten is monotonically increasing counter for chunk timing
+      if (this.samplesWritten >= CHUNK_SIZE_330MS_AT_44100HZ &&
+          this.samplesWritten % CHUNK_SIZE_330MS_AT_44100HZ === 0) {
 
-        // Send chunk when we have accumulated exactly a chunk's worth of new data
-        if (samplesFromLastChunk < inputChannel.length) {
-          // Extract latest chunk using proper circular buffer logic
-          const chunk = new Float32Array(CHUNK_SIZE_330MS_AT_44100HZ);
+        // Extract latest chunk using proper circular buffer logic
+        const chunk = new Float32Array(CHUNK_SIZE_330MS_AT_44100HZ);
 
-          // Calculate read position (readPos is updated only when sending chunks)
-          let chunkReadPos = (this.writePos - CHUNK_SIZE_330MS_AT_44100HZ + this.bufferSize) % this.bufferSize;
+        // Calculate read position: go back CHUNK_SIZE samples from current writePos
+        let chunkReadPos = (this.writePos - CHUNK_SIZE_330MS_AT_44100HZ + this.bufferSize) % this.bufferSize;
 
-          // Copy data from circular buffer, handling wrap-around
-          for (let i = 0; i < CHUNK_SIZE_330MS_AT_44100HZ; i++) {
-            chunk[i] = this.ringBuffer[chunkReadPos];
-            chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
-          }
-
-          // Update read position to current write position
-          this.readPos = this.writePos;
-
-          // Transfer chunk to main thread
-          this.port.postMessage({
-            type: 'audio-chunk',
-            chunk: chunk.buffer,
-            writePos: this.writePos
-          }, [chunk.buffer]); // Transfer ownership for zero-copy
+        // Copy data from circular buffer, handling wrap-around
+        for (let i = 0; i < CHUNK_SIZE_330MS_AT_44100HZ; i++) {
+          chunk[i] = this.ringBuffer[chunkReadPos];
+          chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
         }
+
+        // Update read position to current write position
+        this.readPos = this.writePos;
+
+        // Transfer chunk to main thread
+        this.port.postMessage({
+          type: 'audio-chunk',
+          chunk: chunk.buffer,
+          writePos: this.writePos
+        }, [chunk.buffer]); // Transfer ownership for zero-copy
       }
     }
 
