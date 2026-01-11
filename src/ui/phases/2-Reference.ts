@@ -665,22 +665,22 @@ export class ReferencePhase {
     }
 
     try {
-      // MULTICLASS: Determine label based on number of existing models
+      // MULTICLASS: Determine label and type based on number of existing models
       let label: string;
+      let type: 'healthy' | 'faulty';
 
       if (this.machine.referenceModels.length === 0) {
         // First recording: Always "Baseline" (healthy state)
         label = 'Baseline';
-        logger.info('First recording - using label: "Baseline"');
+        type = 'healthy';
+        logger.info('First recording - using label: "Baseline", type: "healthy"');
       } else {
-        // Additional recordings: Ask user for label
+        // Additional recordings: Ask user for label and type
         const userLabel = prompt(
           'Geben Sie einen Namen für diesen Maschinenzustand ein:\n\n' +
           'Beispiele:\n' +
-          '• Unwucht simuliert\n' +
-          '• Lagerschaden\n' +
-          '• Lüfterfehler\n' +
-          '• Überlast',
+          '• Normale Betriebszustände: "Leerlauf", "Volllast", "Teillast"\n' +
+          '• Fehler: "Unwucht simuliert", "Lagerschaden", "Lüfterfehler"',
           ''
         );
 
@@ -691,7 +691,18 @@ export class ReferencePhase {
         }
 
         label = userLabel.trim();
-        logger.info(`Additional recording - using label: "${label}"`);
+
+        // Ask user for type: Is this a normal state or a fault?
+        const isHealthy = confirm(
+          `Zustand: "${label}"\n\n` +
+          'Ist dies ein NORMALER Betriebszustand?\n\n' +
+          '🟢 OK (Ja) → Normaler Zustand (z.B. "Leerlauf", "Volllast")\n' +
+          '🔴 Abbrechen (Nein) → Bekannter Fehler (z.B. "Unwucht", "Lagerschaden")\n\n' +
+          'Hinweis: Diese Wahl bestimmt, ob eine Diagnose als "gesund" oder "fehlerhaft" angezeigt wird.'
+        );
+
+        type = isHealthy ? 'healthy' : 'faulty';
+        logger.info(`Additional recording - using label: "${label}", type: "${type}"`);
       }
 
       logger.info('💾 Saving reference model...');
@@ -699,8 +710,9 @@ export class ReferencePhase {
       // Train GMIA model
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
 
-      // Add label to model
+      // Add label and type to model
       model.label = label;
+      model.type = type;
 
       // Save model to database
       await updateMachineModel(this.machine.id, model);

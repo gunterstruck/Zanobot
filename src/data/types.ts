@@ -22,6 +22,7 @@ export interface Machine {
 export interface GMIAModel {
   machineId: string;
   label: string;                 // State label (e.g., "Baseline", "Lagerschaden", "Unwucht")
+  type: 'healthy' | 'faulty';    // State type: healthy = normal operation, faulty = known failure mode
   weightVector: Float64Array;    // w_p vector from GMIA training
   regularization: number;        // λ (lambda) = 10^9
   scalingConstant: number;       // C for tanh scaling
