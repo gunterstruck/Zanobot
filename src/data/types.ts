@@ -13,7 +13,7 @@ export interface Machine {
   name: string;                  // Human-readable name
   createdAt: number;             // Timestamp
   lastDiagnosisAt?: number;      // Last diagnosis timestamp
-  referenceModel?: GMIAModel;    // Trained reference model (if exists)
+  referenceModels: GMIAModel[];  // Trained reference models (multiclass diagnosis)
 }
 
 /**
@@ -21,6 +21,7 @@ export interface Machine {
  */
 export interface GMIAModel {
   machineId: string;
+  label: string;                 // State label (e.g., "Baseline", "Lagerschaden", "Unwucht")
   weightVector: Float64Array;    // w_p vector from GMIA training
   regularization: number;        // λ (lambda) = 10^9
   scalingConstant: number;       // C for tanh scaling

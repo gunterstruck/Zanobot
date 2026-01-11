@@ -12,7 +12,8 @@
  * - cos(α): Cosine similarity between test and reference
  */
 
-import type { GMIAModel, DiagnosisResult } from '@data/types.js';
+import type { GMIAModel, DiagnosisResult, FeatureVector } from '@data/types.js';
+import { inferGMIA } from './gmia.js';
 
 /**
  * Thresholds for health status classification
@@ -360,4 +361,136 @@ export class ScoreHistory {
   hasFullHistory(): boolean {
     return this.scores.length >= SCORE_HISTORY_SIZE;
   }
+}
+
+/**
+ * Uncertainty threshold for multiclass diagnosis
+ * Scores below this threshold indicate an unknown anomaly
+ */
+const UNCERTAINTY_THRESHOLD = 70;
+
+/**
+ * Multiclass Diagnosis - Classify machine state across multiple trained models
+ *
+ * Algorithm:
+ * 1. Loop through all trained models
+ * 2. For each model: Calculate cosine similarity → health score
+ * 3. Find model with highest score
+ * 4. Check uncertainty threshold (< 70% = UNKNOWN anomaly)
+ * 5. Return diagnosis with best matching state
+ *
+ * @param models - Array of trained GMIA models (each representing a machine state)
+ * @param featureVector - Feature vector from test audio
+ * @returns Diagnosis result with identified state
+ */
+export function classifyDiagnosticState(
+  models: GMIAModel[],
+  featureVector: FeatureVector
+): DiagnosisResult {
+  if (models.length === 0) {
+    throw new Error('No reference models available for classification');
+  }
+
+  // Initialize tracking variables
+  let bestScore = 0;
+  let bestLabel = 'UNKNOWN';
+  let bestModel: GMIAModel | null = null;
+  let bestCosine = 0;
+
+  // Loop through all models to find best match
+  for (const model of models) {
+    // Step 1: Calculate cosine similarity using existing GMIA inference
+    const cosineSimilarities = inferGMIA(model, [featureVector]);
+    const cosine = cosineSimilarities[0];
+
+    // Step 2: Calculate health score using existing scoring function
+    const score = calculateHealthScore(cosine, model.scalingConstant);
+
+    // Step 3: Check if this is the best match so far
+    if (score > bestScore) {
+      bestScore = score;
+      bestLabel = model.label;
+      bestModel = model;
+      bestCosine = cosine;
+    }
+  }
+
+  // Step 4: Uncertainty check - is the best score too low?
+  let status: DiagnosisResult['status'];
+  if (bestScore < UNCERTAINTY_THRESHOLD) {
+    // Anomaly detected, but doesn't match any known fault pattern
+    status = 'UNKNOWN';
+    bestLabel = 'UNKNOWN';
+  } else {
+    // Matched a known state
+    // Check if it's the baseline (healthy) or a fault state
+    if (bestLabel.toLowerCase().includes('baseline') ||
+        bestLabel.toLowerCase().includes('healthy') ||
+        bestLabel.toLowerCase().includes('normal')) {
+      status = 'healthy';
+    } else {
+      // It's a recognized fault state
+      status = 'faulty';
+    }
+  }
+
+  // Generate diagnosis result
+  const diagnosis: DiagnosisResult = {
+    id: `diag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    machineId: bestModel?.machineId || models[0].machineId,
+    timestamp: Date.now(),
+    healthScore: Math.round(bestScore * 10) / 10,
+    status,
+    confidence: calculateConfidenceFromScore(bestScore),
+    rawCosineSimilarity: Math.round(bestCosine * 10000) / 10000,
+    metadata: {
+      detectedState: bestLabel,
+      multiclassMode: true,
+      evaluatedModels: models.length,
+    },
+    analysis: {
+      hint: generateMulticlassHint(bestScore, bestLabel, status),
+    },
+  };
+
+  return diagnosis;
+}
+
+/**
+ * Calculate confidence from score for multiclass diagnosis
+ *
+ * @param score - Health score [0, 100]
+ * @returns Confidence [0, 100]
+ */
+function calculateConfidenceFromScore(score: number): number {
+  // Higher scores = higher confidence
+  // Use exponential curve to emphasize high scores
+  const normalized = score / 100;
+  const confidence = Math.pow(normalized, 0.8) * 100;
+  return Math.round(confidence * 10) / 10;
+}
+
+/**
+ * Generate analysis hint for multiclass diagnosis
+ *
+ * @param score - Health score
+ * @param label - Detected state label
+ * @param status - Status category
+ * @returns Hint text
+ */
+function generateMulticlassHint(
+  score: number,
+  label: string,
+  status: DiagnosisResult['status']
+): string {
+  if (status === 'UNKNOWN') {
+    return `Unbekannte Anomalie erkannt (${score.toFixed(1)}%). Das Signal weicht vom Normalzustand ab, passt aber zu keinem trainierten Fehlerbild. Weitere Inspektion empfohlen.`;
+  }
+
+  if (status === 'healthy') {
+    return `Maschine läuft im Normalzustand "${label}" (${score.toFixed(1)}%). Keine Anomalien erkannt.`;
+  }
+
+  // status === 'faulty'
+  return `Fehlerzustand erkannt: "${label}" (${score.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
 }

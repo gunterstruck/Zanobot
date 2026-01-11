@@ -111,6 +111,7 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
 
   return {
     machineId,
+    label: '', // Will be set by caller (Phase 2: "Baseline" for first, user-provided for others)
     weightVector,
     regularization: LAMBDA,
     scalingConstant,

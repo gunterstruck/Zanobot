@@ -193,6 +193,7 @@ export class IdentifyPhase {
           id: code,
           name: `Machine ${code}`,
           createdAt: Date.now(),
+          referenceModels: [], // MULTICLASS: Initialize empty model array
         };
 
         await saveMachine(machine);
@@ -359,6 +360,7 @@ export class IdentifyPhase {
         id,
         name,
         createdAt: Date.now(),
+        referenceModels: [], // MULTICLASS: Initialize empty model array
       };
 
       await saveMachine(machine);
