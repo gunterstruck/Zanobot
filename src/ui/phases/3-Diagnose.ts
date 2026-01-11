@@ -218,6 +218,17 @@ export class DiagnosePhase {
       this.audioContext = null;
     }
 
+    // Clean up dynamically created DOM elements to prevent memory leaks
+    const liveDisplay = document.querySelector('.live-display');
+    if (liveDisplay) {
+      liveDisplay.remove();
+    }
+
+    const smartStartStatus = document.getElementById('smart-start-status');
+    if (smartStartStatus) {
+      smartStartStatus.remove();
+    }
+
     logger.debug('🧹 Cleanup complete');
   }
 
@@ -361,6 +372,11 @@ export class DiagnosePhase {
    */
   private async saveFinalDiagnosis(): Promise<void> {
     try {
+      // Validate machine data
+      if (!this.machine || !this.machine.id) {
+        throw new Error('Machine data is invalid or missing');
+      }
+
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         throw new Error('No reference models available');
       }

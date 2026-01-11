@@ -68,6 +68,11 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   // Step 1: Convert features to matrix X_p (features as rows, samples as columns)
   const X_p = featuresToMatrix(features);
 
+  // Validate matrix dimensions
+  if (X_p.length === 0 || !X_p[0]) {
+    throw new Error('Matrix X_p is empty or malformed after feature conversion');
+  }
+
   logger.debug(`   Matrix X_p: ${X_p.length}x${X_p[0].length}`);
 
   // Step 2: Compute X_p^T (transpose)
@@ -75,6 +80,11 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
 
   // Step 3: Compute X_p^T * X_p (gram matrix)
   const gramMatrix = matrixMultiply(X_p_T, X_p);
+
+  // Validate gram matrix
+  if (gramMatrix.length === 0 || !gramMatrix[0]) {
+    throw new Error('Gram matrix is empty or malformed');
+  }
 
   logger.debug(`   Gram matrix: ${gramMatrix.length}x${gramMatrix[0].length}`);
 

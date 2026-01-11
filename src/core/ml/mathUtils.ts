@@ -15,6 +15,14 @@
  * @returns Result matrix C (m x p)
  */
 export function matrixMultiply(A: Float64Array[], B: Float64Array[]): Float64Array[] {
+  // Validate input matrices
+  if (!A || A.length === 0 || !A[0]) {
+    throw new Error('Matrix A is empty or malformed');
+  }
+  if (!B || B.length === 0 || !B[0]) {
+    throw new Error('Matrix B is empty or malformed');
+  }
+
   const m = A.length;
   const n = A[0].length;
   const p = B[0].length;
@@ -46,6 +54,11 @@ export function matrixMultiply(A: Float64Array[], B: Float64Array[]): Float64Arr
  * @returns Transposed matrix (n x m)
  */
 export function matrixTranspose(A: Float64Array[]): Float64Array[] {
+  // Validate input matrix
+  if (!A || A.length === 0 || !A[0]) {
+    throw new Error('Matrix A is empty or malformed');
+  }
+
   const m = A.length;
   const n = A[0].length;
 
@@ -281,6 +294,14 @@ export function stdDev(values: number[]): number {
  * @returns Result vector (m)
  */
 export function matrixVectorMultiply(A: Float64Array[], x: Float64Array): Float64Array {
+  // Validate inputs
+  if (!A || A.length === 0 || !A[0]) {
+    throw new Error('Matrix A is empty or malformed');
+  }
+  if (!x || x.length === 0) {
+    throw new Error('Vector x is empty');
+  }
+
   const m = A.length;
   const n = A[0].length;
 
@@ -308,8 +329,12 @@ export function matrixVectorMultiply(A: Float64Array[], x: Float64Array): Float6
  * @returns Matrix where each column is a feature vector
  */
 export function featuresToMatrix(features: Float64Array[]): Float64Array[] {
-  if (features.length === 0) {
+  if (!features || features.length === 0) {
     throw new Error('Cannot create matrix from empty feature array');
+  }
+
+  if (!features[0] || features[0].length === 0) {
+    throw new Error('Feature vectors are empty or malformed');
   }
 
   const numFeatures = features[0].length;
