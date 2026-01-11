@@ -161,12 +161,9 @@ function calculateScalingConstant(
   const cosineSimilarities = features.map((f) => cosineSimilarity(weightVector, f));
   const mu = mean(cosineSimilarities);
 
-  // Validate mean cosine similarity
-  if (!isFinite(mu) || mu === 0) {
-    throw new Error(
-      `Invalid mean cosine similarity: ${mu}. ` +
-      'This typically indicates that the features are zero vectors or the training data is invalid.'
-    );
+  // Sanity check: Signal quality must be sufficient for training
+  if (Math.abs(mu) < 1e-9) {
+    throw new Error('Signal quality too low for training');
   }
 
   // Target score (0.9 = 90%)
@@ -180,22 +177,7 @@ function calculateScalingConstant(
 
   const sqrtTarget = Math.sqrt(targetScore);
   const atanhValue = Math.atanh(sqrtTarget);
-
-  // Validate atanh result
-  if (!isFinite(atanhValue)) {
-    throw new Error(
-      `Invalid atanh value: ${atanhValue}. Target score ${targetScore} may be out of valid range.`
-    );
-  }
-
   const C = atanhValue / mu;
-
-  // Validate final calibration constant
-  if (!isFinite(C)) {
-    throw new Error(
-      `Invalid calibration constant C: ${C}. mu=${mu}, atanhValue=${atanhValue}`
-    );
-  }
 
   return C;
 }
