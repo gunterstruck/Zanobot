@@ -11,6 +11,7 @@
  */
 
 import { exportData, importData, getDBStats, clearAllData } from '@data/db.js';
+import { notify } from '@utils/notifications.js';
 
 export class SettingsPhase {
   constructor() {}
@@ -76,10 +77,13 @@ export class SettingsPhase {
       URL.revokeObjectURL(url);
 
       console.log(`✅ Database exported: ${filename}`);
-      alert(`✅ Datenbank exportiert!\n\nDatei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`);
+      notify.success(
+        `Datei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`,
+        'Datenbank exportiert'
+      );
     } catch (error) {
       console.error('Export error:', error);
-      alert('❌ Fehler beim Exportieren der Datenbank.');
+      notify.error('Fehler beim Exportieren der Datenbank', error as Error);
     }
   }
 
@@ -144,12 +148,9 @@ export class SettingsPhase {
             diagnoses: data.diagnoses?.length || 0,
           };
 
-          alert(
-            `✅ Datenbank importiert!\n\n` +
-            `Maschinen: ${stats.machines}\n` +
-            `Aufnahmen: ${stats.recordings}\n` +
-            `Diagnosen: ${stats.diagnoses}\n\n` +
-            `Modus: ${merge ? 'Zusammengeführt' : 'Ersetzt'}`
+          notify.success(
+            `Maschinen: ${stats.machines}\nAufnahmen: ${stats.recordings}\nDiagnosen: ${stats.diagnoses}\n\nModus: ${merge ? 'Zusammengeführt' : 'Ersetzt'}`,
+            'Datenbank importiert'
           );
 
           // Refresh stats display
@@ -158,14 +159,16 @@ export class SettingsPhase {
           console.log('✅ Database import complete');
         } catch (error) {
           console.error('Import error:', error);
-          alert(`❌ Fehler beim Importieren:\n\n${(error as Error).message}`);
+          notify.error('Fehler beim Importieren', error as Error, {
+            duration: 0
+          });
         }
       };
 
       input.click();
     } catch (error) {
       console.error('Import setup error:', error);
-      alert('❌ Fehler beim Vorbereiten des Imports.');
+      notify.error('Fehler beim Vorbereiten des Imports', error as Error);
     }
   }
 
@@ -202,7 +205,7 @@ export class SettingsPhase {
 
       await clearAllData();
 
-      alert('✅ Alle Daten wurden gelöscht.');
+      notify.success('Alle Daten wurden gelöscht', 'Datenbank geleert');
 
       // Refresh stats display
       this.showStats();
@@ -210,7 +213,9 @@ export class SettingsPhase {
       console.log('✅ All data cleared');
     } catch (error) {
       console.error('Clear error:', error);
-      alert('❌ Fehler beim Löschen der Daten.');
+      notify.error('Fehler beim Löschen der Daten', error as Error, {
+        duration: 0
+      });
     }
   }
 

@@ -21,6 +21,7 @@ import {
   AudioWorkletManager,
   isAudioWorkletSupported,
 } from '@core/audio/audioWorkletHelper.js';
+import { notify } from '@utils/notifications.js';
 import type { Machine, TrainingData } from '@data/types.js';
 
 export class ReferencePhase {
@@ -93,7 +94,7 @@ export class ReferencePhase {
             this.actuallyStartRecording();
           },
           onSmartStartTimeout: () => {
-            alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+            notify.warning('Kein Signal erkannt', 'Bitte näher an die Maschine gehen und erneut versuchen.');
             this.stopRecording();
           },
         });
@@ -111,7 +112,10 @@ export class ReferencePhase {
       }
     } catch (error) {
       console.error('Recording error:', error);
-      alert('Failed to access microphone. Please grant permission.');
+      notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
+        title: 'Zugriff verweigert',
+        duration: 0
+      });
 
       // Cleanup on error
       this.cleanup();
@@ -247,7 +251,10 @@ export class ReferencePhase {
       this.showSuccessWithExport();
     } catch (error) {
       console.error('Processing error:', error);
-      alert('Failed to process recording. Please try again.');
+      notify.error('Aufnahme konnte nicht verarbeitet werden', error as Error, {
+        title: 'Verarbeitungsfehler',
+        duration: 0
+      });
       this.hideRecordingModal();
     }
   }
@@ -276,7 +283,7 @@ export class ReferencePhase {
    */
   private exportReferenceAudio(filename: string): void {
     if (!this.recordedBlob) {
-      alert('Keine Audiodatei zum Exportieren verfügbar.');
+      notify.warning('Keine Audiodatei verfügbar', 'Bitte zuerst eine Referenzaufnahme erstellen.');
       return;
     }
 
@@ -293,7 +300,9 @@ export class ReferencePhase {
       console.log(`📥 Reference audio exported: ${filename}`);
     } catch (error) {
       console.error('Export error:', error);
-      alert('Fehler beim Exportieren der Audiodatei.');
+      notify.error('Export fehlgeschlagen', error as Error, {
+        title: 'Exportfehler',
+      });
     }
   }
 

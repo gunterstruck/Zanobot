@@ -29,6 +29,7 @@ import {
   AudioWorkletManager,
   isAudioWorkletSupported,
 } from '@core/audio/audioWorkletHelper.js';
+import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 
 export class DiagnosePhase {
@@ -83,7 +84,7 @@ export class DiagnosePhase {
     try {
       // Check if machine has reference model
       if (!this.machine.referenceModel) {
-        alert('No reference model found. Please record a reference first.');
+        notify.error('Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.');
         return;
       }
 
@@ -148,7 +149,7 @@ export class DiagnosePhase {
             this.isProcessing = true; // Start processing incoming chunks
           },
           onSmartStartTimeout: () => {
-            alert('Kein Signal erkannt. Bitte näher an die Maschine gehen und erneut versuchen.');
+            notify.warning('Kein Signal erkannt', 'Bitte näher an die Maschine gehen und erneut versuchen.');
             this.stopRecording();
           },
         });
@@ -164,13 +165,16 @@ export class DiagnosePhase {
         this.updateSmartStartStatus('Diagnose läuft');
         this.isProcessing = true;
         // Note: Without AudioWorklet, real-time processing won't work optimally
-        alert('AudioWorklet nicht unterstützt. Diagnose-Funktionalität eingeschränkt.');
+        notify.warning('AudioWorklet nicht unterstützt', 'Diagnose-Funktionalität eingeschränkt.');
       }
 
       console.log('✅ Real-time diagnosis initialized!');
     } catch (error) {
       console.error('Diagnosis error:', error);
-      alert('Failed to access microphone. Please grant permission.');
+      notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
+        title: 'Zugriff verweigert',
+        duration: 0
+      });
 
       // Cleanup on error
       this.cleanup();
@@ -373,7 +377,10 @@ export class DiagnosePhase {
       console.log('✅ Diagnosis saved successfully!');
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save diagnosis. Please try again.');
+      notify.error('Diagnose konnte nicht gespeichert werden', error as Error, {
+        title: 'Speicherfehler',
+        duration: 0
+      });
       this.hideRecordingModal();
     }
   }

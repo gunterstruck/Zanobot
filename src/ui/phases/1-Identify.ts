@@ -8,6 +8,7 @@
  */
 
 import { saveMachine, getMachine } from '@data/db.js';
+import { notify } from '@utils/notifications.js';
 import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -386,16 +387,13 @@ export class IdentifyPhase {
    * Show notification message
    */
   private showNotification(message: string): void {
-    // Simple notification (can be enhanced with a toast component)
-    console.log(`✅ ${message}`);
-    alert(message); // Placeholder
+    notify.success(message);
   }
 
   /**
    * Show error message
    */
   private showError(message: string): void {
-    console.error(`❌ ${message}`);
-    alert(`Error: ${message}`); // Placeholder
+    notify.error(message);
   }
 }

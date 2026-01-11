@@ -12,6 +12,7 @@
  */
 
 import { logger } from './logger.js';
+import { toast } from '@ui/components/Toast.js';
 
 /**
  * Notification types
@@ -105,22 +106,17 @@ class NotificationManager {
   }
 
   /**
-   * Show native browser notification (temporary implementation)
+   * Show toast notification (modern implementation)
    */
   private showNativeNotification(type: NotificationType, options: NotificationOptions): void {
-    const icon = this.getIcon(type);
-    const fullMessage = options.title
-      ? `${icon} ${options.title}\n\n${options.message}`
-      : `${icon} ${options.message}`;
-
-    // Use browser alert for errors and warnings
-    if (type === 'error' || type === 'warning') {
-      alert(fullMessage);
-    } else {
-      // For success and info, log to console (non-intrusive)
-      // In production, this could be replaced with a toast notification
-      console.log(fullMessage);
-    }
+    // Use toast system for all notification types
+    toast.show({
+      message: options.message,
+      title: options.title,
+      type,
+      duration: options.duration,
+      dismissible: options.dismissible,
+    });
   }
 
   /**
