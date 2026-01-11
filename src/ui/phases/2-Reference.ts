@@ -80,6 +80,12 @@ export class ReferencePhase {
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: 44100 });
 
+      // Validate sample rate (some browsers may use different rate)
+      if (this.audioContext.sampleRate !== 44100) {
+        logger.warn(`⚠️ AudioContext sample rate is ${this.audioContext.sampleRate}Hz instead of requested 44100Hz`);
+        logger.warn('   This may cause slight differences in feature extraction.');
+      }
+
       // Show recording modal
       this.showRecordingModal();
 
@@ -136,6 +142,9 @@ export class ReferencePhase {
    * Cleanup resources (AudioContext, MediaStream, etc.)
    */
   private cleanup(): void {
+    // Reset state flags to prevent memory leaks
+    this.isRecordingActive = false;
+
     // Stop media recorder if active
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop();
@@ -188,7 +197,6 @@ export class ReferencePhase {
     this.audioChunks = [];
     this.mediaRecorder = new MediaRecorder(this.mediaStream);
     this.isRecordingActive = true;
-    this.recordingStartTime = Date.now();
 
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
@@ -198,16 +206,23 @@ export class ReferencePhase {
 
     this.mediaRecorder.onstop = () => this.processRecording();
 
-    // Start recording
+    // Set up onstart handler to ensure precise timing
+    this.mediaRecorder.onstart = () => {
+      // Record actual start time when recording actually begins
+      this.recordingStartTime = Date.now();
+
+      // Update timer (shows dual-phase UI)
+      this.startTimer();
+
+      // Auto-stop after full duration (15 seconds)
+      // Using setTimeout here ensures timer starts AFTER recording actually started
+      setTimeout(() => {
+        this.stopRecording();
+      }, this.recordingDuration * 1000);
+    };
+
+    // Start recording (will trigger onstart event)
     this.mediaRecorder.start();
-
-    // Update timer (shows dual-phase UI)
-    this.startTimer();
-
-    // Auto-stop after full duration (15 seconds)
-    setTimeout(() => {
-      this.stopRecording();
-    }, this.recordingDuration * 1000);
   }
 
   /**

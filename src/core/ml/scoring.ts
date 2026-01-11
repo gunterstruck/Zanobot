@@ -155,8 +155,11 @@ export function generateDiagnosisResult(
   // Calculate confidence
   const confidence = calculateConfidence(model, cosineSimilarities);
 
+  // Generate unique ID with timestamp + random suffix to prevent collisions
+  const uniqueId = `diag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
   return {
-    id: `diag-${Date.now()}`,
+    id: uniqueId,
     machineId,
     timestamp: Date.now(),
     healthScore: Math.round(healthScore * 10) / 10, // Round to 1 decimal
@@ -258,6 +261,12 @@ export function calculateDegradation(previousScore: number, currentScore: number
 }
 
 /**
+ * Score history buffer size for filtering
+ * As specified in Technical Report (p.12)
+ */
+export const SCORE_HISTORY_SIZE = 10;
+
+/**
  * UI Post-Processing Filter for score smoothing
  *
  * Implements the filtering strategy from Technical Report (p.12):
@@ -269,22 +278,22 @@ export function calculateDegradation(previousScore: number, currentScore: number
  *
  * This prevents display "jitter" and provides stable readings.
  *
- * @param scores - Array of recent health scores (should contain at least 10 values)
+ * @param scores - Array of recent health scores (should contain at least SCORE_HISTORY_SIZE values)
  * @returns Filtered (smoothed) health score
  */
 export function filterHealthScoreForDisplay(scores: number[]): number {
-  // Need at least 10 scores for proper filtering
-  if (scores.length < 10) {
+  // Need at least SCORE_HISTORY_SIZE scores for proper filtering
+  if (scores.length < SCORE_HISTORY_SIZE) {
     // Fallback: return mean of available scores
     if (scores.length === 0) return 0;
     return scores.reduce((sum, val) => sum + val, 0) / scores.length;
   }
 
-  // Take last 10 scores
-  const last10 = scores.slice(-10);
+  // Take last SCORE_HISTORY_SIZE scores
+  const lastN = scores.slice(-SCORE_HISTORY_SIZE);
 
   // Sort ascending
-  const sorted = [...last10].sort((a, b) => a - b);
+  const sorted = [...lastN].sort((a, b) => a - b);
 
   // Remove 2 lowest (indices 0, 1) and 2 highest (indices 8, 9)
   const trimmed = sorted.slice(2, 8);
@@ -302,7 +311,7 @@ export function filterHealthScoreForDisplay(scores: number[]): number {
  */
 export class ScoreHistory {
   private scores: number[] = [];
-  private maxSize: number = 10;
+  private maxSize: number = SCORE_HISTORY_SIZE;
 
   /**
    * Add a new score to the history
@@ -346,9 +355,9 @@ export class ScoreHistory {
   /**
    * Check if history has enough scores for reliable filtering
    *
-   * @returns True if >= 10 scores available
+   * @returns True if >= SCORE_HISTORY_SIZE scores available
    */
   hasFullHistory(): boolean {
-    return this.scores.length >= 10;
+    return this.scores.length >= SCORE_HISTORY_SIZE;
   }
 }

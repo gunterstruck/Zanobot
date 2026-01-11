@@ -185,6 +185,7 @@ export class SmartStartManager {
         this.state.phase = 'waiting';
         this.waitStartTime = now;
         this.notifyStateChange();
+        return false; // Phase changed, wait for next processAudio() call
       } else {
         this.notifyStateChange();
         return false; // Still warming up
