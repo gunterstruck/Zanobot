@@ -168,10 +168,16 @@ export class ReferencePhase {
       this.mediaStream = null;
     }
 
-    // Close audio context
+    // Close audio context with error handling to prevent leaks
     if (this.audioContext && this.audioContext.state !== 'closed') {
-      this.audioContext.close();
-      this.audioContext = null;
+      try {
+        this.audioContext.close();
+      } catch (error) {
+        logger.warn('⚠️ Error closing AudioContext:', error);
+      } finally {
+        // Always null the reference to prevent leaks
+        this.audioContext = null;
+      }
     }
 
     logger.debug('🧹 Reference phase cleanup complete');
@@ -805,10 +811,17 @@ export class ReferencePhase {
         minute: '2-digit',
       });
 
-      li.innerHTML = `
-        <span class="state-label">${model.label}</span>
-        <span class="state-date">${dateStr}</span>
-      `;
+      // Use textContent instead of innerHTML to prevent XSS attacks
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'state-label';
+      labelSpan.textContent = model.label;
+
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'state-date';
+      dateSpan.textContent = dateStr;
+
+      li.appendChild(labelSpan);
+      li.appendChild(dateSpan);
 
       stateList.appendChild(li);
     });

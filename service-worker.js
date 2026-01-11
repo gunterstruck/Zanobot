@@ -5,6 +5,25 @@
 
 const CACHE_VERSION = 'zanobot-v1.0.8';
 const CACHE_NAME = `${CACHE_VERSION}`;
+const DEBUG = false; // Set to true for development, false for production
+
+// Helper function for conditional logging
+function log(...args) {
+    if (DEBUG) {
+        log(...args);
+    }
+}
+
+function warn(...args) {
+    if (DEBUG) {
+        warn(...args);
+    }
+}
+
+function error(...args) {
+    // Always log errors, even in production
+    console.error(...args);
+}
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -27,31 +46,47 @@ const RUNTIME_CACHE_URLS = [
  * Cache static assets when service worker is installed
  */
 self.addEventListener('install', (event) => {
-    console.log('[SW] Installing service worker...');
+    log('[SW] Installing service worker...');
 
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(async (cache) => {
-                console.log('[SW] Caching static assets');
+                log('[SW] Caching static assets');
+
+                // Track which critical files failed to cache
+                const criticalFiles = ['./index.html', './js/app.js'];
+                const failedCriticalFiles = [];
 
                 // Cache each file individually to handle errors gracefully
                 const cachePromises = STATIC_ASSETS.map(async (url) => {
                     try {
                         await cache.add(url);
-                        console.log('[SW] Cached:', url);
+                        log('[SW] Cached:', url);
                     } catch (error) {
-                        console.warn('[SW] Failed to cache:', url, error);
+                        warn('[SW] Failed to cache:', url, error);
+                        if (criticalFiles.includes(url)) {
+                            failedCriticalFiles.push(url);
+                        }
                     }
                 });
 
                 await Promise.all(cachePromises);
+
+                // Throw error if critical files failed to cache
+                if (failedCriticalFiles.length > 0) {
+                    throw new Error(
+                        `Failed to cache critical files: ${failedCriticalFiles.join(', ')}. ` +
+                        'Offline functionality will not work properly.'
+                    );
+                }
             })
             .then(() => {
-                console.log('[SW] Installation complete');
+                log('[SW] Installation complete');
                 return self.skipWaiting();
             })
             .catch((error) => {
-                console.error('[SW] Installation failed:', error);
+                error('[SW] Installation failed:', error);
+                throw error; // Re-throw to prevent faulty service worker installation
             })
     );
 });
@@ -61,7 +96,7 @@ self.addEventListener('install', (event) => {
  * Clean up old caches
  */
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating service worker...');
+    log('[SW] Activating service worker...');
 
     event.waitUntil(
         caches.keys()
@@ -73,13 +108,13 @@ self.addEventListener('activate', (event) => {
                             return cacheName !== CACHE_NAME && cacheName.startsWith('zanobot-');
                         })
                         .map((cacheName) => {
-                            console.log('[SW] Deleting old cache:', cacheName);
+                            log('[SW] Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         })
                 );
             })
             .then(() => {
-                console.log('[SW] Activation complete');
+                log('[SW] Activation complete');
                 return self.clients.claim();
             })
     );
@@ -106,7 +141,7 @@ self.addEventListener('fetch', (event) => {
         caches.match(request)
             .then((cachedResponse) => {
                 if (cachedResponse) {
-                    console.log('[SW] Serving from cache:', request.url);
+                    log('[SW] Serving from cache:', request.url);
                     return cachedResponse;
                 }
 
@@ -127,7 +162,7 @@ self.addEventListener('fetch', (event) => {
                         if (shouldCache) {
                             caches.open(CACHE_NAME)
                                 .then((cache) => {
-                                    console.log('[SW] Caching runtime asset:', request.url);
+                                    log('[SW] Caching runtime asset:', request.url);
                                     cache.put(request, responseToCache);
                                 });
                         }
@@ -135,7 +170,7 @@ self.addEventListener('fetch', (event) => {
                         return response;
                     })
                     .catch((error) => {
-                        console.error('[SW] Fetch failed:', error);
+                        error('[SW] Fetch failed:', error);
 
                         // Return offline page if available
                         return caches.match('/index.html');
@@ -149,7 +184,7 @@ self.addEventListener('fetch', (event) => {
  * Handle messages from the app
  */
 self.addEventListener('message', (event) => {
-    console.log('[SW] Message received:', event.data);
+    log('[SW] Message received:', event.data);
 
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
@@ -173,7 +208,7 @@ self.addEventListener('message', (event) => {
  * Handle background sync for offline actions
  */
 self.addEventListener('sync', (event) => {
-    console.log('[SW] Background sync:', event.tag);
+    log('[SW] Background sync:', event.tag);
 
     if (event.tag === 'sync-data') {
         event.waitUntil(syncData());
@@ -187,7 +222,7 @@ self.addEventListener('sync', (event) => {
  * Syncs diagnoses and recordings when connection is restored.
  */
 async function syncData() {
-    console.log('[SW] 🔄 Starting background sync...');
+    log('[SW] 🔄 Starting background sync...');
 
     try {
         // Open IndexedDB
@@ -198,7 +233,7 @@ async function syncData() {
         const store = tx.objectStore('diagnoses');
         const diagnoses = await getAllFromStore(store);
 
-        console.log(`[SW] Found ${diagnoses.length} diagnoses to potentially sync`);
+        log(`[SW] Found ${diagnoses.length} diagnoses to potentially sync`);
 
         // Check if there are any pending syncs (this would require a sync flag in data model)
         // For now, we just log that sync is ready
@@ -220,16 +255,16 @@ async function syncData() {
                     diagnosis.syncedAt = Date.now();
                     await updateDiagnosis(db, diagnosis);
                 } catch (error) {
-                    console.error('[SW] Sync failed for diagnosis:', diagnosis.id, error);
+                    error('[SW] Sync failed for diagnosis:', diagnosis.id, error);
                 }
             }
         }
         */
 
-        console.log('[SW] ✅ Background sync complete');
+        log('[SW] ✅ Background sync complete');
         return Promise.resolve();
     } catch (error) {
-        console.error('[SW] ❌ Sync error:', error);
+        error('[SW] ❌ Sync error:', error);
         return Promise.reject(error);
     }
 }
@@ -239,7 +274,7 @@ async function syncData() {
  */
 function openIndexedDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('zanobot-db', 2);
+        const request = indexedDB.open('zanobot-db', 3);
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
@@ -261,7 +296,7 @@ function getAllFromStore(store) {
  * Handle push notifications
  */
 self.addEventListener('push', (event) => {
-    console.log('[SW] Push notification received');
+    log('[SW] Push notification received');
 
     const options = {
         body: event.data ? event.data.text() : 'Neue Benachrichtigung von Zanobot',
@@ -294,7 +329,7 @@ self.addEventListener('push', (event) => {
  * Handle notification clicks
  */
 self.addEventListener('notificationclick', (event) => {
-    console.log('[SW] Notification clicked:', event.action);
+    log('[SW] Notification clicked:', event.action);
 
     event.notification.close();
 
@@ -305,4 +340,4 @@ self.addEventListener('notificationclick', (event) => {
     }
 });
 
-console.log('[SW] Service Worker loaded');
+log('[SW] Service Worker loaded');

@@ -50,12 +50,20 @@ export class Router {
    * Initialize Phase 2 (Reference) and Phase 3 (Diagnose)
    */
   private initializePhases(machine: Machine): void {
-    // Cleanup previous instances
+    // Cleanup previous instances with error handling
     if (this.referencePhase) {
-      this.referencePhase.destroy();
+      try {
+        this.referencePhase.destroy();
+      } catch (error) {
+        logger.warn('⚠️ Error destroying reference phase:', error);
+      }
     }
     if (this.diagnosePhase) {
-      this.diagnosePhase.destroy();
+      try {
+        this.diagnosePhase.destroy();
+      } catch (error) {
+        logger.warn('⚠️ Error destroying diagnose phase:', error);
+      }
     }
 
     // Create new instances

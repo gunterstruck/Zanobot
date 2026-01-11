@@ -82,7 +82,7 @@ export interface DiagnosisResult {
   machineId: string;
   timestamp: number;
   healthScore: number;           // 0-100%
-  status: 'healthy' | 'uncertain' | 'faulty' | string; // Allow string for flexibility
+  status: 'healthy' | 'uncertain' | 'faulty'; // Strict type for proper type checking
   confidence: number;            // 0-100% (model quality indicator)
   rawCosineSimilarity?: number;  // Raw cosine value (optional for real-time)
   metadata?: Record<string, any>; // Flexible metadata

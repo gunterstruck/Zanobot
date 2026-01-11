@@ -212,22 +212,26 @@ export class DiagnosePhase {
       this.mediaStream = null;
     }
 
-    // Close audio context
+    // Close audio context with error handling to prevent leaks
     if (this.audioContext && this.audioContext.state !== 'closed') {
-      this.audioContext.close();
-      this.audioContext = null;
+      try {
+        this.audioContext.close();
+      } catch (error) {
+        logger.warn('⚠️ Error closing AudioContext:', error);
+      } finally {
+        // Always null the reference to prevent leaks
+        this.audioContext = null;
+      }
     }
 
     // Clean up dynamically created DOM elements to prevent memory leaks
-    const liveDisplay = document.querySelector('.live-display');
-    if (liveDisplay) {
-      liveDisplay.remove();
-    }
+    // Remove ALL live display elements (use querySelectorAll to prevent memory leaks)
+    const liveDisplays = document.querySelectorAll('.live-display');
+    liveDisplays.forEach((element) => element.remove());
 
-    const smartStartStatus = document.getElementById('smart-start-status');
-    if (smartStartStatus) {
-      smartStartStatus.remove();
-    }
+    // Remove all smart start status elements
+    const smartStartStatuses = document.querySelectorAll('#smart-start-status');
+    smartStartStatuses.forEach((element) => element.remove());
 
     logger.debug('🧹 Cleanup complete');
   }
@@ -243,6 +247,11 @@ export class DiagnosePhase {
    * @param chunk - Audio chunk from AudioWorklet (4096 samples)
    */
   private processChunkDirectly(chunk: Float32Array): void {
+    // Check if processing is active to prevent race conditions during cleanup
+    if (!this.isProcessing) {
+      return;
+    }
+
     // Validate reference models exist
     if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
       return;
@@ -467,7 +476,8 @@ export class DiagnosePhase {
 
     // Add Smart Start status and live score display
     const modalBody = document.querySelector('#recording-modal .modal-body');
-    if (modalBody && !document.getElementById('live-health-score')) {
+    // Check if live-display already exists to prevent creating multiple instances
+    if (modalBody && !document.querySelector('.live-display')) {
       const liveDisplay = document.createElement('div');
       liveDisplay.className = 'live-display';
       liveDisplay.innerHTML = `

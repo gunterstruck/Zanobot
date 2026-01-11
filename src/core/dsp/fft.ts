@@ -171,6 +171,8 @@ export function fftRecursive(x: Complex[]): Complex[] {
 /**
  * Calculate magnitude (absolute value) of FFT output
  *
+ * Uses Math.hypot for better numerical stability and overflow prevention.
+ *
  * @param fftResult - Complex FFT output
  * @returns Magnitude spectrum (real values)
  */
@@ -179,7 +181,8 @@ export function getMagnitude(fftResult: Complex[]): Float64Array {
 
   for (let i = 0; i < fftResult.length; i++) {
     const { real, imag } = fftResult[i];
-    magnitude[i] = Math.sqrt(real * real + imag * imag);
+    // Use Math.hypot for numerical stability (prevents overflow)
+    magnitude[i] = Math.hypot(real, imag);
   }
 
   return magnitude;

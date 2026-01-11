@@ -18,6 +18,8 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.bufferSize = 16384; // Large enough for chunk processing
     this.ringBuffer = new Float32Array(this.bufferSize);
     this.writePos = 0;
+    this.readPos = 0;
+    this.samplesWritten = 0; // Track total samples written to detect wrap-around
 
     // Smart Start state
     this.smartStartActive = false;
@@ -52,6 +54,8 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       case 'reset-buffer':
         this.ringBuffer.fill(0);
         this.writePos = 0;
+        this.readPos = 0;
+        this.samplesWritten = 0;
         break;
     }
   }
@@ -64,6 +68,8 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.phase = 'warmup';
     this.warmUpStartTime = currentTime * 1000; // Convert to ms
     this.writePos = 0;
+    this.readPos = 0;
+    this.samplesWritten = 0;
     this.ringBuffer.fill(0);
 
     this.port.postMessage({
@@ -177,36 +183,48 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
     // Normal recording mode (write to ring buffer)
     if (this.phase === 'recording') {
+      // Write samples to ring buffer
       for (let i = 0; i < inputChannel.length; i++) {
         this.ringBuffer[this.writePos] = inputChannel[i];
         this.writePos = (this.writePos + 1) % this.bufferSize;
+        this.samplesWritten++;
       }
 
       // Send audio chunk to main thread for real-time processing
       // Transfer a copy of the data every ~14553 samples (330ms at 44.1kHz)
       // This matches the DSP window size for feature extraction
-      const targetChunkSize = 14553;
+      const CHUNK_SIZE_330MS_AT_44100HZ = 14553;
 
-      if (this.writePos % targetChunkSize === 0 && this.writePos >= targetChunkSize) {
-        // Extract latest chunk
-        const chunk = new Float32Array(targetChunkSize);
+      // Only send chunks if we have enough data written and at proper intervals
+      // Check if we have accumulated enough samples for a complete chunk
+      if (this.samplesWritten >= CHUNK_SIZE_330MS_AT_44100HZ) {
+        const availableSamples = Math.min(this.samplesWritten, this.bufferSize);
+        const samplesFromLastChunk = (this.samplesWritten - CHUNK_SIZE_330MS_AT_44100HZ) % CHUNK_SIZE_330MS_AT_44100HZ;
 
-        let readPos = this.writePos - targetChunkSize;
-        if (readPos < 0) {
-          readPos += this.bufferSize;
+        // Send chunk when we have accumulated exactly a chunk's worth of new data
+        if (samplesFromLastChunk < inputChannel.length) {
+          // Extract latest chunk using proper circular buffer logic
+          const chunk = new Float32Array(CHUNK_SIZE_330MS_AT_44100HZ);
+
+          // Calculate read position (readPos is updated only when sending chunks)
+          let chunkReadPos = (this.writePos - CHUNK_SIZE_330MS_AT_44100HZ + this.bufferSize) % this.bufferSize;
+
+          // Copy data from circular buffer, handling wrap-around
+          for (let i = 0; i < CHUNK_SIZE_330MS_AT_44100HZ; i++) {
+            chunk[i] = this.ringBuffer[chunkReadPos];
+            chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
+          }
+
+          // Update read position to current write position
+          this.readPos = this.writePos;
+
+          // Transfer chunk to main thread
+          this.port.postMessage({
+            type: 'audio-chunk',
+            chunk: chunk.buffer,
+            writePos: this.writePos
+          }, [chunk.buffer]); // Transfer ownership for zero-copy
         }
-
-        for (let i = 0; i < targetChunkSize; i++) {
-          chunk[i] = this.ringBuffer[readPos];
-          readPos = (readPos + 1) % this.bufferSize;
-        }
-
-        // Transfer chunk to main thread
-        this.port.postMessage({
-          type: 'audio-chunk',
-          chunk: chunk.buffer,
-          writePos: this.writePos
-        }, [chunk.buffer]); // Transfer ownership for zero-copy
       }
     }
 

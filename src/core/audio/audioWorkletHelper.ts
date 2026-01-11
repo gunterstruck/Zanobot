@@ -204,6 +204,8 @@ export class AudioWorkletManager {
    */
   cleanup(): void {
     if (this.workletNode) {
+      // Clear message handler to prevent memory leaks
+      this.workletNode.port.onmessage = null;
       this.workletNode.disconnect();
       this.workletNode = null;
     }
