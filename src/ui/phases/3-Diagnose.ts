@@ -280,11 +280,24 @@ export class DiagnosePhase {
 
   /**
    * Update Smart Start status message
+   *
+   * Shows descriptive feedback during the extended settling time (5 seconds).
+   * This helps the user understand that the system is waiting for OS audio
+   * filters (AGC, noise cancellation) to stabilize.
    */
   private updateSmartStartStatus(message: string): void {
     const statusElement = document.getElementById('smart-start-status');
     if (statusElement) {
-      statusElement.textContent = message;
+      // Enhance the message with more descriptive text
+      let enhancedMessage = message;
+
+      if (message.includes('Stabilisierung')) {
+        enhancedMessage = `🎙️ ${message}\n(Mikrofon pegelt ein, OS-Filter werden stabilisiert...)`;
+      } else if (message.includes('Warte')) {
+        enhancedMessage = `🔍 ${message}`;
+      }
+
+      statusElement.textContent = enhancedMessage;
 
       // Hide once recording starts
       if (message.includes('läuft')) {
