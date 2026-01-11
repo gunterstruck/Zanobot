@@ -83,87 +83,33 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
       }
 
       // Migration from v1 to v2: Fix keyPath if upgrading from old version
+      // SIMPLIFIED MIGRATION: Due to race condition issues with asynchronous cursor operations
+      // in the synchronous upgrade callback, we simply recreate the store.
+      // This results in data loss for v1 users, but prevents database corruption.
       if (db.objectStoreNames.contains('diagnoses') && oldVersion < 2) {
-        logger.info('🔄 Migrating diagnoses store: fixing keyPath from timestamp to id');
+        logger.warn('🔄 Migrating diagnoses store from v1 to v2');
+        logger.warn('   ⚠️ Old diagnosis data will be lost due to schema change (keyPath: timestamp → id)');
 
         try {
-          // Step 1: Create temporary store for backup
-          const tempStore = db.createObjectStore('diagnoses_temp', { keyPath: 'id' });
-
-          // Step 2: Copy all data from old store to temp store
-          const oldStore = transaction.objectStore('diagnoses');
-          const cursorRequest = oldStore.openCursor();
-          let migratedCount = 0;
-
-          cursorRequest.onsuccess = (event) => {
-            const cursor = (event.target as IDBRequest).result;
-            if (cursor) {
-              const record = cursor.value as DiagnosisResult;
-
-              // Ensure record has 'id' field (add if missing)
-              if (!record.id) {
-                record.id = `diag-${record.timestamp}`;
-              }
-
-              // Add to temp store
-              tempStore.add(record);
-              migratedCount++;
-
-              cursor.continue();
-            } else {
-              logger.info(`   📦 Backed up ${migratedCount} diagnoses`);
-            }
-          };
-
-          cursorRequest.onerror = () => {
-            logger.error('   ❌ Cursor error during backup:', cursorRequest.error);
-          };
-
-          // Step 3: Delete old store
+          // Delete old store with incorrect keyPath
           db.deleteObjectStore('diagnoses');
 
-          // Step 4: Rename temp store to 'diagnoses'
-          // Note: IndexedDB doesn't support renaming, so we create new and copy again
-          const newStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
-          newStore.createIndex('by-machine', 'machineId');
-          newStore.createIndex('by-timestamp', 'timestamp');
-          newStore.createIndex('by-status', 'status');
-
-          // Copy from temp to new store
-          const tempCursor = tempStore.openCursor();
-          let restoredCount = 0;
-
-          tempCursor.onsuccess = (event) => {
-            const cursor = (event.target as IDBRequest).result;
-            if (cursor) {
-              newStore.add(cursor.value);
-              restoredCount++;
-              cursor.continue();
-            } else {
-              // Step 5: Delete temp store
-              db.deleteObjectStore('diagnoses_temp');
-              logger.info(`   ✅ Migrated ${restoredCount} diagnoses to new schema`);
-            }
-          };
-
-          tempCursor.onerror = () => {
-            logger.error('   ❌ Failed to restore data:', tempCursor.error);
-            // Clean up temp store even on error
-            if (db.objectStoreNames.contains('diagnoses_temp')) {
-              db.deleteObjectStore('diagnoses_temp');
-            }
-          };
-        } catch (error) {
-          logger.error('   ❌ Migration error:', error);
-          // Fallback: Just recreate the store (data loss, but app doesn't break)
-          if (db.objectStoreNames.contains('diagnoses')) {
-            db.deleteObjectStore('diagnoses');
-          }
+          // Create new store with correct keyPath
           const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
           diagnosisStore.createIndex('by-machine', 'machineId');
           diagnosisStore.createIndex('by-timestamp', 'timestamp');
           diagnosisStore.createIndex('by-status', 'status');
-          logger.warn('   ⚠️ Data could not be migrated. Old diagnoses may be lost.');
+
+          logger.info('   ✅ Diagnoses store recreated with correct schema');
+        } catch (error) {
+          logger.error('   ❌ Migration error:', error);
+          // Ensure store exists even on error
+          if (!db.objectStoreNames.contains('diagnoses')) {
+            const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
+            diagnosisStore.createIndex('by-machine', 'machineId');
+            diagnosisStore.createIndex('by-timestamp', 'timestamp');
+            diagnosisStore.createIndex('by-status', 'status');
+          }
         }
       }
     },
@@ -319,8 +265,12 @@ export async function saveDiagnosis(diagnosis: DiagnosisResult): Promise<void> {
 /**
  * Get all diagnoses for a machine
  *
+ * NOTE: This function loads all diagnoses into memory and then sorts them.
+ * For machines with thousands of diagnoses, this may cause performance issues.
+ * Consider using limit parameter to reduce memory usage.
+ *
  * @param machineId - Machine ID
- * @param limit - Maximum number of results (optional)
+ * @param limit - Maximum number of results (optional, recommended for large datasets)
  * @returns Array of diagnoses (sorted by timestamp, newest first)
  */
 export async function getDiagnosesForMachine(
@@ -328,11 +278,15 @@ export async function getDiagnosesForMachine(
   limit?: number
 ): Promise<DiagnosisResult[]> {
   const db = await initDB();
+
+  // Fetch all diagnoses for this machine
+  // TODO: For very large datasets, consider implementing cursor-based pagination
   const diagnoses = await db.getAllFromIndex('diagnoses', 'by-machine', machineId);
 
   // Sort by timestamp descending (newest first)
   diagnoses.sort((a, b) => b.timestamp - a.timestamp);
 
+  // Apply limit if specified to reduce memory usage
   return limit ? diagnoses.slice(0, limit) : diagnoses;
 }
 

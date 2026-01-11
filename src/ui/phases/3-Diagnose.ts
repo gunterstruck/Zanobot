@@ -43,8 +43,6 @@ export class DiagnosePhase {
 
   // Real-time processing
   private isProcessing: boolean = false;
-  private ringBuffer: Float32Array;
-  private ringBufferWritePos: number = 0;
   private scoreHistory: ScoreHistory;
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
@@ -60,9 +58,6 @@ export class DiagnosePhase {
 
     // Calculate chunk size (330ms)
     this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.sampleRate);
-
-    // Initialize ring buffer (2x chunk size for safety)
-    this.ringBuffer = new Float32Array(this.chunkSize * 2);
 
     // Initialize score history for filtering
     this.scoreHistory = new ScoreHistory();
@@ -103,15 +98,17 @@ export class DiagnosePhase {
       this.lastProcessedStatus = 'UNKNOWN';
       this.scoreHistory.clear();
 
-      // Reset ring buffer to prevent contamination from previous runs
-      this.ringBuffer.fill(0);
-      this.ringBufferWritePos = 0;
-
       // Request microphone access using central helper (same as Phase 2!)
       this.mediaStream = await getRawAudioStream();
 
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
+
+      // Validate sample rate (some browsers may use different rate)
+      if (this.audioContext.sampleRate !== this.sampleRate) {
+        logger.warn(`⚠️ AudioContext sample rate is ${this.audioContext.sampleRate}Hz instead of requested ${this.sampleRate}Hz`);
+        logger.warn('   Diagnosis may be less accurate due to sample rate mismatch.');
+      }
 
       // Show recording modal
       this.showRecordingModal();
@@ -189,6 +186,11 @@ export class DiagnosePhase {
     // Stop processing
     this.isProcessing = false;
 
+    // Reset state flags to prevent memory leaks
+    this.hasValidMeasurement = false;
+    this.lastProcessedScore = 0;
+    this.lastProcessedStatus = 'UNKNOWN';
+
     // Cleanup AudioWorklet
     if (this.audioWorkletManager) {
       this.audioWorkletManager.cleanup();
@@ -224,7 +226,13 @@ export class DiagnosePhase {
    * @param chunk - Audio chunk from AudioWorklet (4096 samples)
    */
   private processChunkDirectly(chunk: Float32Array): void {
+    // Validate reference model exists and has required fields
     if (!this.machine.referenceModel) {
+      return;
+    }
+
+    if (!this.machine.referenceModel.weightVector || !this.machine.referenceModel.scalingConstant) {
+      logger.error('❌ Invalid reference model: missing weightVector or scalingConstant');
       return;
     }
 

@@ -100,7 +100,8 @@ export function matrixInverse(A: Float64Array[]): Float64Array[] {
     [augmented[i], augmented[maxRow]] = [augmented[maxRow], augmented[i]];
 
     // Check for singular matrix
-    if (Math.abs(augmented[i][i]) < 1e-10) {
+    // Using 1e-12 threshold as we often work with large regularization (λ = 1e9)
+    if (Math.abs(augmented[i][i]) < 1e-12) {
       throw new Error('Matrix is singular and cannot be inverted');
     }
 
@@ -216,7 +217,9 @@ export function cosineSimilarity(a: Float64Array, b: Float64Array): number {
   const magA = vectorMagnitude(a);
   const magB = vectorMagnitude(b);
 
-  if (magA === 0 || magB === 0) {
+  // Use epsilon threshold to prevent numerical instability with very small magnitudes
+  const EPSILON = 1e-10;
+  if (magA < EPSILON || magB < EPSILON) {
     return 0;
   }
 

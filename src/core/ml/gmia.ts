@@ -52,6 +52,10 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
     throw new Error('Cannot train model with empty feature set');
   }
 
+  if (!features[0] || features[0].length === 0) {
+    throw new Error('Invalid feature vector: first feature is empty or undefined');
+  }
+
   const numSamples = features.length;
   const featureDim = features[0].length;
 
