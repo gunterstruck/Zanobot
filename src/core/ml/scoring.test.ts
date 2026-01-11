@@ -22,6 +22,7 @@ describe('Health Scoring', () => {
   const mockModel: GMIAModel = {
     machineId: 'test-machine',
     label: 'Baseline',
+    type: 'healthy',
     weightVector: new Float64Array([1, 2, 3]),
     regularization: 1e9,
     scalingConstant: 2.5,
@@ -268,10 +269,29 @@ describe('Health Scoring', () => {
 
   describe('classifyDiagnosticState() - MULTICLASS DIAGNOSIS', () => {
     // Create test models with different characteristics
+    // Mix of healthy states and fault states to test type system
     const baselineModel: GMIAModel = {
       machineId: 'test-machine',
       label: 'Baseline',
+      type: 'healthy',
       weightVector: new Float64Array([1.0, 0.5, 0.3]),
+      regularization: 1e9,
+      scalingConstant: 2.5,
+      featureDimension: 3,
+      trainingDate: Date.now(),
+      trainingDuration: 10,
+      sampleRate: 44100,
+      metadata: {
+        meanCosineSimilarity: 0.95,
+        targetScore: 0.9,
+      },
+    };
+
+    const healthyModel2: GMIAModel = {
+      machineId: 'test-machine',
+      label: 'Volllast',
+      type: 'healthy',
+      weightVector: new Float64Array([0.8, 0.6, 0.4]),
       regularization: 1e9,
       scalingConstant: 2.5,
       featureDimension: 3,
@@ -287,6 +307,7 @@ describe('Health Scoring', () => {
     const faultModel1: GMIAModel = {
       machineId: 'test-machine',
       label: 'Unwucht',
+      type: 'faulty',
       weightVector: new Float64Array([0.3, 1.0, 0.5]),
       regularization: 1e9,
       scalingConstant: 2.5,
@@ -303,6 +324,7 @@ describe('Health Scoring', () => {
     const faultModel2: GMIAModel = {
       machineId: 'test-machine',
       label: 'Lagerschaden',
+      type: 'faulty',
       weightVector: new Float64Array([0.5, 0.3, 1.0]),
       regularization: 1e9,
       scalingConstant: 2.5,
@@ -352,7 +374,7 @@ describe('Health Scoring', () => {
       expect(result.status).toBe('faulty');
     });
 
-    it('should detect UNKNOWN for low scores (< 70%)', () => {
+    it('should detect uncertain for low scores (< 70%)', () => {
       const models = [baselineModel, faultModel1, faultModel2];
 
       // Feature vector with very low similarity to all models
@@ -365,9 +387,9 @@ describe('Health Scoring', () => {
 
       const result = classifyDiagnosticState(models, featureVector);
 
-      // Should be UNKNOWN (anomaly that doesn't match any known state)
+      // Should be uncertain (anomaly that doesn't match any known state)
       expect(result.metadata?.detectedState).toBe('UNKNOWN');
-      expect(result.status).toBe('UNKNOWN');
+      expect(result.status).toBe('uncertain');
       expect(result.healthScore).toBeLessThan(70);
     });
 
@@ -428,6 +450,79 @@ describe('Health Scoring', () => {
 
       expect(result.metadata?.detectedState).toBe('Baseline');
       expect(result.metadata?.evaluatedModels).toBe(1);
+    });
+
+    // NEW: Tests for type system (healthy vs faulty)
+    it('should inherit status from model type (healthy)', () => {
+      const models = [baselineModel, healthyModel2, faultModel1];
+
+      // Feature vector that matches healthyModel2 (Volllast)
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.78, 0.59, 0.39]),
+        absoluteFeatures: new Float64Array([0.78, 0.59, 0.39]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      // Should match Volllast (healthy state)
+      expect(result.metadata?.detectedState).toBe('Volllast');
+      expect(result.status).toBe('healthy'); // Type from model!
+    });
+
+    it('should inherit status from model type (faulty)', () => {
+      const models = [baselineModel, faultModel1, faultModel2];
+
+      // Feature vector that matches faultModel2 (Lagerschaden)
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.48, 0.29, 0.95]),
+        absoluteFeatures: new Float64Array([0.48, 0.29, 0.95]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      // Should match Lagerschaden (fault state)
+      expect(result.metadata?.detectedState).toBe('Lagerschaden');
+      expect(result.status).toBe('faulty'); // Type from model!
+    });
+
+    it('should support multiple healthy states', () => {
+      // Test scenario: Multiple normal operating conditions
+      const models = [baselineModel, healthyModel2];
+
+      // Feature matches healthyModel2
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.78, 0.59, 0.39]),
+        absoluteFeatures: new Float64Array([0.78, 0.59, 0.39]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      expect(result.metadata?.detectedState).toBe('Volllast');
+      expect(result.status).toBe('healthy');
+    });
+
+    it('should support multiple fault states', () => {
+      // Test scenario: Multiple known failure modes
+      const models = [faultModel1, faultModel2];
+
+      // Feature matches faultModel1
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.29, 0.95, 0.48]),
+        absoluteFeatures: new Float64Array([0.29, 0.95, 0.48]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, featureVector);
+
+      expect(result.metadata?.detectedState).toBe('Unwucht');
+      expect(result.status).toBe('faulty');
     });
   });
 });

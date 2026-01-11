@@ -418,20 +418,13 @@ export function classifyDiagnosticState(
   // Step 4: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
   if (bestScore < UNCERTAINTY_THRESHOLD) {
-    // Anomaly detected, but doesn't match any known fault pattern
-    status = 'UNKNOWN';
+    // Anomaly detected, but doesn't match any known pattern
+    status = 'uncertain';
     bestLabel = 'UNKNOWN';
   } else {
-    // Matched a known state
-    // Check if it's the baseline (healthy) or a fault state
-    if (bestLabel.toLowerCase().includes('baseline') ||
-        bestLabel.toLowerCase().includes('healthy') ||
-        bestLabel.toLowerCase().includes('normal')) {
-      status = 'healthy';
-    } else {
-      // It's a recognized fault state
-      status = 'faulty';
-    }
+    // Matched a known state - use model's type directly
+    // This allows multiple healthy states (e.g., "Idle", "Full Load") and multiple faults
+    status = bestModel!.type; // 'healthy' or 'faulty' from the winning model
   }
 
   // Generate diagnosis result
@@ -483,8 +476,8 @@ function generateMulticlassHint(
   label: string,
   status: DiagnosisResult['status']
 ): string {
-  if (status === 'UNKNOWN') {
-    return `Unbekannte Anomalie erkannt (${score.toFixed(1)}%). Das Signal weicht vom Normalzustand ab, passt aber zu keinem trainierten Fehlerbild. Weitere Inspektion empfohlen.`;
+  if (status === 'uncertain') {
+    return `Unbekannte Anomalie erkannt (${score.toFixed(1)}%). Das Signal weicht vom Normalzustand ab, passt aber zu keinem trainierten Zustand. Weitere Inspektion empfohlen.`;
   }
 
   if (status === 'healthy') {
