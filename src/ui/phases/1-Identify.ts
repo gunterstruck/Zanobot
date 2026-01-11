@@ -11,6 +11,7 @@ import { saveMachine, getMachine } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
+import { logger } from '@utils/logger.js';
 
 export class IdentifyPhase {
   private onMachineSelected: (machine: Machine) => void;
@@ -69,7 +70,7 @@ export class IdentifyPhase {
       this.openScannerModal();
       await this.startScanner();
     } catch (error) {
-      console.error('Scan error:', error);
+      logger.error('Scan error:', error);
       this.showScannerError('Fehler beim Starten des Scanners');
     }
   }
@@ -122,7 +123,7 @@ export class IdentifyPhase {
         this.onScanFailure.bind(this)
       );
     } catch (error: any) {
-      console.error('Failed to start scanner:', error);
+      logger.error('Failed to start scanner:', error);
       this.isScanning = false;
 
       // Check if it's a permission error
@@ -149,7 +150,7 @@ export class IdentifyPhase {
    * Handle successful scan
    */
   private async onScanSuccess(decodedText: string, decodedResult: any): Promise<void> {
-    console.log('Code detected:', decodedText);
+    logger.info('Code detected:', decodedText);
 
     // Stop scanner immediately
     await this.stopScanner();
@@ -174,7 +175,7 @@ export class IdentifyPhase {
     // Don't log every failure - it's called very frequently while scanning
     // Only log if it's not the typical "No MultiFormat Readers" message
     if (!error.includes('No MultiFormat Readers')) {
-      console.debug('Scan attempt:', error);
+      logger.debug('Scan attempt:', error);
     }
   }
 
@@ -202,7 +203,7 @@ export class IdentifyPhase {
 
       this.onMachineSelected(machine);
     } catch (error) {
-      console.error('Error processing scanned code:', error);
+      logger.error('Error processing scanned code:', error);
       this.showError('Fehler beim Verarbeiten des Codes');
     }
   }
@@ -216,7 +217,7 @@ export class IdentifyPhase {
         await this.html5QrCode.stop();
         this.html5QrCode.clear();
       } catch (error) {
-        console.error('Error stopping scanner:', error);
+        logger.error('Error stopping scanner:', error);
       } finally {
         this.isScanning = false;
       }
@@ -306,7 +307,7 @@ export class IdentifyPhase {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
     } catch (error) {
-      console.warn('Could not play beep sound:', error);
+      logger.warn('Could not play beep sound:', error);
     }
   }
 
@@ -369,7 +370,7 @@ export class IdentifyPhase {
       this.showNotification(`Maschine erstellt: ${name}`);
       this.onMachineSelected(machine);
     } catch (error) {
-      console.error('Create machine error:', error);
+      logger.error('Create machine error:', error);
       this.showError('Fehler beim Erstellen der Maschine');
     }
   }

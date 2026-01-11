@@ -12,6 +12,7 @@
 
 import { exportData, importData, getDBStats, clearAllData } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
+import { logger } from '@utils/logger.js';
 
 export class SettingsPhase {
   constructor() {}
@@ -53,7 +54,7 @@ export class SettingsPhase {
    */
   private async handleExportData(): Promise<void> {
     try {
-      console.log('📦 Exporting database...');
+      logger.info('📦 Exporting database...');
 
       // Get all data
       const data = await exportData();
@@ -76,13 +77,13 @@ export class SettingsPhase {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      console.log(`✅ Database exported: ${filename}`);
+      logger.info(`✅ Database exported: ${filename}`);
       notify.success(
         `Datei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`,
         'Datenbank exportiert'
       );
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       notify.error('Fehler beim Exportieren der Datenbank', error as Error);
     }
   }
@@ -105,7 +106,7 @@ export class SettingsPhase {
           return;
         }
 
-        console.log(`📥 Importing database from: ${file.name}`);
+        logger.info(`📥 Importing database from: ${file.name}`);
 
         try {
           // Read file
@@ -156,9 +157,9 @@ export class SettingsPhase {
           // Refresh stats display
           this.showStats();
 
-          console.log('✅ Database import complete');
+          logger.info('✅ Database import complete');
         } catch (error) {
-          console.error('Import error:', error);
+          logger.error('Import error:', error);
           notify.error('Fehler beim Importieren', error as Error, {
             duration: 0
           });
@@ -167,7 +168,7 @@ export class SettingsPhase {
 
       input.click();
     } catch (error) {
-      console.error('Import setup error:', error);
+      logger.error('Import setup error:', error);
       notify.error('Fehler beim Vorbereiten des Imports', error as Error);
     }
   }
@@ -201,7 +202,7 @@ export class SettingsPhase {
     }
 
     try {
-      console.log('🗑️ Clearing all data...');
+      logger.info('🗑️ Clearing all data...');
 
       await clearAllData();
 
@@ -210,9 +211,9 @@ export class SettingsPhase {
       // Refresh stats display
       this.showStats();
 
-      console.log('✅ All data cleared');
+      logger.info('✅ All data cleared');
     } catch (error) {
-      console.error('Clear error:', error);
+      logger.error('Clear error:', error);
       notify.error('Fehler beim Löschen der Daten', error as Error, {
         duration: 0
       });
@@ -243,9 +244,9 @@ export class SettingsPhase {
         diagnosesCount.textContent = stats.diagnoses.toString();
       }
 
-      console.log('📊 Database stats:', stats);
+      logger.debug('📊 Database stats:', stats);
     } catch (error) {
-      console.error('Stats error:', error);
+      logger.error('Stats error:', error);
     }
   }
 

@@ -23,6 +23,7 @@ import {
 } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, TrainingData } from '@data/types.js';
+import { logger } from '@utils/logger.js';
 
 export class ReferencePhase {
   private machine: Machine;
@@ -56,12 +57,12 @@ export class ReferencePhase {
    */
   private async startRecording(): Promise<void> {
     try {
-      console.log('🎙️ Phase 2: Starting reference recording with Smart Start...');
+      logger.info('🎙️ Phase 2: Starting reference recording with Smart Start...');
 
       // Check AudioWorklet support
       this.useAudioWorklet = isAudioWorkletSupported();
       if (!this.useAudioWorklet) {
-        console.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
+        logger.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
       }
 
       // Request microphone access using central helper
@@ -89,7 +90,7 @@ export class ReferencePhase {
             this.updateStatusMessage(statusMsg);
           },
           onSmartStartComplete: (rms) => {
-            console.log(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+            logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
             this.updateStatusMessage('Aufnahme läuft');
             this.actuallyStartRecording();
           },
@@ -106,12 +107,12 @@ export class ReferencePhase {
         this.audioWorkletManager.startSmartStart();
       } else {
         // Fallback: Start recording immediately without Smart Start
-        console.log('⏭️ Skipping Smart Start (AudioWorklet not supported)');
+        logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
         this.updateStatusMessage('Aufnahme läuft');
         setTimeout(() => this.actuallyStartRecording(), 500);
       }
     } catch (error) {
-      console.error('Recording error:', error);
+      logger.error('Recording error:', error);
       notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
         title: 'Zugriff verweigert',
         duration: 0
@@ -155,7 +156,7 @@ export class ReferencePhase {
       this.audioContext = null;
     }
 
-    console.log('🧹 Reference phase cleanup complete');
+    logger.debug('🧹 Reference phase cleanup complete');
   }
 
   /**
@@ -220,12 +221,12 @@ export class ReferencePhase {
       const arrayBuffer = await blob.arrayBuffer();
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
-      console.log(`🎙️ Recording complete: ${audioBuffer.duration.toFixed(2)}s`);
+      logger.info(`🎙️ Recording complete: ${audioBuffer.duration.toFixed(2)}s`);
 
       // Extract features
-      console.log('📊 Extracting features...');
+      logger.info('📊 Extracting features...');
       const features = extractFeatures(audioBuffer, DEFAULT_DSP_CONFIG);
-      console.log(`   Extracted ${features.length} feature vectors`);
+      logger.info(`   Extracted ${features.length} feature vectors`);
 
       // Prepare training data
       const trainingData: TrainingData = {
@@ -242,7 +243,7 @@ export class ReferencePhase {
       // Save model to database
       await updateMachineModel(this.machine.id, model);
 
-      console.log('✅ Reference model trained and saved!');
+      logger.info('✅ Reference model trained and saved!');
 
       // Update UI
       this.hideRecordingModal();
@@ -250,7 +251,7 @@ export class ReferencePhase {
       // Show success with option to download reference audio
       this.showSuccessWithExport();
     } catch (error) {
-      console.error('Processing error:', error);
+      logger.error('Processing error:', error);
       notify.error('Aufnahme konnte nicht verarbeitet werden', error as Error, {
         title: 'Verarbeitungsfehler',
         duration: 0
@@ -297,9 +298,9 @@ export class ReferencePhase {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      console.log(`📥 Reference audio exported: ${filename}`);
+      logger.info(`📥 Reference audio exported: ${filename}`);
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       notify.error('Export fehlgeschlagen', error as Error, {
         title: 'Exportfehler',
       });

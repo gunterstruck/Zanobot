@@ -31,6 +31,7 @@ import {
 } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
+import { logger } from '@utils/logger.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -88,12 +89,12 @@ export class DiagnosePhase {
         return;
       }
 
-      console.log('🔴 Starting REAL-TIME diagnosis with Smart Start...');
+      logger.info('🔴 Starting REAL-TIME diagnosis with Smart Start...');
 
       // Check AudioWorklet support
       this.useAudioWorklet = isAudioWorkletSupported();
       if (!this.useAudioWorklet) {
-        console.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
+        logger.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
       }
 
       // Reset state for new diagnosis
@@ -144,7 +145,7 @@ export class DiagnosePhase {
             this.updateSmartStartStatus(statusMsg);
           },
           onSmartStartComplete: (rms) => {
-            console.log(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+            logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
             this.updateSmartStartStatus('Diagnose läuft');
             this.isProcessing = true; // Start processing incoming chunks
           },
@@ -161,16 +162,16 @@ export class DiagnosePhase {
         this.audioWorkletManager.startSmartStart();
       } else {
         // Fallback: Start processing immediately without Smart Start
-        console.log('⏭️ Skipping Smart Start (AudioWorklet not supported)');
+        logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
         this.updateSmartStartStatus('Diagnose läuft');
         this.isProcessing = true;
         // Note: Without AudioWorklet, real-time processing won't work optimally
         notify.warning('AudioWorklet nicht unterstützt', 'Diagnose-Funktionalität eingeschränkt.');
       }
 
-      console.log('✅ Real-time diagnosis initialized!');
+      logger.info('✅ Real-time diagnosis initialized!');
     } catch (error) {
-      console.error('Diagnosis error:', error);
+      logger.error('Diagnosis error:', error);
       notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
         title: 'Zugriff verweigert',
         duration: 0
@@ -211,7 +212,7 @@ export class DiagnosePhase {
       this.audioContext = null;
     }
 
-    console.log('🧹 Cleanup complete');
+    logger.debug('🧹 Cleanup complete');
   }
 
   /**
@@ -269,10 +270,10 @@ export class DiagnosePhase {
 
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
-        console.log(`📊 Live Score: ${filteredScore.toFixed(1)}% (${status})`);
+        logger.debug(`📊 Live Score: ${filteredScore.toFixed(1)}% (${status})`);
       }
     } catch (error) {
-      console.error('Chunk processing error:', error);
+      logger.error('Chunk processing error:', error);
     }
   }
 
@@ -317,7 +318,7 @@ export class DiagnosePhase {
    * Stop recording and save final result
    */
   private stopRecording(): void {
-    console.log('⏹️ Stopping diagnosis...');
+    logger.info('⏹️ Stopping diagnosis...');
 
     // Cleanup resources
     this.cleanup();
@@ -326,7 +327,7 @@ export class DiagnosePhase {
     if (this.hasValidMeasurement) {
       this.saveFinalDiagnosis();
     } else {
-      console.log('⚠️ No valid measurement data - skipping save');
+      logger.warn('⚠️ No valid measurement data - skipping save');
       this.hideRecordingModal();
     }
   }
@@ -363,7 +364,7 @@ export class DiagnosePhase {
         },
       };
 
-      console.log(`💾 Saving final diagnosis: ${finalScore.toFixed(1)}% (${finalStatus})`);
+      logger.info(`💾 Saving final diagnosis: ${finalScore.toFixed(1)}% (${finalStatus})`);
 
       // Save to database
       await saveDiagnosis(diagnosis);
@@ -374,9 +375,9 @@ export class DiagnosePhase {
       // Show results
       this.showResults(diagnosis);
 
-      console.log('✅ Diagnosis saved successfully!');
+      logger.info('✅ Diagnosis saved successfully!');
     } catch (error) {
-      console.error('Save error:', error);
+      logger.error('Save error:', error);
       notify.error('Diagnose konnte nicht gespeichert werden', error as Error, {
         title: 'Speicherfehler',
         duration: 0

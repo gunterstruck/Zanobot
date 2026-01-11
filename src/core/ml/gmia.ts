@@ -26,6 +26,7 @@ import {
 } from './mathUtils.js';
 
 import type { GMIAModel, FeatureVector, TrainingData } from '@data/types.js';
+import { logger } from '@utils/logger.js';
 
 /**
  * Regularization parameter from Technical Report (p.25)
@@ -43,7 +44,7 @@ const LAMBDA = 1e9;
  * @returns Trained GMIA model
  */
 export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAModel {
-  console.log(`🧠 Training GMIA model for machine ${machineId}...`);
+  logger.info(`🧠 Training GMIA model for machine ${machineId}...`);
 
   const features = trainingData.featureVectors;
 
@@ -54,12 +55,12 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   const numSamples = features.length;
   const featureDim = features[0].length;
 
-  console.log(`   Features: ${featureDim} dimensions, ${numSamples} samples`);
+  logger.debug(`   Features: ${featureDim} dimensions, ${numSamples} samples`);
 
   // Step 1: Convert features to matrix X_p (features as rows, samples as columns)
   const X_p = featuresToMatrix(features);
 
-  console.log(`   Matrix X_p: ${X_p.length}x${X_p[0].length}`);
+  logger.debug(`   Matrix X_p: ${X_p.length}x${X_p[0].length}`);
 
   // Step 2: Compute X_p^T (transpose)
   const X_p_T = matrixTranspose(X_p);
@@ -67,12 +68,12 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   // Step 3: Compute X_p^T * X_p (gram matrix)
   const gramMatrix = matrixMultiply(X_p_T, X_p);
 
-  console.log(`   Gram matrix: ${gramMatrix.length}x${gramMatrix[0].length}`);
+  logger.debug(`   Gram matrix: ${gramMatrix.length}x${gramMatrix[0].length}`);
 
   // Step 4: Add regularization: X_p^T * X_p + λI
   const regularized = addRegularization(gramMatrix, LAMBDA);
 
-  console.log(`   Regularization: λ = ${LAMBDA}`);
+  logger.debug(`   Regularization: λ = ${LAMBDA}`);
 
   // Step 5: Invert: (X_p^T * X_p + λI)^(-1)
   const inverted = matrixInverse(regularized);
@@ -86,19 +87,19 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   // Step 8: Multiply X_p with temp to get weight vector
   const weightVector = matrixVectorMultiply(X_p, temp);
 
-  console.log(`   Weight vector: ${weightVector.length} dimensions`);
+  logger.debug(`   Weight vector: ${weightVector.length} dimensions`);
 
   // Step 9: Calculate scaling constant C for tanh
   const scalingConstant = calculateScalingConstant(features, weightVector);
 
-  console.log(`   Scaling constant C: ${scalingConstant.toFixed(6)}`);
+  logger.debug(`   Scaling constant C: ${scalingConstant.toFixed(6)}`);
 
   // Step 10: Calculate mean cosine similarity for metadata
   const cosineSimilarities = features.map((f) => cosineSimilarity(weightVector, f));
   const meanCosine = mean(cosineSimilarities);
 
-  console.log(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
-  console.log(`✅ GMIA model trained successfully!`);
+  logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
+  logger.info(`✅ GMIA model trained successfully!`);
 
   return {
     machineId,

@@ -10,6 +10,8 @@
  * - Future-proof (ScriptProcessorNode is deprecated)
  */
 
+import { logger } from '@utils/logger.js';
+
 export interface AudioWorkletConfig {
   bufferSize: number;
   onAudioData?: (writePos: number) => void;
@@ -69,9 +71,9 @@ export class AudioWorkletManager {
       // Connect to destination for monitoring (optional)
       this.workletNode.connect(audioContext.destination);
 
-      console.log('✅ AudioWorklet initialized');
+      logger.info('✅ AudioWorklet initialized');
     } catch (error) {
-      console.error('❌ AudioWorklet initialization failed:', error);
+      logger.error('❌ AudioWorklet initialization failed:', error);
       throw new Error('Failed to initialize AudioWorklet. Browser may not support it.');
     }
   }
@@ -124,7 +126,7 @@ export class AudioWorkletManager {
    */
   startSmartStart(): void {
     if (!this.workletNode) {
-      console.error('AudioWorklet not initialized');
+      logger.error('AudioWorklet not initialized');
       return;
     }
 
@@ -136,7 +138,7 @@ export class AudioWorkletManager {
    */
   skipToRecording(): void {
     if (!this.workletNode) {
-      console.error('AudioWorklet not initialized');
+      logger.error('AudioWorklet not initialized');
       return;
     }
 
