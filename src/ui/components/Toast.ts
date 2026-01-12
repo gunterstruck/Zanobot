@@ -44,6 +44,21 @@ export class ToastManager {
    * Initialize toast container
    */
   private initContainer(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    if (!document.body) {
+      document.addEventListener(
+        'DOMContentLoaded',
+        () => {
+          this.initContainer();
+        },
+        { once: true }
+      );
+      return;
+    }
+
     // Check if container already exists
     let container = document.getElementById('toast-container');
 
@@ -63,6 +78,14 @@ export class ToastManager {
    * Show a toast notification
    */
   public show(options: ToastOptions): string {
+    if (!this.container) {
+      this.initContainer();
+    }
+
+    if (!this.container) {
+      return '';
+    }
+
     const defaults: Required<ToastOptions> = {
       message: '',
       title: '',
