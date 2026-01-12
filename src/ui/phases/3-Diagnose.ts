@@ -126,6 +126,30 @@ export class DiagnosePhase {
         logger.info(`✅ Adapting feature extraction to use actual sample rate: ${this.actualSampleRate}Hz`);
       }
 
+      // CRITICAL: Validate sample rate compatibility with trained models BEFORE starting
+      // This prevents wasting time on a diagnosis that will fail
+      const modelSampleRate = this.machine.referenceModels[0].sampleRate;
+      if (this.actualSampleRate !== modelSampleRate) {
+        logger.error(`❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, Model=${modelSampleRate}Hz`);
+        notify.error(
+          `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber das ` +
+          `trainierte Modell wurde bei ${modelSampleRate}Hz erstellt. FFT-Frequenzbänder sind ` +
+          'inkompatibel. Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder ' +
+          'erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
+          new Error('Sample Rate Mismatch'),
+          {
+            title: 'Inkompatible Sample Rate',
+            duration: 0
+          }
+        );
+        // Clean up and abort
+        this.cleanup();
+        return;
+      }
+
+      logger.info(`✅ Sample Rate validation passed: ${this.actualSampleRate}Hz (matches model training)`);
+
+
       // Update chunkSize and DSP config with actual sample rate
       this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.actualSampleRate);
       this.dspConfig = {
@@ -291,7 +315,12 @@ export class DiagnosePhase {
 
       // Step 2: MULTICLASS CLASSIFICATION
       // Compare against all trained models and find best match
-      const diagnosis = classifyDiagnosticState(this.machine.referenceModels, featureVector);
+      // CRITICAL: Pass actualSampleRate for validation against model's training sample rate
+      const diagnosis = classifyDiagnosticState(
+        this.machine.referenceModels,
+        featureVector,
+        this.actualSampleRate
+      );
 
       // Step 3: Add score to history for filtering
       this.scoreHistory.addScore(diagnosis.healthScore);
@@ -315,6 +344,29 @@ export class DiagnosePhase {
       }
     } catch (error) {
       logger.error('Chunk processing error:', error);
+
+      // CRITICAL: Check for sample rate mismatch error
+      if (error instanceof Error && error.message.includes('Sample Rate Mismatch')) {
+        // Stop processing immediately
+        this.isProcessing = false;
+
+        // Show user-friendly error message
+        notify.error(
+          'Audio-Setup Fehler: Die Sample Rate Ihres Mikrofons ' +
+          `(${this.actualSampleRate}Hz) stimmt nicht mit der Sample Rate des ` +
+          'trainierten Modells überein. Bitte verwenden Sie das gleiche Audio-Setup ' +
+          'wie beim Training oder erstellen Sie ein neues Referenzmodell.',
+          error,
+          {
+            title: 'Inkompatible Sample Rate',
+            duration: 0
+          }
+        );
+
+        // Clean up resources
+        this.cleanup();
+        this.hideRecordingModal();
+      }
     }
   }
 

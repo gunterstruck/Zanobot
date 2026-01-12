@@ -395,13 +395,19 @@ const UNCERTAINTY_THRESHOLD = 70;
  * 4. Check uncertainty threshold (< 70% = UNKNOWN anomaly)
  * 5. Return diagnosis with best matching state
  *
+ * CRITICAL: Validates sample rate compatibility before inference.
+ * All models must have been trained at the same sample rate as the test data.
+ *
  * @param models - Array of trained GMIA models (each representing a machine state)
  * @param featureVector - Feature vector from test audio
+ * @param testSampleRate - Sample rate of the test audio (required for validation)
  * @returns Diagnosis result with identified state
+ * @throws Error if sample rates don't match between models and test data
  */
 export function classifyDiagnosticState(
   models: GMIAModel[],
-  featureVector: FeatureVector
+  featureVector: FeatureVector,
+  testSampleRate: number
 ): DiagnosisResult {
   if (models.length === 0) {
     throw new Error('No reference models available for classification');
@@ -416,7 +422,8 @@ export function classifyDiagnosticState(
   // Loop through all models to find best match
   for (const model of models) {
     // Step 1: Calculate cosine similarity using existing GMIA inference
-    const cosineSimilarities = inferGMIA(model, [featureVector]);
+    // CRITICAL: Pass testSampleRate for validation
+    const cosineSimilarities = inferGMIA(model, [featureVector], testSampleRate);
     const cosine = cosineSimilarities[0];
 
     // Step 2: Calculate health score using existing scoring function

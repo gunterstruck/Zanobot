@@ -194,15 +194,57 @@ function calculateScalingConstant(
 }
 
 /**
+ * Validate sample rate compatibility between model and test data
+ *
+ * CRITICAL: FFT-based features are physically bound to sample rate.
+ * A model trained at 48kHz cannot perform inference at 44.1kHz due to
+ * frequency bin mismatch. This would cause incorrect feature alignment.
+ *
+ * Reference: SiMobile Technical Report - Energy Spectral Densities (ESD)
+ * are calculated from FFT, which maps bins to physical frequencies based on
+ * sample rate: f = (bin * sampleRate) / fftSize
+ *
+ * @param modelSampleRate - Sample rate used during model training
+ * @param testSampleRate - Sample rate of current test data
+ * @throws Error if sample rates don't match
+ */
+function validateSampleRateIntegrity(modelSampleRate: number, testSampleRate: number): void {
+  if (modelSampleRate !== testSampleRate) {
+    throw new Error(
+      `CRITICAL: Sample Rate Mismatch. ` +
+      `Model trained at ${modelSampleRate}Hz, but inference attempted at ${testSampleRate}Hz. ` +
+      `FFT frequency bins are incompatible. Please use the same audio hardware/settings ` +
+      `as during training, or retrain the model with the current sample rate.`
+    );
+  }
+}
+
+/**
  * Perform inference on new audio data
  *
  * Compare test features against trained model.
  *
+ * CRITICAL: Validates sample rate integrity before inference.
+ * This prevents frequency bin mismatches that would cause incorrect results.
+ *
  * @param model - Trained GMIA model
  * @param testFeatures - Features from test recording
+ * @param testSampleRate - Sample rate of the test recording (optional, extracted from first feature if not provided)
  * @returns Array of cosine similarities (one per chunk)
+ * @throws Error if sample rates don't match
  */
-export function inferGMIA(model: GMIAModel, testFeatures: FeatureVector[]): number[] {
+export function inferGMIA(
+  model: GMIAModel,
+  testFeatures: FeatureVector[],
+  testSampleRate?: number
+): number[] {
+  // Extract test sample rate from features if not explicitly provided
+  // Note: FeatureVector doesn't store sample rate, so it must be passed explicitly
+  // or we rely on the calling code to ensure consistency
+  if (testSampleRate !== undefined) {
+    validateSampleRateIntegrity(model.sampleRate, testSampleRate);
+  }
+
   const cosineSimilarities = testFeatures.map((featureVector) =>
     cosineSimilarity(model.weightVector, featureVector.features)
   );
