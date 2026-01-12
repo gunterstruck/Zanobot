@@ -241,34 +241,77 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
 /**
  * Save a recording
  *
+ * CRITICAL FIX: Serialize AudioBuffer before storing in IndexedDB
+ * AudioBuffer is not structure-cloneable and will cause DataCloneError if stored directly.
+ * We serialize it to a plain object that IndexedDB can handle.
+ *
  * @param recording - Recording object
  */
 export async function saveRecording(recording: Recording): Promise<void> {
   const db = await initDB();
-  await db.put('recordings', recording);
+
+  // Serialize AudioBuffer for IndexedDB storage
+  const serializedRecording = {
+    ...recording,
+    audioBuffer: serializeAudioBuffer(recording.audioBuffer),
+  };
+
+  await db.put('recordings', serializedRecording as any);
   logger.info(`🎙️ Recording saved: ${recording.id}`);
 }
 
 /**
  * Get recording by ID
  *
+ * CRITICAL FIX: Deserialize AudioBuffer after loading from IndexedDB
+ * The stored recording has a serialized AudioBuffer that needs to be converted back.
+ *
  * @param id - Recording ID
  * @returns Recording or undefined
  */
 export async function getRecording(id: string): Promise<Recording | undefined> {
   const db = await initDB();
-  return await db.get('recordings', id);
+  const storedRecording = await db.get('recordings', id);
+
+  if (!storedRecording) {
+    return undefined;
+  }
+
+  // Deserialize AudioBuffer if it's in serialized format
+  if (isSerializedAudioBuffer(storedRecording.audioBuffer)) {
+    return {
+      ...storedRecording,
+      audioBuffer: deserializeAudioBuffer(storedRecording.audioBuffer),
+    } as Recording;
+  }
+
+  // Already deserialized (shouldn't happen, but handle gracefully)
+  return storedRecording as Recording;
 }
 
 /**
  * Get all recordings for a machine
+ *
+ * CRITICAL FIX: Deserialize AudioBuffers after loading from IndexedDB
+ * The stored recordings have serialized AudioBuffers that need to be converted back.
  *
  * @param machineId - Machine ID
  * @returns Array of recordings
  */
 export async function getRecordingsForMachine(machineId: string): Promise<Recording[]> {
   const db = await initDB();
-  return await db.getAllFromIndex('recordings', 'by-machine', machineId);
+  const storedRecordings = await db.getAllFromIndex('recordings', 'by-machine', machineId);
+
+  // Deserialize all AudioBuffers
+  return storedRecordings.map((recording) => {
+    if (isSerializedAudioBuffer(recording.audioBuffer)) {
+      return {
+        ...recording,
+        audioBuffer: deserializeAudioBuffer(recording.audioBuffer),
+      } as Recording;
+    }
+    return recording as Recording;
+  });
 }
 
 // ============================================================================
@@ -456,6 +499,10 @@ export async function exportData(): Promise<{
 /**
  * Deserialize AudioBuffer from JSON format
  *
+ * CRITICAL FIX: Close AudioContext after use to prevent resource leaks
+ * Each AudioContext consumes browser resources. Creating many without closing
+ * can lead to "Too many AudioContexts" errors and instability.
+ *
  * @param serialized - Serialized AudioBuffer data
  * @returns Web Audio API AudioBuffer
  */
@@ -463,24 +510,32 @@ function deserializeAudioBuffer(serialized: SerializedAudioBuffer): AudioBuffer 
   // Create AudioContext to generate AudioBuffer
   const audioContext = new AudioContext();
 
-  // Create empty AudioBuffer
-  const audioBuffer = audioContext.createBuffer(
-    serialized.numberOfChannels,
-    serialized.length,
-    serialized.sampleRate
-  );
+  try {
+    // Create empty AudioBuffer
+    const audioBuffer = audioContext.createBuffer(
+      serialized.numberOfChannels,
+      serialized.length,
+      serialized.sampleRate
+    );
 
-  // Fill channel data
-  for (let i = 0; i < serialized.numberOfChannels; i++) {
-    const channelData = audioBuffer.getChannelData(i);
-    const sourceData = serialized.channelData[i];
+    // Fill channel data
+    for (let i = 0; i < serialized.numberOfChannels; i++) {
+      const channelData = audioBuffer.getChannelData(i);
+      const sourceData = serialized.channelData[i];
 
-    for (let j = 0; j < sourceData.length; j++) {
-      channelData[j] = sourceData[j];
+      for (let j = 0; j < sourceData.length; j++) {
+        channelData[j] = sourceData[j];
+      }
     }
-  }
 
-  return audioBuffer;
+    return audioBuffer;
+  } finally {
+    // CRITICAL: Always close AudioContext to prevent resource leaks
+    // The AudioBuffer can be used independently after the context is closed
+    audioContext.close().catch((error) => {
+      logger.warn('⚠️ Failed to close AudioContext during deserialization:', error);
+    });
+  }
 }
 
 /**

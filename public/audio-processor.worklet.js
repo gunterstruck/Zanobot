@@ -235,11 +235,14 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       // - At 44.1kHz: ~14553 samples
       // - At 48kHz: ~15840 samples
 
-      // Simple modulo-based triggering on fixed grid
-      // samplesWritten is monotonically increasing counter for chunk timing
-      if (this.samplesWritten >= this.chunkSize &&
-          this.samplesWritten % this.chunkSize === 0) {
+      // CRITICAL FIX: Improved chunk triggering logic
+      // Instead of relying on samplesWritten % chunkSize === 0 (which rarely triggers
+      // because AudioWorklet processes in 128-sample blocks and chunkSize is not a multiple of 128),
+      // we track the last chunk delivery time and trigger when enough samples have accumulated.
+      // Calculate how many samples have been written since last chunk delivery
+      const samplesSinceLastChunk = this.samplesWritten - this.readPos;
 
+      if (samplesSinceLastChunk >= this.chunkSize) {
         // Extract latest chunk using proper circular buffer logic
         const chunk = new Float32Array(this.chunkSize);
 
@@ -252,8 +255,8 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
           chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
         }
 
-        // Update read position to current write position
-        this.readPos = this.writePos;
+        // Update read position to current write position (marks where we've processed up to)
+        this.readPos = this.samplesWritten;
 
         // CRITICAL FIX: Send audio-data-ready message BEFORE audio-chunk
         // This maintains API consistency with AudioWorkletManager expectations
