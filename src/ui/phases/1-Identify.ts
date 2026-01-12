@@ -428,16 +428,17 @@ export class IdentifyPhase {
    * Initialize hardware check on page load
    */
   private async initializeHardwareCheck(): Promise<void> {
+    let tempStream: MediaStream | null = null;
     try {
       // Request audio stream to check current device
-      this.currentAudioStream = await getRawAudioStream(this.selectedDeviceId);
+      tempStream = await getRawAudioStream(this.selectedDeviceId);
 
       // Get current device info
-      const currentDevice = await HardwareCheck.getCurrentDevice(this.currentAudioStream);
+      const currentDevice = await HardwareCheck.getCurrentDevice(tempStream);
 
       if (currentDevice) {
         // Get audio track settings for sample rate
-        const audioTrack = this.currentAudioStream.getAudioTracks()[0];
+        const audioTrack = tempStream.getAudioTracks()[0];
         const settings = audioTrack.getSettings();
         const sampleRate = settings.sampleRate || 44100;
 
@@ -450,8 +451,19 @@ export class IdentifyPhase {
         // Update UI
         this.updateHardwareInfoCard();
       }
+
+      // CRITICAL FIX: Stop temporary stream immediately after hardware check
+      // This prevents resource leak and keeps microphone available for actual recordings
+      if (tempStream) {
+        tempStream.getTracks().forEach((track) => track.stop());
+        tempStream = null;
+      }
     } catch (error) {
       logger.error('Failed to initialize hardware check:', error);
+      // CRITICAL FIX: Ensure stream is stopped even on error
+      if (tempStream) {
+        tempStream.getTracks().forEach((track) => track.stop());
+      }
       // Don't block user flow - just log the error
     }
   }
