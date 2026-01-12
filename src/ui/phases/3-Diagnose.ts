@@ -548,7 +548,7 @@ export class DiagnosePhase {
     // Update confidence
     const resultConfidence = document.getElementById('result-confidence');
     if (resultConfidence) {
-      resultConfidence.textContent = diagnosis.healthScore.toFixed(1);
+      resultConfidence.textContent = diagnosis.confidence.toFixed(1);
     }
 
     // Update analysis hint
