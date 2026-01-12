@@ -294,6 +294,25 @@ export class ReferencePhase {
       logger.info(`   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`);
       logger.info(`   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`);
 
+      // CRITICAL FIX: Validate that we have enough samples for training
+      const MIN_TRAINING_DURATION = 2.0; // Minimum 2 seconds of training data
+      const minTrainingSamples = Math.floor(MIN_TRAINING_DURATION * sampleRate);
+
+      if (trainingSamples <= 0) {
+        throw new Error(
+          `Aufnahme zu kurz: ${audioBuffer.duration.toFixed(2)}s Gesamtdauer ist kürzer als die ${this.warmUpDuration}s Warmup-Phase. ` +
+          `Mindestdauer: ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s`
+        );
+      }
+
+      if (trainingSamples < minTrainingSamples) {
+        throw new Error(
+          `Trainings-Daten zu kurz: ${(trainingSamples / sampleRate).toFixed(2)}s (nach Warmup-Phase). ` +
+          `Minimum erforderlich: ${MIN_TRAINING_DURATION}s. ` +
+          `Bitte mindestens ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s aufnehmen.`
+        );
+      }
+
       // Create new AudioBuffer with only the training portion
       const trainingBuffer = this.audioContext.createBuffer(
         audioBuffer.numberOfChannels,
