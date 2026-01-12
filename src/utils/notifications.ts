@@ -88,6 +88,12 @@ class NotificationManager {
    * Confirm dialog (for important actions)
    */
   public async confirm(message: string, title = 'Bestätigung erforderlich'): Promise<boolean> {
+    // Browser guard: Check if window.confirm is available
+    if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
+      logger.warn('⚠️ Confirm dialog not available in non-browser context. Defaulting to false.');
+      return false;
+    }
+
     // For now, use browser confirm (can be replaced with custom modal later)
     return confirm(`${title}\n\n${message}`);
   }
