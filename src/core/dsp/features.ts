@@ -40,8 +40,18 @@ export function extractFeatures(
   audioBuffer: AudioBuffer,
   config: DSPConfig = DEFAULT_DSP_CONFIG
 ): FeatureVector[] {
+  const effectiveConfig =
+    config.sampleRate !== audioBuffer.sampleRate ||
+    config.frequencyRange[1] !== audioBuffer.sampleRate / 2
+      ? {
+          ...config,
+          sampleRate: audioBuffer.sampleRate,
+          frequencyRange: [0, audioBuffer.sampleRate / 2] as [number, number],
+        }
+      : config;
+
   // Validate minimum audio buffer length
-  const minDuration = config.windowSize; // At least one window size
+  const minDuration = effectiveConfig.windowSize; // At least one window size
   if (audioBuffer.duration < minDuration) {
     throw new Error(
       `Audio buffer too short: ${audioBuffer.duration.toFixed(2)}s (minimum: ${minDuration.toFixed(2)}s)`
@@ -52,7 +62,7 @@ export function extractFeatures(
   const channelData = getMonoChannel(audioBuffer);
 
   // Split into chunks (0.330s windows with 0.066s overlap)
-  const chunks = chunkSignal(channelData, audioBuffer.sampleRate, config);
+  const chunks = chunkSignal(channelData, audioBuffer.sampleRate, effectiveConfig);
 
   // Ensure we have at least one chunk
   if (chunks.length === 0) {
@@ -60,7 +70,7 @@ export function extractFeatures(
   }
 
   // Extract features from each chunk
-  const features = chunks.map((chunk) => extractChunkFeatures(chunk, config));
+  const features = chunks.map((chunk) => extractChunkFeatures(chunk, effectiveConfig));
 
   return features;
 }
@@ -133,7 +143,7 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
     features: relativeFeatures,
     absoluteFeatures: binnedEnergy,
     bins: config.frequencyBins,
-    frequencyRange: config.frequencyRange,
+    frequencyRange: [0, config.sampleRate / 2],
   };
 }
 

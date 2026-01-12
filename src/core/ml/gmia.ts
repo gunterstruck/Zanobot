@@ -229,21 +229,20 @@ function validateSampleRateIntegrity(modelSampleRate: number, testSampleRate: nu
  *
  * @param model - Trained GMIA model
  * @param testFeatures - Features from test recording
- * @param testSampleRate - Sample rate of the test recording (optional, extracted from first feature if not provided)
+ * @param testSampleRate - Sample rate of the test recording (required for validation)
  * @returns Array of cosine similarities (one per chunk)
  * @throws Error if sample rates don't match
  */
 export function inferGMIA(
   model: GMIAModel,
   testFeatures: FeatureVector[],
-  testSampleRate?: number
+  testSampleRate: number
 ): number[] {
-  // Extract test sample rate from features if not explicitly provided
-  // Note: FeatureVector doesn't store sample rate, so it must be passed explicitly
-  // or we rely on the calling code to ensure consistency
-  if (testSampleRate !== undefined) {
-    validateSampleRateIntegrity(model.sampleRate, testSampleRate);
+  if (typeof testSampleRate !== 'number') {
+    throw new Error('Test sample rate is required for GMIA inference');
   }
+
+  validateSampleRateIntegrity(model.sampleRate, testSampleRate);
 
   const cosineSimilarities = testFeatures.map((featureVector) =>
     cosineSimilarity(model.weightVector, featureVector.features)

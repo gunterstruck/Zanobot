@@ -269,7 +269,19 @@ export class AudioWorkletManager {
    * Check if AudioWorklet is supported
    */
   static isSupported(): boolean {
-    return typeof AudioWorklet !== 'undefined' && typeof AudioWorkletNode !== 'undefined';
+    const AudioContextConstructor =
+      typeof AudioContext !== 'undefined'
+        ? AudioContext
+        : typeof (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !==
+            'undefined'
+          ? (globalThis as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+          : undefined;
+
+    if (!AudioContextConstructor) {
+      return false;
+    }
+
+    return 'audioWorklet' in AudioContextConstructor.prototype;
   }
 }
 

@@ -210,7 +210,7 @@ describe('GMIA Algorithm', () => {
       ];
 
       // Inference
-      const cosineSimilarities = inferGMIA(model, testFeatures);
+      const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
       expect(cosineSimilarities).toHaveLength(1);
       expect(cosineSimilarities[0]).toBeGreaterThanOrEqual(-1);
@@ -227,7 +227,7 @@ describe('GMIA Algorithm', () => {
         { features: generateFeatureVectors(1, 512, 300)[0], timestamp: Date.now() },
       ];
 
-      const cosineSimilarities = inferGMIA(model, testFeatures);
+      const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
       cosineSimilarities.forEach((cos) => {
         expect(cos).toBeGreaterThanOrEqual(-1);
@@ -245,7 +245,7 @@ describe('GMIA Algorithm', () => {
         { features: generateFeatureVectors(1, 512, 42)[0], timestamp: Date.now() },
       ];
 
-      const cosineSimilarities = inferGMIA(model, testFeatures);
+      const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
       // Should have high similarity (> 0.5) for similar data
       expect(cosineSimilarities[0]).toBeGreaterThan(0.5);
@@ -264,7 +264,7 @@ describe('GMIA Algorithm', () => {
         });
       }
 
-      const cosineSimilarities = inferGMIA(model, testFeatures);
+      const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
       expect(cosineSimilarities).toHaveLength(10);
       cosineSimilarities.forEach((cos) => {
@@ -277,7 +277,7 @@ describe('GMIA Algorithm', () => {
       const trainingData = createTrainingData(50, 512);
       const model = trainGMIA(trainingData, 'test-machine');
 
-      const cosineSimilarities = inferGMIA(model, []);
+      const cosineSimilarities = inferGMIA(model, [], model.sampleRate);
 
       expect(cosineSimilarities).toHaveLength(0);
     });
@@ -333,7 +333,7 @@ describe('GMIA Algorithm', () => {
       }
 
       // Step 3: Inference
-      const cosineSimilarities = inferGMIA(model, testFeatures);
+      const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
       expect(cosineSimilarities).toHaveLength(20);
 
@@ -365,8 +365,8 @@ describe('GMIA Algorithm', () => {
         { features: generateFeatureVectors(1, 512, 9999)[0], timestamp: Date.now() },
       ];
 
-      const normalSimilarity = inferGMIA(model, normalFeatures)[0];
-      const anomalousSimilarity = inferGMIA(model, anomalousFeatures)[0];
+      const normalSimilarity = inferGMIA(model, normalFeatures, model.sampleRate)[0];
+      const anomalousSimilarity = inferGMIA(model, anomalousFeatures, model.sampleRate)[0];
 
       // Normal features should have higher similarity than anomalous ones
       expect(normalSimilarity).toBeGreaterThan(anomalousSimilarity);
