@@ -51,6 +51,7 @@ export class DiagnosePhase {
   private lastDetectedState: string = 'UNKNOWN'; // MULTICLASS: Store detected state
   private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
   private useAudioWorklet: boolean = true;
+  private isStarting: boolean = false;
 
   // Configuration
   private chunkSize: number; // 330ms in samples
@@ -84,6 +85,11 @@ export class DiagnosePhase {
    * Start real-time diagnosis with Smart Start
    */
   private async startDiagnosis(): Promise<void> {
+    if (this.isStarting || this.isProcessing || this.mediaStream) {
+      notify.warning('Eine Diagnose läuft bereits.');
+      return;
+    }
+
     try {
       // Check if machine has reference models (multiclass)
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
@@ -104,6 +110,8 @@ export class DiagnosePhase {
         );
         return;
       }
+
+      this.isStarting = true;
 
       // Reset state for new diagnosis
       this.hasValidMeasurement = false;
@@ -223,6 +231,8 @@ export class DiagnosePhase {
 
       // Cleanup on error
       this.cleanup();
+    } finally {
+      this.isStarting = false;
     }
   }
 
@@ -232,6 +242,7 @@ export class DiagnosePhase {
   private cleanup(): void {
     // Stop processing
     this.isProcessing = false;
+    this.isStarting = false;
 
     // Reset state flags to prevent memory leaks
     this.hasValidMeasurement = false;

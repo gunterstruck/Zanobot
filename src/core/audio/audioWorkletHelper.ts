@@ -68,9 +68,7 @@ export class AudioWorkletManager {
       // Connect audio source
       this.sourceNode = audioContext.createMediaStreamSource(mediaStream);
       this.sourceNode.connect(this.workletNode);
-
-      // Connect to destination for monitoring (optional)
-      this.workletNode.connect(audioContext.destination);
+      // NOTE: Do not connect to destination by default to avoid feedback/echo loops.
 
       // CRITICAL FIX: Send actual sample rate and warmup duration to worklet
       // This ensures Single Source of Truth from config (no hardcoded values in worklet)
