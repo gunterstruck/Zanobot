@@ -9,6 +9,7 @@ export class HealthGauge {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private score: number = 0;
+  private customStatus: string | undefined = undefined;
   private animationFrame: number | null = null;
 
   constructor(canvasId: string) {
@@ -45,6 +46,7 @@ export class HealthGauge {
    */
   public draw(score: number, status?: string): void {
     this.score = Math.max(0, Math.min(100, score));
+    this.customStatus = status;
     this.render();
   }
 
@@ -154,8 +156,8 @@ export class HealthGauge {
     this.ctx.fillStyle = '#888888';
     this.ctx.fillText('%', x, y + 30);
 
-    // Draw status label
-    const status = this.getStatusLabel(score);
+    // Draw status label (use custom status if provided, otherwise auto-calculate)
+    const status = this.customStatus !== undefined ? this.customStatus : this.getStatusLabel(score);
     this.ctx.font = '16px system-ui, -apple-system, sans-serif';
     this.ctx.fillStyle = this.getScoreColor(score);
     this.ctx.fillText(status, x, y + 60);

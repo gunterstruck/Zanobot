@@ -143,9 +143,14 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
  * Used for signal trigger detection.
  *
  * @param samples - Audio samples
- * @returns RMS level (0-1)
+ * @returns RMS level (0-1), or 0 if samples array is empty
  */
 export function calculateRMS(samples: Float32Array): number {
+  // Guard against empty samples to prevent NaN
+  if (samples.length === 0) {
+    return 0;
+  }
+
   let sum = 0;
   for (let i = 0; i < samples.length; i++) {
     sum += samples[i] * samples[i];
