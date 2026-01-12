@@ -119,6 +119,17 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
   logger.info(`✅ GMIA model trained successfully!`);
 
+  // Calculate actual training duration with overlap
+  // Formula: windowSize + hopSize * (numSamples - 1)
+  // - First chunk: starts at 0, duration = windowSize
+  // - Each subsequent chunk: starts hopSize later
+  // Example: 100 samples, windowSize=0.330s, hopSize=0.066s
+  //   → 0.330 + 0.066 * 99 = 6.864s (not 33.0s!)
+  const actualDuration =
+    numSamples === 1
+      ? trainingData.config.windowSize
+      : trainingData.config.windowSize + trainingData.config.hopSize * (numSamples - 1);
+
   return {
     machineId,
     label: '', // Will be set by caller (Phase 2: "Baseline" for first, user-provided for others)
@@ -128,7 +139,7 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
     scalingConstant,
     featureDimension: featureDim,
     trainingDate: Date.now(),
-    trainingDuration: trainingData.config.windowSize * numSamples,
+    trainingDuration: actualDuration,
     sampleRate: trainingData.config.sampleRate,
     metadata: {
       meanCosineSimilarity: meanCosine,
