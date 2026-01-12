@@ -28,6 +28,7 @@ import { logger } from '@utils/logger.js';
 
 export class ReferencePhase {
   private machine: Machine;
+  private selectedDeviceId: string | undefined; // Selected microphone device ID
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
@@ -48,8 +49,9 @@ export class ReferencePhase {
   private currentQualityResult: QualityResult | null = null;
   private currentTrainingData: TrainingData | null = null;
 
-  constructor(machine: Machine) {
+  constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
+    this.selectedDeviceId = selectedDeviceId;
   }
 
   /**
@@ -75,8 +77,8 @@ export class ReferencePhase {
         logger.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
       }
 
-      // Request microphone access using central helper
-      this.mediaStream = await getRawAudioStream();
+      // Request microphone access using central helper with selected device
+      this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: 44100 });
@@ -111,8 +113,12 @@ export class ReferencePhase {
             this.actuallyStartRecording();
           },
           onSmartStartTimeout: () => {
+            logger.warn('⏱️ Smart Start timeout - cleaning up resources');
             notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
-            this.stopRecording();
+            // CRITICAL FIX: Call cleanup() to properly release all resources
+            // (AudioWorklet, MediaStream, Modal, Timer, etc.)
+            this.cleanup();
+            this.hideRecordingModal();
           },
         });
 
