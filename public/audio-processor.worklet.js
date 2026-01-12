@@ -30,6 +30,11 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.waitStartTime = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording
 
+    // Dynamic chunk size based on actual sample rate
+    // Will be set via 'init' message from manager
+    this.sampleRate = 44100; // Default, will be overridden
+    this.chunkSize = Math.floor(0.330 * this.sampleRate); // 330ms window
+
     // Listen for messages from main thread
     this.port.onmessage = (event) => {
       this.handleMessage(event.data);
@@ -41,6 +46,19 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
    */
   handleMessage(message) {
     switch (message.type) {
+      case 'init':
+        // Initialize with actual sample rate from AudioContext
+        if (message.sampleRate) {
+          this.sampleRate = message.sampleRate;
+          this.chunkSize = Math.floor(0.330 * this.sampleRate);
+          // Acknowledge initialization
+          this.port.postMessage({
+            type: 'init-complete',
+            sampleRate: this.sampleRate,
+            chunkSize: this.chunkSize
+          });
+        }
+        break;
       case 'start-smart-start':
         this.startSmartStart();
         break;
@@ -191,23 +209,25 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       }
 
       // Send audio chunk to main thread for real-time processing
-      // Transfer a copy of the data every ~14553 samples (330ms at 44.1kHz)
+      // Transfer a copy of the data every ~chunkSize samples (330ms at actual sample rate)
       // This matches the DSP window size for feature extraction
-      const CHUNK_SIZE_330MS_AT_44100HZ = 14553;
+      // CRITICAL FIX: Use dynamic chunk size based on actual sample rate
+      // - At 44.1kHz: ~14553 samples
+      // - At 48kHz: ~15840 samples
 
       // Simple modulo-based triggering on fixed grid
       // samplesWritten is monotonically increasing counter for chunk timing
-      if (this.samplesWritten >= CHUNK_SIZE_330MS_AT_44100HZ &&
-          this.samplesWritten % CHUNK_SIZE_330MS_AT_44100HZ === 0) {
+      if (this.samplesWritten >= this.chunkSize &&
+          this.samplesWritten % this.chunkSize === 0) {
 
         // Extract latest chunk using proper circular buffer logic
-        const chunk = new Float32Array(CHUNK_SIZE_330MS_AT_44100HZ);
+        const chunk = new Float32Array(this.chunkSize);
 
         // Calculate read position: go back CHUNK_SIZE samples from current writePos
-        let chunkReadPos = (this.writePos - CHUNK_SIZE_330MS_AT_44100HZ + this.bufferSize) % this.bufferSize;
+        let chunkReadPos = (this.writePos - this.chunkSize + this.bufferSize) % this.bufferSize;
 
         // Copy data from circular buffer, handling wrap-around
-        for (let i = 0; i < CHUNK_SIZE_330MS_AT_44100HZ; i++) {
+        for (let i = 0; i < this.chunkSize; i++) {
           chunk[i] = this.ringBuffer[chunkReadPos];
           chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
         }
@@ -215,7 +235,15 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         // Update read position to current write position
         this.readPos = this.writePos;
 
-        // Transfer chunk to main thread
+        // CRITICAL FIX: Send audio-data-ready message BEFORE audio-chunk
+        // This maintains API consistency with AudioWorkletManager expectations
+        // Manager can sync currentWritePos before receiving the chunk
+        this.port.postMessage({
+          type: 'audio-data-ready',
+          writePos: this.writePos
+        });
+
+        // Transfer chunk to main thread (with writePos for redundancy)
         this.port.postMessage({
           type: 'audio-chunk',
           chunk: chunk.buffer,

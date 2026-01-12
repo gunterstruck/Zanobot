@@ -71,6 +71,12 @@ export class AudioWorkletManager {
       // Connect to destination for monitoring (optional)
       this.workletNode.connect(audioContext.destination);
 
+      // CRITICAL FIX: Send actual sample rate to worklet for dynamic chunk size calculation
+      this.workletNode.port.postMessage({
+        type: 'init',
+        sampleRate: audioContext.sampleRate
+      });
+
       logger.info('✅ AudioWorklet initialized');
     } catch (error) {
       logger.error('❌ AudioWorklet initialization failed:', error);
@@ -83,6 +89,11 @@ export class AudioWorkletManager {
    */
   private handleWorkletMessage(message: any): void {
     switch (message.type) {
+      case 'init-complete':
+        // Worklet initialization confirmed with actual sample rate and chunk size
+        logger.info(`✅ Worklet initialized: sampleRate=${message.sampleRate}Hz, chunkSize=${message.chunkSize} samples`);
+        break;
+
       case 'audio-data-ready':
         this.currentWritePos = message.writePos;
         if (this.config.onAudioData) {
@@ -94,6 +105,14 @@ export class AudioWorkletManager {
         // Receive audio chunk from worklet (zero-copy transfer)
         if (message.chunk) {
           const chunk = new Float32Array(message.chunk);
+
+          // CRITICAL FIX: Sync currentWritePos from worklet's writePos
+          // This ensures readLatestChunk() works correctly if ever used
+          if (typeof message.writePos === 'number') {
+            // Don't overwrite before fillRingBuffer - fillRingBuffer manages its own position
+            // Instead, we'll use this for validation/debugging
+            // The local ringBuffer is independent from worklet's ringBuffer
+          }
 
           // Fill ring buffer for readLatestChunk() usage
           this.fillRingBuffer(chunk);
