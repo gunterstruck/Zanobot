@@ -128,12 +128,14 @@ export class DiagnosePhase {
 
       // CRITICAL: Validate sample rate compatibility with trained models BEFORE starting
       // This prevents wasting time on a diagnosis that will fail
-      const modelSampleRate = this.machine.referenceModels[0].sampleRate;
-      if (this.actualSampleRate !== modelSampleRate) {
-        logger.error(`❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, Model=${modelSampleRate}Hz`);
+      const modelSampleRates = new Set(this.machine.referenceModels.map((model) => model.sampleRate));
+      const mismatchedRates = [...modelSampleRates].filter((rate) => rate !== this.actualSampleRate);
+      if (mismatchedRates.length > 0) {
+        const rateList = [...modelSampleRates].sort((a, b) => a - b).join(', ');
+        logger.error(`❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, ModelRates=[${rateList}]`);
         notify.error(
           `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber das ` +
-          `trainierte Modell wurde bei ${modelSampleRate}Hz erstellt. FFT-Frequenzbänder sind ` +
+          `trainierte Modell wurde bei ${rateList}Hz erstellt. FFT-Frequenzbänder sind ` +
           'inkompatibel. Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder ' +
           'erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
           new Error('Sample Rate Mismatch'),

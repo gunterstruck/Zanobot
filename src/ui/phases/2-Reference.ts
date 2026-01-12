@@ -42,6 +42,7 @@ export class ReferencePhase {
   private useAudioWorklet: boolean = true;
   private recordingStartTime: number = 0; // Track when actual recording started
   private timerInterval: ReturnType<typeof setInterval> | null = null; // Track timer interval for cleanup
+  private isRecordingStarting: boolean = false;
 
   // Phase 2: Review Modal State
   private currentAudioBuffer: AudioBuffer | null = null;
@@ -68,6 +69,13 @@ export class ReferencePhase {
    * Start recording reference audio with Smart Start
    */
   private async startRecording(): Promise<void> {
+    if (this.isRecordingStarting || this.isRecordingActive || this.mediaStream) {
+      notify.warning('Eine Aufnahme läuft bereits.');
+      return;
+    }
+
+    this.isRecordingStarting = true;
+
     try {
       logger.info('🎙️ Phase 2: Starting reference recording with Smart Start...');
 
@@ -169,6 +177,7 @@ export class ReferencePhase {
   private cleanup(): void {
     // Reset state flags to prevent memory leaks
     this.isRecordingActive = false;
+    this.isRecordingStarting = false;
 
     // Clear timer interval to prevent memory leaks
     if (this.timerInterval !== null) {
@@ -234,6 +243,7 @@ export class ReferencePhase {
     this.audioChunks = [];
     this.mediaRecorder = new MediaRecorder(this.mediaStream);
     this.isRecordingActive = true;
+    this.isRecordingStarting = false;
 
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {

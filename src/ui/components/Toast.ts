@@ -35,6 +35,7 @@ export class ToastManager {
   private container: HTMLElement | null = null;
   private toasts: Map<string, HTMLElement> = new Map();
   private toastCounter = 0;
+  private pendingToasts: ToastOptions[] = [];
 
   constructor() {
     this.initContainer();
@@ -72,6 +73,7 @@ export class ToastManager {
     }
 
     this.container = container;
+    this.flushPendingToasts();
   }
 
   /**
@@ -83,6 +85,7 @@ export class ToastManager {
     }
 
     if (!this.container) {
+      this.pendingToasts.push(options);
       return '';
     }
 
@@ -116,6 +119,21 @@ export class ToastManager {
     }
 
     return toastId;
+  }
+
+  /**
+   * Flush queued toasts once the container is ready
+   */
+  private flushPendingToasts(): void {
+    if (!this.container || this.pendingToasts.length === 0) {
+      return;
+    }
+
+    const queued = [...this.pendingToasts];
+    this.pendingToasts = [];
+    queued.forEach((options) => {
+      this.show(options);
+    });
   }
 
   /**
