@@ -40,6 +40,7 @@ export class ReferencePhase {
   private recordedBlob: Blob | null = null; // For reference audio export
   private useAudioWorklet: boolean = true;
   private recordingStartTime: number = 0; // Track when actual recording started
+  private timerInterval: ReturnType<typeof setInterval> | null = null; // Track timer interval for cleanup
 
   // Phase 2: Review Modal State
   private currentAudioBuffer: AudioBuffer | null = null;
@@ -145,6 +146,12 @@ export class ReferencePhase {
     // Reset state flags to prevent memory leaks
     this.isRecordingActive = false;
 
+    // Clear timer interval to prevent memory leaks
+    if (this.timerInterval !== null) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
     // Stop media recorder if active
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop();
@@ -233,9 +240,16 @@ export class ReferencePhase {
 
   /**
    * Stop recording
+   *
+   * IMPORTANT: Only stops the MediaRecorder here. Cleanup is called later
+   * in processRecording() after the audio has been decoded and processed.
+   * This prevents closing the AudioContext before processRecording() needs it.
    */
   private stopRecording(): void {
-    this.cleanup();
+    // Stop media recorder if active
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop(); // This triggers onstop -> processRecording()
+    }
   }
 
   /**
@@ -250,6 +264,7 @@ export class ReferencePhase {
    * CRITICAL IMPLEMENTATION:
    * - File blob: Full 15 seconds (for playback and debugging)
    * - Feature extraction: Only seconds 5-15 (after OS audio filters have settled)
+   * - Cleanup is called at the end to release AudioContext after processing
    */
   private async processRecording(): Promise<void> {
     try {
@@ -320,6 +335,10 @@ export class ReferencePhase {
       this.currentQualityResult = qualityResult;
       this.currentTrainingData = trainingData;
 
+      // Cleanup resources now that processing is complete
+      // This releases AudioContext, MediaStream, timer, etc.
+      this.cleanup();
+
       // Hide recording modal
       this.hideRecordingModal();
 
@@ -331,6 +350,10 @@ export class ReferencePhase {
         title: 'Verarbeitungsfehler',
         duration: 0
       });
+
+      // Cleanup on error
+      this.cleanup();
+
       this.hideRecordingModal();
     }
   }
@@ -449,7 +472,8 @@ export class ReferencePhase {
     const timerElement = document.getElementById('recording-timer');
     const statusElement = document.getElementById('recording-status');
 
-    const interval = setInterval(() => {
+    // Store interval reference for cleanup
+    this.timerInterval = setInterval(() => {
       elapsed++;
 
       // Update phase-specific UI
@@ -478,7 +502,10 @@ export class ReferencePhase {
       }
 
       if (elapsed >= this.recordingDuration) {
-        clearInterval(interval);
+        if (this.timerInterval !== null) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
       }
     }, 1000);
   }
