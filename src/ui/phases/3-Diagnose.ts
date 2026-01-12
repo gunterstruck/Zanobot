@@ -36,6 +36,7 @@ import { logger } from '@utils/logger.js';
 
 export class DiagnosePhase {
   private machine: Machine;
+  private selectedDeviceId: string | undefined; // Selected microphone device ID
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private audioWorkletManager: AudioWorkletManager | null = null;
@@ -57,8 +58,9 @@ export class DiagnosePhase {
   private actualSampleRate: number = 44100; // Actual sample rate from AudioContext
   private dspConfig: typeof DEFAULT_DSP_CONFIG; // DSP config with actual sample rate
 
-  constructor(machine: Machine) {
+  constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
+    this.selectedDeviceId = selectedDeviceId;
 
     // Initialize with default config (will be updated when AudioContext is created)
     this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.requestedSampleRate);
@@ -91,10 +93,16 @@ export class DiagnosePhase {
 
       logger.info('🔴 Starting REAL-TIME diagnosis with Smart Start...');
 
-      // Check AudioWorklet support
+      // Check AudioWorklet support - CRITICAL for real-time processing
       this.useAudioWorklet = isAudioWorkletSupported();
       if (!this.useAudioWorklet) {
-        logger.warn('⚠️ AudioWorklet not supported, Smart Start disabled');
+        logger.error('❌ AudioWorklet not supported - Real-time diagnosis requires AudioWorklet');
+        notify.error(
+          'Ihr Browser unterstützt keine Real-Time-Diagnose. Bitte verwenden Sie Chrome, Edge oder Safari.',
+          new Error('AudioWorklet not supported'),
+          { title: 'Browser nicht kompatibel', duration: 0 }
+        );
+        return;
       }
 
       // Reset state for new diagnosis
@@ -104,8 +112,8 @@ export class DiagnosePhase {
       this.lastDetectedState = 'UNKNOWN'; // MULTICLASS: Reset detected state
       this.scoreHistory.clear();
 
-      // Request microphone access using central helper (same as Phase 2!)
-      this.mediaStream = await getRawAudioStream();
+      // Request microphone access using central helper with selected device
+      this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: this.requestedSampleRate });
@@ -145,44 +153,38 @@ export class DiagnosePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      if (this.useAudioWorklet) {
-        // Initialize AudioWorklet Manager
-        this.audioWorkletManager = new AudioWorkletManager({
-          bufferSize: this.chunkSize * 2,
-          onAudioChunk: (chunk) => {
-            // Real-time audio chunk received from worklet
-            if (this.isProcessing) {
-              this.processChunkDirectly(chunk);
-            }
-          },
-          onSmartStartStateChange: (state) => {
-            const statusMsg = getSmartStartStatusMessage(state);
-            this.updateSmartStartStatus(statusMsg);
-          },
-          onSmartStartComplete: (rms) => {
-            logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
-            this.updateSmartStartStatus('Diagnose läuft');
-            this.isProcessing = true; // Start processing incoming chunks
-          },
-          onSmartStartTimeout: () => {
-            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
-            this.stopRecording();
-          },
-        });
+      // Initialize AudioWorklet Manager (always available at this point)
+      this.audioWorkletManager = new AudioWorkletManager({
+        bufferSize: this.chunkSize * 2,
+        onAudioChunk: (chunk) => {
+          // Real-time audio chunk received from worklet
+          if (this.isProcessing) {
+            this.processChunkDirectly(chunk);
+          }
+        },
+        onSmartStartStateChange: (state) => {
+          const statusMsg = getSmartStartStatusMessage(state);
+          this.updateSmartStartStatus(statusMsg);
+        },
+        onSmartStartComplete: (rms) => {
+          logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+          this.updateSmartStartStatus('Diagnose läuft');
+          this.isProcessing = true; // Start processing incoming chunks
+        },
+        onSmartStartTimeout: () => {
+          logger.warn('⏱️ Smart Start timeout - cleaning up resources');
+          notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
+          // CRITICAL FIX: Call cleanup() to properly release all resources
+          this.cleanup();
+          this.hideRecordingModal();
+        },
+      });
 
-        // Initialize AudioWorklet
-        await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
+      // Initialize AudioWorklet
+      await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
-        // Start Smart Start sequence
-        this.audioWorkletManager.startSmartStart();
-      } else {
-        // Fallback: Start processing immediately without Smart Start
-        logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
-        this.updateSmartStartStatus('Diagnose läuft');
-        this.isProcessing = true;
-        // Note: Without AudioWorklet, real-time processing won't work optimally
-        notify.warning('Diagnose-Funktionalität eingeschränkt.', { title: 'AudioWorklet nicht unterstützt' });
-      }
+      // Start Smart Start sequence
+      this.audioWorkletManager.startSmartStart();
 
       logger.info('✅ Real-time diagnosis initialized!');
     } catch (error) {

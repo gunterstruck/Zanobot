@@ -66,11 +66,15 @@ export class Router {
       }
     }
 
-    // Create new instances
-    this.referencePhase = new ReferencePhase(machine);
+    // Get selected microphone device ID from Phase 1
+    const selectedDeviceId = this.identifyPhase.getSelectedDeviceId();
+    logger.info(`📱 Using microphone device: ${selectedDeviceId || 'default'}`);
+
+    // Create new instances with selected device ID
+    this.referencePhase = new ReferencePhase(machine, selectedDeviceId);
     this.referencePhase.init();
 
-    this.diagnosePhase = new DiagnosePhase(machine);
+    this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
   }
 
