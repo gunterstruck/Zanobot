@@ -123,8 +123,10 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
           ...AUDIO_CONSTRAINTS_FALLBACK.audio, // Deep copy of nested audio object
         },
       };
+      // CRITICAL FIX: In fallback, don't use 'exact' for deviceId
+      // If first attempt failed with exact, fallback should use simple deviceId (browser picks best match)
       if (deviceId) {
-        (fallbackConstraints.audio as any).deviceId = { exact: deviceId };
+        (fallbackConstraints.audio as any).deviceId = deviceId;
       }
       return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
     } catch (fallbackError) {

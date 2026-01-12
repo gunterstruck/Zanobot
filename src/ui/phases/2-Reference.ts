@@ -492,6 +492,9 @@ export class ReferencePhase {
     // Setup stop button
     const stopBtn = document.getElementById('stop-recording-btn');
     if (stopBtn) {
+      // CRITICAL FIX: Reset button text to 'Stop' (Diagnose phase sets it to 'Stop & Save')
+      // This prevents UI confusion when switching between phases
+      stopBtn.textContent = 'Stop';
       stopBtn.onclick = () => this.stopRecording();
     }
   }
@@ -850,7 +853,8 @@ export class ReferencePhase {
     let statusContainer = document.getElementById('multiclass-status');
     if (!statusContainer) {
       // Create container if it doesn't exist
-      const parentContainer = document.querySelector('.phase-content');
+      // CRITICAL FIX: Use correct class selector from HTML (container-content, not phase-content)
+      const parentContainer = document.querySelector('#record-reference-content .container-content');
       if (!parentContainer) return;
 
       statusContainer = document.createElement('div');
