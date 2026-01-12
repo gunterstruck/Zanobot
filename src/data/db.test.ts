@@ -59,7 +59,7 @@ describe('Database Operations', () => {
       const db = await initDB();
 
       expect(db).toBeDefined();
-      expect(db.version).toBe(2); // Current DB version
+      expect(db.version).toBe(3); // Current DB version
     });
 
     it('should create all required object stores', async () => {
@@ -87,9 +87,8 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'test-machine-001',
         name: 'Test Machine',
-        type: 'industrial-pump',
-        location: 'Factory Floor 1',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       await saveMachine(machine);
@@ -104,8 +103,8 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'machine-123',
         name: 'Pump A',
-        type: 'pump',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       await saveMachine(machine);
@@ -122,9 +121,9 @@ describe('Database Operations', () => {
 
     it('should get all machines', async () => {
       const machines: Machine[] = [
-        { id: 'm1', name: 'Machine 1', type: 'type1', createdAt: Date.now() },
-        { id: 'm2', name: 'Machine 2', type: 'type2', createdAt: Date.now() },
-        { id: 'm3', name: 'Machine 3', type: 'type3', createdAt: Date.now() },
+        { id: 'm1', name: 'Machine 1', createdAt: Date.now(), referenceModels: [] },
+        { id: 'm2', name: 'Machine 2', createdAt: Date.now(), referenceModels: [] },
+        { id: 'm3', name: 'Machine 3', createdAt: Date.now(), referenceModels: [] },
       ];
 
       for (const machine of machines) {
@@ -143,14 +142,16 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'machine-model-test',
         name: 'Test Machine',
-        type: 'test',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       await saveMachine(machine);
 
       const model: GMIAModel = {
         machineId: 'machine-model-test',
+        label: 'Test Model',
+        type: 'healthy',
         weightVector: new Float64Array([1, 2, 3]),
         regularization: 1e9,
         scalingConstant: 2.5,
@@ -158,15 +159,21 @@ describe('Database Operations', () => {
         trainingDate: Date.now(),
         trainingDuration: 10,
         sampleRate: 44100,
+        metadata: {
+          meanCosineSimilarity: 0.9,
+          targetScore: 0.9,
+        },
       };
 
       await updateMachineModel('machine-model-test', model);
 
       const updated = await getMachine('machine-model-test');
 
-      expect(updated?.referenceModel).toBeDefined();
-      expect(updated?.referenceModel?.scalingConstant).toBe(2.5);
-      expect(updated?.referenceModel?.featureDimension).toBe(3);
+      expect(updated?.referenceModels).toBeDefined();
+      expect(updated?.referenceModels).toHaveLength(1);
+      expect(updated?.referenceModels[0]?.label).toBe('Test Model');
+      expect(updated?.referenceModels[0]?.scalingConstant).toBe(2.5);
+      expect(updated?.referenceModels[0]?.featureDimension).toBe(3);
     });
   });
 
@@ -186,8 +193,8 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'machine-123',
         name: 'Test Machine',
-        type: 'test',
         createdAt: Date.now(),
+        referenceModels: [],
       };
       await saveMachine(machine);
     });
@@ -258,8 +265,8 @@ describe('Database Operations', () => {
 
     it('should return correct stats with data', async () => {
       // Add machines
-      await saveMachine({ id: 'm1', name: 'M1', type: 't1', createdAt: Date.now() });
-      await saveMachine({ id: 'm2', name: 'M2', type: 't2', createdAt: Date.now() });
+      await saveMachine({ id: 'm1', name: 'M1', createdAt: Date.now(), referenceModels: [] });
+      await saveMachine({ id: 'm2', name: 'M2', createdAt: Date.now(), referenceModels: [] });
 
       // Add diagnoses
       await saveDiagnosis({
@@ -285,8 +292,8 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'export-test',
         name: 'Export Test Machine',
-        type: 'test',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       await saveMachine(machine);
@@ -301,13 +308,13 @@ describe('Database Operations', () => {
 
     it('should import database from JSON (replace mode)', async () => {
       // Create existing data
-      await saveMachine({ id: 'old', name: 'Old Machine', type: 'old', createdAt: Date.now() });
+      await saveMachine({ id: 'old', name: 'Old Machine', createdAt: Date.now(), referenceModels: [] });
 
       // Import new data (replace)
       const importData_mock = {
         version: 2,
         exportDate: Date.now(),
-        machines: [{ id: 'new', name: 'New Machine', type: 'new', createdAt: Date.now() }],
+        machines: [{ id: 'new', name: 'New Machine', createdAt: Date.now(), referenceModels: [] }],
         recordings: [],
         diagnoses: [],
       };
@@ -322,13 +329,13 @@ describe('Database Operations', () => {
 
     it('should import database from JSON (merge mode)', async () => {
       // Create existing data
-      await saveMachine({ id: 'existing', name: 'Existing', type: 'ex', createdAt: Date.now() });
+      await saveMachine({ id: 'existing', name: 'Existing', createdAt: Date.now(), referenceModels: [] });
 
       // Import new data (merge)
       const importData_mock = {
         version: 2,
         exportDate: Date.now(),
-        machines: [{ id: 'imported', name: 'Imported', type: 'imp', createdAt: Date.now() }],
+        machines: [{ id: 'imported', name: 'Imported', createdAt: Date.now(), referenceModels: [] }],
         recordings: [],
         diagnoses: [],
       };
@@ -354,8 +361,8 @@ describe('Database Operations', () => {
   describe('Clear All Data', () => {
     it('should delete all data from all stores', async () => {
       // Add test data
-      await saveMachine({ id: 'm1', name: 'M1', type: 't1', createdAt: Date.now() });
-      await saveMachine({ id: 'm2', name: 'M2', type: 't2', createdAt: Date.now() });
+      await saveMachine({ id: 'm1', name: 'M1', createdAt: Date.now(), referenceModels: [] });
+      await saveMachine({ id: 'm2', name: 'M2', createdAt: Date.now(), referenceModels: [] });
 
       await saveDiagnosis({
         id: 'd1',
@@ -383,15 +390,15 @@ describe('Database Operations', () => {
       const machine1: Machine = {
         id: 'dup-test',
         name: 'Original',
-        type: 'type1',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       const machine2: Machine = {
         id: 'dup-test',
         name: 'Updated',
-        type: 'type2',
         createdAt: Date.now() + 1000,
+        referenceModels: [],
       };
 
       await saveMachine(machine1);
@@ -406,8 +413,8 @@ describe('Database Operations', () => {
       const machine: Machine = {
         id: 'machine-with-special-chars-äöü-123!@#',
         name: 'Special Machine',
-        type: 'test',
         createdAt: Date.now(),
+        referenceModels: [],
       };
 
       await saveMachine(machine);
@@ -423,8 +430,8 @@ describe('Database Operations', () => {
         machines.push({
           id: `machine-${i}`,
           name: `Machine ${i}`,
-          type: 'test',
           createdAt: Date.now() + i,
+          referenceModels: [],
         });
       }
 
