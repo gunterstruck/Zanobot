@@ -113,6 +113,11 @@ export function calculateConfidence(
   model: GMIAModel,
   cosineSimilarities: number[]
 ): number {
+  // Guard against empty array (would cause NaN)
+  if (cosineSimilarities.length === 0) {
+    return 0;
+  }
+
   // Base confidence from mean cosine similarity
   const meanCosine = cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
   const baseConfidence = Math.abs(meanCosine) * 100;
@@ -144,6 +149,11 @@ export function generateDiagnosisResult(
   cosineSimilarities: number[],
   machineId: string
 ): DiagnosisResult {
+  // Guard against empty array (would cause NaN)
+  if (cosineSimilarities.length === 0) {
+    throw new Error('Cannot generate diagnosis result with empty cosine similarities array');
+  }
+
   // Average cosine similarity
   const avgCosine = cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
 
@@ -422,14 +432,15 @@ export function classifyDiagnosticState(
 
   // Step 4: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
-  if (bestScore < UNCERTAINTY_THRESHOLD) {
+  if (bestScore < UNCERTAINTY_THRESHOLD || bestModel === null) {
     // Anomaly detected, but doesn't match any known pattern
+    // OR all scores were zero/negative (bestModel remains null)
     status = 'uncertain';
     bestLabel = 'UNKNOWN';
   } else {
     // Matched a known state - use model's type directly
     // This allows multiple healthy states (e.g., "Idle", "Full Load") and multiple faults
-    status = bestModel!.type; // 'healthy' or 'faulty' from the winning model
+    status = bestModel.type; // 'healthy' or 'faulty' from the winning model
   }
 
   // Generate diagnosis result
