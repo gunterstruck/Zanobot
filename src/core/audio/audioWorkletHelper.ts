@@ -14,6 +14,7 @@ import { logger } from '@utils/logger.js';
 
 export interface AudioWorkletConfig {
   bufferSize: number;
+  warmUpDuration?: number; // Optional warmup duration in ms (defaults to DEFAULT_SMART_START_CONFIG)
   onAudioData?: (writePos: number) => void;
   onAudioChunk?: (chunk: Float32Array) => void;
   onSmartStartStateChange?: (state: SmartStartState) => void;
@@ -71,10 +72,12 @@ export class AudioWorkletManager {
       // Connect to destination for monitoring (optional)
       this.workletNode.connect(audioContext.destination);
 
-      // CRITICAL FIX: Send actual sample rate to worklet for dynamic chunk size calculation
+      // CRITICAL FIX: Send actual sample rate and warmup duration to worklet
+      // This ensures Single Source of Truth from config (no hardcoded values in worklet)
       this.workletNode.port.postMessage({
         type: 'init',
-        sampleRate: audioContext.sampleRate
+        sampleRate: audioContext.sampleRate,
+        warmUpDuration: this.config.warmUpDuration || 5000 // Default to 5s if not specified
       });
 
       logger.info('✅ AudioWorklet initialized');

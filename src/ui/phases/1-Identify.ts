@@ -276,8 +276,10 @@ export class IdentifyPhase {
     if (errorMessage) {
       errorMessage.textContent = message;
     }
-    if (errorHint && hint) {
-      errorHint.textContent = hint;
+    // CRITICAL FIX: Always reset hint text (even when empty) to prevent stale hints
+    // This ensures old hints don't remain visible when new errors occur without hints
+    if (errorHint) {
+      errorHint.textContent = hint || '';
     }
   }
 
