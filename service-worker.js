@@ -10,13 +10,13 @@ const DEBUG = false; // Set to true for development, false for production
 // Helper function for conditional logging
 function log(...args) {
     if (DEBUG) {
-        log(...args);
+        console.log(...args);
     }
 }
 
 function warn(...args) {
     if (DEBUG) {
-        warn(...args);
+        console.warn(...args);
     }
 }
 

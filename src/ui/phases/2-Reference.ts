@@ -573,15 +573,18 @@ export class ReferencePhase {
       return;
     }
 
-    // Setup audio player
-    const audioElement = document.getElementById('review-audio') as HTMLAudioElement;
-    const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement;
+    // Setup audio player with proper null checks
+    const audioElement = document.getElementById('review-audio') as HTMLAudioElement | null;
+    const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement | null;
 
-    if (audioElement && audioSource) {
-      const audioUrl = URL.createObjectURL(this.recordedBlob);
-      audioSource.src = audioUrl;
-      audioElement.load();
+    if (!audioElement || !audioSource) {
+      logger.error('Audio player elements not found');
+      return;
     }
+
+    const audioUrl = URL.createObjectURL(this.recordedBlob);
+    audioSource.src = audioUrl;
+    audioElement.load();
 
     // Update quality indicator
     this.updateQualityIndicator(this.currentQualityResult);
