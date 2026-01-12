@@ -90,8 +90,16 @@ export class AudioWorkletManager {
   private handleWorkletMessage(message: any): void {
     switch (message.type) {
       case 'init-complete':
-        // Worklet initialization confirmed with actual sample rate and chunk size
-        logger.info(`✅ Worklet initialized: sampleRate=${message.sampleRate}Hz, chunkSize=${message.chunkSize} samples`);
+        // Worklet initialization confirmed with actual sample rate, chunk size, and buffer size
+        logger.info(`✅ Worklet initialized: sampleRate=${message.sampleRate}Hz, chunkSize=${message.chunkSize} samples, bufferSize=${message.bufferSize} samples`);
+
+        // CRITICAL FIX: Resize local ring buffer if worklet reports larger buffer size
+        // This ensures consistency between worklet and manager buffers
+        if (message.bufferSize && message.bufferSize > this.ringBuffer.length) {
+          logger.info(`📊 Resizing local ring buffer from ${this.ringBuffer.length} to ${message.bufferSize} samples`);
+          this.ringBuffer = new Float32Array(message.bufferSize);
+          this.currentWritePos = 0;
+        }
         break;
 
       case 'audio-data-ready':

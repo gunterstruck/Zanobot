@@ -102,9 +102,14 @@ export class ReferencePhase {
       }
 
       if (this.useAudioWorklet) {
+        // CRITICAL FIX: Calculate proper buffer size based on actual sample rate
+        // At 96kHz: chunkSize = 31680, so we need bufferSize >= 63360
+        const chunkSize = Math.floor(0.330 * actualSampleRate);
+        const bufferSize = Math.max(32768, chunkSize * 2);
+
         // Initialize AudioWorklet Manager
         this.audioWorkletManager = new AudioWorkletManager({
-          bufferSize: 16384,
+          bufferSize: bufferSize,
           onSmartStartStateChange: (state) => {
             const statusMsg = getSmartStartStatusMessage(state);
             this.updateStatusMessage(statusMsg);
@@ -751,7 +756,8 @@ export class ReferencePhase {
       let label: string;
       let type: 'healthy' | 'faulty';
 
-      if (this.machine.referenceModels.length === 0) {
+      // CRITICAL FIX: Check if referenceModels exists before accessing length
+      if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         // First recording: Always "Baseline" (healthy state)
         label = 'Baseline';
         type = 'healthy';
@@ -864,7 +870,9 @@ export class ReferencePhase {
     const stateList = document.createElement('ul');
     stateList.className = 'state-list';
 
-    this.machine.referenceModels.forEach((model, index) => {
+    // CRITICAL FIX: Check if referenceModels exists before iterating
+    if (this.machine.referenceModels) {
+      this.machine.referenceModels.forEach((model, index) => {
       const li = document.createElement('li');
       li.className = 'state-item';
 
@@ -890,7 +898,8 @@ export class ReferencePhase {
       li.appendChild(dateSpan);
 
       stateList.appendChild(li);
-    });
+      });
+    }
 
     statusContainer.appendChild(stateList);
 

@@ -14,13 +14,6 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
 
-    // Ring buffer for audio data
-    this.bufferSize = 16384; // Large enough for chunk processing
-    this.ringBuffer = new Float32Array(this.bufferSize);
-    this.writePos = 0;
-    this.readPos = 0;
-    this.samplesWritten = 0; // Track total samples written to detect wrap-around
-
     // Smart Start state
     this.smartStartActive = false;
     this.warmUpStartTime = 0;
@@ -34,6 +27,16 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     // Will be set via 'init' message from manager
     this.sampleRate = 44100; // Default, will be overridden
     this.chunkSize = Math.floor(0.330 * this.sampleRate); // 330ms window
+
+    // CRITICAL FIX: Ring buffer size must be larger than chunkSize
+    // At 96kHz: chunkSize = 31680 samples
+    // We need bufferSize >= chunkSize for proper circular buffer operation
+    // Use 2x chunkSize as safety margin for high sample rates
+    this.bufferSize = Math.max(32768, this.chunkSize * 2); // Minimum 32768 or 2x chunkSize
+    this.ringBuffer = new Float32Array(this.bufferSize);
+    this.writePos = 0;
+    this.readPos = 0;
+    this.samplesWritten = 0; // Track total samples written to detect wrap-around
 
     // Listen for messages from main thread
     this.port.onmessage = (event) => {
@@ -51,11 +54,21 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         if (message.sampleRate) {
           this.sampleRate = message.sampleRate;
           this.chunkSize = Math.floor(0.330 * this.sampleRate);
+
+          // CRITICAL FIX: Resize ring buffer based on actual chunk size
+          // This ensures bufferSize >= chunkSize at all sample rates
+          this.bufferSize = Math.max(32768, this.chunkSize * 2);
+          this.ringBuffer = new Float32Array(this.bufferSize);
+          this.writePos = 0;
+          this.readPos = 0;
+          this.samplesWritten = 0;
+
           // Acknowledge initialization
           this.port.postMessage({
             type: 'init-complete',
             sampleRate: this.sampleRate,
-            chunkSize: this.chunkSize
+            chunkSize: this.chunkSize,
+            bufferSize: this.bufferSize
           });
         }
         break;
