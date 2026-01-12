@@ -120,7 +120,8 @@ export function calculateConfidence(
 
   // Base confidence from mean cosine similarity
   const meanCosine = cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
-  const baseConfidence = Math.abs(meanCosine) * 100;
+  // Clamp negative values to 0 (negative cosine = poor match = low confidence)
+  const baseConfidence = Math.max(0, meanCosine) * 100;
 
   // Penalty for high variance (inconsistent readings)
   const variance = calculateVariance(cosineSimilarities);
