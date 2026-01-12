@@ -202,14 +202,23 @@ export class IdentifyPhase {
    */
   private async processScannedCode(code: string): Promise<void> {
     try {
+      // Trim and validate the scanned code
+      const trimmedCode = code.trim();
+      const validation = this.validateMachineId(trimmedCode);
+
+      if (!validation.valid) {
+        this.showError(validation.error || 'Ungültiger Code gescannt');
+        return;
+      }
+
       // Check if machine exists
-      let machine = await getMachine(code);
+      let machine = await getMachine(trimmedCode);
 
       if (!machine) {
         // Create new machine from scanned code
         machine = {
-          id: code,
-          name: `Machine ${code}`,
+          id: trimmedCode,
+          name: `Machine ${trimmedCode}`,
           createdAt: Date.now(),
           referenceModels: [], // MULTICLASS: Initialize empty model array
         };
@@ -327,6 +336,18 @@ export class IdentifyPhase {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
+
+      // CRITICAL FIX: Close AudioContext after beep finishes to prevent resource leak
+      // Wait for sound duration (200ms) + small buffer before closing context
+      setTimeout(() => {
+        if (audioContext && audioContext.state !== 'closed') {
+          try {
+            audioContext.close();
+          } catch (error) {
+            logger.warn('⚠️ Error closing AudioContext:', error);
+          }
+        }
+      }, 250); // 200ms sound + 50ms buffer
     } catch (error) {
       logger.warn('Could not play beep sound:', error);
     }
@@ -345,7 +366,16 @@ export class IdentifyPhase {
       return;
     }
 
-    await this.processScannedCode(scannedCode);
+    // Validate input before processing
+    const trimmedCode = scannedCode.trim();
+    const validation = this.validateMachineId(trimmedCode);
+
+    if (!validation.valid) {
+      this.showError(validation.error || 'Ungültige Maschinen-ID');
+      return;
+    }
+
+    await this.processScannedCode(trimmedCode);
   }
 
   /**
@@ -361,11 +391,38 @@ export class IdentifyPhase {
       }
 
       const name = nameInput.value.trim();
-      const id = idInput.value.trim() || this.generateMachineId();
+      const idInputValue = idInput.value.trim();
 
+      // Validate name
       if (!name) {
         this.showError('Bitte geben Sie einen Maschinennamen ein');
         return;
+      }
+
+      // Validate name is not just whitespace and has reasonable length
+      if (!/\S/.test(name)) {
+        this.showError('Maschinenname darf nicht nur aus Leerzeichen bestehen');
+        return;
+      }
+
+      if (name.length > 100) {
+        this.showError('Maschinenname ist zu lang (maximal 100 Zeichen)');
+        return;
+      }
+
+      // Generate or validate ID
+      let id: string;
+      if (idInputValue) {
+        // Validate provided ID
+        const validation = this.validateMachineId(idInputValue);
+        if (!validation.valid) {
+          this.showError(validation.error || 'Ungültige Maschinen-ID');
+          return;
+        }
+        id = idInputValue;
+      } else {
+        // Generate new ID
+        id = this.generateMachineId();
       }
 
       // Check if ID already exists
@@ -404,6 +461,37 @@ export class IdentifyPhase {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 7);
     return `${timestamp}-${random}`.toUpperCase();
+  }
+
+  /**
+   * Validate machine ID format
+   * Ensures ID is not empty, not just whitespace, and has reasonable length
+   */
+  private validateMachineId(id: string): { valid: boolean; error?: string } {
+    // Trim whitespace
+    const trimmedId = id.trim();
+
+    // Check if empty after trimming
+    if (!trimmedId) {
+      return { valid: false, error: 'Maschinen-ID darf nicht leer sein' };
+    }
+
+    // Check minimum length (at least 1 character)
+    if (trimmedId.length < 1) {
+      return { valid: false, error: 'Maschinen-ID ist zu kurz' };
+    }
+
+    // Check maximum length (prevent excessive IDs)
+    if (trimmedId.length > 100) {
+      return { valid: false, error: 'Maschinen-ID ist zu lang (maximal 100 Zeichen)' };
+    }
+
+    // Check for only whitespace characters (extra safety)
+    if (!/\S/.test(trimmedId)) {
+      return { valid: false, error: 'Maschinen-ID darf nicht nur aus Leerzeichen bestehen' };
+    }
+
+    return { valid: true };
   }
 
   /**
@@ -553,33 +641,56 @@ export class IdentifyPhase {
         const tempReport = HardwareCheck.analyzeCurrentDevice(device.label, 44100);
         const statusClass = tempReport.status === 'good' ? 'status-good' : 'status-warning';
 
-        deviceItem.innerHTML = `
-          <div class="device-info">
-            <div class="device-icon ${statusClass}">
-              ${
-                tempReport.status === 'good'
-                  ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        // CRITICAL FIX: Use safe DOM manipulation instead of innerHTML to prevent XSS
+        // Create device info container
+        const deviceInfo = document.createElement('div');
+        deviceInfo.className = 'device-info';
+
+        // Create device icon with status
+        const deviceIcon = document.createElement('div');
+        deviceIcon.className = `device-icon ${statusClass}`;
+
+        // Add appropriate SVG based on status (safe static content)
+        if (tempReport.status === 'good') {
+          deviceIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                       <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>`
-                  : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    </svg>`;
+        } else {
+          deviceIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                       <line x1="12" y1="9" x2="12" y2="13"/>
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>`
-              }
-            </div>
-            <div class="device-details">
-              <div class="device-name">${device.label}</div>
-              <div class="device-status">${tempReport.reason}</div>
-            </div>
-          </div>
-          ${
-            isSelected
-              ? '<div class="device-checkmark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
-              : ''
-          }
-        `;
+                    </svg>`;
+        }
+
+        // Create device details container
+        const deviceDetails = document.createElement('div');
+        deviceDetails.className = 'device-details';
+
+        // Use textContent instead of innerHTML to prevent XSS attacks
+        const deviceName = document.createElement('div');
+        deviceName.className = 'device-name';
+        deviceName.textContent = device.label; // SAFE - textContent escapes HTML
+
+        const deviceStatus = document.createElement('div');
+        deviceStatus.className = 'device-status';
+        deviceStatus.textContent = tempReport.reason; // SAFE - textContent escapes HTML
+
+        // Assemble the structure
+        deviceDetails.appendChild(deviceName);
+        deviceDetails.appendChild(deviceStatus);
+        deviceInfo.appendChild(deviceIcon);
+        deviceInfo.appendChild(deviceDetails);
+        deviceItem.appendChild(deviceInfo);
+
+        // Add checkmark for selected device
+        if (isSelected) {
+          const checkmark = document.createElement('div');
+          checkmark.className = 'device-checkmark';
+          checkmark.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+          deviceItem.appendChild(checkmark);
+        }
 
         deviceItem.addEventListener('click', () => this.selectMicrophone(device));
         deviceList.appendChild(deviceItem);
