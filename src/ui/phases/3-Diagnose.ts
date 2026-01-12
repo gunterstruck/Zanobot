@@ -25,7 +25,7 @@ import {
 import { saveDiagnosis } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
-import { getRawAudioStream, getSmartStartStatusMessage } from '@core/audio/audioHelper.js';
+import { getRawAudioStream, getSmartStartStatusMessage, DEFAULT_SMART_START_CONFIG } from '@core/audio/audioHelper.js';
 import {
   AudioWorkletManager,
   isAudioWorkletSupported,
@@ -156,6 +156,7 @@ export class DiagnosePhase {
       // Initialize AudioWorklet Manager (always available at this point)
       this.audioWorkletManager = new AudioWorkletManager({
         bufferSize: this.chunkSize * 2,
+        warmUpDuration: DEFAULT_SMART_START_CONFIG.warmUpDuration, // Use config as Single Source of Truth
         onAudioChunk: (chunk) => {
           // Real-time audio chunk received from worklet
           if (this.isProcessing) {
@@ -429,15 +430,19 @@ export class DiagnosePhase {
 
       // Use the passed values (saved before cleanup)
 
+      // CRITICAL FIX: Recalculate status from filtered score instead of using cached value
+      // This prevents status/score mismatch where filtered score changes classification
+      const recalculatedStatus = classifyHealthStatus(finalScore);
+
       // Get classification details
       const classification = getClassificationDetails(finalScore);
 
       // MULTICLASS: Generate hint based on detected state
       let hint = classification.recommendation;
       if (detectedState !== 'UNKNOWN') {
-        if (finalStatus === 'healthy') {
+        if (recalculatedStatus === 'healthy') {
           hint = `Maschine läuft im Normalzustand "${detectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
-        } else if (finalStatus === 'faulty') {
+        } else if (recalculatedStatus === 'faulty') {
           hint = `Fehlerzustand erkannt: "${detectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
         }
       }
@@ -448,7 +453,7 @@ export class DiagnosePhase {
         machineId: this.machine.id,
         timestamp: Date.now(),
         healthScore: finalScore,
-        status: finalStatus,
+        status: recalculatedStatus,
         confidence: classification.confidence,
         rawCosineSimilarity: 0, // Not stored for real-time
         metadata: {

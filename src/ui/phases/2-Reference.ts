@@ -110,6 +110,7 @@ export class ReferencePhase {
         // Initialize AudioWorklet Manager
         this.audioWorkletManager = new AudioWorkletManager({
           bufferSize: bufferSize,
+          warmUpDuration: this.warmUpDuration * 1000, // Convert seconds to milliseconds
           onSmartStartStateChange: (state) => {
             const statusMsg = getSmartStartStatusMessage(state);
             this.updateStatusMessage(statusMsg);

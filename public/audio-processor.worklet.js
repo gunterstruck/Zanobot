@@ -17,7 +17,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     // Smart Start state
     this.smartStartActive = false;
     this.warmUpStartTime = 0;
-    this.warmUpDuration = 2000; // 2 seconds in ms
+    this.warmUpDuration = 5000; // Default 5s, will be overridden via 'init' message
     this.signalThreshold = 0.02;
     this.maxWaitTime = 30000;
     this.waitStartTime = 0;
@@ -63,12 +63,19 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
           this.readPos = 0;
           this.samplesWritten = 0;
 
+          // CRITICAL FIX: Set warmUpDuration from config (Single Source of Truth)
+          // This prevents hardcoded values and ensures consistency across pipeline
+          if (message.warmUpDuration) {
+            this.warmUpDuration = message.warmUpDuration;
+          }
+
           // Acknowledge initialization
           this.port.postMessage({
             type: 'init-complete',
             sampleRate: this.sampleRate,
             chunkSize: this.chunkSize,
-            bufferSize: this.bufferSize
+            bufferSize: this.bufferSize,
+            warmUpDuration: this.warmUpDuration
           });
         }
         break;
