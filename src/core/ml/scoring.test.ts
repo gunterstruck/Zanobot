@@ -349,7 +349,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       // Should match Baseline (highest similarity)
       expect(result.metadata?.detectedState).toBe('Baseline');
@@ -367,7 +367,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       // Should match Unwucht (fault state)
       expect(result.metadata?.detectedState).toBe('Unwucht');
@@ -385,7 +385,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       // Should be uncertain (anomaly that doesn't match any known state)
       expect(result.metadata?.detectedState).toBe('UNKNOWN');
@@ -403,7 +403,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       expect(result.metadata?.multiclassMode).toBe(true);
       expect(result.metadata?.evaluatedModels).toBe(3);
@@ -417,7 +417,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      expect(() => classifyDiagnosticState([], featureVector)).toThrow();
+      expect(() => classifyDiagnosticState([], featureVector, 44100)).toThrow();
     });
 
     it('should include analysis hint with detected state', () => {
@@ -430,7 +430,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       expect(result.analysis?.hint).toBeDefined();
       expect(result.analysis?.hint).toContain('Baseline');
@@ -446,7 +446,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       expect(result.metadata?.detectedState).toBe('Baseline');
       expect(result.metadata?.evaluatedModels).toBe(1);
@@ -464,7 +464,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       // Should match Volllast (healthy state)
       expect(result.metadata?.detectedState).toBe('Volllast');
@@ -482,7 +482,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       // Should match Lagerschaden (fault state)
       expect(result.metadata?.detectedState).toBe('Lagerschaden');
@@ -501,7 +501,7 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       expect(result.metadata?.detectedState).toBe('Volllast');
       expect(result.status).toBe('healthy');
@@ -519,10 +519,42 @@ describe('Health Scoring', () => {
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, featureVector);
+      const result = classifyDiagnosticState(models, featureVector, 44100);
 
       expect(result.metadata?.detectedState).toBe('Unwucht');
       expect(result.status).toBe('faulty');
+    });
+
+    it('should throw error on sample rate mismatch', () => {
+      // Test sample rate validation
+      const models = [baselineModel]; // Model trained at 44100Hz
+
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.95, 0.48, 0.29]),
+        absoluteFeatures: new Float64Array([0.95, 0.48, 0.29]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      // Try to classify with different sample rate (48000Hz)
+      expect(() => classifyDiagnosticState(models, featureVector, 48000)).toThrow(
+        'Sample Rate Mismatch'
+      );
+    });
+
+    it('should accept matching sample rate', () => {
+      // Test that matching sample rate works correctly
+      const models = [baselineModel]; // Model trained at 44100Hz
+
+      const featureVector: FeatureVector = {
+        features: new Float64Array([0.95, 0.48, 0.29]),
+        absoluteFeatures: new Float64Array([0.95, 0.48, 0.29]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      // Should work with matching sample rate
+      expect(() => classifyDiagnosticState(models, featureVector, 44100)).not.toThrow();
     });
   });
 });
