@@ -126,7 +126,10 @@ export class HardwareCheck {
   public static async getAvailableDevices(): Promise<AudioDeviceInfo[]> {
     try {
       // Request permissions first (required for device labels)
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Stop the stream immediately - we only needed it for permissions
+      stream.getTracks().forEach((track) => track.stop());
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audioInputs = devices
