@@ -83,10 +83,12 @@ export class ReferencePhase {
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: 44100 });
 
-      // Validate sample rate (some browsers may use different rate)
-      if (this.audioContext.sampleRate !== 44100) {
-        logger.warn(`⚠️ AudioContext sample rate is ${this.audioContext.sampleRate}Hz instead of requested 44100Hz`);
-        logger.warn('   This may cause slight differences in feature extraction.');
+      // CRITICAL FIX: Validate sample rate and adapt DSP config to actual rate
+      // This ensures training and diagnosis use consistent feature extraction parameters
+      const actualSampleRate = this.audioContext.sampleRate;
+      if (actualSampleRate !== 44100) {
+        logger.warn(`⚠️ AudioContext sample rate is ${actualSampleRate}Hz instead of requested 44100Hz`);
+        logger.info(`✅ Feature extraction will use actual sample rate: ${actualSampleRate}Hz`);
       }
 
       // Show recording modal
@@ -337,21 +339,33 @@ export class ReferencePhase {
         }
       }
 
+      // CRITICAL FIX: Create DSP config with actual sample rate from AudioContext
+      // This ensures training features match diagnosis features even if browser uses different sample rate
+      const actualSampleRate = this.audioContext.sampleRate;
+      const dspConfig = {
+        ...DEFAULT_DSP_CONFIG,
+        sampleRate: actualSampleRate,
+        frequencyRange: [0, actualSampleRate / 2] as [number, number], // Update Nyquist frequency
+      };
+
+      logger.debug(`📊 DSP Config: sampleRate=${dspConfig.sampleRate}Hz, frequencyRange=[${dspConfig.frequencyRange[0]}, ${dspConfig.frequencyRange[1]}]Hz`);
+
       // Extract features from the SLICED buffer (only stable signal)
       logger.info('📊 Extracting features from stable signal...');
-      const features = extractFeatures(trainingBuffer, DEFAULT_DSP_CONFIG);
+      const features = extractFeatures(trainingBuffer, dspConfig);
       logger.info(`   Extracted ${features.length} feature vectors`);
 
       // PHASE 2: Assess recording quality
       const qualityResult = assessRecordingQuality(features);
 
       // Prepare training data (but don't train yet - wait for user approval)
+      // CRITICAL FIX: Store actual DSP config used for feature extraction
       const trainingData: TrainingData = {
         featureVectors: features.map((f) => f.features),
         machineId: this.machine.id,
         recordingId: `ref-${Date.now()}`,
         numSamples: features.length,
-        config: DEFAULT_DSP_CONFIG,
+        config: dspConfig, // Use actual config with correct sample rate
       };
 
       // Store for later use
