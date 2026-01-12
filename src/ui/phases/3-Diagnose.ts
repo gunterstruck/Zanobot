@@ -448,8 +448,12 @@ export class DiagnosePhase {
       }
 
       // Create diagnosis result
+      // CRITICAL FIX: Add random suffix to prevent ID collisions
+      // If multiple diagnoses are saved in the same millisecond, they would collide
+      // without a random suffix (e.g., rapid automated testing or high-frequency monitoring)
+      const randomSuffix = Math.random().toString(36).substring(2, 9);
       const diagnosis: DiagnosisResult = {
-        id: `diag-${Date.now()}`,
+        id: `diag-${Date.now()}-${randomSuffix}`,
         machineId: this.machine.id,
         timestamp: Date.now(),
         healthScore: finalScore,
