@@ -485,11 +485,21 @@ export async function exportData(): Promise<{
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
-  // Serialize AudioBuffers for JSON export
-  const serializedRecordings = recordings.map((recording) => ({
-    ...recording,
-    audioBuffer: serializeAudioBuffer(recording.audioBuffer),
-  }));
+  // CRITICAL FIX: Check if AudioBuffers are already serialized
+  // Recordings in IndexedDB are already serialized by saveRecording()
+  // Attempting to serialize again causes crash (no getChannelData method on plain objects)
+  const serializedRecordings = recordings.map((recording) => {
+    if (isSerializedAudioBuffer(recording.audioBuffer)) {
+      // Already serialized - use directly
+      return recording as SerializedRecording;
+    }
+
+    // Not serialized yet - serialize now (shouldn't happen with current saveRecording, but handle gracefully)
+    return {
+      ...recording,
+      audioBuffer: serializeAudioBuffer(recording.audioBuffer),
+    };
+  });
 
   logger.info('📦 Data exported successfully');
 
@@ -589,22 +599,22 @@ export async function importData(
   // Import recordings with AudioBuffer rehydration
   if (data.recordings) {
     for (const recording of data.recordings) {
-      // Check if audioBuffer needs deserialization
-      let finalRecording: Recording;
+      // CRITICAL FIX: IndexedDB requires serialized AudioBuffers, not real AudioBuffer objects
+      // AudioBuffer is not structure-cloneable and causes DataCloneError
+      let serializedRecording: any;
 
       if (isSerializedAudioBuffer(recording.audioBuffer)) {
-        // Deserialize AudioBuffer
-        const audioBuffer = deserializeAudioBuffer(recording.audioBuffer);
-        finalRecording = {
-          ...recording,
-          audioBuffer,
-        } as Recording;
+        // Already serialized - use directly (format matches IndexedDB storage)
+        serializedRecording = recording;
       } else {
-        // Already a valid AudioBuffer (or will fail validation)
-        finalRecording = recording as Recording;
+        // Real AudioBuffer - serialize it before storing in IndexedDB
+        serializedRecording = {
+          ...recording,
+          audioBuffer: serializeAudioBuffer(recording.audioBuffer as AudioBuffer),
+        };
       }
 
-      await db.put('recordings', finalRecording);
+      await db.put('recordings', serializedRecording);
     }
     logger.info(`📥 Imported ${data.recordings.length} recordings`);
   }
