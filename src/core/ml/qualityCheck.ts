@@ -48,6 +48,19 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   const numFrames = featureMatrix.length;
   const numBins = featureMatrix[0].length;
 
+  if (numBins === 0) {
+    return {
+      score: 0,
+      rating: 'BAD',
+      issues: ['Leere Feature-Vektoren'],
+      metadata: {
+        variance: 0,
+        stability: 0,
+        outlierCount: 0,
+      },
+    };
+  }
+
   logger.debug(`   Analyzing ${numFrames} frames with ${numBins} frequency bins`);
 
   // 1. Calculate spectral variance across time
