@@ -34,6 +34,9 @@ export class Router {
   private onMachineSelected(machine: Machine): void {
     logger.info(`🤖 Machine selected: ${machine.name} (${machine.id})`);
 
+    // Stop any active IdentifyPhase resources (e.g., temporary microphone streams)
+    this.identifyPhase.cleanup();
+
     this.currentMachine = machine;
 
     // Update UI to show selected machine
