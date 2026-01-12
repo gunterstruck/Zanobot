@@ -517,35 +517,36 @@ export async function exportData(): Promise<{
  * @returns Web Audio API AudioBuffer
  */
 function deserializeAudioBuffer(serialized: SerializedAudioBuffer): AudioBuffer {
-  // Create AudioContext to generate AudioBuffer
-  const audioContext = new AudioContext();
+  // Create OfflineAudioContext instead of AudioContext for better resource management
+  // OfflineAudioContext is designed for processing and is automatically cleaned up
+  const audioContext = new OfflineAudioContext(
+    serialized.numberOfChannels,
+    serialized.length,
+    serialized.sampleRate
+  );
 
-  try {
-    // Create empty AudioBuffer
-    const audioBuffer = audioContext.createBuffer(
-      serialized.numberOfChannels,
-      serialized.length,
-      serialized.sampleRate
-    );
+  // Create empty AudioBuffer
+  const audioBuffer = audioContext.createBuffer(
+    serialized.numberOfChannels,
+    serialized.length,
+    serialized.sampleRate
+  );
 
-    // Fill channel data
-    for (let i = 0; i < serialized.numberOfChannels; i++) {
-      const channelData = audioBuffer.getChannelData(i);
-      const sourceData = serialized.channelData[i];
+  // Fill channel data
+  for (let i = 0; i < serialized.numberOfChannels; i++) {
+    const channelData = audioBuffer.getChannelData(i);
+    const sourceData = serialized.channelData[i];
 
-      for (let j = 0; j < sourceData.length; j++) {
-        channelData[j] = sourceData[j];
-      }
+    for (let j = 0; j < sourceData.length; j++) {
+      channelData[j] = sourceData[j];
     }
-
-    return audioBuffer;
-  } finally {
-    // CRITICAL: Always close AudioContext to prevent resource leaks
-    // The AudioBuffer can be used independently after the context is closed
-    audioContext.close().catch((error) => {
-      logger.warn('⚠️ Failed to close AudioContext during deserialization:', error);
-    });
   }
+
+  // OfflineAudioContext doesn't need explicit closing
+  // It's designed for synchronous buffer creation and is auto-managed
+  // No need for try/finally or async close() calls
+
+  return audioBuffer;
 }
 
 /**

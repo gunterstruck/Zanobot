@@ -104,7 +104,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
   startSmartStart() {
     this.smartStartActive = true;
     this.phase = 'warmup';
-    this.warmUpStartTime = currentTime * 1000; // Convert to ms
+    this.warmUpStartTime = performance.now(); // Use performance.now() for timing
     this.writePos = 0;
     this.readPos = 0;
     this.samplesWritten = 0;
@@ -153,7 +153,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     }
 
     const inputChannel = input[0]; // Mono channel
-    const now = currentTime * 1000; // Convert to ms
+    const now = performance.now(); // Use performance.now() for timing
 
     // Smart Start logic
     if (this.smartStartActive) {
@@ -238,16 +238,18 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       // CRITICAL FIX: Improved chunk triggering logic
       // Instead of relying on samplesWritten % chunkSize === 0 (which rarely triggers
       // because AudioWorklet processes in 128-sample blocks and chunkSize is not a multiple of 128),
-      // we track the last chunk delivery time and trigger when enough samples have accumulated.
+      // we track the last chunk delivery and trigger when enough samples have accumulated.
       // Calculate how many samples have been written since last chunk delivery
       const samplesSinceLastChunk = this.samplesWritten - this.readPos;
 
       if (samplesSinceLastChunk >= this.chunkSize) {
-        // Extract latest chunk using proper circular buffer logic
+        // Extract chunk from readPos (not from writePos backwards!)
+        // This ensures we process all data sequentially without gaps
         const chunk = new Float32Array(this.chunkSize);
 
-        // Calculate read position: go back CHUNK_SIZE samples from current writePos
-        let chunkReadPos = (this.writePos - this.chunkSize + this.bufferSize) % this.bufferSize;
+        // FIXED: Read from readPos forward, not from writePos backward
+        // Calculate read position in circular buffer
+        let chunkReadPos = this.readPos % this.bufferSize;
 
         // Copy data from circular buffer, handling wrap-around
         for (let i = 0; i < this.chunkSize; i++) {
@@ -255,8 +257,9 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
           chunkReadPos = (chunkReadPos + 1) % this.bufferSize;
         }
 
-        // Update read position to current write position (marks where we've processed up to)
-        this.readPos = this.samplesWritten;
+        // FIXED: Increment readPos by chunkSize (not set to samplesWritten)
+        // This ensures we process all data without skipping samples
+        this.readPos += this.chunkSize;
 
         // CRITICAL FIX: Send audio-data-ready message BEFORE audio-chunk
         // This maintains API consistency with AudioWorkletManager expectations

@@ -138,19 +138,23 @@ export class IdentifyPhase {
         this.onScanSuccess.bind(this),
         this.onScanFailure.bind(this)
       );
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Failed to start scanner:', error);
       this.isScanning = false;
       // Clean up scanner instance on error to prevent stale state
       this.html5QrCode = null;
 
+      // Type-safe error handling
+      const errorName = error instanceof Error ? error.name : '';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
       // Check if it's a permission error
-      if (error?.name === 'NotAllowedError' || error?.message?.includes('Permission')) {
+      if (errorName === 'NotAllowedError' || errorMessage.includes('Permission')) {
         this.showScannerError(
           'Kamerazugriff wurde verweigert',
           'Bitte erlauben Sie den Kamerazugriff in Ihren Browser-Einstellungen'
         );
-      } else if (error?.name === 'NotFoundError') {
+      } else if (errorName === 'NotFoundError') {
         this.showScannerError(
           'Keine Kamera gefunden',
           'Bitte stellen Sie sicher, dass Ihr Gerät eine Kamera hat'
@@ -181,8 +185,17 @@ export class IdentifyPhase {
 
     // Wait a moment before proceeding
     setTimeout(async () => {
-      await this.processScannedCode(decodedText);
-      this.closeScanner();
+      try {
+        await this.processScannedCode(decodedText);
+      } catch (error) {
+        logger.error('Failed to process scanned code:', error);
+        Toast.show({
+          message: 'Fehler beim Verarbeiten des QR-Codes',
+          type: 'error',
+        });
+      } finally {
+        this.closeScanner();
+      }
     }, 800);
   }
 

@@ -27,14 +27,16 @@ class ZanobotApp {
     logger.info('🤖 Zanobot AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');
 
-    // Wait for DOM
+    // Wait for DOM with race condition protection
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', async () => {
-        await this.setup();
+      // Use once: true to ensure handler only fires once
+      await new Promise<void>((resolve) => {
+        document.addEventListener('DOMContentLoaded', () => resolve(), { once: true });
       });
-    } else {
-      await this.setup();
     }
+
+    // Always call setup after DOM is ready
+    await this.setup();
   }
 
   /**
