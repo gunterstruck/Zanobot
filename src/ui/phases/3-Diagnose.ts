@@ -362,11 +362,14 @@ export class DiagnosePhase {
   private stopRecording(): void {
     logger.info('⏹️ Stopping diagnosis...');
 
+    // Save flag BEFORE cleanup (cleanup resets it!)
+    const hadValidMeasurement = this.hasValidMeasurement;
+
     // Cleanup resources
     this.cleanup();
 
     // Save final diagnosis ONLY if we have valid measurement data
-    if (this.hasValidMeasurement) {
+    if (hadValidMeasurement) {
       this.saveFinalDiagnosis();
     } else {
       logger.warn('⚠️ No valid measurement data - skipping save');

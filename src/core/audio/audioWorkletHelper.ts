@@ -92,9 +92,16 @@ export class AudioWorkletManager {
 
       case 'audio-chunk':
         // Receive audio chunk from worklet (zero-copy transfer)
-        if (message.chunk && this.config.onAudioChunk) {
+        if (message.chunk) {
           const chunk = new Float32Array(message.chunk);
-          this.config.onAudioChunk(chunk);
+
+          // Fill ring buffer for readLatestChunk() usage
+          this.fillRingBuffer(chunk);
+
+          // Also call callback if provided
+          if (this.config.onAudioChunk) {
+            this.config.onAudioChunk(chunk);
+          }
         }
         break;
 
@@ -118,6 +125,16 @@ export class AudioWorkletManager {
           this.config.onSmartStartTimeout();
         }
         break;
+    }
+  }
+
+  /**
+   * Fill ring buffer with audio chunk
+   */
+  private fillRingBuffer(chunk: Float32Array): void {
+    for (let i = 0; i < chunk.length; i++) {
+      this.ringBuffer[this.currentWritePos] = chunk[i];
+      this.currentWritePos = (this.currentWritePos + 1) % this.ringBuffer.length;
     }
   }
 
