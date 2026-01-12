@@ -220,6 +220,13 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
     throw new Error(`Machine not found: ${machineId}`);
   }
 
+  // CRITICAL FIX: Initialize referenceModels array if it doesn't exist
+  // This handles legacy data from old versions or imported data
+  if (!machine.referenceModels) {
+    logger.warn(`⚠️ Machine ${machineId} has no referenceModels array - initializing empty array`);
+    machine.referenceModels = [];
+  }
+
   // Add model to the collection
   machine.referenceModels.push(model);
   await db.put('machines', machine);

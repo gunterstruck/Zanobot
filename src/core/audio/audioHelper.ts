@@ -34,7 +34,13 @@ export const AUDIO_CONSTRAINTS = {
  * @returns Audio constraints object
  */
 export function buildAudioConstraints(deviceId?: string): MediaStreamConstraints {
-  const baseConstraints = { ...AUDIO_CONSTRAINTS };
+  // CRITICAL FIX: Deep copy to prevent mutation of global AUDIO_CONSTRAINTS
+  // Shallow copy ({ ...AUDIO_CONSTRAINTS }) would leave the nested 'audio' object as a reference
+  const baseConstraints: MediaStreamConstraints = {
+    audio: {
+      ...AUDIO_CONSTRAINTS.audio, // Deep copy of nested audio object
+    },
+  };
 
   if (deviceId) {
     (baseConstraints.audio as any).deviceId = { exact: deviceId };
@@ -110,8 +116,13 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
     logger.warn('⚠️ Exact constraints failed, using fallback:', error);
 
     try {
-      // Fall back to simple boolean constraints
-      const fallbackConstraints = { ...AUDIO_CONSTRAINTS_FALLBACK };
+      // CRITICAL FIX: Deep copy to prevent mutation of global AUDIO_CONSTRAINTS_FALLBACK
+      // Shallow copy ({ ...AUDIO_CONSTRAINTS_FALLBACK }) would leave the nested 'audio' object as a reference
+      const fallbackConstraints: MediaStreamConstraints = {
+        audio: {
+          ...AUDIO_CONSTRAINTS_FALLBACK.audio, // Deep copy of nested audio object
+        },
+      };
       if (deviceId) {
         (fallbackConstraints.audio as any).deviceId = { exact: deviceId };
       }
