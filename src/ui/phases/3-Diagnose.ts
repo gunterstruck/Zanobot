@@ -53,13 +53,16 @@ export class DiagnosePhase {
 
   // Configuration
   private chunkSize: number; // 330ms in samples
-  private sampleRate: number = 44100;
+  private requestedSampleRate: number = 44100; // Requested sample rate
+  private actualSampleRate: number = 44100; // Actual sample rate from AudioContext
+  private dspConfig: typeof DEFAULT_DSP_CONFIG; // DSP config with actual sample rate
 
   constructor(machine: Machine) {
     this.machine = machine;
 
-    // Calculate chunk size (330ms)
-    this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.sampleRate);
+    // Initialize with default config (will be updated when AudioContext is created)
+    this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.requestedSampleRate);
+    this.dspConfig = { ...DEFAULT_DSP_CONFIG };
 
     // Initialize score history for filtering
     this.scoreHistory = new ScoreHistory();
@@ -105,13 +108,25 @@ export class DiagnosePhase {
       this.mediaStream = await getRawAudioStream();
 
       // Create audio context
-      this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
+      this.audioContext = new AudioContext({ sampleRate: this.requestedSampleRate });
 
-      // Validate sample rate (some browsers may use different rate)
-      if (this.audioContext.sampleRate !== this.sampleRate) {
-        logger.warn(`⚠️ AudioContext sample rate is ${this.audioContext.sampleRate}Hz instead of requested ${this.sampleRate}Hz`);
-        logger.warn('   Diagnosis may be less accurate due to sample rate mismatch.');
+      // CRITICAL FIX: Update configuration with actual sample rate
+      this.actualSampleRate = this.audioContext.sampleRate;
+
+      if (this.actualSampleRate !== this.requestedSampleRate) {
+        logger.warn(`⚠️ AudioContext sample rate is ${this.actualSampleRate}Hz instead of requested ${this.requestedSampleRate}Hz`);
+        logger.info(`✅ Adapting feature extraction to use actual sample rate: ${this.actualSampleRate}Hz`);
       }
+
+      // Update chunkSize and DSP config with actual sample rate
+      this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.actualSampleRate);
+      this.dspConfig = {
+        ...DEFAULT_DSP_CONFIG,
+        sampleRate: this.actualSampleRate,
+        frequencyRange: [0, this.actualSampleRate / 2], // Update Nyquist frequency
+      };
+
+      logger.debug(`📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`);
 
       // Show recording modal
       this.showRecordingModal();
@@ -268,7 +283,8 @@ export class DiagnosePhase {
       const processingChunk = chunk.slice(0, this.chunkSize);
 
       // Step 1: Extract features (Energy Spectral Densities)
-      const featureVector = extractFeaturesFromChunk(processingChunk, DEFAULT_DSP_CONFIG);
+      // CRITICAL FIX: Use actual sample rate from dspConfig (not hardcoded DEFAULT_DSP_CONFIG)
+      const featureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
 
       // Step 2: MULTICLASS CLASSIFICATION
       // Compare against all trained models and find best match
@@ -362,15 +378,19 @@ export class DiagnosePhase {
   private stopRecording(): void {
     logger.info('⏹️ Stopping diagnosis...');
 
-    // Save flag BEFORE cleanup (cleanup resets it!)
+    // CRITICAL FIX: Save ALL values BEFORE cleanup (cleanup resets them!)
     const hadValidMeasurement = this.hasValidMeasurement;
+    const finalScore = this.lastProcessedScore;
+    const finalStatus = this.lastProcessedStatus;
+    const finalDetectedState = this.lastDetectedState;
+    const scoreHistoryCopy = this.scoreHistory.getAllScores().slice(); // Copy array
 
     // Cleanup resources
     this.cleanup();
 
     // Save final diagnosis ONLY if we have valid measurement data
     if (hadValidMeasurement) {
-      this.saveFinalDiagnosis();
+      this.saveFinalDiagnosis(finalScore, finalStatus, finalDetectedState, scoreHistoryCopy);
     } else {
       logger.warn('⚠️ No valid measurement data - skipping save');
       this.hideRecordingModal();
@@ -381,8 +401,20 @@ export class DiagnosePhase {
    * Save final diagnosis result
    *
    * MULTICLASS: Includes detected state in metadata
+   *
+   * CRITICAL FIX: Accepts values as parameters (saved before cleanup)
+   *
+   * @param finalScore - Health score before cleanup
+   * @param finalStatus - Health status before cleanup
+   * @param detectedState - Detected state before cleanup
+   * @param scoreHistory - Score history array before cleanup
    */
-  private async saveFinalDiagnosis(): Promise<void> {
+  private async saveFinalDiagnosis(
+    finalScore: number,
+    finalStatus: string,
+    detectedState: string,
+    scoreHistory: number[]
+  ): Promise<void> {
     try {
       // Validate machine data
       if (!this.machine || !this.machine.id) {
@@ -393,10 +425,7 @@ export class DiagnosePhase {
         throw new Error('No reference models available');
       }
 
-      // Use the last processed (filtered) score
-      const finalScore = this.lastProcessedScore;
-      const finalStatus = this.lastProcessedStatus;
-      const detectedState = this.lastDetectedState;
+      // Use the passed values (saved before cleanup)
 
       // Get classification details
       const classification = getClassificationDetails(finalScore);
@@ -422,8 +451,8 @@ export class DiagnosePhase {
         rawCosineSimilarity: 0, // Not stored for real-time
         metadata: {
           processingMode: 'real-time',
-          totalScores: this.scoreHistory.getAllScores().length,
-          scoreHistory: this.scoreHistory.getAllScores().slice(-10),
+          totalScores: scoreHistory.length,
+          scoreHistory: scoreHistory.slice(-10), // Use passed scoreHistory (saved before cleanup)
           detectedState, // MULTICLASS: Store detected state
           multiclassMode: true,
           evaluatedModels: this.machine.referenceModels.length,
