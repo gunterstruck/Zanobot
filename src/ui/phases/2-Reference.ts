@@ -80,6 +80,16 @@ export class ReferencePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
+      if (typeof MediaRecorder === 'undefined') {
+        notify.error(
+          'Ihr Browser unterstützt keine Audioaufnahme. Bitte verwenden Sie einen aktuellen Browser.',
+          new Error('MediaRecorder not supported'),
+          { title: 'Browser nicht kompatibel', duration: 0 }
+        );
+        this.cleanup();
+        return;
+      }
+
       // Create audio context
       this.audioContext = new AudioContext({ sampleRate: 44100 });
 

@@ -189,9 +189,9 @@ export class IdentifyPhase {
         await this.processScannedCode(decodedText);
       } catch (error) {
         logger.error('Failed to process scanned code:', error);
-        Toast.show({
-          message: 'Fehler beim Verarbeiten des QR-Codes',
-          type: 'error',
+        notify.error('Fehler beim Verarbeiten des QR-Codes', error as Error, {
+          title: 'Scanfehler',
+          duration: 0,
         });
       } finally {
         this.closeScanner();
