@@ -383,13 +383,57 @@ export async function getDBStats(): Promise<{
 }
 
 /**
+ * Serialized AudioBuffer for JSON export
+ */
+interface SerializedAudioBuffer {
+  _serialized: true;
+  numberOfChannels: number;
+  sampleRate: number;
+  length: number;
+  duration: number;
+  channelData: number[][]; // Array of Arrays (Float32Array → number[])
+}
+
+/**
+ * Serialized Recording for JSON export
+ */
+interface SerializedRecording extends Omit<Recording, 'audioBuffer'> {
+  audioBuffer: SerializedAudioBuffer;
+}
+
+/**
+ * Serialize AudioBuffer to JSON-compatible format
+ *
+ * @param audioBuffer - Web Audio API AudioBuffer
+ * @returns Serialized format with Float32Array data
+ */
+function serializeAudioBuffer(audioBuffer: AudioBuffer): SerializedAudioBuffer {
+  const channelData: number[][] = [];
+
+  // Extract all channel data
+  for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+    const data = audioBuffer.getChannelData(i);
+    channelData.push(Array.from(data)); // Float32Array → number[]
+  }
+
+  return {
+    _serialized: true,
+    numberOfChannels: audioBuffer.numberOfChannels,
+    sampleRate: audioBuffer.sampleRate,
+    length: audioBuffer.length,
+    duration: audioBuffer.duration,
+    channelData,
+  };
+}
+
+/**
  * Export all data (for backup)
  *
- * @returns All database data
+ * @returns All database data with serialized AudioBuffers
  */
 export async function exportData(): Promise<{
   machines: Machine[];
-  recordings: Recording[];
+  recordings: SerializedRecording[];
   diagnoses: DiagnosisResult[];
 }> {
   const db = await initDB();
@@ -398,9 +442,63 @@ export async function exportData(): Promise<{
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
+  // Serialize AudioBuffers for JSON export
+  const serializedRecordings = recordings.map((recording) => ({
+    ...recording,
+    audioBuffer: serializeAudioBuffer(recording.audioBuffer),
+  }));
+
   logger.info('📦 Data exported successfully');
 
-  return { machines, recordings, diagnoses };
+  return { machines, recordings: serializedRecordings, diagnoses };
+}
+
+/**
+ * Deserialize AudioBuffer from JSON format
+ *
+ * @param serialized - Serialized AudioBuffer data
+ * @returns Web Audio API AudioBuffer
+ */
+function deserializeAudioBuffer(serialized: SerializedAudioBuffer): AudioBuffer {
+  // Create AudioContext to generate AudioBuffer
+  const audioContext = new AudioContext();
+
+  // Create empty AudioBuffer
+  const audioBuffer = audioContext.createBuffer(
+    serialized.numberOfChannels,
+    serialized.length,
+    serialized.sampleRate
+  );
+
+  // Fill channel data
+  for (let i = 0; i < serialized.numberOfChannels; i++) {
+    const channelData = audioBuffer.getChannelData(i);
+    const sourceData = serialized.channelData[i];
+
+    for (let j = 0; j < sourceData.length; j++) {
+      channelData[j] = sourceData[j];
+    }
+  }
+
+  return audioBuffer;
+}
+
+/**
+ * Check if an object is a serialized AudioBuffer
+ *
+ * @param obj - Object to check
+ * @returns True if object is serialized AudioBuffer
+ */
+function isSerializedAudioBuffer(obj: any): obj is SerializedAudioBuffer {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    obj._serialized === true &&
+    typeof obj.numberOfChannels === 'number' &&
+    typeof obj.sampleRate === 'number' &&
+    typeof obj.length === 'number' &&
+    Array.isArray(obj.channelData)
+  );
 }
 
 /**
@@ -412,7 +510,7 @@ export async function exportData(): Promise<{
 export async function importData(
   data: {
     machines?: Machine[];
-    recordings?: Recording[];
+    recordings?: (Recording | SerializedRecording)[];
     diagnoses?: DiagnosisResult[];
   },
   merge: boolean = false
@@ -433,10 +531,25 @@ export async function importData(
     logger.info(`📥 Imported ${data.machines.length} machines`);
   }
 
-  // Import recordings
+  // Import recordings with AudioBuffer rehydration
   if (data.recordings) {
     for (const recording of data.recordings) {
-      await db.put('recordings', recording);
+      // Check if audioBuffer needs deserialization
+      let finalRecording: Recording;
+
+      if (isSerializedAudioBuffer(recording.audioBuffer)) {
+        // Deserialize AudioBuffer
+        const audioBuffer = deserializeAudioBuffer(recording.audioBuffer);
+        finalRecording = {
+          ...recording,
+          audioBuffer,
+        } as Recording;
+      } else {
+        // Already a valid AudioBuffer (or will fail validation)
+        finalRecording = recording as Recording;
+      }
+
+      await db.put('recordings', finalRecording);
     }
     logger.info(`📥 Imported ${data.recordings.length} recordings`);
   }
