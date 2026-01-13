@@ -23,7 +23,7 @@ export const AUDIO_CONSTRAINTS = {
     autoGainControl: { exact: false },
     noiseSuppression: { exact: false },
     channelCount: 1, // Mono is more robust
-    sampleRate: 44100,
+    sampleRate: 48000, // High quality audio (matches config.json)
   },
 };
 
@@ -59,7 +59,7 @@ export const AUDIO_CONSTRAINTS_FALLBACK = {
     autoGainControl: false,
     noiseSuppression: false,
     channelCount: 1,
-    sampleRate: 44100,
+    sampleRate: 48000, // High quality audio (matches config.json)
   },
 };
 
