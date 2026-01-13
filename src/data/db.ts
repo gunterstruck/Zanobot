@@ -463,6 +463,13 @@ interface SerializedRecording extends Omit<Recording, 'audioBuffer'> {
 }
 
 /**
+ * Serialized Machine for JSON export
+ */
+interface SerializedMachine extends Omit<Machine, 'referenceModels'> {
+  referenceModels: Array<Omit<GMIAModel, 'weightVector'> & { weightVector: number[] }>;
+}
+
+/**
  * Serialize AudioBuffer to JSON-compatible format
  *
  * @param audioBuffer - Web Audio API AudioBuffer
@@ -493,13 +500,20 @@ function serializeAudioBuffer(audioBuffer: AudioBuffer): SerializedAudioBuffer {
  * @returns All database data with serialized AudioBuffers
  */
 export async function exportData(): Promise<{
-  machines: Machine[];
+  machines: SerializedMachine[];
   recordings: SerializedRecording[];
   diagnoses: DiagnosisResult[];
 }> {
   const db = await initDB();
 
   const machines = await db.getAll('machines');
+  const serializedMachines: SerializedMachine[] = machines.map((machine) => ({
+    ...machine,
+    referenceModels: (machine.referenceModels || []).map((model) => ({
+      ...model,
+      weightVector: Array.from(model.weightVector),
+    })),
+  }));
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
@@ -523,7 +537,7 @@ export async function exportData(): Promise<{
 
   logger.info('📦 Data exported successfully');
 
-  return { machines, recordings: serializedRecordings, diagnoses };
+  return { machines: serializedMachines, recordings: serializedRecordings, diagnoses };
 }
 
 /**

@@ -249,6 +249,8 @@ export class SmartStartManager {
       // Check for timeout
       if (waitElapsed >= this.config.maxWaitTime) {
         logger.warn('⏱️ Signal timeout - no signal detected');
+        this.state = { phase: 'idle' };
+        this.notifyStateChange();
         if (this.onTimeout) {
           this.onTimeout();
         }
