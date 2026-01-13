@@ -168,6 +168,7 @@ export class ReferencePhase {
 
       // Cleanup on error
       this.cleanup();
+      this.hideRecordingModal();
     }
   }
 
