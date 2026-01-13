@@ -158,10 +158,7 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
  * @param weightVector - Trained weight vector
  * @returns Scaling constant C
  */
-function calculateScalingConstant(
-  features: Float64Array[],
-  weightVector: Float64Array
-): number {
+function calculateScalingConstant(features: Float64Array[], weightVector: Float64Array): number {
   // Calculate mean cosine similarity (μ)
   const cosineSimilarities = features.map((f) => cosineSimilarity(weightVector, f));
   const mu = mean(cosineSimilarities);
@@ -206,9 +203,9 @@ function validateSampleRateIntegrity(modelSampleRate: number, testSampleRate: nu
   if (modelSampleRate !== testSampleRate) {
     throw new Error(
       `CRITICAL: Sample Rate Mismatch. ` +
-      `Model trained at ${modelSampleRate}Hz, but inference attempted at ${testSampleRate}Hz. ` +
-      `FFT frequency bins are incompatible. Please use the same audio hardware/settings ` +
-      `as during training, or retrain the model with the current sample rate.`
+        `Model trained at ${modelSampleRate}Hz, but inference attempted at ${testSampleRate}Hz. ` +
+        `FFT frequency bins are incompatible. Please use the same audio hardware/settings ` +
+        `as during training, or retrain the model with the current sample rate.`
     );
   }
 }
@@ -234,11 +231,7 @@ export function inferGMIA(
 ): number[] {
   // CRITICAL FIX: Comprehensive sample rate validation
   // Check type, finite value, and positive range to prevent mathematical errors
-  if (
-    typeof testSampleRate !== 'number' ||
-    !isFinite(testSampleRate) ||
-    testSampleRate <= 0
-  ) {
+  if (typeof testSampleRate !== 'number' || !isFinite(testSampleRate) || testSampleRate <= 0) {
     throw new Error(
       `Invalid test sample rate: ${testSampleRate}. Must be a positive finite number (e.g., 48000).`
     );

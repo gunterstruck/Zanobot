@@ -19,11 +19,7 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
   /**
    * Compare two complex arrays with strict tolerance
    */
-  function expectIdenticalResults(
-    iterative: Complex[],
-    recursive: Complex[],
-    testName: string
-  ) {
+  function expectIdenticalResults(iterative: Complex[], recursive: Complex[], testName: string) {
     expect(iterative.length).toBe(recursive.length);
 
     let maxRealDiff = 0;
@@ -54,7 +50,9 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
       }
     }
 
-    console.log(`${testName}: Max diff - Real: ${maxRealDiff.toExponential(3)}, Imag: ${maxImagDiff.toExponential(3)}`);
+    console.log(
+      `${testName}: Max diff - Real: ${maxRealDiff.toExponential(3)}, Imag: ${maxImagDiff.toExponential(3)}`
+    );
   }
 
   it('CRITICAL: Size 4 - Simple case', () => {
@@ -140,9 +138,10 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
 
     for (let i = 0; i < N; i++) {
       input.push({
-        real: Math.sin((2 * Math.PI * i * 7) / N) +
-              0.5 * Math.cos((2 * Math.PI * i * 13) / N) +
-              0.3 * Math.sin((2 * Math.PI * i * 23) / N),
+        real:
+          Math.sin((2 * Math.PI * i * 7) / N) +
+          0.5 * Math.cos((2 * Math.PI * i * 13) / N) +
+          0.3 * Math.sin((2 * Math.PI * i * 23) / N),
         imag: 0,
       });
     }
@@ -160,9 +159,10 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
     // Simulate typical audio chunk
     for (let i = 0; i < N; i++) {
       input.push({
-        real: 0.8 * Math.sin((2 * Math.PI * i * 5) / N) +
-              0.4 * Math.sin((2 * Math.PI * i * 17) / N) +
-              0.2 * Math.cos((2 * Math.PI * i * 31) / N),
+        real:
+          0.8 * Math.sin((2 * Math.PI * i * 5) / N) +
+          0.4 * Math.sin((2 * Math.PI * i * 17) / N) +
+          0.2 * Math.cos((2 * Math.PI * i * 31) / N),
         imag: 0,
       });
     }
@@ -180,8 +180,7 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
     // This is the actual size used in GMIA!
     for (let i = 0; i < N; i++) {
       input.push({
-        real: Math.sin((2 * Math.PI * i * 3) / N) +
-              0.5 * Math.sin((2 * Math.PI * i * 7) / N),
+        real: Math.sin((2 * Math.PI * i * 3) / N) + 0.5 * Math.sin((2 * Math.PI * i * 7) / N),
         imag: 0,
       });
     }
@@ -198,8 +197,7 @@ describe('FFT - DIRECT Recursive vs Iterative Comparison', () => {
 
     for (let i = 0; i < N; i++) {
       input.push({
-        real: Math.sin((2 * Math.PI * i * 11) / N) +
-              0.3 * Math.sin((2 * Math.PI * i * 23) / N),
+        real: Math.sin((2 * Math.PI * i * 11) / N) + 0.3 * Math.sin((2 * Math.PI * i * 23) / N),
         imag: 0,
       });
     }

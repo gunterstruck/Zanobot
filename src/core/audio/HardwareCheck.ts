@@ -64,10 +64,7 @@ export class HardwareCheck {
    * @param sampleRate - Sample rate in Hz
    * @returns Audio quality report with status and recommendations
    */
-  public static analyzeCurrentDevice(
-    label: string,
-    sampleRate: number
-  ): AudioQualityReport {
+  public static analyzeCurrentDevice(label: string, sampleRate: number): AudioQualityReport {
     const report: AudioQualityReport = {
       status: 'good',
       reason: 'Hardware geeignet für Maschinendiagnose',
@@ -78,9 +75,7 @@ export class HardwareCheck {
 
     // Check 1: Device label for problematic keywords
     const lowerLabel = label.toLowerCase();
-    const foundKeyword = this.PROBLEMATIC_KEYWORDS.find((keyword) =>
-      lowerLabel.includes(keyword)
-    );
+    const foundKeyword = this.PROBLEMATIC_KEYWORDS.find((keyword) => lowerLabel.includes(keyword));
 
     if (foundKeyword) {
       report.status = 'warning';
@@ -157,9 +152,7 @@ export class HardwareCheck {
    * @param stream - Active MediaStream
    * @returns Device info or null if not determinable
    */
-  public static async getCurrentDevice(
-    stream: MediaStream
-  ): Promise<AudioDeviceInfo | null> {
+  public static async getCurrentDevice(stream: MediaStream): Promise<AudioDeviceInfo | null> {
     try {
       const tracks = stream.getAudioTracks();
       if (tracks.length === 0) {

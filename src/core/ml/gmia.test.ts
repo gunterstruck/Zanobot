@@ -17,9 +17,13 @@ import type { TrainingData, FeatureVector } from '@data/types.js';
 
 describe('GMIA Algorithm', () => {
   /**
-   * Helper: Generate synthetic feature vectors
+   * Helper: Generate synthetic feature vectors (Float64Array[])
    */
-  function generateFeatureVectors(numSamples: number, featureDim: number, seed = 1): Float64Array[] {
+  function generateFeatureVectors(
+    numSamples: number,
+    featureDim: number,
+    seed = 1
+  ): Float64Array[] {
     const features: Float64Array[] = [];
 
     for (let i = 0; i < numSamples; i++) {
@@ -38,15 +42,37 @@ describe('GMIA Algorithm', () => {
   }
 
   /**
+   * Helper: Create proper FeatureVector objects
+   */
+  function createFeatureVector(featureDim: number, seed = 1): FeatureVector {
+    const features = new Float64Array(featureDim);
+    const absoluteFeatures = new Float64Array(featureDim);
+
+    for (let j = 0; j < featureDim; j++) {
+      const value = Math.sin(seed * (j + 1)) * 0.5 + 0.5;
+      features[j] = value;
+      absoluteFeatures[j] = value * 100; // Arbitrary absolute value
+    }
+
+    return {
+      features,
+      absoluteFeatures,
+      bins: featureDim,
+      frequencyRange: [0, 22050],
+    };
+  }
+
+  /**
    * Helper: Create training data
    */
   function createTrainingData(
     numSamples: number,
     featureDim: number,
+    seed = 1,
     machineId = 'test-machine-001'
   ): TrainingData {
     return {
-      featureVectors: generateFeatureVectors(numSamples, featureDim),
+      featureVectors: generateFeatureVectors(numSamples, featureDim, seed),
       machineId,
       recordingId: `ref-${Date.now()}`,
       numSamples,
@@ -55,7 +81,8 @@ describe('GMIA Algorithm', () => {
         hopSize: 0.066,
         sampleRate: 44100,
         fftSize: 1024,
-        melBands: 40,
+        frequencyBins: 512,
+        frequencyRange: [0, 22050],
       },
     };
   }
@@ -118,7 +145,8 @@ describe('GMIA Algorithm', () => {
           hopSize: 0.066,
           sampleRate: 44100,
           fftSize: 1024,
-          melBands: 40,
+          frequencyBins: 512,
+          frequencyRange: [0, 22050],
         },
       };
 
@@ -202,12 +230,7 @@ describe('GMIA Algorithm', () => {
       const model = trainGMIA(trainingData, 'test-machine');
 
       // Create test features
-      const testFeatures: FeatureVector[] = [
-        {
-          features: generateFeatureVectors(1, 512)[0],
-          timestamp: Date.now(),
-        },
-      ];
+      const testFeatures: FeatureVector[] = [createFeatureVector(512, 1)];
 
       // Inference
       const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
@@ -222,9 +245,9 @@ describe('GMIA Algorithm', () => {
       const model = trainGMIA(trainingData, 'test-machine');
 
       const testFeatures: FeatureVector[] = [
-        { features: generateFeatureVectors(1, 512, 100)[0], timestamp: Date.now() },
-        { features: generateFeatureVectors(1, 512, 200)[0], timestamp: Date.now() },
-        { features: generateFeatureVectors(1, 512, 300)[0], timestamp: Date.now() },
+        createFeatureVector(512, 100),
+        createFeatureVector(512, 200),
+        createFeatureVector(512, 300),
       ];
 
       const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
@@ -241,9 +264,7 @@ describe('GMIA Algorithm', () => {
       const model = trainGMIA(trainingData, 'test-machine');
 
       // Test with very similar features (same seed, slightly different)
-      const testFeatures: FeatureVector[] = [
-        { features: generateFeatureVectors(1, 512, 42)[0], timestamp: Date.now() },
-      ];
+      const testFeatures: FeatureVector[] = [createFeatureVector(512, 42)];
 
       const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
 
@@ -258,10 +279,7 @@ describe('GMIA Algorithm', () => {
       // Multiple test samples
       const testFeatures: FeatureVector[] = [];
       for (let i = 0; i < 10; i++) {
-        testFeatures.push({
-          features: generateFeatureVectors(1, 512, 100 + i)[0],
-          timestamp: Date.now() + i,
-        });
+        testFeatures.push(createFeatureVector(512, 100 + i));
       }
 
       const cosineSimilarities = inferGMIA(model, testFeatures, model.sampleRate);
@@ -326,10 +344,7 @@ describe('GMIA Algorithm', () => {
       // Step 2: Generate test data (similar to training data)
       const testFeatures: FeatureVector[] = [];
       for (let i = 0; i < 20; i++) {
-        testFeatures.push({
-          features: generateFeatureVectors(1, 512, i)[0],
-          timestamp: Date.now() + i,
-        });
+        testFeatures.push(createFeatureVector(512, i));
       }
 
       // Step 3: Inference
@@ -357,13 +372,9 @@ describe('GMIA Algorithm', () => {
       const model = trainGMIA(trainingData, 'machine-001');
 
       // Create very different test features
-      const normalFeatures: FeatureVector[] = [
-        { features: generateFeatureVectors(1, 512, 1)[0], timestamp: Date.now() },
-      ];
+      const normalFeatures: FeatureVector[] = [createFeatureVector(512, 1)];
 
-      const anomalousFeatures: FeatureVector[] = [
-        { features: generateFeatureVectors(1, 512, 9999)[0], timestamp: Date.now() },
-      ];
+      const anomalousFeatures: FeatureVector[] = [createFeatureVector(512, 9999)];
 
       const normalSimilarity = inferGMIA(model, normalFeatures, model.sampleRate)[0];
       const anomalousSimilarity = inferGMIA(model, anomalousFeatures, model.sampleRate)[0];
@@ -423,7 +434,8 @@ describe('GMIA Algorithm', () => {
           hopSize: 0.066,
           sampleRate: 44100,
           fftSize: 1024,
-          melBands: 40,
+          frequencyBins: 512,
+          frequencyRange: [0, 22050],
         },
       };
 

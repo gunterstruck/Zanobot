@@ -14,14 +14,8 @@ import { trainGMIA } from '@core/ml/gmia.js';
 import { assessRecordingQuality } from '@core/ml/qualityCheck.js';
 import { updateMachineModel } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
-import {
-  getRawAudioStream,
-  getSmartStartStatusMessage,
-} from '@core/audio/audioHelper.js';
-import {
-  AudioWorkletManager,
-  isAudioWorkletSupported,
-} from '@core/audio/audioWorkletHelper.js';
+import { getRawAudioStream, getSmartStartStatusMessage } from '@core/audio/audioHelper.js';
+import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
@@ -113,7 +107,9 @@ export class ReferencePhase {
       // This ensures training and diagnosis use consistent feature extraction parameters
       const actualSampleRate = this.audioContext.sampleRate;
       if (actualSampleRate !== 48000) {
-        logger.warn(`⚠️ AudioContext sample rate is ${actualSampleRate}Hz instead of requested 48000Hz`);
+        logger.warn(
+          `⚠️ AudioContext sample rate is ${actualSampleRate}Hz instead of requested 48000Hz`
+        );
         logger.info(`✅ Feature extraction will use actual sample rate: ${actualSampleRate}Hz`);
       }
 
@@ -130,7 +126,7 @@ export class ReferencePhase {
       if (this.useAudioWorklet) {
         // CRITICAL FIX: Calculate proper buffer size based on actual sample rate
         // At 96kHz: chunkSize = 31680, so we need bufferSize >= 63360
-        const chunkSize = Math.floor(0.330 * actualSampleRate);
+        const chunkSize = Math.floor(0.33 * actualSampleRate);
         const bufferSize = Math.max(32768, chunkSize * 2);
 
         // Initialize AudioWorklet Manager
@@ -148,7 +144,9 @@ export class ReferencePhase {
           },
           onSmartStartTimeout: () => {
             logger.warn('⏱️ Smart Start timeout - cleaning up resources');
-            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
+            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', {
+              title: 'Kein Signal erkannt',
+            });
             // CRITICAL FIX: Call cleanup() to properly release all resources
             // (AudioWorklet, MediaStream, Modal, Timer, etc.)
             this.cleanup();
@@ -171,7 +169,7 @@ export class ReferencePhase {
       logger.error('Recording error:', error);
       notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
         title: 'Zugriff verweigert',
-        duration: 0
+        duration: 0,
       });
 
       // Cleanup on error
@@ -354,8 +352,12 @@ export class ReferencePhase {
 
       logger.info(`📊 Slicing audio buffer:`);
       logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s`);
-      logger.info(`   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`);
-      logger.info(`   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`);
+      logger.info(
+        `   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`
+      );
+      logger.info(
+        `   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`
+      );
 
       // CRITICAL FIX: Validate that we have enough samples for training
       const MIN_TRAINING_DURATION = 2.0; // Minimum 2 seconds of training data
@@ -364,15 +366,15 @@ export class ReferencePhase {
       if (trainingSamples <= 0) {
         throw new Error(
           `Aufnahme zu kurz: ${audioBuffer.duration.toFixed(2)}s Gesamtdauer ist kürzer als die ${this.warmUpDuration}s Warmup-Phase. ` +
-          `Mindestdauer: ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s`
+            `Mindestdauer: ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s`
         );
       }
 
       if (trainingSamples < minTrainingSamples) {
         throw new Error(
           `Trainings-Daten zu kurz: ${(trainingSamples / sampleRate).toFixed(2)}s (nach Warmup-Phase). ` +
-          `Minimum erforderlich: ${MIN_TRAINING_DURATION}s. ` +
-          `Bitte mindestens ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s aufnehmen.`
+            `Minimum erforderlich: ${MIN_TRAINING_DURATION}s. ` +
+            `Bitte mindestens ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s aufnehmen.`
         );
       }
 
@@ -403,7 +405,9 @@ export class ReferencePhase {
         frequencyRange: [0, actualSampleRate / 2] as [number, number], // Update Nyquist frequency
       };
 
-      logger.debug(`📊 DSP Config: sampleRate=${dspConfig.sampleRate}Hz, frequencyRange=[${dspConfig.frequencyRange[0]}, ${dspConfig.frequencyRange[1]}]Hz`);
+      logger.debug(
+        `📊 DSP Config: sampleRate=${dspConfig.sampleRate}Hz, frequencyRange=[${dspConfig.frequencyRange[0]}, ${dspConfig.frequencyRange[1]}]Hz`
+      );
 
       // Extract features from the SLICED buffer (only stable signal)
       logger.info('📊 Extracting features from stable signal...');
@@ -442,7 +446,7 @@ export class ReferencePhase {
       logger.error('Processing error:', error);
       notify.error('Aufnahme konnte nicht verarbeitet werden', error as Error, {
         title: 'Verarbeitungsfehler',
-        duration: 0
+        duration: 0,
       });
 
       // Cleanup on error
@@ -471,9 +475,9 @@ export class ReferencePhase {
 
     const shouldDownload = confirm(
       `✅ Referenzmodell erfolgreich trainiert!\n\n` +
-      `Maschine: ${this.machine.name}\n\n` +
-      `Möchten Sie die Referenz-Audiodatei herunterladen?\n` +
-      `(Empfohlen für Backup)`
+        `Maschine: ${this.machine.name}\n\n` +
+        `Möchten Sie die Referenz-Audiodatei herunterladen?\n` +
+        `(Empfohlen für Backup)`
     );
 
     if (shouldDownload && this.recordedBlob) {
@@ -486,7 +490,9 @@ export class ReferencePhase {
    */
   private exportReferenceAudio(filename: string): void {
     if (!this.recordedBlob) {
-      notify.warning('Bitte zuerst eine Referenzaufnahme erstellen.', { title: 'Keine Audiodatei verfügbar' });
+      notify.warning('Bitte zuerst eine Referenzaufnahme erstellen.', {
+        title: 'Keine Audiodatei verfügbar',
+      });
       return;
     }
 
@@ -609,7 +615,11 @@ export class ReferencePhase {
         if (timerElement) {
           const minutes = Math.floor(recordingElapsed / 60);
           const seconds = recordingElapsed % 60;
-          timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} / ${Math.floor(recordingTotal / 60).toString().padStart(2, '0')}:${(recordingTotal % 60).toString().padStart(2, '0')}`;
+          timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} / ${Math.floor(
+            recordingTotal / 60
+          )
+            .toString()
+            .padStart(2, '0')}:${(recordingTotal % 60).toString().padStart(2, '0')}`;
         }
       }
 
@@ -796,7 +806,7 @@ export class ReferencePhase {
       logger.error('Cannot save: machine data is invalid or missing');
       notify.error('Maschinendaten fehlen', new Error('Machine ID missing'), {
         title: 'Fehler',
-        duration: 0
+        duration: 0,
       });
       return;
     }
@@ -810,11 +820,11 @@ export class ReferencePhase {
     if (this.currentQualityResult.rating === 'BAD') {
       const confirmed = confirm(
         '⚠️ WARNUNG: Schlechte Aufnahmequalität\n\n' +
-        'Die Qualität dieser Aufnahme ist schlecht. Das Training könnte unzuverlässig sein.\n\n' +
-        'Probleme:\n' +
-        this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n') +
-        '\n\n' +
-        'Möchten Sie trotzdem speichern?'
+          'Die Qualität dieser Aufnahme ist schlecht. Das Training könnte unzuverlässig sein.\n\n' +
+          'Probleme:\n' +
+          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n') +
+          '\n\n' +
+          'Möchten Sie trotzdem speichern?'
       );
 
       if (!confirmed) {
@@ -842,9 +852,9 @@ export class ReferencePhase {
         // Additional recordings: Ask user for label and type
         const userLabel = prompt(
           'Geben Sie einen Namen für diesen Maschinenzustand ein:\n\n' +
-          'Beispiele:\n' +
-          '• Normale Betriebszustände: "Leerlauf", "Volllast", "Teillast"\n' +
-          '• Fehler: "Unwucht simuliert", "Lagerschaden", "Lüfterfehler"',
+            'Beispiele:\n' +
+            '• Normale Betriebszustände: "Leerlauf", "Volllast", "Teillast"\n' +
+            '• Fehler: "Unwucht simuliert", "Lagerschaden", "Lüfterfehler"',
           ''
         );
 
@@ -859,10 +869,10 @@ export class ReferencePhase {
         // Ask user for type: Is this a normal state or a fault?
         const isHealthy = confirm(
           `Zustand: "${label}"\n\n` +
-          'Ist dies ein NORMALER Betriebszustand?\n\n' +
-          '🟢 OK (Ja) → Normaler Zustand (z.B. "Leerlauf", "Volllast")\n' +
-          '🔴 Abbrechen (Nein) → Bekannter Fehler (z.B. "Unwucht", "Lagerschaden")\n\n' +
-          'Hinweis: Diese Wahl bestimmt, ob eine Diagnose als "gesund" oder "fehlerhaft" angezeigt wird.'
+            'Ist dies ein NORMALER Betriebszustand?\n\n' +
+            '🟢 OK (Ja) → Normaler Zustand (z.B. "Leerlauf", "Volllast")\n' +
+            '🔴 Abbrechen (Nein) → Bekannter Fehler (z.B. "Unwucht", "Lagerschaden")\n\n' +
+            'Hinweis: Diese Wahl bestimmt, ob eine Diagnose als "gesund" oder "fehlerhaft" angezeigt wird.'
         );
 
         type = isHealthy ? 'healthy' : 'faulty';
@@ -908,7 +918,7 @@ export class ReferencePhase {
       logger.error('Save error:', error);
       notify.error('Speichern fehlgeschlagen', error as Error, {
         title: 'Fehler beim Speichern',
-        duration: 0
+        duration: 0,
       });
     }
   }
@@ -926,7 +936,9 @@ export class ReferencePhase {
     if (!statusContainer) {
       // Create container if it doesn't exist
       // CRITICAL FIX: Use correct class selector from HTML (container-content, not phase-content)
-      const parentContainer = document.querySelector('#record-reference-content .container-content');
+      const parentContainer = document.querySelector(
+        '#record-reference-content .container-content'
+      );
       if (!parentContainer) return;
 
       statusContainer = document.createElement('div');
@@ -959,12 +971,12 @@ export class ReferencePhase {
 
         const dateStr = model.trainingDate
           ? new Date(model.trainingDate).toLocaleString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
           : 'unbekannt';
 
         // Use textContent instead of innerHTML to prevent XSS attacks

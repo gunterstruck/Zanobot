@@ -19,8 +19,8 @@ import { inferGMIA } from './gmia.js';
  * Thresholds for health status classification
  */
 const HEALTH_THRESHOLDS = {
-  healthy: 75,    // >= 75% = Healthy
-  uncertain: 50,  // 50-75% = Uncertain
+  healthy: 75, // >= 75% = Healthy
+  uncertain: 50, // 50-75% = Uncertain
   // < 50% = Faulty
 };
 
@@ -33,10 +33,7 @@ const HEALTH_THRESHOLDS = {
  * @param scalingConstant - C from model training
  * @returns Health score [0, 100]
  */
-export function calculateHealthScore(
-  cosineSimilarity: number,
-  scalingConstant: number
-): number {
+export function calculateHealthScore(cosineSimilarity: number, scalingConstant: number): number {
   // Apply tanh transformation
   const tanhValue = Math.tanh(scalingConstant * cosineSimilarity);
 
@@ -109,17 +106,15 @@ export function getClassificationDetails(score: number): {
  * @param cosineSimilarities - Array of cosine values from test
  * @returns Confidence score [0, 100]
  */
-export function calculateConfidence(
-  model: GMIAModel,
-  cosineSimilarities: number[]
-): number {
+export function calculateConfidence(model: GMIAModel, cosineSimilarities: number[]): number {
   // Guard against empty array (would cause NaN)
   if (cosineSimilarities.length === 0) {
     return 0;
   }
 
   // Base confidence from mean cosine similarity
-  const meanCosine = cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
+  const meanCosine =
+    cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
   // Clamp negative values to 0 (negative cosine = poor match = low confidence)
   const baseConfidence = Math.max(0, meanCosine) * 100;
 
@@ -156,7 +151,8 @@ export function generateDiagnosisResult(
   }
 
   // Average cosine similarity
-  const avgCosine = cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
+  const avgCosine =
+    cosineSimilarities.reduce((sum, val) => sum + val, 0) / cosineSimilarities.length;
 
   // Calculate health score
   const healthScore = calculateHealthScore(avgCosine, model.scalingConstant);
@@ -566,10 +562,7 @@ export function classifyDiagnosticState(
  * @param featureVector - Test feature vector
  * @returns Ratio clamped to [0, 1]
  */
-function calculateMagnitudeFactor(
-  weightVector: Float64Array,
-  featureVector: Float64Array
-): number {
+function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
   const featureMagnitude = vectorMagnitude(featureVector);
   const weightMagnitude = vectorMagnitude(weightVector);
 

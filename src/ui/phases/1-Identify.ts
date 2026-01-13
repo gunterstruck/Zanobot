@@ -12,7 +12,11 @@ import { notify } from '@utils/notifications.js';
 import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
-import { HardwareCheck, type AudioQualityReport, type AudioDeviceInfo } from '@core/audio/HardwareCheck.js';
+import {
+  HardwareCheck,
+  type AudioQualityReport,
+  type AudioDeviceInfo,
+} from '@core/audio/HardwareCheck.js';
 import { getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 
 export class IdentifyPhase {
@@ -127,9 +131,9 @@ export class IdentifyPhase {
         fps: 10,
         qrbox: { width: 250, height: 250 },
         formatsToSupport: [
-          // @ts-ignore - Html5QrcodeSupportedFormats is available
-          0,  // QR_CODE
-          8,  // CODE_128
+          // @ts-expect-error - Html5QrcodeSupportedFormats is available
+          0, // QR_CODE
+          8, // CODE_128
           13, // EAN_13
           14, // EAN_8
         ],
@@ -627,7 +631,7 @@ export class IdentifyPhase {
       const devices = await HardwareCheck.getAvailableDevices();
 
       // Get or create modal
-      let modal = document.getElementById('microphone-selection-modal');
+      const modal = document.getElementById('microphone-selection-modal');
       if (!modal) {
         logger.error('Microphone selection modal not found in DOM');
         return;
@@ -821,12 +825,14 @@ export class IdentifyPhase {
       // Sort by most recent training date (newest first)
       trainedMachines.sort((a, b) => {
         // Get latest training date for each machine (defensive: handle edge cases)
-        const aLatestDate = a.referenceModels.length > 0
-          ? Math.max(...a.referenceModels.map((m) => m.trainingDate || 0))
-          : 0;
-        const bLatestDate = b.referenceModels.length > 0
-          ? Math.max(...b.referenceModels.map((m) => m.trainingDate || 0))
-          : 0;
+        const aLatestDate =
+          a.referenceModels.length > 0
+            ? Math.max(...a.referenceModels.map((m) => m.trainingDate || 0))
+            : 0;
+        const bLatestDate =
+          b.referenceModels.length > 0
+            ? Math.max(...b.referenceModels.map((m) => m.trainingDate || 0))
+            : 0;
         return bLatestDate - aLatestDate;
       });
 

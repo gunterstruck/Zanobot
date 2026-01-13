@@ -121,17 +121,17 @@ export class SettingsPhase {
           // Ask for merge or replace
           const merge = confirm(
             `Datenbank importieren aus: ${file.name}\n\n` +
-            `Möchten Sie die Daten ZUSAMMENFÜHREN?\n\n` +
-            `JA = Zusammenführen mit bestehenden Daten\n` +
-            `NEIN = Alle bestehenden Daten ERSETZEN`
+              `Möchten Sie die Daten ZUSAMMENFÜHREN?\n\n` +
+              `JA = Zusammenführen mit bestehenden Daten\n` +
+              `NEIN = Alle bestehenden Daten ERSETZEN`
           );
 
           // Confirm replace if not merging
           if (!merge) {
             const confirmReplace = confirm(
               `⚠️ ACHTUNG!\n\n` +
-              `Alle bestehenden Daten werden GELÖSCHT und durch die Import-Daten ersetzt!\n\n` +
-              `Möchten Sie fortfahren?`
+                `Alle bestehenden Daten werden GELÖSCHT und durch die Import-Daten ersetzt!\n\n` +
+                `Möchten Sie fortfahren?`
             );
 
             if (!confirmReplace) {
@@ -161,7 +161,7 @@ export class SettingsPhase {
         } catch (error) {
           logger.error('Import error:', error);
           notify.error('Fehler beim Importieren', error as Error, {
-            duration: 0
+            duration: 0,
           });
         }
       };
@@ -179,12 +179,12 @@ export class SettingsPhase {
   private async handleClearData(): Promise<void> {
     const confirmed = confirm(
       `⚠️ ACHTUNG!\n\n` +
-      `Alle Daten werden UNWIDERRUFLICH gelöscht:\n` +
-      `- Alle Maschinen\n` +
-      `- Alle Referenzmodelle\n` +
-      `- Alle Aufnahmen\n` +
-      `- Alle Diagnosen\n\n` +
-      `Möchten Sie fortfahren?`
+        `Alle Daten werden UNWIDERRUFLICH gelöscht:\n` +
+        `- Alle Maschinen\n` +
+        `- Alle Referenzmodelle\n` +
+        `- Alle Aufnahmen\n` +
+        `- Alle Diagnosen\n\n` +
+        `Möchten Sie fortfahren?`
     );
 
     if (!confirmed) {
@@ -193,8 +193,7 @@ export class SettingsPhase {
 
     // Double confirmation
     const doubleConfirm = confirm(
-      `Sind Sie ABSOLUT SICHER?\n\n` +
-      `Diese Aktion kann NICHT rückgängig gemacht werden!`
+      `Sind Sie ABSOLUT SICHER?\n\n` + `Diese Aktion kann NICHT rückgängig gemacht werden!`
     );
 
     if (!doubleConfirm) {
@@ -215,7 +214,7 @@ export class SettingsPhase {
     } catch (error) {
       logger.error('Clear error:', error);
       notify.error('Fehler beim Löschen der Daten', error as Error, {
-        duration: 0
+        duration: 0,
       });
     }
   }

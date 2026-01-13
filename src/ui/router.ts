@@ -131,19 +131,19 @@ export class Router {
           const count = machine.referenceModels.length;
           // CRITICAL FIX: Sort by trainingDate with defensive fallback for missing dates
           // This prevents crashes if any model has undefined/null trainingDate
-          const sortedModels = [...machine.referenceModels].sort((a, b) =>
-            (b.trainingDate || 0) - (a.trainingDate || 0)
+          const sortedModels = [...machine.referenceModels].sort(
+            (a, b) => (b.trainingDate || 0) - (a.trainingDate || 0)
           );
           // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
           const latestTimestamp = sortedModels[0]?.trainingDate;
           const latestDate = latestTimestamp
             ? new Date(latestTimestamp).toLocaleString('de-DE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
             : 'unbekannt';
           description.textContent = `${count} Zustand${count > 1 ? 'e' : ''} trainiert (zuletzt: ${latestDate}) - Weitere hinzufügen`;
         } else {

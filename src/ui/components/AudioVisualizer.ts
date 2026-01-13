@@ -21,12 +21,12 @@ export class AudioVisualizer {
   private dataArray: Uint8Array | null = null;
 
   // Visualization settings
-  private fftSize: number = 2048;        // High resolution for bass/mid analysis
-  private smoothing: number = 0.75;      // Smooth transitions (0-1)
-  private barCount: number = 128;        // Number of frequency bars
+  private fftSize: number = 2048; // High resolution for bass/mid analysis
+  private smoothing: number = 0.75; // Smooth transitions (0-1)
+  private barCount: number = 128; // Number of frequency bars
 
   // CRITICAL FIX: Store actual sample rate from AudioContext for correct frequency labels
-  private sampleRate: number = 48000;    // Default to 48 kHz, updated in start()
+  private sampleRate: number = 48000; // Default to 48 kHz, updated in start()
 
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -79,7 +79,9 @@ export class AudioVisualizer {
     const bufferLength = this.analyser.frequencyBinCount; // fftSize / 2
     this.dataArray = new Uint8Array(bufferLength);
 
-    logger.debug(`📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins, sampleRate=${this.sampleRate}Hz`);
+    logger.debug(
+      `📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins, sampleRate=${this.sampleRate}Hz`
+    );
 
     // Start rendering at 60 FPS
     this.render();
@@ -120,7 +122,7 @@ export class AudioVisualizer {
     const height = this.canvas.height / (window.devicePixelRatio || 1);
 
     // Get frequency data (0-255 values)
-    // @ts-ignore - Type mismatch between browser types
+    // @ts-expect-error - Type mismatch between browser types
     this.analyser.getByteFrequencyData(this.dataArray);
 
     // Clear canvas with theme-aware background
@@ -146,7 +148,9 @@ export class AudioVisualizer {
    */
   private drawGrid(width: number, height: number): void {
     // Use theme-aware grid color
-    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-grid').trim();
+    const gridColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--viz-grid')
+      .trim();
     this.ctx.strokeStyle = gridColor || 'rgba(255, 255, 255, 0.05)';
     this.ctx.lineWidth = 1;
 
@@ -337,7 +341,7 @@ export class AudioVisualizer {
       return {
         r: parseInt(hex.substring(0, 2), 16),
         g: parseInt(hex.substring(2, 4), 16),
-        b: parseInt(hex.substring(4, 6), 16)
+        b: parseInt(hex.substring(4, 6), 16),
       };
     }
     return null;
@@ -370,7 +374,9 @@ export class AudioVisualizer {
     ];
 
     // Use theme-aware text color
-    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-text').trim();
+    const textColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--viz-text')
+      .trim();
 
     this.ctx.font = '10px system-ui, sans-serif';
     this.ctx.fillStyle = textColor || 'rgba(255, 255, 255, 0.4)';
@@ -406,7 +412,9 @@ export class AudioVisualizer {
     const step = Math.ceil(channelData.length / width);
 
     // Draw waveform (theme-aware)
-    const vizPrimary = getComputedStyle(document.documentElement).getPropertyValue('--viz-primary').trim();
+    const vizPrimary = getComputedStyle(document.documentElement)
+      .getPropertyValue('--viz-primary')
+      .trim();
     this.ctx.strokeStyle = vizPrimary || '#3b82f6';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
@@ -416,7 +424,7 @@ export class AudioVisualizer {
       const value = channelData[index];
 
       const x = i;
-      const y = (1 + value) * height / 2; // Normalize to canvas height
+      const y = ((1 + value) * height) / 2; // Normalize to canvas height
 
       if (i === 0) {
         this.ctx.moveTo(x, y);
@@ -428,7 +436,9 @@ export class AudioVisualizer {
     this.ctx.stroke();
 
     // Draw center line (theme-aware)
-    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-grid').trim();
+    const gridColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--viz-grid')
+      .trim();
     this.ctx.strokeStyle = gridColor || '#333333';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();

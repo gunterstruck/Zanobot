@@ -88,7 +88,9 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
       // This results in data loss for v1 users, but prevents database corruption.
       if (db.objectStoreNames.contains('diagnoses') && oldVersion < 2) {
         logger.warn('🔄 Migrating diagnoses store from v1 to v2');
-        logger.warn('   ⚠️ Old diagnosis data will be lost due to schema change (keyPath: timestamp → id)');
+        logger.warn(
+          '   ⚠️ Old diagnosis data will be lost due to schema change (keyPath: timestamp → id)'
+        );
 
         try {
           // Delete old store with incorrect keyPath
@@ -358,7 +360,10 @@ export async function getDiagnosesForMachine(
     const diagnoses: DiagnosisResult[] = [];
 
     // Open cursor on by-timestamp index (automatically sorted)
-    let cursor = await db.transaction('diagnoses').store.index('by-timestamp').openCursor(null, 'prev');
+    let cursor = await db
+      .transaction('diagnoses')
+      .store.index('by-timestamp')
+      .openCursor(null, 'prev');
 
     while (cursor && diagnoses.length < limit) {
       const diagnosis = cursor.value as DiagnosisResult;
@@ -630,9 +635,10 @@ export async function importData(
         ...machine,
         referenceModels: (machine.referenceModels || []).map((model) => ({
           ...model,
-          weightVector: model.weightVector instanceof Float64Array
-            ? model.weightVector
-            : new Float64Array(model.weightVector as number[]),
+          weightVector:
+            model.weightVector instanceof Float64Array
+              ? model.weightVector
+              : new Float64Array(model.weightVector as number[]),
         })),
       };
       await db.put('machines', normalizedMachine);

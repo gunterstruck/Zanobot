@@ -25,7 +25,13 @@ export interface ToastOptions {
   /** Show close button */
   dismissible?: boolean;
   /** Position on screen */
-  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+  position?:
+    | 'top-right'
+    | 'top-center'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-center'
+    | 'bottom-left';
 }
 
 /**

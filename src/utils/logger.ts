@@ -94,7 +94,8 @@ class Logger {
   public error(message: string, error?: Error | unknown, ...args: any[]): void {
     if (this.config.level <= LogLevel.ERROR) {
       const errorInfo = error instanceof Error ? error.message : String(error);
-      const stack = error instanceof Error && this.config.enableStackTrace ? error.stack : undefined;
+      const stack =
+        error instanceof Error && this.config.enableStackTrace ? error.stack : undefined;
 
       this.log('ERROR', message, [errorInfo, ...args], console.error);
 
@@ -107,12 +108,7 @@ class Logger {
   /**
    * Internal log method
    */
-  private log(
-    level: string,
-    message: string,
-    args: any[],
-    logFn: (...data: any[]) => void
-  ): void {
+  private log(level: string, message: string, args: any[], logFn: (...data: any[]) => void): void {
     const timestamp = this.config.enableTimestamp ? new Date().toISOString() : '';
     const prefix = timestamp ? `[${timestamp}] [${level}]` : `[${level}]`;
 

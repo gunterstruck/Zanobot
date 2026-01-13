@@ -78,7 +78,7 @@ class ZanobotApp {
       logger.error('❌ Initialization failed:', error);
       notify.error('App konnte nicht initialisiert werden', error as Error, {
         title: 'Initialisierungsfehler',
-        duration: 0
+        duration: 0,
       });
     }
   }

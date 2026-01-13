@@ -25,11 +25,12 @@ import {
 import { saveDiagnosis, getMachine } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
-import { getRawAudioStream, getSmartStartStatusMessage, DEFAULT_SMART_START_CONFIG } from '@core/audio/audioHelper.js';
 import {
-  AudioWorkletManager,
-  isAudioWorkletSupported,
-} from '@core/audio/audioWorkletHelper.js';
+  getRawAudioStream,
+  getSmartStartStatusMessage,
+  DEFAULT_SMART_START_CONFIG,
+} from '@core/audio/audioHelper.js';
+import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
@@ -49,7 +50,7 @@ export class DiagnosePhase {
   private scoreHistory: ScoreHistory;
   private labelHistory: LabelHistory; // CRITICAL FIX: Label history for majority voting
   private lastProcessedScore: number = 0;
-  private lastProcessedStatus: string = 'UNKNOWN';
+  private lastProcessedStatus: 'healthy' | 'uncertain' | 'faulty' | 'UNKNOWN' = 'UNKNOWN';
   private lastDetectedState: string = 'UNKNOWN'; // MULTICLASS: Store detected state
   private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
   private useAudioWorklet: boolean = true;
@@ -151,26 +152,36 @@ export class DiagnosePhase {
       this.actualSampleRate = this.audioContext.sampleRate;
 
       if (this.actualSampleRate !== this.requestedSampleRate) {
-        logger.warn(`⚠️ AudioContext sample rate is ${this.actualSampleRate}Hz instead of requested ${this.requestedSampleRate}Hz`);
-        logger.info(`✅ Adapting feature extraction to use actual sample rate: ${this.actualSampleRate}Hz`);
+        logger.warn(
+          `⚠️ AudioContext sample rate is ${this.actualSampleRate}Hz instead of requested ${this.requestedSampleRate}Hz`
+        );
+        logger.info(
+          `✅ Adapting feature extraction to use actual sample rate: ${this.actualSampleRate}Hz`
+        );
       }
 
       // CRITICAL: Validate sample rate compatibility with trained models BEFORE starting
       // This prevents wasting time on a diagnosis that will fail
-      const modelSampleRates = new Set(this.machine.referenceModels.map((model) => model.sampleRate));
-      const mismatchedRates = [...modelSampleRates].filter((rate) => rate !== this.actualSampleRate);
+      const modelSampleRates = new Set(
+        this.machine.referenceModels.map((model) => model.sampleRate)
+      );
+      const mismatchedRates = [...modelSampleRates].filter(
+        (rate) => rate !== this.actualSampleRate
+      );
       if (mismatchedRates.length > 0) {
         const rateList = [...modelSampleRates].sort((a, b) => a - b).join(', ');
-        logger.error(`❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, ModelRates=[${rateList}]`);
+        logger.error(
+          `❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, ModelRates=[${rateList}]`
+        );
         notify.error(
           `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber das ` +
-          `trainierte Modell wurde bei ${rateList}Hz erstellt. FFT-Frequenzbänder sind ` +
-          'inkompatibel. Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder ' +
-          'erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
+            `trainierte Modell wurde bei ${rateList}Hz erstellt. FFT-Frequenzbänder sind ` +
+            'inkompatibel. Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder ' +
+            'erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
           new Error('Sample Rate Mismatch'),
           {
             title: 'Inkompatible Sample Rate',
-            duration: 0
+            duration: 0,
           }
         );
         // Clean up and abort
@@ -178,8 +189,9 @@ export class DiagnosePhase {
         return;
       }
 
-      logger.info(`✅ Sample Rate validation passed: ${this.actualSampleRate}Hz (matches model training)`);
-
+      logger.info(
+        `✅ Sample Rate validation passed: ${this.actualSampleRate}Hz (matches model training)`
+      );
 
       // Update chunkSize and DSP config with actual sample rate
       this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.actualSampleRate);
@@ -189,7 +201,9 @@ export class DiagnosePhase {
         frequencyRange: [0, this.actualSampleRate / 2], // Update Nyquist frequency
       };
 
-      logger.debug(`📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`);
+      logger.debug(
+        `📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`
+      );
 
       // Show recording modal
       this.showRecordingModal();
@@ -229,7 +243,9 @@ export class DiagnosePhase {
         },
         onSmartStartTimeout: () => {
           logger.warn('⏱️ Smart Start timeout - cleaning up resources');
-          notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', { title: 'Kein Signal erkannt' });
+          notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', {
+            title: 'Kein Signal erkannt',
+          });
           // CRITICAL FIX: Call cleanup() to properly release all resources
           this.cleanup();
           this.hideRecordingModal();
@@ -247,7 +263,7 @@ export class DiagnosePhase {
       logger.error('Diagnosis error:', error);
       notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
         title: 'Zugriff verweigert',
-        duration: 0
+        duration: 0,
       });
 
       // Cleanup on error
@@ -345,7 +361,9 @@ export class DiagnosePhase {
       // Required: this.chunkSize samples (330ms window = ~15840 samples at 48kHz, ~14553 at 44.1kHz)
       // If chunk is smaller, skip processing and wait for more data from AudioWorklet
       if (chunk.length < this.chunkSize) {
-        logger.debug(`⏳ Chunk too small: ${chunk.length} < ${this.chunkSize} samples, waiting for more data`);
+        logger.debug(
+          `⏳ Chunk too small: ${chunk.length} < ${this.chunkSize} samples, waiting for more data`
+        );
         return;
       }
 
@@ -387,7 +405,9 @@ export class DiagnosePhase {
 
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
-        logger.debug(`📊 Live Score: ${filteredScore.toFixed(1)}% | State: ${detectedState} (${diagnosis.status})`);
+        logger.debug(
+          `📊 Live Score: ${filteredScore.toFixed(1)}% | State: ${detectedState} (${diagnosis.status})`
+        );
       }
     } catch (error) {
       logger.error('Chunk processing error:', error);
@@ -400,13 +420,13 @@ export class DiagnosePhase {
         // Show user-friendly error message
         notify.error(
           'Audio-Setup Fehler: Die Sample Rate Ihres Mikrofons ' +
-          `(${this.actualSampleRate}Hz) stimmt nicht mit der Sample Rate des ` +
-          'trainierten Modells überein. Bitte verwenden Sie das gleiche Audio-Setup ' +
-          'wie beim Training oder erstellen Sie ein neues Referenzmodell.',
+            `(${this.actualSampleRate}Hz) stimmt nicht mit der Sample Rate des ` +
+            'trainierten Modells überein. Bitte verwenden Sie das gleiche Audio-Setup ' +
+            'wie beim Training oder erstellen Sie ein neues Referenzmodell.',
           error,
           {
             title: 'Inkompatible Sample Rate',
-            duration: 0
+            duration: 0,
           }
         );
 
@@ -416,7 +436,6 @@ export class DiagnosePhase {
       }
     }
   }
-
 
   /**
    * Update Smart Start status message
@@ -489,7 +508,9 @@ export class DiagnosePhase {
     const finalDetectedState = this.labelHistory.getMajorityLabel();
     const labelHistoryCopy = this.labelHistory.getAllLabels().slice(); // Copy for debugging
 
-    logger.info(`🗳️ Majority voting: ${finalDetectedState} (from ${labelHistoryCopy.length} chunks: ${labelHistoryCopy.slice(-5).join(', ')})`);
+    logger.info(
+      `🗳️ Majority voting: ${finalDetectedState} (from ${labelHistoryCopy.length} chunks: ${labelHistoryCopy.slice(-5).join(', ')})`
+    );
 
     // Cleanup resources
     this.cleanup();
@@ -517,7 +538,7 @@ export class DiagnosePhase {
    */
   private async saveFinalDiagnosis(
     finalScore: number,
-    finalStatus: string,
+    finalStatus: 'healthy' | 'uncertain' | 'faulty' | 'UNKNOWN',
     detectedState: string,
     scoreHistory: number[]
   ): Promise<void> {
@@ -551,12 +572,18 @@ export class DiagnosePhase {
       // If multiple diagnoses are saved in the same millisecond, they would collide
       // without a random suffix (e.g., rapid automated testing or high-frequency monitoring)
       const randomSuffix = Math.random().toString(36).substring(2, 9);
+
+      // CRITICAL FIX: Ensure status is valid for DiagnosisResult (never 'UNKNOWN')
+      // If finalStatus is somehow still 'UNKNOWN', default to 'uncertain'
+      const validStatus: 'healthy' | 'uncertain' | 'faulty' =
+        finalStatus === 'UNKNOWN' ? 'uncertain' : finalStatus;
+
       const diagnosis: DiagnosisResult = {
         id: `diag-${Date.now()}-${randomSuffix}`,
         machineId: this.machine.id,
         timestamp: Date.now(),
         healthScore: finalScore,
-        status: finalStatus,
+        status: validStatus,
         confidence: classification.confidence,
         rawCosineSimilarity: 0, // Not stored for real-time
         metadata: {
@@ -572,7 +599,9 @@ export class DiagnosePhase {
         },
       };
 
-      logger.info(`💾 Saving final diagnosis: ${finalScore.toFixed(1)}% | State: ${detectedState} (${finalStatus})`);
+      logger.info(
+        `💾 Saving final diagnosis: ${finalScore.toFixed(1)}% | State: ${detectedState} (${finalStatus})`
+      );
 
       // Save to database
       await saveDiagnosis(diagnosis);
@@ -588,7 +617,7 @@ export class DiagnosePhase {
       logger.error('Save error:', error);
       notify.error('Diagnose konnte nicht gespeichert werden', error as Error, {
         title: 'Speicherfehler',
-        duration: 0
+        duration: 0,
       });
       this.hideRecordingModal();
     }
