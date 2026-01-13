@@ -295,13 +295,17 @@ export class DiagnosePhase {
     }
 
     // Clean up dynamically created DOM elements to prevent memory leaks
-    // Remove ALL live display elements (use querySelectorAll to prevent memory leaks)
-    const liveDisplays = document.querySelectorAll('.live-display');
-    liveDisplays.forEach((element) => element.remove());
+    // CRITICAL FIX: Only remove elements within the recording modal to avoid affecting other UI
+    const modal = document.getElementById('recording-modal');
+    if (modal) {
+      // Remove live display elements within modal only
+      const liveDisplays = modal.querySelectorAll('.live-display');
+      liveDisplays.forEach((element) => element.remove());
 
-    // Remove all smart start status elements
-    const smartStartStatuses = document.querySelectorAll('#smart-start-status');
-    smartStartStatuses.forEach((element) => element.remove());
+      // Remove smart start status elements within modal only
+      const smartStartStatuses = modal.querySelectorAll('#smart-start-status');
+      smartStartStatuses.forEach((element) => element.remove());
+    }
 
     logger.debug('🧹 Cleanup complete');
   }
@@ -606,8 +610,8 @@ export class DiagnosePhase {
 
     // Add Smart Start status and live score display
     const modalBody = document.querySelector('#recording-modal .modal-body');
-    // Check if live-display already exists to prevent creating multiple instances
-    if (modalBody && !document.querySelector('.live-display')) {
+    // CRITICAL FIX: Check within modal only to prevent conflicts with other UI elements
+    if (modalBody && modal && !modal.querySelector('.live-display')) {
       const liveDisplay = document.createElement('div');
       liveDisplay.className = 'live-display';
       liveDisplay.innerHTML = `
@@ -630,12 +634,12 @@ export class DiagnosePhase {
     const modal = document.getElementById('recording-modal');
     if (modal) {
       modal.style.display = 'none';
-    }
 
-    // Clean up live display
-    const liveDisplay = document.querySelector('.live-display');
-    if (liveDisplay) {
-      liveDisplay.remove();
+      // CRITICAL FIX: Clean up live display within modal only
+      const liveDisplay = modal.querySelector('.live-display');
+      if (liveDisplay) {
+        liveDisplay.remove();
+      }
     }
   }
 
