@@ -561,20 +561,16 @@ export class IdentifyPhase {
         // Update UI
         this.updateHardwareInfoCard();
       }
-
-      // CRITICAL FIX: Stop temporary stream immediately after hardware check
+    } catch (error) {
+      logger.error('Failed to initialize hardware check:', error);
+      // Don't block user flow - just log the error
+    } finally {
+      // CRITICAL FIX: Stop temporary stream after hardware check (success or failure)
       // This prevents resource leak and keeps microphone available for actual recordings
       if (tempStream) {
         tempStream.getTracks().forEach((track) => track.stop());
         tempStream = null;
       }
-    } catch (error) {
-      logger.error('Failed to initialize hardware check:', error);
-      // CRITICAL FIX: Ensure stream is stopped even on error
-      if (tempStream) {
-        tempStream.getTracks().forEach((track) => track.stop());
-      }
-      // Don't block user flow - just log the error
     }
   }
 
