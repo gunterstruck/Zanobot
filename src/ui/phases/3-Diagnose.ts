@@ -63,6 +63,9 @@ export class DiagnosePhase {
   private actualSampleRate: number = 48000; // Actual sample rate from AudioContext
   private dspConfig: typeof DEFAULT_DSP_CONFIG; // DSP config with actual sample rate
 
+  // CRITICAL FIX: Store event listener reference for proper cleanup
+  private diagnoseButtonClickHandler: (() => void) | null = null;
+
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
@@ -83,7 +86,9 @@ export class DiagnosePhase {
   public init(): void {
     const diagnoseBtn = document.getElementById('diagnose-btn');
     if (diagnoseBtn) {
-      diagnoseBtn.addEventListener('click', () => this.startDiagnosis());
+      // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
+      this.diagnoseButtonClickHandler = () => this.startDiagnosis();
+      diagnoseBtn.addEventListener('click', this.diagnoseButtonClickHandler);
     }
   }
 
@@ -703,6 +708,15 @@ export class DiagnosePhase {
    */
   public destroy(): void {
     this.cleanup();
+
+    // CRITICAL FIX: Remove event listener to prevent stacking on re-init
+    if (this.diagnoseButtonClickHandler) {
+      const diagnoseBtn = document.getElementById('diagnose-btn');
+      if (diagnoseBtn) {
+        diagnoseBtn.removeEventListener('click', this.diagnoseButtonClickHandler);
+      }
+      this.diagnoseButtonClickHandler = null;
+    }
 
     // Destroy visualizer
     if (this.visualizer) {

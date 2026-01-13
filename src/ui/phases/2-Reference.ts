@@ -50,6 +50,9 @@ export class ReferencePhase {
   private currentQualityResult: QualityResult | null = null;
   private currentTrainingData: TrainingData | null = null;
 
+  // CRITICAL FIX: Store event listener reference for proper cleanup
+  private recordButtonClickHandler: (() => void) | null = null;
+
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
@@ -61,7 +64,9 @@ export class ReferencePhase {
   public init(): void {
     const recordBtn = document.getElementById('record-btn');
     if (recordBtn) {
-      recordBtn.addEventListener('click', () => this.startRecording());
+      // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
+      this.recordButtonClickHandler = () => this.startRecording();
+      recordBtn.addEventListener('click', this.recordButtonClickHandler);
     }
   }
 
@@ -951,6 +956,15 @@ export class ReferencePhase {
    */
   public destroy(): void {
     this.cleanup();
+
+    // CRITICAL FIX: Remove event listener to prevent stacking on re-init
+    if (this.recordButtonClickHandler) {
+      const recordBtn = document.getElementById('record-btn');
+      if (recordBtn) {
+        recordBtn.removeEventListener('click', this.recordButtonClickHandler);
+      }
+      this.recordButtonClickHandler = null;
+    }
 
     // Destroy visualizer
     if (this.visualizer) {
