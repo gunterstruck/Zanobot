@@ -19,7 +19,6 @@ import {
   calculateHealthScore,
   ScoreHistory,
   LabelHistory,
-  classifyHealthStatus,
   getClassificationDetails,
   classifyDiagnosticState,
 } from '@core/ml/scoring.js';
@@ -525,19 +524,15 @@ export class DiagnosePhase {
 
       // Use the passed values (saved before cleanup)
 
-      // CRITICAL FIX: Recalculate status from filtered score instead of using cached value
-      // This prevents status/score mismatch where filtered score changes classification
-      const recalculatedStatus = classifyHealthStatus(finalScore);
-
       // Get classification details
       const classification = getClassificationDetails(finalScore);
 
       // MULTICLASS: Generate hint based on detected state
       let hint = classification.recommendation;
       if (detectedState !== 'UNKNOWN') {
-        if (recalculatedStatus === 'healthy') {
+        if (finalStatus === 'healthy') {
           hint = `Maschine läuft im Normalzustand "${detectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
-        } else if (recalculatedStatus === 'faulty') {
+        } else if (finalStatus === 'faulty') {
           hint = `Fehlerzustand erkannt: "${detectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
         }
       }
@@ -552,7 +547,7 @@ export class DiagnosePhase {
         machineId: this.machine.id,
         timestamp: Date.now(),
         healthScore: finalScore,
-        status: recalculatedStatus,
+        status: finalStatus,
         confidence: classification.confidence,
         rawCosineSimilarity: 0, // Not stored for real-time
         metadata: {
