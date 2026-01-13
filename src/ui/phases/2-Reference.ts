@@ -250,7 +250,7 @@ export class ReferencePhase {
 
     // Setup media recorder with explicit mimeType
     // CRITICAL FIX: Detect supported MIME type to ensure Blob matches actual format
-    let mimeType = 'audio/webm';
+    let mimeType: string | undefined;
     if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
       mimeType = 'audio/webm;codecs=opus';
     } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
@@ -258,10 +258,13 @@ export class ReferencePhase {
     } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
       mimeType = 'audio/mp4';
     }
-    logger.info(`🎙️ Using MediaRecorder MIME type: ${mimeType}`);
+    logger.info(`🎙️ Using MediaRecorder MIME type: ${mimeType ?? 'browser default'}`);
 
     this.audioChunks = [];
-    this.mediaRecorder = new MediaRecorder(this.mediaStream, { mimeType });
+    const mediaRecorderOptions = mimeType ? { mimeType } : undefined;
+    this.mediaRecorder = mediaRecorderOptions
+      ? new MediaRecorder(this.mediaStream, mediaRecorderOptions)
+      : new MediaRecorder(this.mediaStream);
     this.isRecordingActive = true;
     this.isRecordingStarting = false;
 
@@ -637,6 +640,7 @@ export class ReferencePhase {
 
     const audioUrl = URL.createObjectURL(this.recordedBlob);
     audioSource.src = audioUrl;
+    audioSource.type = this.recordedBlob.type || 'audio/webm';
     audioElement.load();
 
     // Update quality indicator

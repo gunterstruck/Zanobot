@@ -612,7 +612,16 @@ export async function importData(
   // Import machines
   if (data.machines) {
     for (const machine of data.machines) {
-      await db.put('machines', machine);
+      const normalizedMachine: Machine = {
+        ...machine,
+        referenceModels: (machine.referenceModels || []).map((model) => ({
+          ...model,
+          weightVector: model.weightVector instanceof Float64Array
+            ? model.weightVector
+            : new Float64Array(model.weightVector as number[]),
+        })),
+      };
+      await db.put('machines', normalizedMachine);
     }
     logger.info(`📥 Imported ${data.machines.length} machines`);
   }
