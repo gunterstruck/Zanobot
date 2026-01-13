@@ -40,15 +40,19 @@ export function extractFeatures(
   audioBuffer: AudioBuffer,
   config: DSPConfig = DEFAULT_DSP_CONFIG
 ): FeatureVector[] {
-  const effectiveConfig =
+  // OPTIMIZATION: Check if config needs adjustment for actual audio buffer sample rate
+  // Improves readability by separating condition from conditional assignment
+  const needsSampleRateAdjustment =
     config.sampleRate !== audioBuffer.sampleRate ||
-    config.frequencyRange[1] !== audioBuffer.sampleRate / 2
-      ? {
-          ...config,
-          sampleRate: audioBuffer.sampleRate,
-          frequencyRange: [0, audioBuffer.sampleRate / 2] as [number, number],
-        }
-      : config;
+    config.frequencyRange[1] !== audioBuffer.sampleRate / 2;
+
+  const effectiveConfig = needsSampleRateAdjustment
+    ? {
+        ...config,
+        sampleRate: audioBuffer.sampleRate,
+        frequencyRange: [0, audioBuffer.sampleRate / 2] as [number, number],
+      }
+    : config;
 
   // Validate minimum audio buffer length
   const minDuration = effectiveConfig.windowSize; // At least one window size

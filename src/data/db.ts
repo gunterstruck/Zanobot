@@ -340,9 +340,8 @@ export async function saveDiagnosis(diagnosis: DiagnosisResult): Promise<void> {
 /**
  * Get all diagnoses for a machine
  *
- * NOTE: This function loads all diagnoses into memory and then sorts them.
- * For machines with thousands of diagnoses, this may cause performance issues.
- * Consider using limit parameter to reduce memory usage.
+ * OPTIMIZED: Uses cursor-based approach when limit is specified to avoid loading
+ * all records into memory. This prevents performance issues with large datasets.
  *
  * @param machineId - Machine ID
  * @param limit - Maximum number of results (optional, recommended for large datasets)
@@ -354,15 +353,34 @@ export async function getDiagnosesForMachine(
 ): Promise<DiagnosisResult[]> {
   const db = await initDB();
 
-  // Fetch all diagnoses for this machine
-  // TODO: For very large datasets, consider implementing cursor-based pagination
+  // OPTIMIZATION: When limit is specified, use cursor-based pagination
+  if (limit !== undefined && limit > 0) {
+    const diagnoses: DiagnosisResult[] = [];
+
+    // Open cursor on by-timestamp index (automatically sorted)
+    let cursor = await db.transaction('diagnoses').store.index('by-timestamp').openCursor(null, 'prev');
+
+    while (cursor && diagnoses.length < limit) {
+      const diagnosis = cursor.value as DiagnosisResult;
+
+      // Filter by machineId (since we're using timestamp index)
+      if (diagnosis.machineId === machineId) {
+        diagnoses.push(diagnosis);
+      }
+
+      cursor = await cursor.continue();
+    }
+
+    return diagnoses;
+  }
+
+  // Fallback: Load all diagnoses (only when no limit specified)
   const diagnoses = await db.getAllFromIndex('diagnoses', 'by-machine', machineId);
 
   // Sort by timestamp descending (newest first)
   diagnoses.sort((a, b) => b.timestamp - a.timestamp);
 
-  // Apply limit if specified to reduce memory usage
-  return limit ? diagnoses.slice(0, limit) : diagnoses;
+  return diagnoses;
 }
 
 /**

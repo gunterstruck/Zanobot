@@ -27,11 +27,20 @@ class ZanobotApp {
     logger.info('🤖 Zanobot AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');
 
-    // Wait for DOM with race condition protection
+    // CRITICAL FIX: Wait for DOM with enhanced race condition protection
+    // Double-check pattern prevents edge case where event fires between check and listener registration
     if (document.readyState === 'loading') {
-      // Use once: true to ensure handler only fires once
       await new Promise<void>((resolve) => {
-        document.addEventListener('DOMContentLoaded', () => resolve(), { once: true });
+        // Set up listener with once: true to ensure it only fires once
+        const handler = () => resolve();
+        document.addEventListener('DOMContentLoaded', handler, { once: true });
+
+        // RACE CONDITION FIX: Re-check state after adding listener
+        // If DOM loaded between initial check and listener registration, manually resolve
+        if (document.readyState !== 'loading') {
+          document.removeEventListener('DOMContentLoaded', handler);
+          resolve();
+        }
       });
     }
 

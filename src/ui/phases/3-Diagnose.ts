@@ -34,6 +34,7 @@ import {
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -332,13 +333,16 @@ export class DiagnosePhase {
     }
 
     try {
-      // Ensure chunk is large enough for feature extraction (330ms = ~14553 samples at 44.1kHz)
+      // CRITICAL: Ensure chunk has minimum required samples for feature extraction
+      // Required: this.chunkSize samples (330ms window = ~15840 samples at 48kHz, ~14553 at 44.1kHz)
+      // If chunk is smaller, skip processing and wait for more data from AudioWorklet
       if (chunk.length < this.chunkSize) {
-        // Buffer too small, wait for more data
+        logger.debug(`⏳ Chunk too small: ${chunk.length} < ${this.chunkSize} samples, waiting for more data`);
         return;
       }
 
-      // Use only the required chunk size for feature extraction
+      // Extract exactly chunkSize samples for feature extraction (discard excess if any)
+      // This ensures consistent window sizes across all processing cycles
       const processingChunk = chunk.slice(0, this.chunkSize);
 
       // Step 1: Extract features (Energy Spectral Densities)
@@ -598,14 +602,14 @@ export class DiagnosePhase {
     // Update button text and behavior
     const stopBtn = document.getElementById('stop-recording-btn');
     if (stopBtn) {
-      stopBtn.textContent = 'Stop & Save';
+      stopBtn.textContent = BUTTON_TEXT.STOP_DIAGNOSE;
       stopBtn.onclick = () => this.stopRecording();
     }
 
     // Update modal title
     const modalTitle = document.querySelector('#recording-modal .modal-header h3');
     if (modalTitle) {
-      modalTitle.textContent = 'Live Diagnosis - Find Sweet Spot';
+      modalTitle.textContent = MODAL_TITLE.RECORDING_DIAGNOSE;
     }
 
     // Add Smart Start status and live score display
