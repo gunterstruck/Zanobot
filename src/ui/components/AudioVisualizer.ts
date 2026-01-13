@@ -20,6 +20,10 @@ export class AudioVisualizer {
   private animationFrame: number | null = null;
   private dataArray: Uint8Array | null = null;
 
+  // CRITICAL FIX: Store audio source reference to properly disconnect in stop()
+  // Without this, the audio graph continues running and causes resource leaks
+  private source: MediaStreamAudioSourceNode | null = null;
+
   // Visualization settings
   private fftSize: number = 2048; // High resolution for bass/mid analysis
   private smoothing: number = 0.75; // Smooth transitions (0-1)
@@ -74,9 +78,11 @@ export class AudioVisualizer {
     this.analyser.minDecibels = -90;
     this.analyser.maxDecibels = -10;
 
-    // Connect stream to analyser
-    const source = audioContext.createMediaStreamSource(stream);
-    source.connect(this.analyser);
+    // CRITICAL FIX: Store source reference for proper cleanup in stop()
+    // Without storing the reference, we cannot disconnect it later,
+    // causing the audio graph to continue running (resource leak)
+    this.source = audioContext.createMediaStreamSource(stream);
+    this.source.connect(this.analyser);
 
     // Create data array for frequency data
     const bufferLength = this.analyser.frequencyBinCount; // fftSize / 2
@@ -92,11 +98,22 @@ export class AudioVisualizer {
 
   /**
    * Stop visualization
+   *
+   * CRITICAL FIX: Disconnect audio source to prevent resource leaks.
+   * Without disconnecting, the audio graph continues running even after
+   * visualization stops, consuming CPU and memory resources.
    */
   public stop(): void {
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
+    }
+
+    // CRITICAL FIX: Disconnect audio source from audio graph
+    // This prevents resource leaks by properly cleaning up the audio connection
+    if (this.source) {
+      this.source.disconnect();
+      this.source = null;
     }
 
     this.analyser = null;

@@ -85,6 +85,10 @@ class ZanobotApp {
 
   /**
    * Setup collapsible sections
+   *
+   * CRITICAL FIX: Preserve original display mode (flex, grid, etc.)
+   * instead of hardcoding 'block'. Also check computed style instead
+   * of only inline style to handle CSS-defined visibility.
    */
   private setupCollapsibleSections(): void {
     const headers = document.querySelectorAll('.section-header');
@@ -97,9 +101,25 @@ class ZanobotApp {
         const content = document.getElementById(target);
         if (!content) return;
 
-        // Toggle visibility
-        const isVisible = content.style.display !== 'none';
-        content.style.display = isVisible ? 'none' : 'block';
+        // CRITICAL FIX: Store original display mode on first interaction
+        // This preserves flex, grid, or any other display value
+        if (!content.dataset.originalDisplay) {
+          const computedStyle = window.getComputedStyle(content);
+          content.dataset.originalDisplay = computedStyle.display;
+        }
+
+        // CRITICAL FIX: Check computed style instead of inline style
+        // This correctly handles CSS-defined visibility
+        const computedDisplay = window.getComputedStyle(content).display;
+        const isVisible = computedDisplay !== 'none';
+
+        // Toggle visibility while preserving original display mode
+        if (isVisible) {
+          content.style.display = 'none';
+        } else {
+          // CRITICAL FIX: Restore original display mode instead of hardcoding 'block'
+          content.style.display = content.dataset.originalDisplay || 'block';
+        }
 
         // Rotate icon
         const icon = header.querySelector('.collapse-icon');
@@ -146,12 +166,15 @@ class ZanobotApp {
 
   /**
    * Register PWA service worker
+   *
+   * CRITICAL FIX: Use relative path instead of absolute path
+   * to support subpath deployments (e.g., /app/)
    */
   private registerServiceWorker(): void {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
-          .register('/service-worker.js')
+          .register('./service-worker.js')
           .then((registration) => {
             logger.info('✅ Service Worker registered:', registration);
           })
