@@ -138,6 +138,9 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
    * Calculate RMS (Root Mean Square) of audio samples
    */
   calculateRMS(samples) {
+    if (!samples || samples.length === 0) {
+      return 0;
+    }
     let sum = 0;
     for (let i = 0; i < samples.length; i++) {
       sum += samples[i] * samples[i];

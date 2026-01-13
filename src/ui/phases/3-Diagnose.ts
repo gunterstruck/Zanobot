@@ -21,6 +21,7 @@ import {
   LabelHistory,
   getClassificationDetails,
   classifyDiagnosticState,
+  classifyHealthStatus,
 } from '@core/ml/scoring.js';
 import { saveDiagnosis, getMachine } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
@@ -394,19 +395,22 @@ export class DiagnosePhase {
       // Step 4: Get filtered score (trimmed mean of last 10)
       const filteredScore = this.scoreHistory.getFilteredScore();
 
-      // Step 5: Update UI in real-time with detected state
-      this.updateLiveDisplay(filteredScore, diagnosis.status, detectedState);
+      // Step 5: Derive status from filtered score for consistency
+      const filteredStatus = classifyHealthStatus(filteredScore);
 
-      // Step 6: Store for final save (but use unfiltered diagnosis result)
+      // Step 6: Update UI in real-time with detected state
+      this.updateLiveDisplay(filteredScore, filteredStatus, detectedState);
+
+      // Step 7: Store for final save (use filtered score/status for consistency)
       this.lastProcessedScore = filteredScore;
-      this.lastProcessedStatus = diagnosis.status;
+      this.lastProcessedStatus = filteredStatus;
       this.lastDetectedState = detectedState; // MULTICLASS: Store detected state (will be replaced by majority vote on save)
       this.hasValidMeasurement = true; // Mark that we have valid data
 
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
         logger.debug(
-          `📊 Live Score: ${filteredScore.toFixed(1)}% | State: ${detectedState} (${diagnosis.status})`
+          `📊 Live Score: ${filteredScore.toFixed(1)}% | State: ${detectedState} (${filteredStatus})`
         );
       }
     } catch (error) {
