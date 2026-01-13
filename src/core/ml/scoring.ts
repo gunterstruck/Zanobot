@@ -380,6 +380,87 @@ export class ScoreHistory {
 }
 
 /**
+ * Label History Manager
+ *
+ * Manages a rolling buffer of detected state labels for majority voting.
+ * Prevents inconsistent diagnoses where filtered score indicates healthy
+ * but label comes from a single noisy chunk.
+ */
+export class LabelHistory {
+  private labels: string[] = [];
+  private maxSize: number = SCORE_HISTORY_SIZE; // Use same buffer size as scores
+
+  /**
+   * Add a new label to the history
+   *
+   * @param label - State label to add
+   */
+  addLabel(label: string): void {
+    this.labels.push(label);
+
+    // Keep only last maxSize labels
+    if (this.labels.length > this.maxSize) {
+      this.labels.shift();
+    }
+  }
+
+  /**
+   * Get most frequent label (majority voting)
+   *
+   * @returns Most common label, or 'UNKNOWN' if no labels available
+   */
+  getMajorityLabel(): string {
+    if (this.labels.length === 0) {
+      return 'UNKNOWN';
+    }
+
+    // Count occurrences of each label
+    const counts = new Map<string, number>();
+    for (const label of this.labels) {
+      counts.set(label, (counts.get(label) || 0) + 1);
+    }
+
+    // Find label with highest count
+    let maxCount = 0;
+    let majorityLabel = 'UNKNOWN';
+    // CRITICAL FIX: Use Array.from() to avoid downlevelIteration requirement
+    Array.from(counts.entries()).forEach(([label, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        majorityLabel = label;
+      }
+    });
+
+    return majorityLabel;
+  }
+
+  /**
+   * Get all labels
+   *
+   * @returns Array of all labels
+   */
+  getAllLabels(): string[] {
+    return [...this.labels];
+  }
+
+  /**
+   * Clear all labels
+   */
+  clear(): void {
+    this.labels = [];
+  }
+
+  /**
+   * Check if history has enough labels for reliable voting
+   *
+   * @returns True if >= SCORE_HISTORY_SIZE labels available
+   */
+  hasFullHistory(): boolean {
+    return this.labels.length >= SCORE_HISTORY_SIZE;
+  }
+}
+
+/**
  * Uncertainty threshold for multiclass diagnosis
  * Scores below this threshold indicate an unknown anomaly
  */
