@@ -89,11 +89,14 @@ export const DEFAULT_SMART_START_CONFIG: SmartStartConfig = {
 
 /**
  * Smart Start state
+ *
+ * CRITICAL: This interface is shared between audioHelper and audioWorkletHelper.
+ * All properties except 'phase' are optional to support both implementations.
  */
 export interface SmartStartState {
-  phase: 'warmup' | 'waiting' | 'recording';
-  remainingWarmUp: number;
-  signalDetected: boolean;
+  phase: 'idle' | 'warmup' | 'waiting' | 'recording';
+  remainingWarmUp?: number;
+  signalDetected?: boolean;
 }
 
 /**
@@ -326,8 +329,11 @@ export class SmartStartManager {
  */
 export function getSmartStartStatusMessage(state: SmartStartState): string {
   switch (state.phase) {
+    case 'idle':
+      return 'Bereit';
     case 'warmup':
-      const seconds = Math.ceil(state.remainingWarmUp / 1000);
+      // CRITICAL FIX: Handle optional remainingWarmUp field
+      const seconds = state.remainingWarmUp ? Math.ceil(state.remainingWarmUp / 1000) : 0;
       return `Akustische Stabilisierung... ${seconds}s`;
     case 'waiting':
       return 'Warte auf Signal...';
