@@ -543,7 +543,12 @@ export class IdentifyPhase {
 
       if (currentDevice) {
         // Get audio track settings for sample rate
-        const audioTrack = tempStream.getAudioTracks()[0];
+        const audioTracks = tempStream.getAudioTracks();
+        if (audioTracks.length === 0) {
+          logger.warn('No audio tracks found on device');
+          return;
+        }
+        const audioTrack = audioTracks[0];
         const settings = audioTrack.getSettings();
         const sampleRate = settings.sampleRate || 44100;
 

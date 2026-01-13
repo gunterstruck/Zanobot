@@ -123,6 +123,10 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
   skipToRecording() {
     this.phase = 'recording';
     this.smartStartActive = false;
+    this.writePos = 0;
+    this.readPos = 0;
+    this.samplesWritten = 0;
+    this.ringBuffer.fill(0);
 
     this.port.postMessage({
       type: 'smart-start-state',

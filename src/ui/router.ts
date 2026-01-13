@@ -135,7 +135,8 @@ export class Router {
             (b.trainingDate || 0) - (a.trainingDate || 0)
           );
           // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
-          const latestDate = new Date(sortedModels[0].trainingDate).toLocaleString('de-DE', {
+          const latestTimestamp = sortedModels[0]?.trainingDate;
+          const latestDate = (latestTimestamp ? new Date(latestTimestamp) : new Date()).toLocaleString('de-DE', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
