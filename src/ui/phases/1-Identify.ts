@@ -131,7 +131,6 @@ export class IdentifyPhase {
         fps: 10,
         qrbox: { width: 250, height: 250 },
         formatsToSupport: [
-          // @ts-expect-error - Html5QrcodeSupportedFormats is available
           0, // QR_CODE
           8, // CODE_128
           13, // EAN_13
