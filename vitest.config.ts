@@ -18,6 +18,7 @@ export default defineConfig({
       '@core': path.resolve(__dirname, './src/core'),
       '@data': path.resolve(__dirname, './src/data'),
       '@ui': path.resolve(__dirname, './src/ui'),
+      '@utils': path.resolve(__dirname, './src/utils'),
     },
   },
 });

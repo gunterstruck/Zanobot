@@ -508,19 +508,23 @@ export function classifyDiagnosticState(
     const cosineSimilarities = inferGMIA(model, [featureVector], testSampleRate);
     const cosine = cosineSimilarities[0];
 
-    // Step 2: Calculate health score using existing scoring function
-    const score = calculateHealthScore(cosine, model.scalingConstant);
+    // Step 2: Adjust similarity using magnitude to avoid low-energy false matches
+    const magnitudeFactor = calculateMagnitudeFactor(model.weightVector, featureVector.features);
+    const adjustedCosine = cosine * magnitudeFactor;
 
-    // Step 3: Check if this is the best match so far
+    // Step 3: Calculate health score using existing scoring function
+    const score = calculateHealthScore(adjustedCosine, model.scalingConstant);
+
+    // Step 4: Check if this is the best match so far
     if (score > bestScore) {
       bestScore = score;
       bestLabel = model.label;
       bestModel = model;
-      bestCosine = cosine;
+      bestCosine = adjustedCosine;
     }
   }
 
-  // Step 4: Uncertainty check - is the best score too low?
+  // Step 5: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
   if (bestScore < UNCERTAINTY_THRESHOLD || bestModel === null) {
     // Anomaly detected, but doesn't match any known pattern
@@ -553,6 +557,41 @@ export function classifyDiagnosticState(
   };
 
   return diagnosis;
+}
+
+/**
+ * Calculate magnitude ratio between test features and model weights.
+ *
+ * @param weightVector - Model weight vector
+ * @param featureVector - Test feature vector
+ * @returns Ratio clamped to [0, 1]
+ */
+function calculateMagnitudeFactor(
+  weightVector: Float64Array,
+  featureVector: Float64Array
+): number {
+  const featureMagnitude = vectorMagnitude(featureVector);
+  const weightMagnitude = vectorMagnitude(weightVector);
+
+  if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) || weightMagnitude === 0) {
+    return 0;
+  }
+
+  return Math.min(1, featureMagnitude / weightMagnitude);
+}
+
+/**
+ * Calculate vector magnitude (L2 norm).
+ *
+ * @param vector - Vector to measure
+ * @returns Magnitude
+ */
+function vectorMagnitude(vector: Float64Array): number {
+  let sumSquares = 0;
+  for (const value of vector) {
+    sumSquares += value * value;
+  }
+  return Math.sqrt(sumSquares);
 }
 
 /**
