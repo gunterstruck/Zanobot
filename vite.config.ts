@@ -3,6 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
+  base: '/Zanobot/',
   resolve: {
     alias: {
       '@core': path.resolve(__dirname, './src/core'),
