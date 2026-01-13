@@ -857,8 +857,12 @@ body {
 }
 
 /* ===================================
-   HISTORY
+   QUICK CHECK BUTTON
    =================================== */
+.quick-check-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     border: none;
     border-radius: var(--radius-md);
     color: var(--bg-primary);
