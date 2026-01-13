@@ -18,12 +18,12 @@ import type { FeatureVector, AudioChunk, DSPConfig } from '@data/types.js';
  * Default DSP configuration based on Technical Report
  */
 export const DEFAULT_DSP_CONFIG: DSPConfig = {
-  sampleRate: 44100,           // Standard audio sample rate
+  sampleRate: 48000,           // High quality audio sample rate (matches config.json)
   windowSize: 0.330,           // 330ms (from Technical Report)
   hopSize: 0.066,              // 66ms overlap
-  fftSize: 0,                  // Calculated dynamically
+  fftSize: 2048,               // Fixed FFT size (matches config.json)
   frequencyBins: 512,          // Tested optimal value (Report p.19)
-  frequencyRange: [0, 22050],  // 0 to Nyquist frequency
+  frequencyRange: [0, 24000],  // 0 to Nyquist frequency (48000/2)
 };
 
 /**

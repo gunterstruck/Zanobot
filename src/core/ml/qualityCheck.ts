@@ -46,13 +46,14 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   // Extract feature matrices for analysis
   const featureMatrix = features.map((f) => Array.from(f.features));
   const numFrames = featureMatrix.length;
-  const numBins = featureMatrix[0].length;
+  const numBins = featureMatrix[0]?.length || 0;
 
-  if (numBins === 0) {
+  // SAFETY CHECK: Prevent division by zero and undefined access
+  if (numFrames === 0 || numBins === 0) {
     return {
       score: 0,
       rating: 'BAD',
-      issues: ['Leere Feature-Vektoren'],
+      issues: ['Keine Audiodaten extrahiert (Frame Count 0)'],
       metadata: {
         variance: 0,
         stability: 0,
