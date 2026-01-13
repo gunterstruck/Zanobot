@@ -811,12 +811,54 @@ body {
 }
 
 /* ===================================
-   QUICK CHECK BUTTON
+   QUICK SELECT - MACHINE HISTORY
    =================================== */
-.quick-check-btn {
-    width: 100%;
-    padding: var(--spacing-md);
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+.quick-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.quick-select-item {
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.quick-select-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+.quick-select-item-info {
+    flex-grow: 1;
+}
+
+.quick-select-machine-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.125rem;
+}
+
+.quick-select-machine-id {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+/* ===================================
+   HISTORY
+   =================================== */
     border: none;
     border-radius: var(--radius-md);
     color: var(--bg-primary);
