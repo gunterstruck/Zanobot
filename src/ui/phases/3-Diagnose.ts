@@ -231,6 +231,7 @@ export class DiagnosePhase {
 
       // Cleanup on error
       this.cleanup();
+      this.hideRecordingModal();
     } finally {
       this.isStarting = false;
     }
