@@ -136,13 +136,15 @@ export class Router {
           );
           // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
           const latestTimestamp = sortedModels[0]?.trainingDate;
-          const latestDate = (latestTimestamp ? new Date(latestTimestamp) : new Date()).toLocaleString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
+          const latestDate = latestTimestamp
+            ? new Date(latestTimestamp).toLocaleString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+            : 'unbekannt';
           description.textContent = `${count} Zustand${count > 1 ? 'e' : ''} trainiert (zuletzt: ${latestDate}) - Weitere hinzufügen`;
         } else {
           description.textContent = '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)';
