@@ -7,7 +7,7 @@
  * - Manual entry
  */
 
-import { saveMachine, getMachine } from '@data/db.js';
+import { saveMachine, getMachine, getAllMachines } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -76,6 +76,9 @@ export class IdentifyPhase {
 
     // Initialize hardware check
     this.initializeHardwareCheck();
+
+    // Load and render machine history for quick select
+    this.loadMachineHistory();
   }
 
   /**
@@ -794,6 +797,137 @@ export class IdentifyPhase {
    */
   public getSelectedDeviceId(): string | undefined {
     return this.selectedDeviceId;
+  }
+
+  /**
+   * ========================================
+   * MACHINE HISTORY / QUICK SELECT
+   * ========================================
+   */
+
+  /**
+   * Load machine history and render quick select list
+   */
+  private async loadMachineHistory(): Promise<void> {
+    try {
+      // Get all machines from database
+      const machines = await getAllMachines();
+
+      // Filter machines that have at least one trained model
+      const trainedMachines = machines.filter(
+        (machine) => machine.referenceModels && machine.referenceModels.length > 0
+      );
+
+      // Sort by most recent training date (newest first)
+      trainedMachines.sort((a, b) => {
+        const aLatestDate = Math.max(...a.referenceModels.map((m) => m.trainingDate));
+        const bLatestDate = Math.max(...b.referenceModels.map((m) => m.trainingDate));
+        return bLatestDate - aLatestDate;
+      });
+
+      // Render the quick select list (max 10 machines)
+      this.renderQuickSelectList(trainedMachines.slice(0, 10));
+    } catch (error) {
+      logger.error('Failed to load machine history:', error);
+      // Don't show error to user - just hide the quick select section
+      this.hideQuickSelectSection();
+    }
+  }
+
+  /**
+   * Render quick select list with recent machines
+   */
+  private renderQuickSelectList(machines: Machine[]): void {
+    const quickSelectSection = document.getElementById('quick-select-section');
+    const quickSelectList = document.getElementById('quick-select-list');
+
+    if (!quickSelectSection || !quickSelectList) {
+      logger.warn('Quick select elements not found in DOM');
+      return;
+    }
+
+    // Hide section if no machines available
+    if (machines.length === 0) {
+      quickSelectSection.style.display = 'none';
+      return;
+    }
+
+    // Show section
+    quickSelectSection.style.display = 'block';
+
+    // Clear existing list
+    quickSelectList.innerHTML = '';
+
+    // Render each machine
+    machines.forEach((machine) => {
+      const machineItem = document.createElement('div');
+      machineItem.className = 'quick-select-item';
+      machineItem.dataset.machineId = machine.id;
+
+      // Create machine info
+      const machineInfo = document.createElement('div');
+      machineInfo.className = 'quick-select-item-info';
+
+      const machineName = document.createElement('div');
+      machineName.className = 'quick-select-machine-name';
+      machineName.textContent = machine.name;
+
+      const machineId = document.createElement('div');
+      machineId.className = 'quick-select-machine-id';
+      machineId.textContent = machine.id;
+
+      machineInfo.appendChild(machineName);
+      machineInfo.appendChild(machineId);
+
+      // Create chevron icon
+      const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevron.setAttribute('width', '20');
+      chevron.setAttribute('height', '20');
+      chevron.setAttribute('viewBox', '0 0 24 24');
+      chevron.setAttribute('fill', 'none');
+      chevron.setAttribute('stroke', 'currentColor');
+      chevron.setAttribute('stroke-width', '2');
+      chevron.style.color = 'var(--text-muted)';
+      chevron.style.flexShrink = '0';
+
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', '9 18 15 12 9 6');
+      chevron.appendChild(polyline);
+
+      // Assemble item
+      machineItem.appendChild(machineInfo);
+      machineItem.appendChild(chevron);
+
+      // Add click handler
+      machineItem.addEventListener('click', () => this.handleQuickSelect(machine));
+
+      // Add to list
+      quickSelectList.appendChild(machineItem);
+    });
+  }
+
+  /**
+   * Handle quick select machine click
+   */
+  private async handleQuickSelect(machine: Machine): Promise<void> {
+    try {
+      logger.info(`Quick select: ${machine.name} (${machine.id})`);
+      this.showNotification(`Maschine geladen: ${machine.name}`);
+      this.onMachineSelected(machine);
+    } catch (error) {
+      logger.error('Failed to quick select machine:', error);
+      this.showError('Fehler beim Laden der Maschine');
+    }
+  }
+
+  /**
+   * Hide quick select section
+   */
+  private hideQuickSelectSection(): void {
+    const quickSelectSection = document.getElementById('quick-select-section');
+    if (quickSelectSection) {
+      quickSelectSection.style.display = 'none';
+    }
   }
 
   /**
