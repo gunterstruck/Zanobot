@@ -820,8 +820,13 @@ export class IdentifyPhase {
 
       // Sort by most recent training date (newest first)
       trainedMachines.sort((a, b) => {
-        const aLatestDate = Math.max(...a.referenceModels.map((m) => m.trainingDate));
-        const bLatestDate = Math.max(...b.referenceModels.map((m) => m.trainingDate));
+        // Get latest training date for each machine (defensive: handle edge cases)
+        const aLatestDate = a.referenceModels.length > 0
+          ? Math.max(...a.referenceModels.map((m) => m.trainingDate || 0))
+          : 0;
+        const bLatestDate = b.referenceModels.length > 0
+          ? Math.max(...b.referenceModels.map((m) => m.trainingDate || 0))
+          : 0;
         return bLatestDate - aLatestDate;
       });
 
