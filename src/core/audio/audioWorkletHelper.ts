@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@utils/logger.js';
+import type { SmartStartState } from './audioHelper.js';
 
 export interface AudioWorkletConfig {
   bufferSize: number;
@@ -20,11 +21,6 @@ export interface AudioWorkletConfig {
   onSmartStartStateChange?: (state: SmartStartState) => void;
   onSmartStartComplete?: (rms: number) => void;
   onSmartStartTimeout?: () => void;
-}
-
-export interface SmartStartState {
-  phase: 'idle' | 'warmup' | 'waiting' | 'recording';
-  remainingWarmUp?: number;
 }
 
 /**
@@ -269,12 +265,13 @@ export class AudioWorkletManager {
    * Check if AudioWorklet is supported
    */
   static isSupported(): boolean {
+    // CRITICAL FIX: Use unknown cast for webkitAudioContext (legacy Safari support)
     const AudioContextConstructor =
       typeof AudioContext !== 'undefined'
         ? AudioContext
-        : typeof (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !==
+        : typeof (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !==
             'undefined'
-          ? (globalThis as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+          ? (globalThis as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
           : undefined;
 
     if (!AudioContextConstructor) {

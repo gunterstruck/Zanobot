@@ -491,7 +491,9 @@ export async function exportData(): Promise<{
   const serializedRecordings = recordings.map((recording) => {
     if (isSerializedAudioBuffer(recording.audioBuffer)) {
       // Already serialized - use directly
-      return recording as SerializedRecording;
+      // CRITICAL FIX: Use explicit unknown cast to indicate intentional type conversion
+      // This is safe because we've verified the audioBuffer is already serialized
+      return recording as unknown as SerializedRecording;
     }
 
     // Not serialized yet - serialize now (shouldn't happen with current saveRecording, but handle gracefully)
