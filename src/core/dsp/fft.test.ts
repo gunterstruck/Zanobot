@@ -62,7 +62,7 @@ describe('FFT', () => {
       expect(() => fft(signal)).not.toThrow();
     });
 
-    it('should preserve energy (Parseval\'s theorem)', () => {
+    it("should preserve energy (Parseval's theorem)", () => {
       const signal = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]);
       const result = fft(signal);
 

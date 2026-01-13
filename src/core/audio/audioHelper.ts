@@ -134,7 +134,9 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
       return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
     } catch (fallbackError) {
       logger.error('❌ Failed to get audio stream:', fallbackError);
-      throw new Error('Failed to access microphone. Please grant permission and ensure no other app is using it.');
+      throw new Error(
+        'Failed to access microphone. Please grant permission and ensure no other app is using it.'
+      );
     }
   }
 }
@@ -261,7 +263,9 @@ export class SmartStartManager {
       const rms = calculateRMS(samples);
 
       if (rms >= this.config.signalThreshold) {
-        logger.info(`🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${this.config.signalThreshold})`);
+        logger.info(
+          `🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${this.config.signalThreshold})`
+        );
         this.state.phase = 'recording';
         this.state.signalDetected = true;
         this.notifyStateChange();
@@ -333,10 +337,11 @@ export function getSmartStartStatusMessage(state: SmartStartState): string {
   switch (state.phase) {
     case 'idle':
       return 'Bereit';
-    case 'warmup':
+    case 'warmup': {
       // CRITICAL FIX: Handle optional remainingWarmUp field
       const seconds = state.remainingWarmUp ? Math.ceil(state.remainingWarmUp / 1000) : 0;
       return `Akustische Stabilisierung... ${seconds}s`;
+    }
     case 'waiting':
       return 'Warte auf Signal...';
     case 'recording':

@@ -18,12 +18,12 @@ import type { FeatureVector, AudioChunk, DSPConfig } from '@data/types.js';
  * Default DSP configuration based on Technical Report
  */
 export const DEFAULT_DSP_CONFIG: DSPConfig = {
-  sampleRate: 48000,           // High quality audio sample rate (matches config.json)
-  windowSize: 0.330,           // 330ms (from Technical Report)
-  hopSize: 0.066,              // 66ms overlap
-  fftSize: 2048,               // Fixed FFT size (matches config.json)
-  frequencyBins: 512,          // Tested optimal value (Report p.19)
-  frequencyRange: [0, 24000],  // 0 to Nyquist frequency (48000/2)
+  sampleRate: 48000, // High quality audio sample rate (matches config.json)
+  windowSize: 0.33, // 330ms (from Technical Report)
+  hopSize: 0.066, // 66ms overlap
+  fftSize: 2048, // Fixed FFT size (matches config.json)
+  frequencyBins: 512, // Tested optimal value (Report p.19)
+  frequencyRange: [0, 24000], // 0 to Nyquist frequency (48000/2)
 };
 
 /**
@@ -159,11 +159,7 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
  * @param config - DSP configuration
  * @returns Array of audio chunks
  */
-function chunkSignal(
-  signal: Float32Array,
-  sampleRate: number,
-  config: DSPConfig
-): AudioChunk[] {
+function chunkSignal(signal: Float32Array, sampleRate: number, config: DSPConfig): AudioChunk[] {
   const windowSamples = Math.floor(config.windowSize * sampleRate);
   const hopSamples = Math.floor(config.hopSize * sampleRate);
 

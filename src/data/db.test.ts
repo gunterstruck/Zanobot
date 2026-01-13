@@ -235,7 +235,11 @@ describe('Database Operations', () => {
     });
 
     it('should handle different diagnosis statuses', async () => {
-      const statuses: Array<'healthy' | 'uncertain' | 'faulty'> = ['healthy', 'uncertain', 'faulty'];
+      const statuses: Array<'healthy' | 'uncertain' | 'faulty'> = [
+        'healthy',
+        'uncertain',
+        'faulty',
+      ];
 
       for (let i = 0; i < statuses.length; i++) {
         await saveDiagnosis({
@@ -308,7 +312,12 @@ describe('Database Operations', () => {
 
     it('should import database from JSON (replace mode)', async () => {
       // Create existing data
-      await saveMachine({ id: 'old', name: 'Old Machine', createdAt: Date.now(), referenceModels: [] });
+      await saveMachine({
+        id: 'old',
+        name: 'Old Machine',
+        createdAt: Date.now(),
+        referenceModels: [],
+      });
 
       // Import new data (replace)
       const importData_mock = {
@@ -329,13 +338,20 @@ describe('Database Operations', () => {
 
     it('should import database from JSON (merge mode)', async () => {
       // Create existing data
-      await saveMachine({ id: 'existing', name: 'Existing', createdAt: Date.now(), referenceModels: [] });
+      await saveMachine({
+        id: 'existing',
+        name: 'Existing',
+        createdAt: Date.now(),
+        referenceModels: [],
+      });
 
       // Import new data (merge)
       const importData_mock = {
         version: 2,
         exportDate: Date.now(),
-        machines: [{ id: 'imported', name: 'Imported', createdAt: Date.now(), referenceModels: [] }],
+        machines: [
+          { id: 'imported', name: 'Imported', createdAt: Date.now(), referenceModels: [] },
+        ],
         recordings: [],
         diagnoses: [],
       };

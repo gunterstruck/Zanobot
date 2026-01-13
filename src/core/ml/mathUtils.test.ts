@@ -24,14 +24,8 @@ import {
 describe('Mathematical Utilities', () => {
   describe('Matrix Operations', () => {
     it('should multiply matrices correctly', () => {
-      const A = [
-        new Float64Array([1, 2]),
-        new Float64Array([3, 4]),
-      ];
-      const B = [
-        new Float64Array([5, 6]),
-        new Float64Array([7, 8]),
-      ];
+      const A = [new Float64Array([1, 2]), new Float64Array([3, 4])];
+      const B = [new Float64Array([5, 6]), new Float64Array([7, 8])];
 
       const C = matrixMultiply(A, B);
 
@@ -43,10 +37,7 @@ describe('Mathematical Utilities', () => {
     });
 
     it('should transpose matrices correctly', () => {
-      const A = [
-        new Float64Array([1, 2, 3]),
-        new Float64Array([4, 5, 6]),
-      ];
+      const A = [new Float64Array([1, 2, 3]), new Float64Array([4, 5, 6])];
 
       const AT = matrixTranspose(A);
 
@@ -58,10 +49,7 @@ describe('Mathematical Utilities', () => {
     });
 
     it('should invert 2x2 matrix correctly', () => {
-      const A = [
-        new Float64Array([4, 7]),
-        new Float64Array([2, 6]),
-      ];
+      const A = [new Float64Array([4, 7]), new Float64Array([2, 6])];
 
       const invA = matrixInverse(A);
 
@@ -75,10 +63,7 @@ describe('Mathematical Utilities', () => {
     });
 
     it('should add regularization correctly', () => {
-      const A = [
-        new Float64Array([1, 2]),
-        new Float64Array([3, 4]),
-      ];
+      const A = [new Float64Array([1, 2]), new Float64Array([3, 4])];
 
       const lambda = 10;
       const regularized = addRegularization(A, lambda);
@@ -90,10 +75,7 @@ describe('Mathematical Utilities', () => {
     });
 
     it('should multiply matrix by vector', () => {
-      const A = [
-        new Float64Array([1, 2]),
-        new Float64Array([3, 4]),
-      ];
+      const A = [new Float64Array([1, 2]), new Float64Array([3, 4])];
       const x = new Float64Array([5, 6]);
 
       const y = matrixVectorMultiply(A, x);

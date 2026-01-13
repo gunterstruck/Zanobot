@@ -73,7 +73,7 @@ export class AudioWorkletManager {
       this.workletNode.port.postMessage({
         type: 'init',
         sampleRate: audioContext.sampleRate,
-        warmUpDuration: this.config.warmUpDuration || 5000 // Default to 5s if not specified
+        warmUpDuration: this.config.warmUpDuration || 5000, // Default to 5s if not specified
       });
 
       logger.info('✅ AudioWorklet initialized');
@@ -90,12 +90,16 @@ export class AudioWorkletManager {
     switch (message.type) {
       case 'init-complete':
         // Worklet initialization confirmed with actual sample rate, chunk size, and buffer size
-        logger.info(`✅ Worklet initialized: sampleRate=${message.sampleRate}Hz, chunkSize=${message.chunkSize} samples, bufferSize=${message.bufferSize} samples`);
+        logger.info(
+          `✅ Worklet initialized: sampleRate=${message.sampleRate}Hz, chunkSize=${message.chunkSize} samples, bufferSize=${message.bufferSize} samples`
+        );
 
         // CRITICAL FIX: Resize local ring buffer if worklet reports larger buffer size
         // This ensures consistency between worklet and manager buffers
         if (message.bufferSize && message.bufferSize > this.ringBuffer.length) {
-          logger.info(`📊 Resizing local ring buffer from ${this.ringBuffer.length} to ${message.bufferSize} samples`);
+          logger.info(
+            `📊 Resizing local ring buffer from ${this.ringBuffer.length} to ${message.bufferSize} samples`
+          );
           this.ringBuffer = new Float32Array(message.bufferSize);
           this.currentWritePos = 0;
         }
@@ -271,9 +275,10 @@ export class AudioWorkletManager {
     const AudioContextConstructor =
       typeof AudioContext !== 'undefined'
         ? AudioContext
-        : typeof (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !==
-            'undefined'
-          ? (globalThis as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        : typeof (globalThis as unknown as { webkitAudioContext?: typeof AudioContext })
+              .webkitAudioContext !== 'undefined'
+          ? (globalThis as unknown as { webkitAudioContext: typeof AudioContext })
+              .webkitAudioContext
           : undefined;
 
     if (!AudioContextConstructor) {

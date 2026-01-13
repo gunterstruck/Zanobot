@@ -126,8 +126,7 @@ function calculateSpectralVariance(featureMatrix: number[][]): number {
     const mean = binValues.reduce((sum, val) => sum + val, 0) / numFrames;
 
     // Calculate variance
-    const variance =
-      binValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / numFrames;
+    const variance = binValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / numFrames;
 
     totalVariance += variance;
   }
@@ -154,9 +153,7 @@ function detectOutliers(featureMatrix: number[][]): number[] {
   const numFrames = featureMatrix.length;
 
   // Calculate total energy per frame (sum across all bins)
-  const frameEnergies = featureMatrix.map((frame) =>
-    frame.reduce((sum, val) => sum + val, 0)
-  );
+  const frameEnergies = featureMatrix.map((frame) => frame.reduce((sum, val) => sum + val, 0));
 
   // Calculate median
   const sortedEnergies = [...frameEnergies].sort((a, b) => a - b);
@@ -195,11 +192,7 @@ function detectOutliers(featureMatrix: number[][]): number[] {
  * @param numFrames - Total number of frames
  * @returns Stability metric (0-1)
  */
-function calculateStability(
-  variance: number,
-  outlierCount: number,
-  numFrames: number
-): number {
+function calculateStability(variance: number, outlierCount: number, numFrames: number): number {
   // Penalize based on variance (exponential decay)
   // Typical good variance is around 1e-6 to 1e-5
   // Bad variance is > 1e-4

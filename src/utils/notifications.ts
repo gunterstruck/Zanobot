@@ -161,7 +161,6 @@ export const notification = {
     notify.error(message, error, options),
   warning: (message: string, options?: Partial<NotificationOptions>) =>
     notify.warning(message, options),
-  info: (message: string, options?: Partial<NotificationOptions>) =>
-    notify.info(message, options),
+  info: (message: string, options?: Partial<NotificationOptions>) => notify.info(message, options),
   confirm: (message: string, title?: string) => notify.confirm(message, title),
 };
