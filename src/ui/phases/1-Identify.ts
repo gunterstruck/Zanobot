@@ -754,7 +754,11 @@ export class IdentifyPhase {
       this.currentAudioStream = await getRawAudioStream(device.deviceId);
 
       // Re-analyze hardware
-      const audioTrack = this.currentAudioStream.getAudioTracks()[0];
+      const audioTracks = this.currentAudioStream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        throw new Error('No audio tracks available on selected device');
+      }
+      const audioTrack = audioTracks[0];
       const settings = audioTrack.getSettings();
       const sampleRate = settings.sampleRate || 44100;
 

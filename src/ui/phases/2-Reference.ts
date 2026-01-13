@@ -331,8 +331,11 @@ export class ReferencePhase {
 
       // Create blob from chunks (FULL 15 seconds for download)
       // CRITICAL FIX: Use actual MIME type from MediaRecorder to ensure correct format
-      const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
-      const blob = new Blob(this.audioChunks, { type: mimeType });
+      const mimeType = this.mediaRecorder?.mimeType || '';
+      const blobOptions = mimeType ? { type: mimeType } : undefined;
+      const blob = blobOptions
+        ? new Blob(this.audioChunks, blobOptions)
+        : new Blob(this.audioChunks);
       this.recordedBlob = blob; // Save for export
       logger.info(`📦 Created audio blob with MIME type: ${mimeType}`);
 
@@ -945,33 +948,33 @@ export class ReferencePhase {
 
     // CRITICAL FIX: Check if referenceModels exists before iterating
     if (models && models.length > 0) {
-      models.forEach((model, index) => {
-      const li = document.createElement('li');
-      li.className = 'state-item';
+      models.forEach((model) => {
+        const li = document.createElement('li');
+        li.className = 'state-item';
 
-      const date = new Date(model.trainingDate);
-      // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
-      const dateStr = date.toLocaleString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+        const dateStr = model.trainingDate
+          ? new Date(model.trainingDate).toLocaleString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+          : 'unbekannt';
 
-      // Use textContent instead of innerHTML to prevent XSS attacks
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'state-label';
-      labelSpan.textContent = model.label;
+        // Use textContent instead of innerHTML to prevent XSS attacks
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'state-label';
+        labelSpan.textContent = model.label;
 
-      const dateSpan = document.createElement('span');
-      dateSpan.className = 'state-date';
-      dateSpan.textContent = dateStr;
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'state-date';
+        dateSpan.textContent = dateStr;
 
-      li.appendChild(labelSpan);
-      li.appendChild(dateSpan);
+        li.appendChild(labelSpan);
+        li.appendChild(dateSpan);
 
-      stateList.appendChild(li);
+        stateList.appendChild(li);
       });
     }
 
