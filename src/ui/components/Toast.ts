@@ -35,7 +35,8 @@ export class ToastManager {
   private container: HTMLElement | null = null;
   private toasts: Map<string, HTMLElement> = new Map();
   private toastCounter = 0;
-  private pendingToasts: ToastOptions[] = [];
+  private pendingToasts: Array<{ id: string; options: Required<ToastOptions> }> = [];
+  private currentPosition: Required<ToastOptions>['position'] = 'top-right';
 
   constructor() {
     this.initContainer();
@@ -73,6 +74,7 @@ export class ToastManager {
     }
 
     this.container = container;
+    this.container.classList.add(`toast-container--${this.currentPosition}`);
     this.flushPendingToasts();
   }
 
@@ -80,15 +82,6 @@ export class ToastManager {
    * Show a toast notification
    */
   public show(options: ToastOptions): string {
-    if (!this.container) {
-      this.initContainer();
-    }
-
-    if (!this.container) {
-      this.pendingToasts.push(options);
-      return '';
-    }
-
     const defaults: Required<ToastOptions> = {
       message: '',
       title: '',
@@ -99,24 +92,18 @@ export class ToastManager {
     };
 
     const config = { ...defaults, ...options };
-    const toastId = `toast-${++this.toastCounter}`;
+    const toastId = this.createToastId();
 
-    // Create toast element
-    const toast = this.createToastElement(toastId, config);
-
-    // Add to container
-    if (this.container) {
-      this.container.appendChild(toast);
-      this.toasts.set(toastId, toast);
-
-      // Trigger animation
-      setTimeout(() => toast.classList.add('toast-show'), 10);
-
-      // Auto-dismiss after duration
-      if (config.duration > 0) {
-        setTimeout(() => this.hide(toastId), config.duration);
-      }
+    if (!this.container) {
+      this.initContainer();
     }
+
+    if (!this.container) {
+      this.pendingToasts.push({ id: toastId, options: config });
+      return toastId;
+    }
+
+    this.renderToast(toastId, config);
 
     return toastId;
   }
@@ -131,9 +118,54 @@ export class ToastManager {
 
     const queued = [...this.pendingToasts];
     this.pendingToasts = [];
-    queued.forEach((options) => {
-      this.show(options);
+    queued.forEach(({ id, options }) => {
+      this.renderToast(id, { ...options });
     });
+  }
+
+  /**
+   * Render a toast in the DOM
+   */
+  private renderToast(toastId: string, config: Required<ToastOptions>): void {
+    if (!this.container) {
+      return;
+    }
+
+    this.applyPosition(config.position);
+
+    // Create toast element
+    const toast = this.createToastElement(toastId, config);
+
+    this.container.appendChild(toast);
+    this.toasts.set(toastId, toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('toast-show'), 10);
+
+    // Auto-dismiss after duration
+    if (config.duration > 0) {
+      setTimeout(() => this.hide(toastId), config.duration);
+    }
+  }
+
+  /**
+   * Apply container position classes
+   */
+  private applyPosition(position: Required<ToastOptions>['position']): void {
+    if (!this.container || this.currentPosition === position) {
+      return;
+    }
+
+    this.container.classList.remove(`toast-container--${this.currentPosition}`);
+    this.container.classList.add(`toast-container--${position}`);
+    this.currentPosition = position;
+  }
+
+  /**
+   * Generate a unique toast ID
+   */
+  private createToastId(): string {
+    return `toast-${++this.toastCounter}`;
   }
 
   /**
