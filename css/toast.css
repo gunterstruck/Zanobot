@@ -7,12 +7,42 @@
 /* Toast Container */
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
   z-index: 10000;
   pointer-events: none;
   max-width: 400px;
   width: 100%;
+}
+
+.toast-container--top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.toast-container--top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.toast-container--top-center {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast-container--bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.toast-container--bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.toast-container--bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Toast Base */
@@ -128,10 +158,24 @@
 /* Responsive */
 @media (max-width: 640px) {
   .toast-container {
-    top: 10px;
-    right: 10px;
     left: 10px;
+    right: 10px;
     max-width: none;
+    transform: none;
+  }
+
+  .toast-container--top-right,
+  .toast-container--top-left,
+  .toast-container--top-center {
+    top: 10px;
+    bottom: auto;
+  }
+
+  .toast-container--bottom-right,
+  .toast-container--bottom-left,
+  .toast-container--bottom-center {
+    top: auto;
+    bottom: 10px;
   }
 
   .toast {

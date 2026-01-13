@@ -186,9 +186,7 @@ export class SmartStartManager {
   ) {
     this.config = config;
     this.state = {
-      phase: 'warmup',
-      remainingWarmUp: config.warmUpDuration,
-      signalDetected: false,
+      phase: 'idle',
     };
 
     if (callbacks) {
@@ -222,6 +220,10 @@ export class SmartStartManager {
    */
   public processAudio(samples: Float32Array): boolean {
     const now = Date.now();
+
+    if (this.state.phase === 'idle') {
+      return false;
+    }
 
     // Phase 1: Warm-up period (discard audio)
     if (this.state.phase === 'warmup') {
@@ -289,9 +291,7 @@ export class SmartStartManager {
    */
   public reset(): void {
     this.state = {
-      phase: 'warmup',
-      remainingWarmUp: this.config.warmUpDuration,
-      signalDetected: false,
+      phase: 'idle',
     };
     this.warmUpStartTime = 0;
     this.waitStartTime = 0;
