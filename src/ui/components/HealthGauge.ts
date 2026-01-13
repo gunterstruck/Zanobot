@@ -59,6 +59,9 @@ export class HealthGauge {
   public updateScore(score: number, animate: boolean = true): void {
     const targetScore = Math.max(0, Math.min(100, score));
 
+    // CRITICAL FIX: Reset custom status to allow auto-calculated status
+    this.customStatus = undefined;
+
     if (animate) {
       this.animateToScore(targetScore);
     } else {
@@ -100,7 +103,8 @@ export class HealthGauge {
     const height = this.canvas.height / (window.devicePixelRatio || 1);
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 20;
+    // CRITICAL FIX: Prevent negative radius for small/hidden canvas
+    const radius = Math.max(0, Math.min(width, height) / 2 - 20);
 
     // Clear canvas
     this.ctx.clearRect(0, 0, width, height);

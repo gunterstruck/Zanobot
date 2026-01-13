@@ -61,6 +61,9 @@ export class AudioVisualizer {
    * @param stream - MediaStream from microphone
    */
   public start(audioContext: AudioContext, stream: MediaStream): void {
+    // CRITICAL FIX: Stop previous render loop to prevent parallel loops
+    this.stop();
+
     // CRITICAL FIX: Store actual sample rate from AudioContext for correct frequency labels
     this.sampleRate = audioContext.sampleRate;
 
@@ -406,6 +409,11 @@ export class AudioVisualizer {
     const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--viz-bg').trim();
     this.ctx.fillStyle = bgColor || '#0a0a0a';
     this.ctx.fillRect(0, 0, width, height);
+
+    // CRITICAL FIX: Guard against zero width (would cause step=Infinity and NaN coordinates)
+    if (width <= 0) {
+      return;
+    }
 
     // Get channel data
     const channelData = audioBuffer.getChannelData(0);
