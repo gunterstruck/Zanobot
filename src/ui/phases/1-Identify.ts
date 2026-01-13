@@ -13,7 +13,7 @@ import type { Machine } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { HardwareCheck, type AudioQualityReport, type AudioDeviceInfo } from '@core/audio/HardwareCheck.js';
-import { getRawAudioStream } from '@core/audio/audioHelper.js';
+import { getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 
 export class IdentifyPhase {
   private onMachineSelected: (machine: Machine) => void;
@@ -651,7 +651,10 @@ export class IdentifyPhase {
         }
 
         // Analyze this device
-        const tempReport = HardwareCheck.analyzeCurrentDevice(device.label, 44100);
+        // CRITICAL FIX: Use sample rate from AUDIO_CONSTRAINTS instead of hardcoded value
+        // Note: This is the requested rate - actual rate will be determined when stream is created
+        const estimatedSampleRate = AUDIO_CONSTRAINTS.audio.sampleRate;
+        const tempReport = HardwareCheck.analyzeCurrentDevice(device.label, estimatedSampleRate);
         const statusClass = tempReport.status === 'good' ? 'status-good' : 'status-warning';
 
         // CRITICAL FIX: Use safe DOM manipulation instead of innerHTML to prevent XSS

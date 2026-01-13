@@ -99,13 +99,15 @@ export class ReferencePhase {
       }
 
       // Create audio context
-      this.audioContext = new AudioContext({ sampleRate: 44100 });
+      // CRITICAL FIX: Use 48000 Hz to match AUDIO_CONSTRAINTS.sampleRate
+      // This prevents unnecessary browser resampling (48k hardware → 44.1k context)
+      this.audioContext = new AudioContext({ sampleRate: 48000 });
 
       // CRITICAL FIX: Validate sample rate and adapt DSP config to actual rate
       // This ensures training and diagnosis use consistent feature extraction parameters
       const actualSampleRate = this.audioContext.sampleRate;
-      if (actualSampleRate !== 44100) {
-        logger.warn(`⚠️ AudioContext sample rate is ${actualSampleRate}Hz instead of requested 44100Hz`);
+      if (actualSampleRate !== 48000) {
+        logger.warn(`⚠️ AudioContext sample rate is ${actualSampleRate}Hz instead of requested 48000Hz`);
         logger.info(`✅ Feature extraction will use actual sample rate: ${actualSampleRate}Hz`);
       }
 

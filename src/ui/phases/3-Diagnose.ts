@@ -18,6 +18,7 @@ import { inferGMIA } from '@core/ml/gmia.js';
 import {
   calculateHealthScore,
   ScoreHistory,
+  LabelHistory,
   classifyHealthStatus,
   getClassificationDetails,
   classifyDiagnosticState,
@@ -46,6 +47,7 @@ export class DiagnosePhase {
   // Real-time processing
   private isProcessing: boolean = false;
   private scoreHistory: ScoreHistory;
+  private labelHistory: LabelHistory; // CRITICAL FIX: Label history for majority voting
   private lastProcessedScore: number = 0;
   private lastProcessedStatus: string = 'UNKNOWN';
   private lastDetectedState: string = 'UNKNOWN'; // MULTICLASS: Store detected state
@@ -55,8 +57,10 @@ export class DiagnosePhase {
 
   // Configuration
   private chunkSize: number; // 330ms in samples
-  private requestedSampleRate: number = 44100; // Requested sample rate
-  private actualSampleRate: number = 44100; // Actual sample rate from AudioContext
+  // CRITICAL FIX: Use 48000 Hz to match AUDIO_CONSTRAINTS.sampleRate
+  // This prevents unnecessary browser resampling (48k hardware → 44.1k context)
+  private requestedSampleRate: number = 48000; // Requested sample rate
+  private actualSampleRate: number = 48000; // Actual sample rate from AudioContext
   private dspConfig: typeof DEFAULT_DSP_CONFIG; // DSP config with actual sample rate
 
   constructor(machine: Machine, selectedDeviceId?: string) {
@@ -69,6 +73,8 @@ export class DiagnosePhase {
 
     // Initialize score history for filtering
     this.scoreHistory = new ScoreHistory();
+    // CRITICAL FIX: Initialize label history for majority voting
+    this.labelHistory = new LabelHistory();
   }
 
   /**
@@ -119,6 +125,7 @@ export class DiagnosePhase {
       this.lastProcessedStatus = 'UNKNOWN';
       this.lastDetectedState = 'UNKNOWN'; // MULTICLASS: Reset detected state
       this.scoreHistory.clear();
+      this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
@@ -250,6 +257,8 @@ export class DiagnosePhase {
     this.lastProcessedScore = 0;
     this.lastProcessedStatus = 'UNKNOWN';
     this.lastDetectedState = 'UNKNOWN'; // MULTICLASS: Reset detected state
+    this.scoreHistory.clear();
+    this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
     // Cleanup AudioWorklet
     if (this.audioWorkletManager) {
@@ -339,17 +348,20 @@ export class DiagnosePhase {
       // Step 3: Add score to history for filtering
       this.scoreHistory.addScore(diagnosis.healthScore);
 
+      // CRITICAL FIX: Add label to history for majority voting
+      const detectedState = diagnosis.metadata?.detectedState || 'UNKNOWN';
+      this.labelHistory.addLabel(detectedState);
+
       // Step 4: Get filtered score (trimmed mean of last 10)
       const filteredScore = this.scoreHistory.getFilteredScore();
 
       // Step 5: Update UI in real-time with detected state
-      const detectedState = diagnosis.metadata?.detectedState || 'UNKNOWN';
       this.updateLiveDisplay(filteredScore, diagnosis.status, detectedState);
 
       // Step 6: Store for final save (but use unfiltered diagnosis result)
       this.lastProcessedScore = filteredScore;
       this.lastProcessedStatus = diagnosis.status;
-      this.lastDetectedState = detectedState; // MULTICLASS: Store detected state
+      this.lastDetectedState = detectedState; // MULTICLASS: Store detected state (will be replaced by majority vote on save)
       this.hasValidMeasurement = true; // Mark that we have valid data
 
       // Debug log every 10th update
@@ -451,8 +463,12 @@ export class DiagnosePhase {
     const hadValidMeasurement = this.hasValidMeasurement;
     const finalScore = this.lastProcessedScore;
     const finalStatus = this.lastProcessedStatus;
-    const finalDetectedState = this.lastDetectedState;
     const scoreHistoryCopy = this.scoreHistory.getAllScores().slice(); // Copy array
+    // CRITICAL FIX: Use majority voting for final label instead of last chunk
+    const finalDetectedState = this.labelHistory.getMajorityLabel();
+    const labelHistoryCopy = this.labelHistory.getAllLabels().slice(); // Copy for debugging
+
+    logger.info(`🗳️ Majority voting: ${finalDetectedState} (from ${labelHistoryCopy.length} chunks: ${labelHistoryCopy.slice(-5).join(', ')})`);
 
     // Cleanup resources
     this.cleanup();
@@ -696,5 +712,6 @@ export class DiagnosePhase {
 
     // Clear score history
     this.scoreHistory.clear();
+    this.labelHistory.clear(); // CRITICAL FIX: Clear label history
   }
 }
