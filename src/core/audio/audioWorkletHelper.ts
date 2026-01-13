@@ -50,8 +50,10 @@ export class AudioWorkletManager {
     this.audioContext = audioContext;
 
     try {
-      // Load AudioWorklet processor
-      await audioContext.audioWorklet.addModule('/audio-processor.worklet.js');
+      // Load AudioWorklet processor using base URL for subpath deployments
+      const baseUrl = import.meta.env.BASE_URL ?? '/';
+      const workletUrl = new URL('audio-processor.worklet.js', window.location.origin + baseUrl);
+      await audioContext.audioWorklet.addModule(workletUrl.href);
 
       // Create AudioWorkletNode
       this.workletNode = new AudioWorkletNode(audioContext, 'zanobot-audio-processor');

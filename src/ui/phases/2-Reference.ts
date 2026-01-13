@@ -566,6 +566,11 @@ export class ReferencePhase {
     if (modal) {
       modal.style.display = 'none';
     }
+
+    const statusElement = document.getElementById('recording-status');
+    if (statusElement) {
+      statusElement.remove();
+    }
   }
 
   /**
