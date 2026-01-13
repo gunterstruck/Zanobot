@@ -247,9 +247,20 @@ export class ReferencePhase {
       this.audioWorkletManager.stop();
     }
 
-    // Setup media recorder
+    // Setup media recorder with explicit mimeType
+    // CRITICAL FIX: Detect supported MIME type to ensure Blob matches actual format
+    let mimeType = 'audio/webm';
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      mimeType = 'audio/webm;codecs=opus';
+    } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+      mimeType = 'audio/ogg;codecs=opus';
+    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      mimeType = 'audio/mp4';
+    }
+    logger.info(`🎙️ Using MediaRecorder MIME type: ${mimeType}`);
+
     this.audioChunks = [];
-    this.mediaRecorder = new MediaRecorder(this.mediaStream);
+    this.mediaRecorder = new MediaRecorder(this.mediaStream, { mimeType });
     this.isRecordingActive = true;
     this.isRecordingStarting = false;
 
@@ -315,8 +326,11 @@ export class ReferencePhase {
       }
 
       // Create blob from chunks (FULL 15 seconds for download)
-      const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+      // CRITICAL FIX: Use actual MIME type from MediaRecorder to ensure correct format
+      const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+      const blob = new Blob(this.audioChunks, { type: mimeType });
       this.recordedBlob = blob; // Save for export
+      logger.info(`📦 Created audio blob with MIME type: ${mimeType}`);
 
       // Convert to AudioBuffer
       const arrayBuffer = await blob.arrayBuffer();
@@ -436,7 +450,17 @@ export class ReferencePhase {
    */
   private showSuccessWithExport(): void {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const filename = `${this.machine.id}_REF_${timestamp}.webm`;
+
+    // CRITICAL FIX: Determine file extension based on actual MIME type
+    let extension = 'webm';
+    if (this.recordedBlob) {
+      if (this.recordedBlob.type.includes('ogg')) {
+        extension = 'ogg';
+      } else if (this.recordedBlob.type.includes('mp4')) {
+        extension = 'm4a';
+      }
+    }
+    const filename = `${this.machine.id}_REF_${timestamp}.${extension}`;
 
     const shouldDownload = confirm(
       `✅ Referenzmodell erfolgreich trainiert!\n\n` +
@@ -913,7 +937,8 @@ export class ReferencePhase {
       li.className = 'state-item';
 
       const date = new Date(model.trainingDate);
-      const dateStr = date.toLocaleDateString('de-DE', {
+      // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
+      const dateStr = date.toLocaleString('de-DE', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',

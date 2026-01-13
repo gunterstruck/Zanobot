@@ -129,7 +129,16 @@ export class Router {
       if (description) {
         if (machine.referenceModels && machine.referenceModels.length > 0) {
           const count = machine.referenceModels.length;
-          const latestDate = new Date(machine.referenceModels[machine.referenceModels.length - 1].trainingDate).toLocaleDateString();
+          // CRITICAL FIX: Sort by trainingDate to ensure we get the actual latest recording
+          const sortedModels = [...machine.referenceModels].sort((a, b) => b.trainingDate - a.trainingDate);
+          // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
+          const latestDate = new Date(sortedModels[0].trainingDate).toLocaleString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
           description.textContent = `${count} Zustand${count > 1 ? 'e' : ''} trainiert (zuletzt: ${latestDate}) - Weitere hinzufügen`;
         } else {
           description.textContent = '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)';
