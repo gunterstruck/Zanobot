@@ -238,8 +238,16 @@ export function inferGMIA(
   testFeatures: FeatureVector[],
   testSampleRate: number
 ): number[] {
-  if (typeof testSampleRate !== 'number') {
-    throw new Error('Test sample rate is required for GMIA inference');
+  // CRITICAL FIX: Comprehensive sample rate validation
+  // Check type, finite value, and positive range to prevent mathematical errors
+  if (
+    typeof testSampleRate !== 'number' ||
+    !isFinite(testSampleRate) ||
+    testSampleRate <= 0
+  ) {
+    throw new Error(
+      `Invalid test sample rate: ${testSampleRate}. Must be a positive finite number (e.g., 48000).`
+    );
   }
 
   validateSampleRateIntegrity(model.sampleRate, testSampleRate);

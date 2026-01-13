@@ -144,9 +144,11 @@ export class IdentifyPhase {
       // Clean up scanner instance on error to prevent stale state
       this.html5QrCode = null;
 
-      // Type-safe error handling
-      const errorName = error instanceof Error ? error.name : '';
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      // OPTIMIZATION: Type-safe error handling with single type guard check
+      // Avoid redundant instanceof checks by storing the result
+      const isErrorObject = error instanceof Error;
+      const errorName = isErrorObject ? error.name : '';
+      const errorMessage = isErrorObject ? error.message : String(error);
 
       // Check if it's a permission error
       if (errorName === 'NotAllowedError' || errorMessage.includes('Permission')) {

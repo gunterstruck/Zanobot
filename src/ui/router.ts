@@ -129,8 +129,11 @@ export class Router {
       if (description) {
         if (machine.referenceModels && machine.referenceModels.length > 0) {
           const count = machine.referenceModels.length;
-          // CRITICAL FIX: Sort by trainingDate to ensure we get the actual latest recording
-          const sortedModels = [...machine.referenceModels].sort((a, b) => b.trainingDate - a.trainingDate);
+          // CRITICAL FIX: Sort by trainingDate with defensive fallback for missing dates
+          // This prevents crashes if any model has undefined/null trainingDate
+          const sortedModels = [...machine.referenceModels].sort((a, b) =>
+            (b.trainingDate || 0) - (a.trainingDate || 0)
+          );
           // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
           const latestDate = new Date(sortedModels[0].trainingDate).toLocaleString('de-DE', {
             day: '2-digit',

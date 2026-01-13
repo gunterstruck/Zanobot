@@ -423,13 +423,14 @@ export class LabelHistory {
     // Find label with highest count
     let maxCount = 0;
     let majorityLabel = 'UNKNOWN';
-    // CRITICAL FIX: Use Array.from() to avoid downlevelIteration requirement
-    Array.from(counts.entries()).forEach(([label, count]) => {
+    // OPTIMIZATION: Direct iteration without intermediate array allocation
+    // Using for...of with counts.entries() is more efficient than Array.from().forEach()
+    for (const [label, count] of counts.entries()) {
       if (count > maxCount) {
         maxCount = count;
         majorityLabel = label;
       }
-    });
+    }
 
     return majorityLabel;
   }

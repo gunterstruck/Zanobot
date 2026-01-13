@@ -25,6 +25,7 @@ import {
 import { notify } from '@utils/notifications.js';
 import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { BUTTON_TEXT } from '@ui/constants.js';
 
 export class ReferencePhase {
   private machine: Machine;
@@ -544,9 +545,9 @@ export class ReferencePhase {
     // Setup stop button
     const stopBtn = document.getElementById('stop-recording-btn');
     if (stopBtn) {
-      // CRITICAL FIX: Reset button text to 'Stop' (Diagnose phase sets it to 'Stop & Save')
+      // CRITICAL FIX: Reset button text using constant (Diagnose phase sets it to 'Stop & Save')
       // This prevents UI confusion when switching between phases
-      stopBtn.textContent = 'Stop';
+      stopBtn.textContent = BUTTON_TEXT.STOP_REFERENCE;
       stopBtn.onclick = () => this.stopRecording();
     }
   }
@@ -815,8 +816,12 @@ export class ReferencePhase {
       let label: string;
       let type: 'healthy' | 'faulty';
 
+      // CRITICAL FIX: Store local reference to prevent race conditions
+      // If this.machine.referenceModels changes between checks, we maintain consistency
+      const existingModels = this.machine.referenceModels;
+
       // CRITICAL FIX: Check if referenceModels exists before accessing length
-      if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
+      if (!existingModels || existingModels.length === 0) {
         // First recording: Always "Baseline" (healthy state)
         label = 'Baseline';
         type = 'healthy';
@@ -930,9 +935,13 @@ export class ReferencePhase {
     const stateList = document.createElement('ul');
     stateList.className = 'state-list';
 
+    // CRITICAL FIX: Store local reference to prevent race conditions
+    // This ensures we iterate over the same snapshot even if this.machine.referenceModels changes
+    const models = this.machine.referenceModels;
+
     // CRITICAL FIX: Check if referenceModels exists before iterating
-    if (this.machine.referenceModels) {
-      this.machine.referenceModels.forEach((model, index) => {
+    if (models && models.length > 0) {
+      models.forEach((model, index) => {
       const li = document.createElement('li');
       li.className = 'state-item';
 
