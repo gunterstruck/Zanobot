@@ -25,6 +25,9 @@ export class AudioVisualizer {
   private smoothing: number = 0.75;      // Smooth transitions (0-1)
   private barCount: number = 128;        // Number of frequency bars
 
+  // CRITICAL FIX: Store actual sample rate from AudioContext for correct frequency labels
+  private sampleRate: number = 48000;    // Default to 48 kHz, updated in start()
+
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) {
@@ -58,6 +61,9 @@ export class AudioVisualizer {
    * @param stream - MediaStream from microphone
    */
   public start(audioContext: AudioContext, stream: MediaStream): void {
+    // CRITICAL FIX: Store actual sample rate from AudioContext for correct frequency labels
+    this.sampleRate = audioContext.sampleRate;
+
     // Create analyser node with high resolution
     this.analyser = audioContext.createAnalyser();
     this.analyser.fftSize = this.fftSize;
@@ -73,7 +79,7 @@ export class AudioVisualizer {
     const bufferLength = this.analyser.frequencyBinCount; // fftSize / 2
     this.dataArray = new Uint8Array(bufferLength);
 
-    logger.debug(`📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins`);
+    logger.debug(`📊 FFT Visualizer started: ${this.fftSize} samples, ${bufferLength} bins, sampleRate=${this.sampleRate}Hz`);
 
     // Start rendering at 60 FPS
     this.render();
@@ -339,17 +345,28 @@ export class AudioVisualizer {
 
   /**
    * Draw frequency labels (Hz)
+   *
+   * CRITICAL FIX: Use actual sample rate from AudioContext instead of hardcoded 44.1kHz
+   * This ensures labels are correct for 48kHz (or any other sample rate)
    */
   private drawFrequencyLabels(width: number, height: number): void {
-    const sampleRate = 44100; // Assuming 44.1kHz
-    const maxFreq = sampleRate / 2; // Nyquist frequency (22050 Hz)
+    // CRITICAL FIX: Use actual sample rate from AudioContext (e.g., 48000 Hz)
+    const maxFreq = this.sampleRate / 2; // Nyquist frequency
+
+    // Calculate frequency labels dynamically based on actual sample rate
+    // Format: 0 Hz, 25%, 50%, 75%, 100% of Nyquist frequency
+    const formatFreq = (freq: number): string => {
+      if (freq === 0) return '0';
+      if (freq >= 1000) return `${Math.round(freq / 1000)}k`;
+      return freq.toString();
+    };
 
     const labels = [
-      { pos: 0, text: '0' },
-      { pos: 0.25, text: '5k' },
-      { pos: 0.5, text: '11k' },
-      { pos: 0.75, text: '16k' },
-      { pos: 1, text: '22k' },
+      { pos: 0, freq: 0 },
+      { pos: 0.25, freq: maxFreq * 0.25 },
+      { pos: 0.5, freq: maxFreq * 0.5 },
+      { pos: 0.75, freq: maxFreq * 0.75 },
+      { pos: 1, freq: maxFreq },
     ];
 
     // Use theme-aware text color
@@ -362,7 +379,7 @@ export class AudioVisualizer {
     labels.forEach((label) => {
       const x = width * label.pos;
       const y = height - 5;
-      this.ctx.fillText(label.text + ' Hz', x, y);
+      this.ctx.fillText(formatFreq(label.freq) + ' Hz', x, y);
     });
 
     // Draw amplitude label
