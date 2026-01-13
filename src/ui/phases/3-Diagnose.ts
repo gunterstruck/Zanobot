@@ -22,7 +22,7 @@ import {
   getClassificationDetails,
   classifyDiagnosticState,
 } from '@core/ml/scoring.js';
-import { saveDiagnosis } from '@data/db.js';
+import { saveDiagnosis, getMachine } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
 import { getRawAudioStream, getSmartStartStatusMessage, DEFAULT_SMART_START_CONFIG } from '@core/audio/audioHelper.js';
@@ -102,6 +102,15 @@ export class DiagnosePhase {
     }
 
     try {
+      // Refresh machine data to ensure latest reference models are loaded
+      const latestMachine = await getMachine(this.machine.id);
+      if (latestMachine) {
+        this.machine = latestMachine;
+      } else {
+        notify.error('Maschine nicht gefunden. Bitte neu auswählen.');
+        return;
+      }
+
       // Check if machine has reference models (multiclass)
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         notify.error('Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.');
