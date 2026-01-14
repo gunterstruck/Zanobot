@@ -659,6 +659,34 @@
         </div>
     </div>
 
+    <!-- Manual Machine ID Modal -->
+    <div id="manual-input-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Maschinen-ID eingeben</h3>
+                <button class="close-modal-btn" id="close-manual-input-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="manual-machine-id-input">Maschinen-ID</label>
+                <input
+                    type="text"
+                    id="manual-machine-id-input"
+                    class="machine-input"
+                    placeholder="z.B. 1GB4-636A0-Ba1"
+                />
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="manual-input-cancel">Abbrechen</button>
+                <button class="modal-btn btn-primary" id="manual-input-confirm">Weiter</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for Diagnosis Results -->
     <div id="diagnosis-modal" class="modal" style="display: none;">
         <div class="modal-content">

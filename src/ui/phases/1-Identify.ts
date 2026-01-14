@@ -54,6 +54,10 @@ export class IdentifyPhase {
     this.scannerModal = document.getElementById('scanner-modal');
     const closeScannerBtn = document.getElementById('close-scanner-modal');
     const manualInputBtn = document.getElementById('manual-input-btn');
+    const manualInputConfirmBtn = document.getElementById('manual-input-confirm');
+    const manualInputCancelBtn = document.getElementById('manual-input-cancel');
+    const manualInputCloseBtn = document.getElementById('close-manual-input-modal');
+    const manualInputModal = document.getElementById('manual-input-modal');
 
     if (closeScannerBtn) {
       closeScannerBtn.addEventListener('click', () => this.closeScanner());
@@ -61,6 +65,26 @@ export class IdentifyPhase {
 
     if (manualInputBtn) {
       manualInputBtn.addEventListener('click', () => this.handleManualInput());
+    }
+
+    if (manualInputConfirmBtn) {
+      manualInputConfirmBtn.addEventListener('click', () => this.submitManualInput());
+    }
+
+    if (manualInputCancelBtn) {
+      manualInputCancelBtn.addEventListener('click', () => this.closeManualInputModal());
+    }
+
+    if (manualInputCloseBtn) {
+      manualInputCloseBtn.addEventListener('click', () => this.closeManualInputModal());
+    }
+
+    if (manualInputModal) {
+      manualInputModal.addEventListener('click', (e) => {
+        if (e.target === manualInputModal) {
+          this.closeManualInputModal();
+        }
+      });
     }
 
     // Close modal when clicking outside
@@ -232,25 +256,7 @@ export class IdentifyPhase {
         return;
       }
 
-      // Check if machine exists
-      let machine = await getMachine(trimmedCode);
-
-      if (!machine) {
-        // Create new machine from scanned code
-        machine = {
-          id: trimmedCode,
-          name: `Machine ${trimmedCode}`,
-          createdAt: Date.now(),
-          referenceModels: [], // MULTICLASS: Initialize empty model array
-        };
-
-        await saveMachine(machine);
-        this.showNotification(`Neue Maschine erstellt: ${machine.name}`);
-      } else {
-        this.showNotification(`Maschine geladen: ${machine.name}`);
-      }
-
-      this.onMachineSelected(machine);
+      await this.handleMachineId(trimmedCode);
     } catch (error) {
       logger.error('Error processing scanned code:', error);
       this.showError('Fehler beim Verarbeiten des Codes');
@@ -379,16 +385,23 @@ export class IdentifyPhase {
    */
   private async handleManualInput(): Promise<void> {
     await this.closeScanner();
+    this.openManualInputModal();
+  }
 
-    // Prompt for manual input
-    const scannedCode = prompt('Barcode/QR-Code manuell eingeben:');
+  /**
+   * Handle manual machine ID submission
+   */
+  private async submitManualInput(): Promise<void> {
+    const manualInput = document.getElementById(
+      'manual-machine-id-input'
+    ) as HTMLInputElement | null;
 
-    if (!scannedCode) {
+    if (!manualInput) {
+      this.showError('Manuelle Eingabe konnte nicht geladen werden');
       return;
     }
 
-    // Validate input before processing
-    const trimmedCode = scannedCode.trim();
+    const trimmedCode = manualInput.value.trim();
     const validation = this.validateMachineId(trimmedCode);
 
     if (!validation.valid) {
@@ -396,7 +409,67 @@ export class IdentifyPhase {
       return;
     }
 
-    await this.processScannedCode(trimmedCode);
+    this.closeManualInputModal();
+    await this.handleMachineId(trimmedCode);
+  }
+
+  /**
+   * Open manual input modal
+   */
+  private openManualInputModal(): void {
+    const manualInputModal = document.getElementById('manual-input-modal');
+    const manualInput = document.getElementById(
+      'manual-machine-id-input'
+    ) as HTMLInputElement | null;
+
+    if (manualInputModal) {
+      manualInputModal.style.display = 'flex';
+    }
+
+    if (manualInput) {
+      manualInput.value = '';
+      manualInput.focus();
+    }
+  }
+
+  /**
+   * Close manual input modal
+   */
+  private closeManualInputModal(): void {
+    const manualInputModal = document.getElementById('manual-input-modal');
+    if (manualInputModal) {
+      manualInputModal.style.display = 'none';
+    }
+  }
+
+  /**
+   * Handle machine selection or auto-create if missing
+   */
+  private async handleMachineId(id: string): Promise<void> {
+    try {
+      const machine = await getMachine(id);
+
+      if (machine) {
+        notify.success(`Maschine "${machine.name}" geladen`);
+        this.onMachineSelected(machine);
+        return;
+      }
+
+      const autoName = `Maschine ${id}`;
+      const newMachine: Machine = {
+        id,
+        name: autoName,
+        createdAt: Date.now(),
+        referenceModels: [],
+      };
+
+      await saveMachine(newMachine);
+      notify.success(`Neue Maschine "${autoName}" automatisch angelegt.`);
+      this.onMachineSelected(newMachine);
+    } catch (error) {
+      logger.error('Error handling machine ID:', error);
+      notify.error('Fehler beim Laden der Maschine', error as Error);
+    }
   }
 
   /**
