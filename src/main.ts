@@ -118,7 +118,9 @@ class ZanobotApp {
           content.style.display = 'none';
         } else {
           // CRITICAL FIX: Restore original display mode instead of hardcoding 'block'
-          content.style.display = content.dataset.originalDisplay || 'block';
+          const originalDisplay = content.dataset.originalDisplay;
+          content.style.display =
+            originalDisplay && originalDisplay !== 'none' ? originalDisplay : 'block';
         }
 
         // Rotate icon
