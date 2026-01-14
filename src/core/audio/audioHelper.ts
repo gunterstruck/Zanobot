@@ -142,6 +142,25 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
 }
 
 /**
+ * Get actual hardware sample rate from MediaStream
+ *
+ * @param stream - MediaStream from getUserMedia
+ * @returns Actual sample rate (fallback 48000)
+ */
+export function getRealSampleRate(stream: MediaStream): number {
+  const audioTracks = stream.getAudioTracks();
+  const sampleRate = audioTracks[0]?.getSettings().sampleRate;
+
+  if (sampleRate) {
+    logger.debug(`🎚️ Detected hardware sample rate: ${sampleRate}Hz`);
+    return sampleRate;
+  }
+
+  logger.debug('⚠️ Hardware sample rate unavailable, falling back to 48000Hz');
+  return 48000;
+}
+
+/**
  * Calculate RMS (Root Mean Square) level of audio samples
  *
  * This represents the "loudness" or "power" of the audio signal.

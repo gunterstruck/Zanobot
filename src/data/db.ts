@@ -37,13 +37,14 @@ interface ZanobotDB extends DBSchema {
     indexes: {
       'by-machine': string;
       'by-timestamp': number;
+      'by-machine-timestamp': [string, number];
       'by-status': DiagnosisResult['status'];
     };
   };
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 3; // Incremented for multiclass diagnosis: referenceModel → referenceModels[]
+const DB_VERSION = 4; // Incremented for optimized machine + timestamp index
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -79,6 +80,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
         const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
         diagnosisStore.createIndex('by-machine', 'machineId');
         diagnosisStore.createIndex('by-timestamp', 'timestamp');
+        diagnosisStore.createIndex('by-machine-timestamp', ['machineId', 'timestamp']);
         diagnosisStore.createIndex('by-status', 'status');
       }
 
@@ -100,6 +102,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
           const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
           diagnosisStore.createIndex('by-machine', 'machineId');
           diagnosisStore.createIndex('by-timestamp', 'timestamp');
+          diagnosisStore.createIndex('by-machine-timestamp', ['machineId', 'timestamp']);
           diagnosisStore.createIndex('by-status', 'status');
 
           logger.info('   ✅ Diagnoses store recreated with correct schema');
@@ -110,6 +113,7 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
             const diagnosisStore = db.createObjectStore('diagnoses', { keyPath: 'id' });
             diagnosisStore.createIndex('by-machine', 'machineId');
             diagnosisStore.createIndex('by-timestamp', 'timestamp');
+            diagnosisStore.createIndex('by-machine-timestamp', ['machineId', 'timestamp']);
             diagnosisStore.createIndex('by-status', 'status');
           }
         }
@@ -136,6 +140,15 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
           logger.info('   ✅ Database reset complete - ready for multiclass diagnosis');
         } catch (error) {
           logger.error('   ❌ Migration error:', error);
+        }
+      }
+
+      // Migration from v3 to v4: Add compound index for machine + timestamp
+      if (oldVersion < 4 && db.objectStoreNames.contains('diagnoses')) {
+        const diagnosisStore = transaction.objectStore('diagnoses');
+        if (!diagnosisStore.indexNames.contains('by-machine-timestamp')) {
+          diagnosisStore.createIndex('by-machine-timestamp', ['machineId', 'timestamp']);
+          logger.info('   ✅ Added compound index: by-machine-timestamp');
         }
       }
     },
@@ -354,36 +367,24 @@ export async function getDiagnosesForMachine(
   limit?: number
 ): Promise<DiagnosisResult[]> {
   const db = await initDB();
+  const diagnoses: DiagnosisResult[] = [];
+  const maxResults = limit !== undefined ? limit : Number.POSITIVE_INFINITY;
 
-  // OPTIMIZATION: When limit is specified, use cursor-based pagination
-  if (limit !== undefined && limit > 0) {
-    const diagnoses: DiagnosisResult[] = [];
-
-    // Open cursor on by-timestamp index (automatically sorted)
-    let cursor = await db
-      .transaction('diagnoses')
-      .store.index('by-timestamp')
-      .openCursor(null, 'prev');
-
-    while (cursor && diagnoses.length < limit) {
-      const diagnosis = cursor.value as DiagnosisResult;
-
-      // Filter by machineId (since we're using timestamp index)
-      if (diagnosis.machineId === machineId) {
-        diagnoses.push(diagnosis);
-      }
-
-      cursor = await cursor.continue();
-    }
-
+  if (maxResults <= 0) {
     return diagnoses;
   }
 
-  // Fallback: Load all diagnoses (only when no limit specified)
-  const diagnoses = await db.getAllFromIndex('diagnoses', 'by-machine', machineId);
+  const range = IDBKeyRange.bound([machineId, -Infinity], [machineId, Infinity]);
 
-  // Sort by timestamp descending (newest first)
-  diagnoses.sort((a, b) => b.timestamp - a.timestamp);
+  let cursor = await db
+    .transaction('diagnoses')
+    .store.index('by-machine-timestamp')
+    .openCursor(range, 'prev');
+
+  while (cursor && diagnoses.length < maxResults) {
+    diagnoses.push(cursor.value as DiagnosisResult);
+    cursor = await cursor.continue();
+  }
 
   return diagnoses;
 }
