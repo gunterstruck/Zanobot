@@ -706,8 +706,11 @@ export class DiagnosePhase {
     // Draw final health gauge
     const gaugeCanvas = document.getElementById('health-gauge-canvas');
     if (gaugeCanvas) {
-      const finalGauge = new HealthGauge('health-gauge-canvas');
-      finalGauge.draw(diagnosis.healthScore, diagnosis.status);
+      if (this.healthGauge) {
+        this.healthGauge.destroy();
+      }
+      this.healthGauge = new HealthGauge('health-gauge-canvas');
+      this.healthGauge.draw(diagnosis.healthScore, diagnosis.status);
     }
 
     // Update status
