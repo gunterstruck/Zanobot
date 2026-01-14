@@ -33,7 +33,7 @@ import {
 } from '@core/audio/audioHelper.js';
 import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
-import type { Machine, DiagnosisResult } from '@data/types.js';
+import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
 
@@ -45,6 +45,7 @@ export class DiagnosePhase {
   private audioWorkletManager: AudioWorkletManager | null = null;
   private visualizer: AudioVisualizer | null = null;
   private healthGauge: HealthGauge | null = null;
+  private activeModels: GMIAModel[] = [];
 
   // Real-time processing
   private isProcessing: boolean = false;
@@ -163,22 +164,21 @@ export class DiagnosePhase {
 
       // CRITICAL: Validate sample rate compatibility with trained models BEFORE starting
       // This prevents wasting time on a diagnosis that will fail
-      const modelSampleRates = new Set(
-        this.machine.referenceModels.map((model) => model.sampleRate)
+      this.activeModels = this.machine.referenceModels.filter(
+        (model) => model.sampleRate === this.actualSampleRate
       );
-      const mismatchedRates = [...modelSampleRates].filter(
-        (rate) => rate !== this.actualSampleRate
-      );
-      if (mismatchedRates.length > 0) {
-        const rateList = [...modelSampleRates].sort((a, b) => a - b).join(', ');
+      if (this.activeModels.length === 0) {
+        const rateList = [...new Set(this.machine.referenceModels.map((model) => model.sampleRate))]
+          .sort((a, b) => a - b)
+          .join(', ');
         logger.error(
           `❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, ModelRates=[${rateList}]`
         );
         notify.error(
-          `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber das ` +
-            `trainierte Modell wurde bei ${rateList}Hz erstellt. FFT-Frequenzbänder sind ` +
-            'inkompatibel. Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder ' +
-            'erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
+          `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber kein ` +
+            `Referenzmodell wurde bei dieser Sample Rate trainiert (Modelle: ${rateList}Hz). ` +
+            'Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder erstellen Sie ' +
+            'ein neues Referenzmodell mit der aktuellen Sample Rate.',
           new Error('Sample Rate Mismatch'),
           {
             title: 'Inkompatible Sample Rate',
@@ -188,6 +188,12 @@ export class DiagnosePhase {
         // Clean up and abort
         this.cleanup();
         return;
+      }
+
+      if (this.activeModels.length < this.machine.referenceModels.length) {
+        logger.warn(
+          `⚠️ Sample Rate Filter: ${this.activeModels.length}/${this.machine.referenceModels.length} Modelle kompatibel (${this.actualSampleRate}Hz)`
+        );
       }
 
       logger.info(
@@ -353,7 +359,7 @@ export class DiagnosePhase {
     }
 
     // Validate reference models exist
-    if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
+    if (!this.activeModels || this.activeModels.length === 0) {
       return;
     }
 
@@ -380,7 +386,7 @@ export class DiagnosePhase {
       // Compare against all trained models and find best match
       // CRITICAL: Pass actualSampleRate for validation against model's training sample rate
       const diagnosis = classifyDiagnosticState(
-        this.machine.referenceModels,
+        this.activeModels,
         featureVector,
         this.actualSampleRate
       );
