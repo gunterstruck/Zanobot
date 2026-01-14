@@ -304,6 +304,16 @@ export class ReferencePhase {
     // Stop media recorder if active
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop(); // This triggers onstop -> processRecording()
+      return;
+    }
+
+    // Handle Smart Start / waiting phase where MediaRecorder is inactive
+    if (this.audioWorkletManager || this.isRecordingActive || this.isRecordingStarting) {
+      if (this.audioWorkletManager) {
+        this.audioWorkletManager.cleanup();
+      }
+      this.cleanup();
+      this.hideRecordingModal();
     }
   }
 
