@@ -775,6 +775,12 @@ export class DiagnosePhase {
       this.visualizer = null;
     }
 
+    // Cleanup health gauge instance to prevent leaks
+    if (this.healthGauge) {
+      this.healthGauge.destroy();
+      this.healthGauge = null;
+    }
+
     // Clear score history
     this.scoreHistory.clear();
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
