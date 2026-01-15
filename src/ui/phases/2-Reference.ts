@@ -199,6 +199,8 @@ export class ReferencePhase {
 
     // Stop media recorder if active
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.ondataavailable = null;
+      this.mediaRecorder.onstop = null;
       this.mediaRecorder.stop();
       this.mediaRecorder = null;
     }

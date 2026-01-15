@@ -35,7 +35,8 @@ const HEALTH_THRESHOLDS = {
  */
 export function calculateHealthScore(cosineSimilarity: number, scalingConstant: number): number {
   // Apply tanh transformation
-  const tanhValue = Math.tanh(scalingConstant * cosineSimilarity);
+  const clampedCosine = Math.max(0, cosineSimilarity);
+  const tanhValue = Math.tanh(scalingConstant * clampedCosine);
 
   // Square and convert to percentage
   const score = Math.pow(tanhValue, 2) * 100;
