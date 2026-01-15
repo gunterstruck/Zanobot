@@ -38,6 +38,7 @@ export class ReferencePhase {
   private recordingStartTime: number = 0; // Track when actual recording started
   private timerInterval: ReturnType<typeof setInterval> | null = null; // Track timer interval for cleanup
   private isRecordingStarting: boolean = false;
+  private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Phase 2: Review Modal State
   private currentAudioBuffer: AudioBuffer | null = null;
@@ -191,6 +192,10 @@ export class ReferencePhase {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+    if (this.autoStopTimer !== null) {
+      clearTimeout(this.autoStopTimer);
+      this.autoStopTimer = null;
+    }
 
     // Stop media recorder if active
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
@@ -284,7 +289,7 @@ export class ReferencePhase {
 
       // Auto-stop after full duration (15 seconds)
       // Using setTimeout here ensures timer starts AFTER recording actually started
-      setTimeout(() => {
+      this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
       }, this.recordingDuration * 1000);
     };
