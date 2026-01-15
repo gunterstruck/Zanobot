@@ -120,7 +120,7 @@ class ZanobotApp {
           // CRITICAL FIX: Restore original display mode instead of hardcoding 'block'
           const originalDisplay = content.dataset.originalDisplay;
           content.style.display =
-            originalDisplay && originalDisplay !== 'none' ? originalDisplay : 'block';
+            originalDisplay && originalDisplay !== 'none' ? originalDisplay : '';
         }
 
         // Rotate icon

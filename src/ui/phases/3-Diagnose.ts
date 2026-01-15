@@ -602,7 +602,7 @@ export class DiagnosePhase {
           scoreHistory: scoreHistory.slice(-10), // Use passed scoreHistory (saved before cleanup)
           detectedState, // MULTICLASS: Store detected state
           multiclassMode: true,
-          evaluatedModels: this.machine.referenceModels.length,
+          evaluatedModels: this.activeModels.length,
         },
         analysis: {
           hint,
