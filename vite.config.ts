@@ -3,7 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
-  base: './',
+  base: '/Zanobot/',
   resolve: {
     alias: {
       '@core': path.resolve(__dirname, './src/core'),
@@ -14,6 +14,7 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
+      filename: 'service-worker.js',
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'assets/**/*'],
       manifest: {
