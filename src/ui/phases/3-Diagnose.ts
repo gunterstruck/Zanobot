@@ -479,6 +479,7 @@ export class DiagnosePhase {
    * Update live display (HealthGauge)
    *
    * MULTICLASS: Shows detected state label (e.g., "Baseline", "Unwucht", etc.)
+   * UX FIX: Hide detected state if score < 70% to avoid confusing display
    */
   private updateLiveDisplay(score: number, status: string, detectedState?: string): void {
     if (this.healthGauge) {
@@ -493,8 +494,11 @@ export class DiagnosePhase {
 
     const statusElement = document.getElementById('live-status');
     if (statusElement) {
-      // MULTICLASS: Show detected state in addition to status
-      if (detectedState && detectedState !== 'UNKNOWN') {
+      // UX FIX: Only show detected state if score >= 70% (confident match)
+      // Below 70% the match is uncertain, showing the label would be confusing
+      const shouldShowState = score >= 70 && detectedState && detectedState !== 'UNKNOWN';
+
+      if (shouldShowState) {
         statusElement.textContent = `${status} | ${detectedState}`;
       } else {
         statusElement.textContent = status;
@@ -567,13 +571,16 @@ export class DiagnosePhase {
       // Get classification details
       const classification = getClassificationDetails(finalScore);
 
+      // UX FIX: Hide detected state if score < 70% (uncertain match)
+      const effectiveDetectedState = finalScore >= 70 ? detectedState : 'UNKNOWN';
+
       // MULTICLASS: Generate hint based on detected state
       let hint = classification.recommendation;
-      if (detectedState !== 'UNKNOWN') {
+      if (effectiveDetectedState !== 'UNKNOWN') {
         if (finalStatus === 'healthy') {
-          hint = `Maschine läuft im Normalzustand "${detectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
+          hint = `Maschine läuft im Normalzustand "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
         } else if (finalStatus === 'faulty') {
-          hint = `Fehlerzustand erkannt: "${detectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
+          hint = `Fehlerzustand erkannt: "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
         }
       }
 
@@ -600,7 +607,7 @@ export class DiagnosePhase {
           processingMode: 'real-time',
           totalScores: scoreHistory.length,
           scoreHistory: scoreHistory.slice(-10), // Use passed scoreHistory (saved before cleanup)
-          detectedState, // MULTICLASS: Store detected state
+          detectedState: effectiveDetectedState, // MULTICLASS: Store detected state (UNKNOWN if score < 70%)
           multiclassMode: true,
           evaluatedModels: this.activeModels.length,
         },

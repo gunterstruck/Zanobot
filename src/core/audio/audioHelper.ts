@@ -73,6 +73,10 @@ export interface SmartStartConfig {
   signalThreshold: number;
   /** Maximum wait time for signal in milliseconds */
   maxWaitTime: number;
+  /** Enable adaptive trigger learning (default: true) */
+  adaptiveTrigger?: boolean;
+  /** Learning period for adaptive trigger in milliseconds (default: 2000ms) */
+  adaptiveLearningPeriod?: number;
 }
 
 /**
@@ -83,8 +87,10 @@ export const DEFAULT_SMART_START_CONFIG: SmartStartConfig = {
   // 5 seconds warmup is REQUIRED to discard initial unstable samples.
   // This is not a timing bug - it's a deliberate delay for signal stabilization.
   warmUpDuration: 5000, // 5 seconds (extended settling time for OS audio filters)
-  signalThreshold: 0.02, // RMS threshold
+  signalThreshold: 0.005, // RMS threshold (fallback if adaptive trigger disabled)
   maxWaitTime: 30000, // 30 seconds max wait
+  adaptiveTrigger: true, // Enable adaptive trigger learning
+  adaptiveLearningPeriod: 2000, // Learn from first 2 seconds of warmup
 };
 
 /**
@@ -182,6 +188,12 @@ export function calculateRMS(samples: Float32Array): number {
  *
  * Handles warm-up period and signal trigger logic.
  * Ensures identical recording conditions for Phase 2 and Phase 3.
+ *
+ * ADAPTIVE TRIGGER:
+ * - During first 2s of warmup: Collect RMS samples
+ * - Calculate median RMS (baseline noise level)
+ * - Set adaptive trigger = max(baseline * 3, config.signalThreshold)
+ * - This adapts to environment noise while preventing false triggers
  */
 export class SmartStartManager {
   private config: SmartStartConfig;
@@ -191,6 +203,11 @@ export class SmartStartManager {
   private onStateChange?: (state: SmartStartState) => void;
   private onRecordingStart?: () => void;
   private onTimeout?: () => void;
+
+  // Adaptive trigger learning
+  private rmsHistory: number[] = [];
+  private adaptiveTriggerThreshold: number;
+  private isLearningComplete: boolean = false;
 
   constructor(
     config: SmartStartConfig = DEFAULT_SMART_START_CONFIG,
@@ -204,6 +221,8 @@ export class SmartStartManager {
     this.state = {
       phase: 'idle',
     };
+    this.adaptiveTriggerThreshold = config.signalThreshold;
+    this.isLearningComplete = false;
 
     if (callbacks) {
       this.onStateChange = callbacks.onStateChange;
@@ -246,6 +265,26 @@ export class SmartStartManager {
       const elapsed = now - this.warmUpStartTime;
       this.state.remainingWarmUp = Math.max(0, this.config.warmUpDuration - elapsed);
 
+      // Adaptive trigger learning: Collect RMS samples during learning period
+      if (
+        this.config.adaptiveTrigger &&
+        !this.isLearningComplete &&
+        elapsed <= (this.config.adaptiveLearningPeriod || 2000)
+      ) {
+        const rms = calculateRMS(samples);
+        this.rmsHistory.push(rms);
+      }
+
+      // End of learning period: Calculate adaptive trigger
+      if (
+        this.config.adaptiveTrigger &&
+        !this.isLearningComplete &&
+        elapsed > (this.config.adaptiveLearningPeriod || 2000)
+      ) {
+        this.computeAdaptiveTrigger();
+        this.isLearningComplete = true;
+      }
+
       if (elapsed >= this.config.warmUpDuration) {
         logger.info('✅ Warm-up complete. Waiting for signal...');
         this.state.phase = 'waiting';
@@ -273,12 +312,13 @@ export class SmartStartManager {
         return false;
       }
 
-      // Check signal level
+      // Check signal level (use adaptive threshold if available)
       const rms = calculateRMS(samples);
+      const activeThreshold = this.adaptiveTriggerThreshold;
 
-      if (rms >= this.config.signalThreshold) {
+      if (rms >= activeThreshold) {
         logger.info(
-          `🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${this.config.signalThreshold})`
+          `🎯 Signal detected! RMS: ${rms.toFixed(4)} (threshold: ${activeThreshold.toFixed(4)}${this.config.adaptiveTrigger ? ' adaptive' : ''})`
         );
         this.state.phase = 'recording';
         this.state.signalDetected = true;
@@ -315,6 +355,43 @@ export class SmartStartManager {
     };
     this.warmUpStartTime = 0;
     this.waitStartTime = 0;
+    this.rmsHistory = [];
+    this.adaptiveTriggerThreshold = this.config.signalThreshold;
+    this.isLearningComplete = false;
+  }
+
+  /**
+   * Compute adaptive trigger threshold from collected RMS samples
+   *
+   * Algorithm:
+   * 1. Calculate median RMS (baseline noise level)
+   * 2. Set trigger = max(baseline * 3, config.signalThreshold)
+   * 3. This adapts to environment noise while preventing false triggers
+   */
+  private computeAdaptiveTrigger(): void {
+    if (this.rmsHistory.length === 0) {
+      logger.warn('⚠️ No RMS samples collected - using default threshold');
+      this.adaptiveTriggerThreshold = this.config.signalThreshold;
+      return;
+    }
+
+    // Sort RMS values to find median
+    const sorted = [...this.rmsHistory].sort((a, b) => a - b);
+    const medianIndex = Math.floor(sorted.length / 2);
+    const medianRMS = sorted.length % 2 === 0
+      ? (sorted[medianIndex - 1] + sorted[medianIndex]) / 2
+      : sorted[medianIndex];
+
+    // Set trigger = baseline * 3, but not lower than config threshold
+    // Factor 3 ensures we detect signal above noise while avoiding false triggers
+    const adaptiveThreshold = Math.max(medianRMS * 3, this.config.signalThreshold);
+
+    this.adaptiveTriggerThreshold = adaptiveThreshold;
+
+    logger.info(
+      `📊 Adaptive trigger computed: ${adaptiveThreshold.toFixed(4)} ` +
+      `(baseline: ${medianRMS.toFixed(4)}, samples: ${this.rmsHistory.length})`
+    );
   }
 
   /**

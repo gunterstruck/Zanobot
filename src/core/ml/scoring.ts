@@ -465,6 +465,12 @@ export class LabelHistory {
 const UNCERTAINTY_THRESHOLD = 70;
 
 /**
+ * Minimum reference magnitude threshold.
+ * Models trained with lower magnitude are considered unreliable (e.g., brown noise).
+ */
+const MIN_REFERENCE_MAGNITUDE = 0.3;
+
+/**
  * Multiclass Diagnosis - Classify machine state across multiple trained models
  *
  * Algorithm:
@@ -590,17 +596,26 @@ export function classifyDiagnosticState(
  *
  * Formula: factor = min(1, ||featureVector|| / ||weightVector||)
  *
+ * ADDITIONAL FIX (Brown Noise Protection):
+ * - If reference model has very low magnitude (< 0.3), it was likely trained
+ *   on noise or low-energy signal and is unreliable.
+ * - Return 0 to force health score to 0 and prevent false diagnoses.
+ * - This prevents the case where both test and reference are brown noise,
+ *   resulting in acceptable magnitude ratio but meaningless comparison.
+ *
  * Example:
- *   Reference magnitude: 100
- *   Test magnitude: 10
+ *   Reference magnitude: 100, Test magnitude: 10
  *   → factor = 0.1
  *   → adjustedCosine = cosine * 0.1 (90% penalty)
+ *
+ *   Reference magnitude: 0.12 (brown noise), Test magnitude: 0.08
+ *   → factor = 0 (reference unreliable, reject)
  *
  * See MAGNITUDE_FACTOR_ANALYSIS.md for comprehensive analysis.
  *
  * @param weightVector - Model weight vector (reference)
  * @param featureVector - Test feature vector
- * @returns Magnitude ratio clamped to [0, 1]
+ * @returns Magnitude ratio clamped to [0, 1], or 0 if reference is too weak
  */
 export function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
   const featureMagnitude = vectorMagnitude(featureVector);
@@ -608,6 +623,11 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
 
   if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) || weightMagnitude === 0) {
     return 0;
+  }
+
+  // CRITICAL FIX: Reject models trained on low-energy signals (e.g., brown noise)
+  if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
+    return 0; // Model is unreliable - force score to 0
   }
 
   return Math.min(1, featureMagnitude / weightMagnitude);
