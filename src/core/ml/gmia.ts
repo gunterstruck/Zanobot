@@ -23,6 +23,7 @@ import {
   cosineSimilarity,
   mean,
   featuresToMatrix,
+  vectorMagnitude,
 } from './mathUtils.js';
 
 import type { GMIAModel, FeatureVector, TrainingData } from '@data/types.js';
@@ -116,7 +117,11 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   const cosineSimilarities = features.map((f) => cosineSimilarity(weightVector, f));
   const meanCosine = mean(cosineSimilarities);
 
+  // Step 11: Calculate weight vector magnitude (L2 norm) for quality validation
+  const weightMagnitude = vectorMagnitude(weightVector);
+
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
+  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(4)} (${weightMagnitude >= 0.2 ? 'SUFFICIENT' : 'LOW - possible noise'})`);
   logger.info(`✅ GMIA model trained successfully!`);
 
   // Calculate total training duration based on window size per sample.
@@ -138,6 +143,7 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
     metadata: {
       meanCosineSimilarity: meanCosine,
       targetScore: 0.9, // Target 90% health score for reference data
+      weightMagnitude, // Store magnitude for later validation
     },
   };
 }

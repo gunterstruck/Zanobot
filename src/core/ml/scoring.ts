@@ -466,9 +466,18 @@ const UNCERTAINTY_THRESHOLD = 70;
 
 /**
  * Minimum reference magnitude threshold.
- * Models trained with lower magnitude are considered unreliable (e.g., brown noise).
+ * Models trained with lower magnitude are considered unreliable (e.g., pure brown noise).
+ *
+ * Threshold tuning:
+ * - Pure brown noise: ~0.04-0.15 (REJECT)
+ * - Machine with heavy background noise (SNR 15-20dB): ~0.20-0.30 (ACCEPT)
+ * - Clean machine signal (SNR >25dB): ~0.40-0.60 (ACCEPT)
+ *
+ * Value 0.2 balances:
+ * - Rejecting pure noise recordings
+ * - Accepting real machines in industrial environments with moderate background noise
  */
-const MIN_REFERENCE_MAGNITUDE = 0.3;
+const MIN_REFERENCE_MAGNITUDE = 0.2;
 
 /**
  * Multiclass Diagnosis - Classify machine state across multiple trained models
@@ -597,19 +606,23 @@ export function classifyDiagnosticState(
  * Formula: factor = min(1, ||featureVector|| / ||weightVector||)
  *
  * ADDITIONAL FIX (Brown Noise Protection):
- * - If reference model has very low magnitude (< 0.3), it was likely trained
+ * - If reference model has very low magnitude (< 0.2), it was likely trained
  *   on noise or low-energy signal and is unreliable.
  * - Return 0 to force health score to 0 and prevent false diagnoses.
  * - This prevents the case where both test and reference are brown noise,
  *   resulting in acceptable magnitude ratio but meaningless comparison.
+ * - Threshold 0.2 allows machines in noisy environments while blocking pure noise.
  *
  * Example:
  *   Reference magnitude: 100, Test magnitude: 10
  *   → factor = 0.1
  *   → adjustedCosine = cosine * 0.1 (90% penalty)
  *
- *   Reference magnitude: 0.12 (brown noise), Test magnitude: 0.08
+ *   Reference magnitude: 0.12 (pure brown noise), Test magnitude: 0.08
  *   → factor = 0 (reference unreliable, reject)
+ *
+ *   Reference magnitude: 0.25 (machine + noise, SNR ~20dB), Test magnitude: 0.23
+ *   → factor = 0.92 (acceptable, slight penalty)
  *
  * See MAGNITUDE_FACTOR_ANALYSIS.md for comprehensive analysis.
  *
@@ -625,7 +638,8 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
     return 0;
   }
 
-  // CRITICAL FIX: Reject models trained on low-energy signals (e.g., brown noise)
+  // CRITICAL FIX: Reject models trained on very low-energy/diffuse signals
+  // Threshold 0.2: Rejects pure noise (~0.05-0.15) but accepts machines in noisy environments (~0.2-0.6)
   if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
     return 0; // Model is unreliable - force score to 0
   }

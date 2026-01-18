@@ -74,13 +74,17 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   // 3. Calculate stability metric (inverse of variance, normalized)
   const stability = calculateStability(variance, outlierCount, numFrames);
 
-  // 4. Calculate final quality score (0-100)
+  // 4. Calculate signal magnitude (L2 norm of mean feature vector)
+  const signalMagnitude = calculateSignalMagnitude(featureMatrix);
+
+  // 5. Calculate final quality score (0-100)
   const score = calculateQualityScore(variance, stability, outlierCount, numFrames);
 
-  // 5. Determine rating and issues
-  const { rating, issues } = determineRating(score, variance, outlierCount, numFrames);
+  // 6. Determine rating and issues
+  const { rating, issues } = determineRating(score, variance, outlierCount, numFrames, signalMagnitude);
 
   logger.info(`   Quality Score: ${score.toFixed(1)}% - Rating: ${rating}`);
+  logger.info(`   Signal Magnitude: ${signalMagnitude.toFixed(4)} (${signalMagnitude >= 0.2 ? 'SUFFICIENT' : 'LOW - possible noise/weak signal'})`);
   if (issues.length > 0) {
     logger.warn(`   Issues detected: ${issues.join(', ')}`);
   }
@@ -93,6 +97,7 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
       variance,
       stability,
       outlierCount,
+      signalMagnitude,
     },
   };
 }
@@ -243,19 +248,60 @@ function calculateQualityScore(
 }
 
 /**
+ * Calculate signal magnitude (L2 norm of mean feature vector)
+ *
+ * This measures the "concentration" of spectral energy.
+ * - High magnitude (>0.3): Strong tonal components (machines)
+ * - Medium magnitude (0.2-0.3): Moderate tonal content with noise
+ * - Low magnitude (<0.2): Diffuse/noise-dominated signal (brown noise)
+ *
+ * @param featureMatrix - Matrix of feature vectors [frames x bins]
+ * @returns L2 norm of mean feature vector
+ */
+function calculateSignalMagnitude(featureMatrix: number[][]): number {
+  const numFrames = featureMatrix.length;
+  const numBins = featureMatrix[0].length;
+
+  if (numFrames === 0 || numBins === 0) {
+    return 0;
+  }
+
+  // Calculate mean feature vector (average across time)
+  const meanVector = new Array(numBins).fill(0);
+
+  for (let bin = 0; bin < numBins; bin++) {
+    let sum = 0;
+    for (let frame = 0; frame < numFrames; frame++) {
+      sum += featureMatrix[frame][bin];
+    }
+    meanVector[bin] = sum / numFrames;
+  }
+
+  // Calculate L2 norm (magnitude)
+  let sumSquares = 0;
+  for (let bin = 0; bin < numBins; bin++) {
+    sumSquares += meanVector[bin] * meanVector[bin];
+  }
+
+  return Math.sqrt(sumSquares);
+}
+
+/**
  * Determine quality rating and identify specific issues
  *
  * @param score - Quality score (0-100)
  * @param variance - Spectral variance
  * @param outlierCount - Number of outlier frames
  * @param numFrames - Total number of frames
+ * @param signalMagnitude - L2 norm of mean feature vector
  * @returns Rating and list of issues
  */
 function determineRating(
   score: number,
   variance: number,
   outlierCount: number,
-  numFrames: number
+  numFrames: number,
+  signalMagnitude: number
 ): { rating: 'GOOD' | 'OK' | 'BAD'; issues: string[] } {
   const issues: string[] = [];
 
@@ -276,13 +322,24 @@ function determineRating(
     issues.push('Sehr hohe Varianz - Bitte in ruhigerer Umgebung aufnehmen');
   }
 
+  // CRITICAL: Check signal magnitude (brown noise detection)
+  if (signalMagnitude < 0.15) {
+    issues.push(
+      'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.'
+    );
+  } else if (signalMagnitude < 0.2) {
+    issues.push(
+      'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.'
+    );
+  }
+
   // Determine rating based on score
   let rating: 'GOOD' | 'OK' | 'BAD';
 
   if (score >= 90) {
     rating = 'GOOD';
     // Clear issues array for GOOD rating (only minor issues allowed)
-    if (outlierRatio < 0.02 && variance < 0.00005) {
+    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.3) {
       issues.length = 0; // No issues for excellent quality
     }
   } else if (score >= 75) {
