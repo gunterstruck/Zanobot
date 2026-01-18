@@ -47,7 +47,7 @@ npm run build    # Production build
 
 - TypeScript 5.7
 - Vite Build System
-- Web Audio API (44.1kHz)
+- Web Audio API (48kHz)
 - IndexedDB (idb)
 - PWA (Service Worker)
 

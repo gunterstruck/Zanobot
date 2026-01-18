@@ -506,6 +506,20 @@ export function classifyDiagnosticState(
     const cosine = cosineSimilarities[0];
 
     // Step 2: Adjust similarity using magnitude to avoid low-energy false matches
+    //
+    // CRITICAL ENHANCEMENT (not in original GMIA paper):
+    // Multiply cosine similarity by magnitude ratio to prevent false positives
+    // when test signal is much quieter than training signal (e.g., machine off,
+    // microphone too far away, background noise only).
+    //
+    // Physics: Cosine similarity is normalized (ignores vector magnitude).
+    // A very quiet signal with random noise can have high cosine similarity
+    // by chance, leading to incorrect "healthy" classification.
+    //
+    // Solution: Scale down the similarity if ||test|| << ||reference||
+    // Formula: adjustedCosine = cos(α) · min(1, ||f|| / ||w||)
+    //
+    // See: MAGNITUDE_FACTOR_ANALYSIS.md for detailed explanation
     const magnitudeFactor = calculateMagnitudeFactor(model.weightVector, featureVector.features);
     const adjustedCosine = cosine * magnitudeFactor;
 
@@ -559,9 +573,34 @@ export function classifyDiagnosticState(
 /**
  * Calculate magnitude ratio between test features and model weights.
  *
- * @param weightVector - Model weight vector
+ * IMPORTANT: This is an EXTENSION of the original GMIA algorithm (not in paper).
+ *
+ * Purpose: Prevent false positives when test signal has much lower energy than
+ * the reference model (e.g., machine turned off, microphone too far away).
+ *
+ * Mathematical Background:
+ * - Cosine similarity is normalized: cos(α) = (w·f) / (||w|| · ||f||)
+ * - This makes it magnitude-invariant (same score for loud and quiet signals)
+ * - Problem: Silent noise can randomly match patterns → false positive
+ *
+ * Solution:
+ * - Calculate energy ratio: ||test|| / ||reference||
+ * - If test is quieter: Apply proportional penalty
+ * - If test is louder: No penalty (clamped to 1.0)
+ *
+ * Formula: factor = min(1, ||featureVector|| / ||weightVector||)
+ *
+ * Example:
+ *   Reference magnitude: 100
+ *   Test magnitude: 10
+ *   → factor = 0.1
+ *   → adjustedCosine = cosine * 0.1 (90% penalty)
+ *
+ * See MAGNITUDE_FACTOR_ANALYSIS.md for comprehensive analysis.
+ *
+ * @param weightVector - Model weight vector (reference)
  * @param featureVector - Test feature vector
- * @returns Ratio clamped to [0, 1]
+ * @returns Magnitude ratio clamped to [0, 1]
  */
 function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
   const featureMagnitude = vectorMagnitude(featureVector);
