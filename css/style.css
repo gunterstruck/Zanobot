@@ -710,7 +710,7 @@ body {
     flex-shrink: 0;
 }
 
-.section-header.expanded .collapse-icon {
+.collapse-icon.rotated {
     transform: rotate(180deg);
 }
 
