@@ -91,8 +91,8 @@ class ZanobotApp {
       this.setupCollapsibleSections();
       this.setupThemeSwitcher();
 
-      // Register service worker
-      this.registerServiceWorker();
+      // Note: Service Worker is automatically registered by VitePWA plugin
+      // See vite.config.ts and the auto-generated registerSW.js script
 
       if (dbAvailable) {
         logger.info('✅ Zanobot initialized successfully!');
@@ -193,25 +193,16 @@ class ZanobotApp {
   }
 
   /**
-   * Register PWA service worker
+   * Note: Service Worker registration is handled automatically by VitePWA plugin
    *
-   * CRITICAL FIX: Use relative path instead of absolute path
-   * to support subpath deployments (e.g., /app/)
+   * The VitePWA plugin (vite.config.ts) automatically:
+   * - Generates service-worker.js with Workbox
+   * - Creates registerSW.js registration script
+   * - Injects the script tag into index.html
+   * - Handles correct base path (/Zanobot/) and scope
+   *
+   * No manual registration needed here to avoid conflicts.
    */
-  private registerServiceWorker(): void {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('./service-worker.js')
-          .then((registration) => {
-            logger.info('✅ Service Worker registered:', registration);
-          })
-          .catch((error) => {
-            logger.error('❌ Service Worker registration failed:', error);
-          });
-      });
-    }
-  }
 }
 
 // Start the app
