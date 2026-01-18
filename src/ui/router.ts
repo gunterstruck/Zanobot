@@ -1,8 +1,9 @@
 /**
  * ZANOBOT - ROUTER
  *
- * Simple state manager that controls the 3-phase flow:
+ * Simple state manager that controls the 4-phase flow:
  * Phase 1: Identify → Phase 2: Reference / Phase 3: Diagnose
+ * Phase 4: Settings (always available, independent of machine selection)
  *
  * The user MUST select a machine (Phase 1) before accessing Phase 2 or 3.
  */
@@ -10,6 +11,7 @@
 import { IdentifyPhase } from './phases/1-Identify.js';
 import { ReferencePhase } from './phases/2-Reference.js';
 import { DiagnosePhase } from './phases/3-Diagnose.js';
+import { SettingsPhase } from './phases/4-Settings.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
@@ -18,11 +20,16 @@ export class Router {
   private identifyPhase: IdentifyPhase;
   private referencePhase: ReferencePhase | null = null;
   private diagnosePhase: DiagnosePhase | null = null;
+  private settingsPhase: SettingsPhase;
 
   constructor() {
     // Initialize Phase 1 (always available)
     this.identifyPhase = new IdentifyPhase((machine) => this.onMachineSelected(machine));
     this.identifyPhase.init();
+
+    // Initialize Phase 4 (Settings - always available, independent of machine selection)
+    this.settingsPhase = new SettingsPhase();
+    this.settingsPhase.init();
 
     // Lock Phase 2 and 3 initially
     this.lockPhases();

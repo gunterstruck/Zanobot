@@ -9,9 +9,28 @@
  */
 
 import { initDB, getDBStats } from '@data/db.js';
-import { Router } from './ui/router.js';
+import { Router } from '@ui/router.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+
+/**
+ * Global type declarations for theme-bootstrap.js API
+ */
+declare global {
+  interface Window {
+    ZanobotTheme?: {
+      setTheme: (theme: string) => void;
+      getTheme: () => string;
+      toggleTheme: () => string;
+      getAvailableThemes: () => string[];
+      getThemeDisplayName: (theme: string) => string;
+      getThemeDescription: (theme: string) => string;
+      applyCustomColors: (colors: Record<string, string>) => void;
+      reset: () => void;
+    };
+    ZANOBOT_CONFIG?: any;
+  }
+}
 
 class ZanobotApp {
   private router: Router | null = null;
@@ -90,6 +109,7 @@ class ZanobotApp {
       // Setup UI interactions
       this.setupCollapsibleSections();
       this.setupThemeSwitcher();
+      this.setupQuickThemeToggle();
 
       // Note: Service Worker is automatically registered by VitePWA plugin
       // See vite.config.ts and the auto-generated registerSW.js script
@@ -162,7 +182,7 @@ class ZanobotApp {
    * Setup theme switcher
    */
   private setupThemeSwitcher(): void {
-    const themeBtns = document.querySelectorAll('.theme-btn');
+    const themeBtns = document.querySelectorAll('.theme-card');
 
     themeBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -190,6 +210,22 @@ class ZanobotApp {
         btn.classList.add('active');
       }
     });
+  }
+
+  /**
+   * Setup quick theme toggle button (header)
+   */
+  private setupQuickThemeToggle(): void {
+    const quickToggleBtn = document.getElementById('quick-theme-toggle');
+    if (quickToggleBtn) {
+      quickToggleBtn.addEventListener('click', () => {
+        // Use the global ZanobotTheme API from theme-bootstrap.js
+        if (window.ZanobotTheme?.toggleTheme) {
+          window.ZanobotTheme.toggleTheme();
+          logger.debug('🎨 Theme toggled via quick toggle button');
+        }
+      });
+    }
   }
 
   /**
