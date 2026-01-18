@@ -602,7 +602,7 @@ export function classifyDiagnosticState(
  * @param featureVector - Test feature vector
  * @returns Magnitude ratio clamped to [0, 1]
  */
-function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
+export function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
   const featureMagnitude = vectorMagnitude(featureVector);
   const weightMagnitude = vectorMagnitude(weightVector);
 

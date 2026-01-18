@@ -15,6 +15,7 @@ import {
   calculateScoreStatistics,
   calculateDegradation,
   classifyDiagnosticState,
+  calculateMagnitudeFactor,
 } from './scoring.js';
 import type { GMIAModel, FeatureVector } from '@data/types.js';
 
@@ -56,13 +57,13 @@ describe('Health Scoring', () => {
       expect(score).toBeLessThanOrEqual(100);
     });
 
-    it('should handle negative similarity (squared tanh)', () => {
+    it('should handle negative similarity (clamped to zero)', () => {
       const score = calculateHealthScore(-0.5, 2.5);
 
-      // Note: tanh(-x)^2 = tanh(x)^2, so negative similarity still produces positive score
-      // This is correct behavior for the GMIA algorithm
-      expect(score).toBeGreaterThan(0);
-      expect(score).toBeLessThan(100);
+      // IMPORTANT: Implementation clamps negative cosine to 0 before tanh
+      // This prevents negative similarity from producing false positives
+      // See scoring.ts:38 - clampedCosine = Math.max(0, cosineSimilarity)
+      expect(score).toBe(0);
     });
 
     it('should clamp score to [0, 100]', () => {
@@ -555,6 +556,255 @@ describe('Health Scoring', () => {
 
       // Should work with matching sample rate
       expect(() => classifyDiagnosticState(models, featureVector, 44100)).not.toThrow();
+    });
+  });
+
+  describe('calculateMagnitudeFactor() - MAGNITUDE FACTOR EXTENSION', () => {
+    it('should return 1.0 when magnitudes are equal', () => {
+      const w = new Float64Array([3, 4]); // ||w|| = 5
+      const f = new Float64Array([3, 4]); // ||f|| = 5
+      const factor = calculateMagnitudeFactor(w, f);
+
+      expect(factor).toBeCloseTo(1.0, 2);
+    });
+
+    it('should return < 1.0 when feature magnitude is smaller', () => {
+      const w = new Float64Array([30, 40]); // ||w|| = 50
+      const f = new Float64Array([3, 4]); // ||f|| = 5
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // Expected: 5 / 50 = 0.1
+      expect(factor).toBeCloseTo(0.1, 2);
+    });
+
+    it('should return 1.0 (clamped) when feature magnitude is larger', () => {
+      const w = new Float64Array([3, 4]); // ||w|| = 5
+      const f = new Float64Array([30, 40]); // ||f|| = 50
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // Expected: min(1, 50/5) = min(1, 10) = 1.0
+      expect(factor).toBe(1.0);
+    });
+
+    it('should return 0 for zero feature vector', () => {
+      const w = new Float64Array([3, 4, 5]);
+      const f = new Float64Array([0, 0, 0]);
+      const factor = calculateMagnitudeFactor(w, f);
+
+      expect(factor).toBe(0);
+    });
+
+    it('should return 0 for zero weight vector (edge case)', () => {
+      const w = new Float64Array([0, 0, 0]);
+      const f = new Float64Array([1, 2, 3]);
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // weightMagnitude === 0 triggers safety check
+      expect(factor).toBe(0);
+    });
+
+    it('should handle very small magnitudes without NaN', () => {
+      const w = new Float64Array([1e-10, 1e-10]);
+      const f = new Float64Array([1e-11, 1e-11]);
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // Should return finite number, not NaN
+      expect(Number.isFinite(factor)).toBe(true);
+      expect(factor).toBeCloseTo(0.1, 1);
+    });
+
+    it('should handle very large magnitudes without overflow', () => {
+      const w = new Float64Array([1e100, 1e100]);
+      const f = new Float64Array([1e99, 1e99]);
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // Should still calculate ratio correctly
+      expect(Number.isFinite(factor)).toBe(true);
+      expect(factor).toBeCloseTo(0.1, 1);
+    });
+
+    it('should handle realistic audio feature vectors (512 bins)', () => {
+      // Simulate realistic feature vectors from audio
+      const w = new Float64Array(512).fill(0).map(() => Math.random() * 0.01); // Reference
+      const f = new Float64Array(512).fill(0).map(() => Math.random() * 0.005); // Test (half energy)
+
+      const factor = calculateMagnitudeFactor(w, f);
+
+      // Factor should be around 0.5 (test is half the energy of reference)
+      expect(factor).toBeGreaterThan(0.3);
+      expect(factor).toBeLessThan(0.7);
+    });
+
+    it('should be proportional to energy ratio', () => {
+      const w = new Float64Array([10, 0]); // ||w|| = 10
+
+      // Test different energy levels
+      const f1 = new Float64Array([10, 0]); // ||f|| = 10 → factor = 1.0
+      const f2 = new Float64Array([5, 0]); // ||f|| = 5  → factor = 0.5
+      const f3 = new Float64Array([1, 0]); // ||f|| = 1  → factor = 0.1
+
+      expect(calculateMagnitudeFactor(w, f1)).toBeCloseTo(1.0, 2);
+      expect(calculateMagnitudeFactor(w, f2)).toBeCloseTo(0.5, 2);
+      expect(calculateMagnitudeFactor(w, f3)).toBeCloseTo(0.1, 2);
+    });
+
+    it('should never return values > 1.0 (clamping)', () => {
+      const w = new Float64Array([1, 0]);
+
+      // Test increasingly loud signals
+      for (let scale = 1; scale <= 100; scale *= 10) {
+        const f = new Float64Array([scale, 0]);
+        const factor = calculateMagnitudeFactor(w, f);
+        expect(factor).toBeLessThanOrEqual(1.0);
+      }
+    });
+  });
+
+  describe('INTEGRATION: Magnitude Factor in Multiclass Diagnosis', () => {
+    const baselineModel: GMIAModel = {
+      machineId: 'test-machine',
+      label: 'Baseline',
+      type: 'healthy',
+      weightVector: new Float64Array([1.0, 0.5, 0.3]),
+      regularization: 1e9,
+      scalingConstant: 2.5,
+      featureDimension: 3,
+      trainingDate: Date.now(),
+      trainingDuration: 10,
+      sampleRate: 44100,
+      metadata: {
+        meanCosineSimilarity: 0.95,
+        targetScore: 0.9,
+      },
+    };
+
+    it('should reject silent background noise (low magnitude)', () => {
+      const models = [baselineModel];
+
+      // Simulate background noise: random pattern, very low energy (1% of normal)
+      const noisyFeature: FeatureVector = {
+        features: new Float64Array([0.01, 0.005, 0.003]), // Very quiet
+        absoluteFeatures: new Float64Array([0.01, 0.005, 0.003]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, noisyFeature, 44100);
+
+      // Should have very low score due to low magnitude
+      // Even if pattern matches, magnitude factor will penalize it heavily
+      expect(result.healthScore).toBeLessThan(20);
+    });
+
+    it('should accept loud signal with similar pattern', () => {
+      const models = [baselineModel];
+
+      // Similar pattern to baseline, high energy (150% of normal)
+      const loudFeature: FeatureVector = {
+        features: new Float64Array([1.5, 0.75, 0.45]), // 50% louder
+        absoluteFeatures: new Float64Array([1.5, 0.75, 0.45]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, loudFeature, 44100);
+
+      // Should NOT be penalized (magnitude factor clamped to 1.0)
+      // Only pattern matters, not higher energy
+      expect(result.healthScore).toBeGreaterThan(80);
+    });
+
+    it('should penalize microphone-too-far scenario (50% energy)', () => {
+      const models = [baselineModel];
+
+      // Same pattern as baseline, but only 50% energy (microphone further away)
+      const distantFeature: FeatureVector = {
+        features: new Float64Array([0.5, 0.25, 0.15]),
+        absoluteFeatures: new Float64Array([0.5, 0.25, 0.15]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, distantFeature, 44100);
+
+      // Magnitude factor should be ~0.5, reducing score
+      // Score should be lower than if magnitude was equal
+      expect(result.healthScore).toBeLessThan(80);
+      expect(result.healthScore).toBeGreaterThan(30); // Still some similarity
+    });
+
+    it('should handle machine-off scenario (near-zero energy)', () => {
+      const models = [baselineModel];
+
+      // Machine is OFF: only ambient noise, extremely low energy
+      const machineOffFeature: FeatureVector = {
+        features: new Float64Array([0.001, 0.0005, 0.0003]),
+        absoluteFeatures: new Float64Array([0.001, 0.0005, 0.0003]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, machineOffFeature, 44100);
+
+      // Should be classified as uncertain or very low score
+      expect(result.healthScore).toBeLessThan(10);
+      // Status should be uncertain due to low score
+      expect(result.status).toBe('uncertain');
+      expect(result.metadata?.detectedState).toBe('UNKNOWN');
+    });
+
+    it('should distinguish between pattern mismatch and energy mismatch', () => {
+      const models = [baselineModel];
+      // Baseline model has weightVector: [1.0, 0.5, 0.3]
+
+      // Scenario 1: Wrong pattern, correct energy
+      // Use orthogonal pattern (perpendicular vector in feature space)
+      const wrongPattern: FeatureVector = {
+        features: new Float64Array([0.0, 0.8, 0.0]), // Orthogonal pattern
+        absoluteFeatures: new Float64Array([0.0, 0.8, 0.0]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      // Scenario 2: Correct pattern, wrong energy (too quiet)
+      const wrongEnergy: FeatureVector = {
+        features: new Float64Array([0.1, 0.05, 0.03]), // Same pattern, 10% energy
+        absoluteFeatures: new Float64Array([0.1, 0.05, 0.03]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result1 = classifyDiagnosticState(models, wrongPattern, 44100);
+      const result2 = classifyDiagnosticState(models, wrongEnergy, 44100);
+
+      // Pattern mismatch: Low score due to poor cosine similarity
+      // Energy mismatch: Low score due to magnitude penalty on top of some similarity
+
+      // CRITICAL INSIGHT: Magnitude factor makes energy mismatch worse than pattern mismatch
+      // Because energy mismatch = (lower cosine similarity) * (magnitude penalty)
+      // Pattern mismatch = (lower cosine similarity) * 1.0 (no magnitude penalty)
+      expect(result2.healthScore).toBeLessThan(result1.healthScore);
+
+      // Both should have low scores (either < 70 or at least not "healthy")
+      expect(result1.healthScore < 75 || result2.healthScore < 75).toBe(true);
+    });
+
+    it('should not affect perfect match (same pattern, same energy)', () => {
+      const models = [baselineModel];
+
+      // Perfect match: same pattern, same energy
+      const perfectMatch: FeatureVector = {
+        features: new Float64Array([1.0, 0.5, 0.3]),
+        absoluteFeatures: new Float64Array([1.0, 0.5, 0.3]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, perfectMatch, 44100);
+
+      // Should have very high score (magnitude factor = 1.0, no penalty)
+      expect(result.healthScore).toBeGreaterThan(85);
+      expect(result.status).toBe('healthy');
     });
   });
 });
