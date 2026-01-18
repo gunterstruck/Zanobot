@@ -813,16 +813,19 @@ describe('Health Scoring', () => {
     it('should reject models trained on low-energy signals (brown noise protection)', () => {
       // Create a model trained on brown noise (very low magnitude)
       const brownNoiseModel: GMIAModel = {
-        id: 'brown-noise-model',
         machineId: 'test-machine',
         label: 'Brown Noise Reference',
         type: 'healthy',
         weightVector: new Float64Array([0.08, 0.04, 0.02]), // Magnitude: ~0.09 (< 0.3 threshold)
+        regularization: 1e9,
         scalingConstant: 2.5,
+        featureDimension: 3,
         trainingDate: Date.now(),
+        trainingDuration: 10,
         sampleRate: 44100,
         metadata: {
-          totalSamples: 30,
+          meanCosineSimilarity: 0.95,
+          targetScore: 0.9,
         },
       };
 
@@ -848,16 +851,19 @@ describe('Health Scoring', () => {
     it('should accept models with sufficient energy even if test is quiet', () => {
       // Normal model with good magnitude (> 0.3)
       const normalModel: GMIAModel = {
-        id: 'normal-model',
         machineId: 'test-machine',
         label: 'Healthy Machine',
         type: 'healthy',
         weightVector: new Float64Array([1.0, 0.5, 0.3]), // Magnitude: ~1.2 (> 0.3 threshold)
+        regularization: 1e9,
         scalingConstant: 2.5,
+        featureDimension: 3,
         trainingDate: Date.now(),
+        trainingDuration: 10,
         sampleRate: 44100,
         metadata: {
-          totalSamples: 30,
+          meanCosineSimilarity: 0.95,
+          targetScore: 0.9,
         },
       };
 
