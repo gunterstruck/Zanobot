@@ -847,7 +847,33 @@ export class ReferencePhase {
       return;
     }
 
+    // INTELLIGENT MAGNITUDE + QUALITY CHECK: Brown Noise Protection
+    // Block if BOTH quality AND signal magnitude are insufficient
+    const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 1.0; // Default to OK if not available
+    const isNoiseDetected =
+      (magnitude < 0.15 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
+      (magnitude < 0.2 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
+
+    if (isNoiseDetected) {
+      logger.error('Brown noise or weak signal detected - blocking save');
+      notify.error(
+        'Signal zu schwach oder diffus (möglicherweise nur Rauschen).\n\n' +
+          `Signal-Stärke: ${(magnitude * 100).toFixed(0)}% (Minimum: 20%)\n` +
+          `Qualität: ${this.currentQualityResult.score}%\n\n` +
+          'Bitte sicherstellen:\n' +
+          '• Mikrofon ist nah genug an der Maschine (10-30cm)\n' +
+          '• Maschine läuft mit ausreichend Lautstärke\n' +
+          '• Kein reines Hintergrundrauschen wird aufgenommen\n\n' +
+          'Probleme:\n' +
+          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        new Error('Signal too weak or noisy'),
+        { duration: 0, title: 'Ungeeignetes Signal' }
+      );
+      return;
+    }
+
     // PHASE 2 REQUIREMENT: Show extra confirmation for BAD quality (score >= 30%)
+    // This runs ONLY if not blocked by magnitude check above
     if (this.currentQualityResult.rating === 'BAD') {
       const confirmed = confirm(
         '⚠️ WARNUNG: Schlechte Aufnahmequalität\n\n' +

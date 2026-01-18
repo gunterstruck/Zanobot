@@ -33,6 +33,7 @@ export interface GMIAModel {
   metadata: {
     meanCosineSimilarity: number; // μ for C calculation
     targetScore: number; // Target score (e.g., 0.9)
+    weightMagnitude?: number; // L2 norm of weight vector (for signal quality validation)
   };
 }
 
@@ -71,6 +72,7 @@ export interface QualityResult {
     variance: number; // Spectral variance across time
     stability: number; // Signal stability metric
     outlierCount: number; // Number of outlier frames detected
+    signalMagnitude?: number; // L2 norm of mean feature vector (used for brown noise detection)
   };
 }
 
