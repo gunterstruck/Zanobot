@@ -50,10 +50,15 @@ class ZanobotApp {
 
   /**
    * Setup application after DOM is ready
+   *
+   * CRITICAL FIX: Graceful degradation - UI initializes even if database fails
+   * This ensures buttons and event listeners are set up regardless of DB status
    */
   private async setup(): Promise<void> {
+    let dbAvailable = false;
+
+    // Initialize database (with graceful degradation)
     try {
-      // Initialize database
       logger.info('📦 Initializing database...');
       await initDB();
 
@@ -61,7 +66,23 @@ class ZanobotApp {
       logger.info(`   Machines: ${stats.machines}`);
       logger.info(`   Recordings: ${stats.recordings}`);
       logger.info(`   Diagnoses: ${stats.diagnoses}`);
+      dbAvailable = true;
+    } catch (error) {
+      logger.error('❌ Database initialization failed:', error);
+      logger.warn('⚠️ Continuing without database - functionality will be limited');
+      notify.error(
+        'Datenbank nicht verfügbar. Bitte erlauben Sie IndexedDB in Ihren Browser-Einstellungen oder deaktivieren Sie den strikten Privacy-Modus.',
+        error as Error,
+        {
+          title: 'Datenbank-Fehler',
+          duration: 0,
+        }
+      );
+    }
 
+    // CRITICAL FIX: Always initialize UI components (even without database)
+    // This ensures buttons have event listeners and the app is interactive
+    try {
       // Initialize router (3-phase flow)
       logger.info('🔀 Initializing router...');
       this.router = new Router();
@@ -73,11 +94,16 @@ class ZanobotApp {
       // Register service worker
       this.registerServiceWorker();
 
-      logger.info('✅ Zanobot initialized successfully!');
+      if (dbAvailable) {
+        logger.info('✅ Zanobot initialized successfully!');
+      } else {
+        logger.warn('⚠️ Zanobot initialized with limited functionality (no database)');
+        logger.warn('   Some features may not work correctly without database access');
+      }
     } catch (error) {
-      logger.error('❌ Initialization failed:', error);
-      notify.error('App konnte nicht initialisiert werden', error as Error, {
-        title: 'Initialisierungsfehler',
+      logger.error('❌ UI initialization failed:', error);
+      notify.error('Benutzeroberfläche konnte nicht geladen werden', error as Error, {
+        title: 'Schwerwiegender Fehler',
         duration: 0,
       });
     }
