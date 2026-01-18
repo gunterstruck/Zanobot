@@ -833,7 +833,21 @@ export class ReferencePhase {
       return;
     }
 
-    // PHASE 2 REQUIREMENT: Show extra confirmation for BAD quality
+    // PHASE 2 REQUIREMENT: Block BAD quality recordings with very low scores
+    if (this.currentQualityResult.rating === 'BAD' && this.currentQualityResult.score < 30) {
+      logger.error('Recording quality too low for training - blocking save');
+      notify.error(
+        'Aufnahme zu schlecht für Training. Bitte in ruhiger Umgebung mit ' +
+          'deutlichem Maschinensignal erneut aufnehmen.\n\n' +
+          'Probleme:\n' +
+          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        new Error('Quality too low'),
+        { duration: 0 }
+      );
+      return;
+    }
+
+    // PHASE 2 REQUIREMENT: Show extra confirmation for BAD quality (score >= 30%)
     if (this.currentQualityResult.rating === 'BAD') {
       const confirmed = confirm(
         '⚠️ WARNUNG: Schlechte Aufnahmequalität\n\n' +

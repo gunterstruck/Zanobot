@@ -608,9 +608,10 @@ describe('Health Scoring', () => {
       const f = new Float64Array([1e-11, 1e-11]);
       const factor = calculateMagnitudeFactor(w, f);
 
-      // Should return finite number, not NaN
+      // UPDATED: With MIN_REFERENCE_MAGNITUDE check, very small weight vectors
+      // are rejected (magnitude < 0.3), returning 0 instead of ratio
       expect(Number.isFinite(factor)).toBe(true);
-      expect(factor).toBeCloseTo(0.1, 1);
+      expect(factor).toBe(0); // Rejected due to low reference magnitude
     });
 
     it('should handle very large magnitudes without overflow', () => {
@@ -625,12 +626,14 @@ describe('Health Scoring', () => {
 
     it('should handle realistic audio feature vectors (512 bins)', () => {
       // Simulate realistic feature vectors from audio
-      const w = new Float64Array(512).fill(0).map(() => Math.random() * 0.01); // Reference
-      const f = new Float64Array(512).fill(0).map(() => Math.random() * 0.005); // Test (half energy)
+      // UPDATED: Use larger values to pass MIN_REFERENCE_MAGNITUDE threshold (0.3)
+      const w = new Float64Array(512).fill(0).map(() => Math.random() * 0.05); // Reference (magnitude ~0.6)
+      const f = new Float64Array(512).fill(0).map(() => Math.random() * 0.025); // Test (half energy)
 
       const factor = calculateMagnitudeFactor(w, f);
 
       // Factor should be around 0.5 (test is half the energy of reference)
+      // Reference magnitude > 0.3, so calculation proceeds normally
       expect(factor).toBeGreaterThan(0.3);
       expect(factor).toBeLessThan(0.7);
     });
@@ -805,6 +808,76 @@ describe('Health Scoring', () => {
       // Should have very high score (magnitude factor = 1.0, no penalty)
       expect(result.healthScore).toBeGreaterThan(85);
       expect(result.status).toBe('healthy');
+    });
+
+    it('should reject models trained on low-energy signals (brown noise protection)', () => {
+      // Create a model trained on brown noise (very low magnitude)
+      const brownNoiseModel: GMIAModel = {
+        id: 'brown-noise-model',
+        machineId: 'test-machine',
+        label: 'Brown Noise Reference',
+        type: 'healthy',
+        weightVector: new Float64Array([0.08, 0.04, 0.02]), // Magnitude: ~0.09 (< 0.3 threshold)
+        scalingConstant: 2.5,
+        trainingDate: Date.now(),
+        sampleRate: 44100,
+        metadata: {
+          totalSamples: 30,
+        },
+      };
+
+      const models = [brownNoiseModel];
+
+      // Test with another brown noise signal (similar magnitude)
+      const brownNoiseTest: FeatureVector = {
+        features: new Float64Array([0.06, 0.03, 0.015]), // Magnitude: ~0.07
+        absoluteFeatures: new Float64Array([0.06, 0.03, 0.015]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, brownNoiseTest, 44100);
+
+      // CRITICAL FIX: Magnitude factor should be 0 because reference magnitude < 0.3
+      // This forces health score to 0, preventing false "healthy" diagnosis
+      expect(result.healthScore).toBe(0);
+      expect(result.status).toBe('uncertain');
+      expect(result.metadata?.detectedState).toBe('UNKNOWN');
+    });
+
+    it('should accept models with sufficient energy even if test is quiet', () => {
+      // Normal model with good magnitude (> 0.3)
+      const normalModel: GMIAModel = {
+        id: 'normal-model',
+        machineId: 'test-machine',
+        label: 'Healthy Machine',
+        type: 'healthy',
+        weightVector: new Float64Array([1.0, 0.5, 0.3]), // Magnitude: ~1.2 (> 0.3 threshold)
+        scalingConstant: 2.5,
+        trainingDate: Date.now(),
+        sampleRate: 44100,
+        metadata: {
+          totalSamples: 30,
+        },
+      };
+
+      const models = [normalModel];
+
+      // Test with quiet signal (50% energy)
+      const quietTest: FeatureVector = {
+        features: new Float64Array([0.5, 0.25, 0.15]), // 50% of reference
+        absoluteFeatures: new Float64Array([0.5, 0.25, 0.15]),
+        bins: 3,
+        frequencyRange: [0, 22050],
+      };
+
+      const result = classifyDiagnosticState(models, quietTest, 44100);
+
+      // Model passes MIN_REFERENCE_MAGNITUDE check (1.2 > 0.3)
+      // Magnitude factor = 0.5 (test is 50% of reference)
+      // Score should be reduced but not zero
+      expect(result.healthScore).toBeGreaterThan(0);
+      expect(result.healthScore).toBeLessThan(75); // Penalty applied
     });
   });
 });
