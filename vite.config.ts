@@ -24,8 +24,8 @@ export default defineConfig({
         theme_color: '#0A1929',
         background_color: '#0A1929',
         display: 'standalone',
-        scope: './',
-        start_url: './',
+        scope: '/Zanobot/',
+        start_url: '/Zanobot/',
         icons: [
           {
             src: 'icons/icon-192.png',

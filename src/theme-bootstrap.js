@@ -8,7 +8,11 @@
     'use strict';
 
     // Configuration
-    const CONFIG_PATH = 'config.json';
+    // Construct config path relative to the base URL
+    const baseUrl = window.location.pathname.endsWith('/')
+        ? window.location.pathname
+        : window.location.pathname + '/';
+    const CONFIG_PATH = new URL('config.json', window.location.origin + baseUrl).href;
     const THEME_STORAGE_KEY = 'zanobot-theme';
     const DEFAULT_THEME = 'neon'; // Neon Industrial is the default (as per UX requirements)
     const AVAILABLE_THEMES = ['neon', 'light', 'brand'];
