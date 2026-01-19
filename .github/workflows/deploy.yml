@@ -37,6 +37,17 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          echo "=== Verifying dist directory ==="
+          ls -la dist/
+          echo "=== Checking CSS ==="
+          ls -la dist/css/
+          echo "=== Checking icons ==="
+          ls -la dist/icons/
+          echo "=== Checking .nojekyll ==="
+          cat dist/.nojekyll || echo ".nojekyll not found"
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
