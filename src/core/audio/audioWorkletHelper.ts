@@ -50,11 +50,12 @@ export class AudioWorkletManager {
     this.audioContext = audioContext;
 
     try {
-      // Load AudioWorklet processor using base URL for subpath deployments
-      const baseUrl = import.meta.env.BASE_URL ?? '/';
-      const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-      const workletBase = new URL(normalizedBaseUrl, window.location.origin);
-      const workletUrl = new URL('audio-processor.worklet.js', workletBase);
+      // Load AudioWorklet processor using document location for correct path resolution
+      // CRITICAL FIX: Use window.location.href as base (not origin) to handle subpath deployments correctly
+      // This ensures the worklet is loaded from the same directory as the HTML document
+      const workletUrl = new URL('audio-processor.worklet.js', window.location.href);
+
+      logger.info(`Loading AudioWorklet from: ${workletUrl.href}`);
       await audioContext.audioWorklet.addModule(workletUrl.href);
 
       // Create AudioWorkletNode
