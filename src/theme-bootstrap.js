@@ -8,11 +8,8 @@
     'use strict';
 
     // Configuration
-    // Construct config path relative to the base URL
-    const baseUrl = window.location.pathname.endsWith('/')
-        ? window.location.pathname
-        : window.location.pathname + '/';
-    const CONFIG_PATH = new URL('config.json', window.location.origin + baseUrl).href;
+    // Use relative path that works both locally and on GitHub Pages
+    const CONFIG_PATH = './config.json';
     const THEME_STORAGE_KEY = 'zanobot-theme';
     const DEFAULT_THEME = 'neon'; // Neon Industrial is the default (as per UX requirements)
     const AVAILABLE_THEMES = ['neon', 'light', 'brand'];
