@@ -87,7 +87,7 @@ export const DEFAULT_SMART_START_CONFIG: SmartStartConfig = {
   // 5 seconds warmup is REQUIRED to discard initial unstable samples.
   // This is not a timing bug - it's a deliberate delay for signal stabilization.
   warmUpDuration: 5000, // 5 seconds (extended settling time for OS audio filters)
-  signalThreshold: 0.005, // RMS threshold (fallback if adaptive trigger disabled)
+  signalThreshold: 0.002, // RMS threshold (reduced from 0.005 to catch weaker signals)
   maxWaitTime: 30000, // 30 seconds max wait
   adaptiveTrigger: true, // Enable adaptive trigger learning
   adaptiveLearningPeriod: 2000, // Learn from first 2 seconds of warmup

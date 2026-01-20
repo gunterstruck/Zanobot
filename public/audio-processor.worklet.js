@@ -18,9 +18,11 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.smartStartActive = false;
     this.warmUpStartSample = 0;
     this.warmUpDurationSamples = 0; // Will be set in init based on sample rate
-    // CRITICAL FIX: Reduced threshold from 0.02 to 0.005 to match audioHelper.ts
-    // The previous value (0.02) was 4x too high, causing the system to miss signals
-    this.signalThreshold = 0.005;
+    // CRITICAL FIX: Reduced threshold from 0.02 to 0.002 for very weak signals
+    // Testing showed that even with "loud enough" sound, RMS values can be < 0.005
+    // New threshold 0.002 is ~2.5x more sensitive, catching weak machine signals
+    // while still above typical background noise (~0.0001 - 0.001)
+    this.signalThreshold = 0.002;
     this.maxWaitSamples = 0; // Will be set in init
     this.waitStartSample = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording
@@ -221,6 +223,18 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
         // Check signal level
         const rms = this.calculateRMS(inputChannel);
+
+        // DEBUG: Log RMS values periodically to help diagnose signal issues
+        // Log every ~1 second (approximately sampleRate / 128 blocks per second)
+        const blocksPerSecond = Math.floor(this.sampleRate / 128);
+        const waitElapsedBlocks = Math.floor(waitElapsedSamples / 128);
+        if (waitElapsedBlocks % blocksPerSecond === 0) {
+          this.port.postMessage({
+            type: 'debug-rms',
+            rms: rms,
+            threshold: this.signalThreshold
+          });
+        }
 
         if (rms >= this.signalThreshold) {
           // Signal detected!
