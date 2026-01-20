@@ -16,12 +16,13 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
     // Smart Start state
     this.smartStartActive = false;
-    this.warmUpStartTime = 0;
-    this.warmUpDuration = 5000; // Default 5s, will be overridden via 'init' message
+    this.warmUpStartSample = 0;
+    this.warmUpDurationSamples = 0; // Will be set in init based on sample rate
     this.signalThreshold = 0.02;
-    this.maxWaitTime = 30000;
-    this.waitStartTime = 0;
+    this.maxWaitSamples = 0; // Will be set in init
+    this.waitStartSample = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording
+    this.currentSampleCount = 0; // Track total samples processed
 
     // Dynamic chunk size based on actual sample rate
     // Will be set via 'init' message from manager
@@ -63,11 +64,18 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
           this.readPos = 0;
           this.samplesWritten = 0;
 
-          // CRITICAL FIX: Set warmUpDuration from config (Single Source of Truth)
-          // This prevents hardcoded values and ensures consistency across pipeline
+          // CRITICAL FIX: Convert time-based durations to sample-based
+          // AudioWorklet doesn't have access to performance.now(), use samples instead
           if (message.warmUpDuration) {
-            this.warmUpDuration = message.warmUpDuration;
+            // Convert milliseconds to samples
+            this.warmUpDurationSamples = Math.floor((message.warmUpDuration / 1000) * this.sampleRate);
+          } else {
+            // Default 5 seconds
+            this.warmUpDurationSamples = Math.floor(5 * this.sampleRate);
           }
+
+          // Max wait time: 30 seconds in samples
+          this.maxWaitSamples = Math.floor(30 * this.sampleRate);
 
           // Acknowledge initialization
           this.port.postMessage({
@@ -75,7 +83,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
             sampleRate: this.sampleRate,
             chunkSize: this.chunkSize,
             bufferSize: this.bufferSize,
-            warmUpDuration: this.warmUpDuration
+            warmUpDurationSamples: this.warmUpDurationSamples
           });
         }
         break;
@@ -104,7 +112,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
   startSmartStart() {
     this.smartStartActive = true;
     this.phase = 'warmup';
-    this.warmUpStartTime = performance.now(); // Use performance.now() for timing
+    this.warmUpStartSample = this.currentSampleCount;
     this.writePos = 0;
     this.readPos = 0;
     this.samplesWritten = 0;
@@ -113,7 +121,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.port.postMessage({
       type: 'smart-start-state',
       phase: 'warmup',
-      remainingWarmUp: this.warmUpDuration
+      remainingWarmUp: Math.floor((this.warmUpDurationSamples / this.sampleRate) * 1000)
     });
   }
 
@@ -160,27 +168,31 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     }
 
     const inputChannel = input[0]; // Mono channel
-    const now = performance.now(); // Use performance.now() for timing
+
+    // Increment sample counter
+    this.currentSampleCount += inputChannel.length;
 
     // Smart Start logic
     if (this.smartStartActive) {
       if (this.phase === 'warmup') {
-        const elapsed = now - this.warmUpStartTime;
-        const remaining = Math.max(0, this.warmUpDuration - elapsed);
+        const elapsedSamples = this.currentSampleCount - this.warmUpStartSample;
+        const remainingSamples = Math.max(0, this.warmUpDurationSamples - elapsedSamples);
+        const remainingMs = Math.floor((remainingSamples / this.sampleRate) * 1000);
 
-        // Send status update (throttled - every 100ms)
-        if (Math.floor(elapsed / 100) !== Math.floor((elapsed - 10) / 100)) {
+        // Send status update (throttled - approximately every 100ms worth of samples)
+        const samplesPerUpdate = Math.floor(0.1 * this.sampleRate); // ~100ms in samples
+        if (Math.floor(elapsedSamples / samplesPerUpdate) !== Math.floor((elapsedSamples - inputChannel.length) / samplesPerUpdate)) {
           this.port.postMessage({
             type: 'smart-start-state',
             phase: 'warmup',
-            remainingWarmUp: remaining
+            remainingWarmUp: remainingMs
           });
         }
 
-        if (elapsed >= this.warmUpDuration) {
+        if (elapsedSamples >= this.warmUpDurationSamples) {
           // Warm-up complete, start waiting for signal
           this.phase = 'waiting';
-          this.waitStartTime = now;
+          this.waitStartSample = this.currentSampleCount;
 
           this.port.postMessage({
             type: 'smart-start-state',
@@ -193,10 +205,10 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       }
 
       if (this.phase === 'waiting') {
-        const waitElapsed = now - this.waitStartTime;
+        const waitElapsedSamples = this.currentSampleCount - this.waitStartSample;
 
         // Check for timeout
-        if (waitElapsed >= this.maxWaitTime) {
+        if (waitElapsedSamples >= this.maxWaitSamples) {
           this.port.postMessage({
             type: 'smart-start-timeout'
           });
