@@ -166,6 +166,13 @@ export class AudioWorkletManager {
           this.config.onSmartStartTimeout();
         }
         break;
+
+      case 'debug-rms':
+        // DEBUG: Log RMS values to help diagnose signal issues
+        logger.debug(
+          `🎙️ Signal RMS: ${message.rms.toFixed(4)} (threshold: ${message.threshold.toFixed(4)})`
+        );
+        break;
     }
   }
 
