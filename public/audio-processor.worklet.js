@@ -18,7 +18,9 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.smartStartActive = false;
     this.warmUpStartSample = 0;
     this.warmUpDurationSamples = 0; // Will be set in init based on sample rate
-    this.signalThreshold = 0.02;
+    // CRITICAL FIX: Reduced threshold from 0.02 to 0.005 to match audioHelper.ts
+    // The previous value (0.02) was 4x too high, causing the system to miss signals
+    this.signalThreshold = 0.005;
     this.maxWaitSamples = 0; // Will be set in init
     this.waitStartSample = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording

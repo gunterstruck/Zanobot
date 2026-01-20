@@ -23,6 +23,8 @@ export class AudioVisualizer {
   // CRITICAL FIX: Store audio source reference to properly disconnect in stop()
   // Without this, the audio graph continues running and causes resource leaks
   private source: MediaStreamAudioSourceNode | null = null;
+  // CRITICAL FIX: Add gain node for signal amplification
+  private gainNode: GainNode | null = null;
 
   // Visualization settings
   private fftSize: number = 2048; // High resolution for bass/mid analysis
@@ -79,11 +81,17 @@ export class AudioVisualizer {
     this.analyser.minDecibels = -90;
     this.analyser.maxDecibels = -10;
 
+    // CRITICAL FIX: Add GainNode for signal amplification to improve visualization
+    // Amplify the microphone signal by 3x to make weak signals more visible in the spectrogram
+    this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = 3.0; // 3x amplification (same as AudioWorkletManager)
+
     // CRITICAL FIX: Store source reference for proper cleanup in stop()
     // Without storing the reference, we cannot disconnect it later,
     // causing the audio graph to continue running (resource leak)
     this.source = audioContext.createMediaStreamSource(stream);
-    this.source.connect(this.analyser);
+    this.source.connect(this.gainNode);
+    this.gainNode.connect(this.analyser);
 
     // Create data array for frequency data
     const bufferLength = this.analyser.frequencyBinCount; // fftSize / 2
@@ -115,6 +123,12 @@ export class AudioVisualizer {
     if (this.source) {
       this.source.disconnect();
       this.source = null;
+    }
+
+    // CRITICAL FIX: Disconnect and clean up gain node
+    if (this.gainNode) {
+      this.gainNode.disconnect();
+      this.gainNode = null;
     }
 
     this.analyser = null;
