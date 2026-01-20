@@ -32,7 +32,6 @@ export class AudioWorkletManager {
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
-  private gainNode: GainNode | null = null; // CRITICAL FIX: Add gain node for signal amplification
   private config: AudioWorkletConfig;
 
   // Ring buffer for reading audio data (synced with worklet)
@@ -67,16 +66,17 @@ export class AudioWorkletManager {
         this.handleWorkletMessage(event.data);
       };
 
-      // CRITICAL FIX: Add GainNode for signal amplification
-      // Amplify the microphone signal by 3x to make it more visible in the spectrogram
-      // This helps detect weak signals that would otherwise appear too quiet
-      this.gainNode = audioContext.createGain();
-      this.gainNode.gain.value = 3.0; // 3x amplification (adjust if needed)
+      // CRITICAL: Do NOT use GainNode in AudioWorklet signal chain!
+      // Reason: Training (Phase 2) uses MediaRecorder which captures UNAMPLIFIED signal
+      // If we amplify here, diagnosis features (Phase 3) won't match training features
+      // Result: False positive/negative diagnoses due to incompatible feature magnitudes
+      //
+      // GainNode is ONLY used in AudioVisualizer for better visualization,
+      // NOT in the feature extraction pipeline!
 
-      // Connect audio source with gain amplification
+      // Connect audio source WITHOUT gain amplification
       this.sourceNode = audioContext.createMediaStreamSource(mediaStream);
-      this.sourceNode.connect(this.gainNode);
-      this.gainNode.connect(this.workletNode);
+      this.sourceNode.connect(this.workletNode);
       // NOTE: Do not connect to destination by default to avoid feedback/echo loops.
 
       // CRITICAL FIX: Send actual sample rate and warmup duration to worklet
@@ -266,12 +266,6 @@ export class AudioWorkletManager {
       this.workletNode.port.onmessage = null;
       this.workletNode.disconnect();
       this.workletNode = null;
-    }
-
-    // CRITICAL FIX: Clean up gain node to prevent memory leaks
-    if (this.gainNode) {
-      this.gainNode.disconnect();
-      this.gainNode = null;
     }
 
     if (this.sourceNode) {
