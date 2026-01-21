@@ -119,6 +119,14 @@ export function extractFeaturesFromChunk(
  * @returns Feature vector
  */
 function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVector {
+  // Step 0: CRITICAL - Calculate RMS amplitude BEFORE standardization
+  // This preserves the actual signal strength for quality assessment and magnitude checks
+  let rmsSum = 0;
+  for (let i = 0; i < chunk.samples.length; i++) {
+    rmsSum += chunk.samples[i] * chunk.samples[i];
+  }
+  const rmsAmplitude = Math.sqrt(rmsSum / chunk.samples.length);
+
   // Step 1: Standardize the chunk
   const standardized = standardizeSignal(chunk.samples);
 
@@ -148,6 +156,7 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
     absoluteFeatures: binnedEnergy,
     bins: config.frequencyBins,
     frequencyRange: [0, config.sampleRate / 2],
+    rmsAmplitude: rmsAmplitude, // CRITICAL: Pre-standardization RMS for amplitude checks
   };
 }
 

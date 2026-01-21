@@ -58,6 +58,7 @@ export interface FeatureVector {
   absoluteFeatures: Float64Array; // Absolute energy values
   bins: number; // Number of frequency bins
   frequencyRange: [number, number]; // [min, max] Hz
+  rmsAmplitude?: number; // RMS amplitude BEFORE standardization (preserves signal strength) - OPTIONAL for backward compatibility
 }
 
 /**
