@@ -407,6 +407,9 @@ body {
    MAIN CONTAINERS
    =================================== */
 .main-container {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: var(--spacing-lg);
     background: var(--bg-card);
     backdrop-filter: blur(20px);
