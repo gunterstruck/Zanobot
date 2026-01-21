@@ -974,21 +974,38 @@ export class ReferencePhase {
         logger.error(
           `Model weight magnitude too low: ${weightMagnitude.toFixed(4)} < ${MIN_REFERENCE_MAGNITUDE}`
         );
+
+        // DEBUGGING FEATURE: Calculate what the score would be WITHOUT magnitude rejection
+        // This helps verify that the algorithm itself works, even if the signal is too weak
+        const { calculateHealthScore } = await import('@core/ml/scoring.js');
+        const theoreticalScore = calculateHealthScore(1.0, model.scalingConstant); // Assume perfect match
+        const theoreticalScoreFormatted = theoreticalScore.toFixed(1);
+
+        logger.warn(
+          `⚠️ DEBUG INFO: Without magnitude check, this model would show ~${theoreticalScoreFormatted}% for matching signals (misleading!)`
+        );
+
         notify.error(
-          'Das Referenzsignal ist zu schwach oder diffus.\n\n' +
-            `Signal-Stärke des Modells: ${(weightMagnitude * 100).toFixed(1)}% ` +
-            `(Minimum: ${(MIN_REFERENCE_MAGNITUDE * 100).toFixed(1)}%)\n\n` +
-            'Mögliche Ursachen:\n' +
-            '• Mikrofon zu weit von der Maschine entfernt (Abstand: 10-30cm empfohlen)\n' +
-            '• Maschine läuft zu leise oder ist ausgeschaltet\n' +
-            '• Nur Hintergrundrauschen wurde aufgenommen\n' +
-            '• Audio-Signal zu schwach (Mikrofonverstärkung prüfen)\n\n' +
-            'Bitte Aufnahme wiederholen mit:\n' +
-            '• Näher an die Maschine herangehen\n' +
-            '• Sicherstellen, dass Maschine läuft und hörbar ist\n' +
-            '• Ruhigere Umgebung wählen (weniger Hintergrundrauschen)',
+          '⛔ REFERENZMODELL ABGELEHNT\n\n' +
+            '❌ Dieses Modell würde bei der Live-Diagnose IMMER 0% anzeigen!\n' +
+            '   (Grund: Magnitude-Filter verwirft zu schwache Referenzsignale)\n\n' +
+            `📊 Signal-Stärke des Modells: ${(weightMagnitude * 100).toFixed(1)}%\n` +
+            `   Minimum erforderlich: ${(MIN_REFERENCE_MAGNITUDE * 100).toFixed(1)}%\n\n` +
+            `🔬 DEBUG-INFO (nur zur Verifikation):\n` +
+            `   Ohne Magnitude-Filter würde das Modell ~${theoreticalScoreFormatted}% zeigen\n` +
+            `   (irreführend, da Signal zu schwach!)\n\n` +
+            '📋 Mögliche Ursachen:\n' +
+            '   • Mikrofon zu weit von der Maschine entfernt (10-30cm empfohlen)\n' +
+            '   • Maschine läuft zu leise oder ist ausgeschaltet\n' +
+            '   • Nur Hintergrundrauschen wurde aufgenommen\n' +
+            '   • Audio-Signal zu schwach (Mikrofonverstärkung prüfen)\n\n' +
+            '✅ Lösung - Aufnahme wiederholen mit:\n' +
+            '   • Näher an die Maschine herangehen\n' +
+            '   • Sicherstellen, dass Maschine läuft und hörbar ist\n' +
+            '   • Ruhigere Umgebung wählen (weniger Hintergrundrauschen)\n' +
+            '   • Eventuell Mikrofonverstärkung erhöhen',
           new Error('Model weight magnitude too low'),
-          { duration: 0, title: 'Referenzmodell ungeeignet' }
+          { duration: 0, title: '⛔ Referenzmodell ungeeignet' }
         );
         return;
       }
