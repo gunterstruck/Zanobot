@@ -2138,6 +2138,115 @@ select:focus-visible {
     line-height: 1.5;
 }
 
+/* Legal Modals (Impressum, Datenschutz, Über Zanobot) */
+.legal-modal-content {
+    max-width: 700px;
+    max-height: 85vh;
+    width: 100%;
+}
+
+.legal-modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.legal-modal-body h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.legal-modal-body h4:first-child {
+    margin-top: 0;
+}
+
+.legal-modal-body h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.legal-modal-body p {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.legal-modal-body ul,
+.legal-modal-body ol {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    padding-left: var(--spacing-lg);
+}
+
+.legal-modal-body li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.legal-modal-body strong {
+    color: var(--text-primary);
+}
+
+.legal-footer {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--divider-color);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.about-hero {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.about-hero svg {
+    margin-bottom: var(--spacing-md);
+}
+
+.about-hero h4 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+    margin-top: 0;
+}
+
+.about-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0;
+}
+
+.about-version {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--divider-color);
+    background: var(--bg-tertiary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.about-version p {
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.about-version p:last-child {
+    margin-bottom: 0;
+}
+
 .microphone-device-list {
     display: flex;
     flex-direction: column;
