@@ -110,6 +110,7 @@ class ZanobotApp {
       this.setupCollapsibleSections();
       this.setupThemeSwitcher();
       this.setupQuickThemeToggle();
+      this.setupFooterLinks();
 
       // Note: Service Worker is automatically registered by VitePWA plugin
       // See vite.config.ts and the auto-generated registerSW.js script
@@ -226,6 +227,94 @@ class ZanobotApp {
         }
       });
     }
+  }
+
+  /**
+   * Setup footer links (Impressum, Datenschutz, Über Zanobot)
+   */
+  private setupFooterLinks(): void {
+    // Impressum modal
+    const impressumBtn = document.getElementById('impressum-btn');
+    const impressumModal = document.getElementById('impressum-modal');
+    const closeImpressumModal = document.getElementById('close-impressum-modal');
+    const closeImpressumBtn = document.getElementById('close-impressum-btn');
+
+    if (impressumBtn && impressumModal) {
+      impressumBtn.addEventListener('click', () => {
+        impressumModal.style.display = 'flex';
+      });
+    }
+
+    if (closeImpressumModal && impressumModal) {
+      closeImpressumModal.addEventListener('click', () => {
+        impressumModal.style.display = 'none';
+      });
+    }
+
+    if (closeImpressumBtn && impressumModal) {
+      closeImpressumBtn.addEventListener('click', () => {
+        impressumModal.style.display = 'none';
+      });
+    }
+
+    // Datenschutz modal
+    const datenschutzBtn = document.getElementById('datenschutz-btn');
+    const datenschutzModal = document.getElementById('datenschutz-modal');
+    const closeDatenschutzModal = document.getElementById('close-datenschutz-modal');
+    const closeDatenschutzBtn = document.getElementById('close-datenschutz-btn');
+
+    if (datenschutzBtn && datenschutzModal) {
+      datenschutzBtn.addEventListener('click', () => {
+        datenschutzModal.style.display = 'flex';
+      });
+    }
+
+    if (closeDatenschutzModal && datenschutzModal) {
+      closeDatenschutzModal.addEventListener('click', () => {
+        datenschutzModal.style.display = 'none';
+      });
+    }
+
+    if (closeDatenschutzBtn && datenschutzModal) {
+      closeDatenschutzBtn.addEventListener('click', () => {
+        datenschutzModal.style.display = 'none';
+      });
+    }
+
+    // Über Zanobot modal
+    const aboutBtn = document.getElementById('about-btn');
+    const aboutModal = document.getElementById('about-modal');
+    const closeAboutModal = document.getElementById('close-about-modal');
+    const closeAboutBtn = document.getElementById('close-about-btn');
+
+    if (aboutBtn && aboutModal) {
+      aboutBtn.addEventListener('click', () => {
+        aboutModal.style.display = 'flex';
+      });
+    }
+
+    if (closeAboutModal && aboutModal) {
+      closeAboutModal.addEventListener('click', () => {
+        aboutModal.style.display = 'none';
+      });
+    }
+
+    if (closeAboutBtn && aboutModal) {
+      closeAboutBtn.addEventListener('click', () => {
+        aboutModal.style.display = 'none';
+      });
+    }
+
+    // Close modals on background click
+    [impressumModal, datenschutzModal, aboutModal].forEach((modal) => {
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+      }
+    });
   }
 
   /**
