@@ -233,6 +233,16 @@ class ZanobotApp {
    * Setup footer links (Impressum, Datenschutz, Über Zanobot)
    */
   private setupFooterLinks(): void {
+    // Helper function to close a modal
+    const closeModal = (modal: HTMLElement) => {
+      modal.style.display = 'none';
+    };
+
+    // Helper function to open a modal
+    const openModal = (modal: HTMLElement) => {
+      modal.style.display = 'flex';
+    };
+
     // Impressum modal
     const impressumBtn = document.getElementById('impressum-btn');
     const impressumModal = document.getElementById('impressum-modal');
@@ -240,21 +250,15 @@ class ZanobotApp {
     const closeImpressumBtn = document.getElementById('close-impressum-btn');
 
     if (impressumBtn && impressumModal) {
-      impressumBtn.addEventListener('click', () => {
-        impressumModal.style.display = 'flex';
-      });
+      impressumBtn.addEventListener('click', () => openModal(impressumModal));
     }
 
     if (closeImpressumModal && impressumModal) {
-      closeImpressumModal.addEventListener('click', () => {
-        impressumModal.style.display = 'none';
-      });
+      closeImpressumModal.addEventListener('click', () => closeModal(impressumModal));
     }
 
     if (closeImpressumBtn && impressumModal) {
-      closeImpressumBtn.addEventListener('click', () => {
-        impressumModal.style.display = 'none';
-      });
+      closeImpressumBtn.addEventListener('click', () => closeModal(impressumModal));
     }
 
     // Datenschutz modal
@@ -264,21 +268,15 @@ class ZanobotApp {
     const closeDatenschutzBtn = document.getElementById('close-datenschutz-btn');
 
     if (datenschutzBtn && datenschutzModal) {
-      datenschutzBtn.addEventListener('click', () => {
-        datenschutzModal.style.display = 'flex';
-      });
+      datenschutzBtn.addEventListener('click', () => openModal(datenschutzModal));
     }
 
     if (closeDatenschutzModal && datenschutzModal) {
-      closeDatenschutzModal.addEventListener('click', () => {
-        datenschutzModal.style.display = 'none';
-      });
+      closeDatenschutzModal.addEventListener('click', () => closeModal(datenschutzModal));
     }
 
     if (closeDatenschutzBtn && datenschutzModal) {
-      closeDatenschutzBtn.addEventListener('click', () => {
-        datenschutzModal.style.display = 'none';
-      });
+      closeDatenschutzBtn.addEventListener('click', () => closeModal(datenschutzModal));
     }
 
     // Über Zanobot modal
@@ -288,21 +286,15 @@ class ZanobotApp {
     const closeAboutBtn = document.getElementById('close-about-btn');
 
     if (aboutBtn && aboutModal) {
-      aboutBtn.addEventListener('click', () => {
-        aboutModal.style.display = 'flex';
-      });
+      aboutBtn.addEventListener('click', () => openModal(aboutModal));
     }
 
     if (closeAboutModal && aboutModal) {
-      closeAboutModal.addEventListener('click', () => {
-        aboutModal.style.display = 'none';
-      });
+      closeAboutModal.addEventListener('click', () => closeModal(aboutModal));
     }
 
     if (closeAboutBtn && aboutModal) {
-      closeAboutBtn.addEventListener('click', () => {
-        aboutModal.style.display = 'none';
-      });
+      closeAboutBtn.addEventListener('click', () => closeModal(aboutModal));
     }
 
     // Close modals on background click
@@ -310,7 +302,18 @@ class ZanobotApp {
       if (modal) {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
-            modal.style.display = 'none';
+            closeModal(modal);
+          }
+        });
+      }
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        [impressumModal, datenschutzModal, aboutModal].forEach((modal) => {
+          if (modal && window.getComputedStyle(modal).display !== 'none') {
+            closeModal(modal);
           }
         });
       }
