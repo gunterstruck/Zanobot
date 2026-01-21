@@ -812,11 +812,13 @@ describe('Health Scoring', () => {
 
     it('should reject models trained on low-energy signals (brown noise protection)', () => {
       // Create a model trained on brown noise (very low magnitude)
+      // CRITICAL: Weight vector magnitude must be < MIN_REFERENCE_MAGNITUDE (0.038)
+      // Using [0.02, 0.01, 0.005] → magnitude = sqrt(0.0004 + 0.0001 + 0.000025) = ~0.0213 < 0.038
       const brownNoiseModel: GMIAModel = {
         machineId: 'test-machine',
         label: 'Brown Noise Reference',
         type: 'healthy',
-        weightVector: new Float64Array([0.08, 0.04, 0.02]), // Magnitude: ~0.09 (< 0.3 threshold)
+        weightVector: new Float64Array([0.02, 0.01, 0.005]), // Magnitude: ~0.021 (< 0.038 threshold)
         regularization: 1e9,
         scalingConstant: 2.5,
         featureDimension: 3,
@@ -833,15 +835,15 @@ describe('Health Scoring', () => {
 
       // Test with another brown noise signal (similar magnitude)
       const brownNoiseTest: FeatureVector = {
-        features: new Float64Array([0.06, 0.03, 0.015]), // Magnitude: ~0.07
-        absoluteFeatures: new Float64Array([0.06, 0.03, 0.015]),
+        features: new Float64Array([0.015, 0.008, 0.004]), // Magnitude: ~0.017
+        absoluteFeatures: new Float64Array([0.015, 0.008, 0.004]),
         bins: 3,
         frequencyRange: [0, 22050],
       };
 
       const result = classifyDiagnosticState(models, brownNoiseTest, 44100);
 
-      // CRITICAL FIX: Magnitude factor should be 0 because reference magnitude < 0.3
+      // CRITICAL FIX: Magnitude factor should be 0 because reference magnitude < 0.038
       // This forces health score to 0, preventing false "healthy" diagnosis
       expect(result.healthScore).toBe(0);
       expect(result.status).toBe('uncertain');
@@ -849,7 +851,7 @@ describe('Health Scoring', () => {
     });
 
     it('should accept models with sufficient energy even if test is quiet', () => {
-      // Normal model with good magnitude (> 0.3)
+      // Normal model with good magnitude (> 0.038 threshold)
       const normalModel: GMIAModel = {
         machineId: 'test-machine',
         label: 'Healthy Machine',

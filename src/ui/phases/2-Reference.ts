@@ -39,6 +39,7 @@ export class ReferencePhase {
   private timerInterval: ReturnType<typeof setInterval> | null = null; // Track timer interval for cleanup
   private isRecordingStarting: boolean = false;
   private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
+  private smartStartWasUsed: boolean = false; // Track if Smart Start completed successfully
 
   // Phase 2: Review Modal State
   private currentAudioBuffer: AudioBuffer | null = null;
@@ -140,11 +141,13 @@ export class ReferencePhase {
           },
           onSmartStartComplete: (rms) => {
             logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+            this.smartStartWasUsed = true; // Mark that Smart Start completed successfully
             this.updateStatusMessage('Aufnahme läuft');
             this.actuallyStartRecording();
           },
           onSmartStartTimeout: () => {
             logger.warn('⏱️ Smart Start timeout - cleaning up resources');
+            this.smartStartWasUsed = false; // Ensure flag is false since Smart Start failed
             notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', {
               title: 'Kein Signal erkannt',
             });
@@ -186,6 +189,7 @@ export class ReferencePhase {
     // Reset state flags to prevent memory leaks
     this.isRecordingActive = false;
     this.isRecordingStarting = false;
+    this.smartStartWasUsed = false; // Reset Smart Start flag for next recording
 
     // Clear timer interval to prevent memory leaks
     if (this.timerInterval !== null) {
@@ -289,11 +293,13 @@ export class ReferencePhase {
       // Update timer (shows dual-phase UI)
       this.startTimer();
 
-      // Auto-stop after full duration (15 seconds)
-      // Using setTimeout here ensures timer starts AFTER recording actually started
+      // Auto-stop after full duration
+      // CRITICAL FIX: If Smart Start was used, we only need 10s of recording (no warmup needed)
+      // If Smart Start was NOT used, record 15s (first 5s = warmup, last 10s = training)
+      const recordingDuration = this.smartStartWasUsed ? 10 : this.recordingDuration;
       this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
-      }, this.recordingDuration * 1000);
+      }, recordingDuration * 1000);
     };
 
     // Start recording (will trigger onstart event)
@@ -360,21 +366,26 @@ export class ReferencePhase {
 
       logger.info(`🎙️ Recording complete: ${audioBuffer.duration.toFixed(2)}s`);
 
-      // IMPORTANT: Slice audio buffer to remove warmup period
-      // We only want to train on the stable signal (after 5 seconds)
+      // CRITICAL FIX: Only slice audio buffer if Smart Start was NOT used
+      // Smart Start already handled the 5-second warmup period, so we don't need to slice again
       const sampleRate = audioBuffer.sampleRate;
-      const warmupSamples = Math.floor(this.warmUpDuration * sampleRate);
+      const warmupSamples = this.smartStartWasUsed ? 0 : Math.floor(this.warmUpDuration * sampleRate);
       const totalSamples = audioBuffer.length;
       const trainingSamples = totalSamples - warmupSamples;
 
-      logger.info(`📊 Slicing audio buffer:`);
-      logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s`);
-      logger.info(
-        `   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`
-      );
-      logger.info(
-        `   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`
-      );
+      if (this.smartStartWasUsed) {
+        logger.info(`📊 Using full recording (Smart Start handled warmup):`);
+        logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s - ALL USED FOR TRAINING`);
+      } else {
+        logger.info(`📊 Slicing audio buffer (fallback mode without Smart Start):`);
+        logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s`);
+        logger.info(
+          `   Warmup period: ${this.warmUpDuration}s (${warmupSamples} samples) - DISCARDED`
+        );
+        logger.info(
+          `   Training period: ${(trainingSamples / sampleRate).toFixed(2)}s (${trainingSamples} samples) - USED`
+        );
+      }
 
       // CRITICAL FIX: Validate that we have enough samples for training
       const MIN_TRAINING_DURATION = 2.0; // Minimum 2 seconds of training data
@@ -599,32 +610,40 @@ export class ReferencePhase {
   /**
    * Start recording timer with dual-phase UI
    *
-   * Phase 1 (0-5s): "Stabilisierung..." (warmup, audio saved but not used for training)
-   * Phase 2 (5-15s): "Aufnahme..." (actual recording used for training)
+   * CRITICAL FIX: Timer behavior depends on whether Smart Start was used:
+   * - Smart Start used: Show only recording phase (10s total)
+   * - Smart Start NOT used: Show warmup + recording phases (5s + 10s = 15s total)
+   *
+   * Phase 1 (0-5s): "Stabilisierung..." (only if Smart Start NOT used)
+   * Phase 2 (0-10s or 5-15s): "Aufnahme..." (actual recording used for training)
    */
   private startTimer(): void {
     let elapsed = 0;
     const timerElement = document.getElementById('recording-timer');
     const statusElement = document.getElementById('recording-status');
 
+    // CRITICAL FIX: Determine total duration and warmup phase based on Smart Start usage
+    const totalDuration = this.smartStartWasUsed ? 10 : this.recordingDuration;
+    const warmupPhase = this.smartStartWasUsed ? 0 : this.warmUpDuration;
+
     // Store interval reference for cleanup
     this.timerInterval = setInterval(() => {
       elapsed++;
 
       // Update phase-specific UI
-      if (elapsed <= this.warmUpDuration) {
-        // Phase 1: Stabilisierung (0-5s)
+      if (!this.smartStartWasUsed && elapsed <= warmupPhase) {
+        // Phase 1: Stabilisierung (0-5s) - only shown when Smart Start was NOT used
         if (statusElement) {
-          const remaining = this.warmUpDuration - elapsed + 1;
+          const remaining = warmupPhase - elapsed + 1;
           statusElement.textContent = `Stabilisierung... ${remaining}s`;
         }
         if (timerElement) {
           timerElement.textContent = '--:--';
         }
       } else {
-        // Phase 2: Aufnahme (5-15s)
-        const recordingElapsed = elapsed - this.warmUpDuration;
-        const recordingTotal = this.recordingDuration - this.warmUpDuration;
+        // Phase 2: Aufnahme (0-10s if Smart Start, 5-15s if not)
+        const recordingElapsed = this.smartStartWasUsed ? elapsed : elapsed - warmupPhase;
+        const recordingTotal = this.smartStartWasUsed ? 10 : this.recordingDuration - warmupPhase;
 
         if (statusElement) {
           statusElement.textContent = `Aufnahme läuft...`;
@@ -640,7 +659,7 @@ export class ReferencePhase {
         }
       }
 
-      if (elapsed >= this.recordingDuration) {
+      if (elapsed >= totalDuration) {
         if (this.timerInterval !== null) {
           clearInterval(this.timerInterval);
           this.timerInterval = null;
@@ -940,6 +959,43 @@ export class ReferencePhase {
 
       // Train GMIA model
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
+
+      // CRITICAL FIX: Validate model weight magnitude
+      // If the weight vector magnitude is too low (< 0.038), the model is unreliable
+      // and will cause all diagnosis attempts to return 0% health score
+      const MIN_REFERENCE_MAGNITUDE = 0.038;
+      let weightMagnitude = 0;
+      for (const value of model.weightVector) {
+        weightMagnitude += value * value;
+      }
+      weightMagnitude = Math.sqrt(weightMagnitude);
+
+      if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
+        logger.error(
+          `Model weight magnitude too low: ${weightMagnitude.toFixed(4)} < ${MIN_REFERENCE_MAGNITUDE}`
+        );
+        notify.error(
+          'Das Referenzsignal ist zu schwach oder diffus.\n\n' +
+            `Signal-Stärke des Modells: ${(weightMagnitude * 100).toFixed(1)}% ` +
+            `(Minimum: ${(MIN_REFERENCE_MAGNITUDE * 100).toFixed(1)}%)\n\n` +
+            'Mögliche Ursachen:\n' +
+            '• Mikrofon zu weit von der Maschine entfernt (Abstand: 10-30cm empfohlen)\n' +
+            '• Maschine läuft zu leise oder ist ausgeschaltet\n' +
+            '• Nur Hintergrundrauschen wurde aufgenommen\n' +
+            '• Audio-Signal zu schwach (Mikrofonverstärkung prüfen)\n\n' +
+            'Bitte Aufnahme wiederholen mit:\n' +
+            '• Näher an die Maschine herangehen\n' +
+            '• Sicherstellen, dass Maschine läuft und hörbar ist\n' +
+            '• Ruhigere Umgebung wählen (weniger Hintergrundrauschen)',
+          new Error('Model weight magnitude too low'),
+          { duration: 0, title: 'Referenzmodell ungeeignet' }
+        );
+        return;
+      }
+
+      logger.info(
+        `✅ Model weight magnitude OK: ${weightMagnitude.toFixed(4)} >= ${MIN_REFERENCE_MAGNITUDE}`
+      );
 
       // Add label and type to model
       model.label = label;
