@@ -121,7 +121,7 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   const weightMagnitude = vectorMagnitude(weightVector);
 
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
-  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(4)} (${weightMagnitude >= 0.2 ? 'SUFFICIENT' : 'LOW - possible noise'})`);
+  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(4)} (${weightMagnitude >= 0.038 ? 'SUFFICIENT' : 'LOW - degenerate signal'})`);
   logger.info(`✅ GMIA model trained successfully!`);
 
   // Calculate total training duration based on window size per sample.

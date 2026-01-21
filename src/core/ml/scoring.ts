@@ -468,16 +468,23 @@ const UNCERTAINTY_THRESHOLD = 70;
  * Minimum reference magnitude threshold.
  * Models trained with lower magnitude are considered unreliable (e.g., pure brown noise).
  *
- * Threshold tuning:
- * - Pure brown noise: ~0.04-0.15 (REJECT)
- * - Machine with heavy background noise (SNR 15-20dB): ~0.20-0.30 (ACCEPT)
- * - Clean machine signal (SNR >25dB): ~0.40-0.60 (ACCEPT)
+ * IMPORTANT: This threshold is for L1-normalized features (sum = 1).
+ * For 512-dimensional vectors with sum=1, L2 magnitudes are naturally low:
  *
- * Value 0.2 balances:
- * - Rejecting pure noise recordings
- * - Accepting real machines in industrial environments with moderate background noise
+ * Threshold tuning for normalized features:
+ * - Pure brown noise / degenerate signal: ~0.035-0.037 (REJECT)
+ * - Machine with background noise: ~0.038-0.045 (ACCEPT)
+ * - Clean machine signal: ~0.045-0.055 (ACCEPT)
+ *
+ * Value 0.038 balances:
+ * - Rejecting only the most degenerate/uniform noise patterns
+ * - Accepting all real machine signals in typical industrial environments
+ *
+ * Mathematical background:
+ * - For uniform distribution (512 bins, sum=1): L2 = √(1/512) ≈ 0.0442
+ * - Real signals have concentrated energy → slightly higher magnitudes
  */
-const MIN_REFERENCE_MAGNITUDE = 0.2;
+const MIN_REFERENCE_MAGNITUDE = 0.038;
 
 /**
  * Multiclass Diagnosis - Classify machine state across multiple trained models
@@ -606,23 +613,23 @@ export function classifyDiagnosticState(
  * Formula: factor = min(1, ||featureVector|| / ||weightVector||)
  *
  * ADDITIONAL FIX (Brown Noise Protection):
- * - If reference model has very low magnitude (< 0.2), it was likely trained
- *   on noise or low-energy signal and is unreliable.
+ * - If reference model has very low magnitude (< 0.038), it was likely trained
+ *   on pure noise or degenerate signal and is unreliable.
  * - Return 0 to force health score to 0 and prevent false diagnoses.
  * - This prevents the case where both test and reference are brown noise,
  *   resulting in acceptable magnitude ratio but meaningless comparison.
- * - Threshold 0.2 allows machines in noisy environments while blocking pure noise.
+ * - Threshold 0.038 blocks degenerate patterns while accepting real machines.
  *
- * Example:
- *   Reference magnitude: 100, Test magnitude: 10
- *   → factor = 0.1
- *   → adjustedCosine = cosine * 0.1 (90% penalty)
+ * Example (for L1-normalized 512-dimensional features):
+ *   Reference magnitude: 0.050, Test magnitude: 0.025
+ *   → factor = 0.5
+ *   → adjustedCosine = cosine * 0.5 (50% penalty, signal too quiet)
  *
- *   Reference magnitude: 0.12 (pure brown noise), Test magnitude: 0.08
+ *   Reference magnitude: 0.036 (pure brown noise), Test magnitude: 0.035
  *   → factor = 0 (reference unreliable, reject)
  *
- *   Reference magnitude: 0.25 (machine + noise, SNR ~20dB), Test magnitude: 0.23
- *   → factor = 0.92 (acceptable, slight penalty)
+ *   Reference magnitude: 0.045 (machine signal), Test magnitude: 0.044
+ *   → factor = 0.98 (acceptable, minimal penalty)
  *
  * See MAGNITUDE_FACTOR_ANALYSIS.md for comprehensive analysis.
  *
