@@ -868,16 +868,17 @@ export class ReferencePhase {
 
     // INTELLIGENT MAGNITUDE + QUALITY CHECK: Brown Noise Protection
     // Block if BOTH quality AND signal magnitude are insufficient
-    const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 1.0; // Default to OK if not available
+    // Note: Magnitude now uses absolute features, so values are higher (typical: 5-50)
+    const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 50.0; // Default to OK if not available
     const isNoiseDetected =
-      (magnitude < 0.15 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
-      (magnitude < 0.2 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
+      (magnitude < 5 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
+      (magnitude < 10 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
 
     if (isNoiseDetected) {
       logger.error('Brown noise or weak signal detected - blocking save');
       notify.error(
         'Signal zu schwach oder diffus (möglicherweise nur Rauschen).\n\n' +
-          `Signal-Stärke: ${(magnitude * 100).toFixed(0)}% (Minimum: 20%)\n` +
+          `Signal-Stärke: ${magnitude.toFixed(1)} (Minimum: 10)\n` +
           `Qualität: ${this.currentQualityResult.score}%\n\n` +
           'Bitte sicherstellen:\n' +
           '• Mikrofon ist nah genug an der Maschine (10-30cm)\n' +
