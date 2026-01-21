@@ -44,7 +44,8 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   }
 
   // Extract feature matrices for analysis
-  const featureMatrix = features.map((f) => Array.from(f.features));
+  const featureMatrix = features.map((f) => Array.from(f.features)); // Normalized features (sum = 1)
+  const absoluteFeatureMatrix = features.map((f) => Array.from(f.absoluteFeatures)); // Absolute features (preserve amplitude)
   const numFrames = featureMatrix.length;
   const numBins = featureMatrix[0]?.length || 0;
 
@@ -64,7 +65,7 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
 
   logger.debug(`   Analyzing ${numFrames} frames with ${numBins} frequency bins`);
 
-  // 1. Calculate spectral variance across time
+  // 1. Calculate spectral variance across time (use normalized features for stability analysis)
   const variance = calculateSpectralVariance(featureMatrix);
 
   // 2. Detect outliers (frames with unusual spectral content)
@@ -74,8 +75,9 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   // 3. Calculate stability metric (inverse of variance, normalized)
   const stability = calculateStability(variance, outlierCount, numFrames);
 
-  // 4. Calculate signal magnitude (L2 norm of mean feature vector)
-  const signalMagnitude = calculateSignalMagnitude(featureMatrix);
+  // 4. CRITICAL FIX: Calculate signal magnitude from ABSOLUTE features (preserves amplitude)
+  // Using normalized features would always return low magnitude regardless of actual signal strength
+  const signalMagnitude = calculateSignalMagnitude(absoluteFeatureMatrix);
 
   // 5. Calculate final quality score (0-100)
   const score = calculateQualityScore(variance, stability, outlierCount, numFrames);
@@ -84,7 +86,7 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   const { rating, issues } = determineRating(score, variance, outlierCount, numFrames, signalMagnitude);
 
   logger.info(`   Quality Score: ${score.toFixed(1)}% - Rating: ${rating}`);
-  logger.info(`   Signal Magnitude: ${signalMagnitude.toFixed(4)} (${signalMagnitude >= 0.2 ? 'SUFFICIENT' : 'LOW - possible noise/weak signal'})`);
+  logger.info(`   Signal Magnitude: ${signalMagnitude.toFixed(2)} (${signalMagnitude >= 10 ? 'SUFFICIENT' : 'LOW - possible noise/weak signal'})`);
   if (issues.length > 0) {
     logger.warn(`   Issues detected: ${issues.join(', ')}`);
   }
@@ -248,15 +250,20 @@ function calculateQualityScore(
 }
 
 /**
- * Calculate signal magnitude (L2 norm of mean feature vector)
+ * Calculate signal magnitude (L2 norm of mean ABSOLUTE feature vector)
  *
- * This measures the "concentration" of spectral energy.
- * - High magnitude (>0.3): Strong tonal components (machines)
- * - Medium magnitude (0.2-0.3): Moderate tonal content with noise
- * - Low magnitude (<0.2): Diffuse/noise-dominated signal (brown noise)
+ * CRITICAL: This function should receive the ABSOLUTE features, not normalized features!
+ * Normalized features always sum to 1, losing amplitude information.
  *
- * @param featureMatrix - Matrix of feature vectors [frames x bins]
- * @returns L2 norm of mean feature vector
+ * This measures the overall spectral energy concentration:
+ * - High magnitude (>15): Strong tonal components (typical machines)
+ * - Medium magnitude (5-15): Moderate signal with some noise
+ * - Low magnitude (<5): Very weak/diffuse signal (background noise, distant mic)
+ *
+ * Note: Magnitudes depend on feature extraction parameters (FFT size, binning, etc.)
+ *
+ * @param featureMatrix - Matrix of ABSOLUTE feature vectors [frames x bins]
+ * @returns L2 norm of mean absolute feature vector
  */
 function calculateSignalMagnitude(featureMatrix: number[][]): number {
   const numFrames = featureMatrix.length;
@@ -322,12 +329,14 @@ function determineRating(
     issues.push('Sehr hohe Varianz - Bitte in ruhigerer Umgebung aufnehmen');
   }
 
-  // CRITICAL: Check signal magnitude (brown noise detection)
-  if (signalMagnitude < 0.15) {
+  // CRITICAL FIX: Check signal magnitude (brown noise detection)
+  // Updated thresholds for absolute features (previously used normalized features)
+  // Typical values: 5-50 (absolute) vs 0.15-0.3 (normalized)
+  if (signalMagnitude < 5) {
     issues.push(
       'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.'
     );
-  } else if (signalMagnitude < 0.2) {
+  } else if (signalMagnitude < 10) {
     issues.push(
       'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.'
     );
@@ -339,7 +348,7 @@ function determineRating(
   if (score >= 90) {
     rating = 'GOOD';
     // Clear issues array for GOOD rating (only minor issues allowed)
-    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.3) {
+    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 15) {
       issues.length = 0; // No issues for excellent quality
     }
   } else if (score >= 75) {
