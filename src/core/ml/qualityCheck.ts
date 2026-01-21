@@ -75,9 +75,10 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   // 3. Calculate stability metric (inverse of variance, normalized)
   const stability = calculateStability(variance, outlierCount, numFrames);
 
-  // 4. CRITICAL FIX: Calculate signal magnitude from ABSOLUTE features (preserves amplitude)
-  // Using normalized features would always return low magnitude regardless of actual signal strength
-  const signalMagnitude = calculateSignalMagnitude(absoluteFeatureMatrix);
+  // 4. CRITICAL FIX: Calculate signal magnitude from pre-standardization RMS amplitude
+  // This is the TRUE amplitude measure (before any normalization/standardization)
+  // Average RMS across all frames to get overall signal strength
+  const signalMagnitude = calculateSignalMagnitudeFromRMS(features);
 
   // 5. Calculate final quality score (0-100)
   const score = calculateQualityScore(variance, stability, outlierCount, numFrames);
@@ -86,7 +87,7 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   const { rating, issues } = determineRating(score, variance, outlierCount, numFrames, signalMagnitude);
 
   logger.info(`   Quality Score: ${score.toFixed(1)}% - Rating: ${rating}`);
-  logger.info(`   Signal Magnitude: ${signalMagnitude.toFixed(2)} (${signalMagnitude >= 10 ? 'SUFFICIENT' : 'LOW - possible noise/weak signal'})`);
+  logger.info(`   Signal RMS Amplitude: ${signalMagnitude.toFixed(4)} (${signalMagnitude >= 0.03 ? 'SUFFICIENT' : 'LOW - possible noise/weak signal'})`);
   if (issues.length > 0) {
     logger.warn(`   Issues detected: ${issues.join(', ')}`);
   }
@@ -294,6 +295,45 @@ function calculateSignalMagnitude(featureMatrix: number[][]): number {
 }
 
 /**
+ * Calculate signal magnitude from pre-standardization RMS amplitudes
+ *
+ * CRITICAL: This is the TRUE amplitude measure!
+ * - Uses RMS amplitude calculated BEFORE standardization
+ * - Preserves actual signal strength (loud vs quiet)
+ * - Returns average RMS across all frames
+ *
+ * Typical values:
+ * - Silent/background noise: 0.001-0.01
+ * - Quiet machine/distant mic: 0.01-0.05
+ * - Normal machine: 0.05-0.2
+ * - Loud machine/close mic: 0.2-0.5+
+ *
+ * @param features - Array of feature vectors with rmsAmplitude
+ * @returns Average RMS amplitude
+ */
+function calculateSignalMagnitudeFromRMS(features: FeatureVector[]): number {
+  if (features.length === 0) {
+    return 0;
+  }
+
+  let sum = 0;
+  let count = 0;
+  for (const feature of features) {
+    if (feature.rmsAmplitude !== undefined) {
+      sum += feature.rmsAmplitude;
+      count++;
+    }
+  }
+
+  // If no RMS values available, return default (assumes sufficient signal)
+  if (count === 0) {
+    return 0.1; // Default to reasonable RMS value
+  }
+
+  return sum / count;
+}
+
+/**
  * Determine quality rating and identify specific issues
  *
  * @param score - Quality score (0-100)
@@ -330,13 +370,13 @@ function determineRating(
   }
 
   // CRITICAL FIX: Check signal magnitude (brown noise detection)
-  // Updated thresholds for absolute features (previously used normalized features)
-  // Typical values: 5-50 (absolute) vs 0.15-0.3 (normalized)
-  if (signalMagnitude < 5) {
+  // UPDATED: Using RMS amplitude (pre-standardization) for TRUE amplitude measure
+  // Typical RMS values: 0.001-0.01 (silent), 0.01-0.05 (quiet), 0.05-0.2 (normal), 0.2+ (loud)
+  if (signalMagnitude < 0.01) {
     issues.push(
       'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.'
     );
-  } else if (signalMagnitude < 10) {
+  } else if (signalMagnitude < 0.03) {
     issues.push(
       'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.'
     );
@@ -348,7 +388,7 @@ function determineRating(
   if (score >= 90) {
     rating = 'GOOD';
     // Clear issues array for GOOD rating (only minor issues allowed)
-    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 15) {
+    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.05) {
       issues.length = 0; // No issues for excellent quality
     }
   } else if (score >= 75) {

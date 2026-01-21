@@ -868,17 +868,17 @@ export class ReferencePhase {
 
     // INTELLIGENT MAGNITUDE + QUALITY CHECK: Brown Noise Protection
     // Block if BOTH quality AND signal magnitude are insufficient
-    // Note: Magnitude now uses absolute features, so values are higher (typical: 5-50)
-    const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 50.0; // Default to OK if not available
+    // UPDATED: Magnitude now uses RMS amplitude (pre-standardization), typical: 0.01-0.5
+    const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 0.5; // Default to OK if not available
     const isNoiseDetected =
-      (magnitude < 5 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
-      (magnitude < 10 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
+      (magnitude < 0.01 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
+      (magnitude < 0.03 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
 
     if (isNoiseDetected) {
       logger.error('Brown noise or weak signal detected - blocking save');
       notify.error(
         'Signal zu schwach oder diffus (möglicherweise nur Rauschen).\n\n' +
-          `Signal-Stärke: ${magnitude.toFixed(1)} (Minimum: 10)\n` +
+          `Signal-Stärke (RMS): ${magnitude.toFixed(4)} (Minimum: 0.03)\n` +
           `Qualität: ${this.currentQualityResult.score}%\n\n` +
           'Bitte sicherstellen:\n' +
           '• Mikrofon ist nah genug an der Maschine (10-30cm)\n' +
@@ -962,9 +962,11 @@ export class ReferencePhase {
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
 
       // CRITICAL FIX: Validate model weight magnitude
-      // If the weight vector magnitude is too low (< 0.038), the model is unreliable
-      // and will cause all diagnosis attempts to return 0% health score
-      const MIN_REFERENCE_MAGNITUDE = 0.038;
+      // UPDATED: Lowered threshold from 0.038 to 0.005 because absoluteFeatures
+      // (from FFT magnitudes) have naturally small values (0.001-0.1 range)
+      // We rely primarily on the intelligent Brown Noise Check (signalMagnitude from qualityCheck)
+      // This check is mainly to catch extreme cases (pure silence, completely degenerate signals)
+      const MIN_REFERENCE_MAGNITUDE = 0.005; // Lowered from 0.038
       let weightMagnitude = 0;
       for (const value of model.weightVector) {
         weightMagnitude += value * value;
