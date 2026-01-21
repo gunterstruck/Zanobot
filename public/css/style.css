@@ -290,9 +290,12 @@ body {
    =================================== */
 .hero-header {
     width: 100%;
+    max-width: 420px;
     height: 20vh;
     min-height: 150px;
     max-height: 300px;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: var(--spacing-lg);
     overflow: hidden;
     border-radius: var(--radius-lg);
