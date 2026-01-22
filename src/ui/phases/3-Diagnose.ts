@@ -438,6 +438,9 @@ export class DiagnosePhase {
       // Step 6: Store debug values from diagnosis metadata
       if (diagnosis.metadata?.debug) {
         this.lastDebugValues = diagnosis.metadata.debug as any;
+        console.log('✅ Debug values stored:', this.lastDebugValues);
+      } else {
+        console.warn('⚠️ No debug values in diagnosis.metadata!', diagnosis.metadata);
       }
 
       // Step 7: Update UI in real-time with detected state and debug values
@@ -516,8 +519,12 @@ export class DiagnosePhase {
    * Update debug display with calculation values
    */
   private updateDebugDisplay(): void {
-    if (!this.lastDebugValues) return;
+    if (!this.lastDebugValues) {
+      console.warn('⚠️ updateDebugDisplay: No debug values available!');
+      return;
+    }
 
+    console.log('🔧 Updating debug display with values:', this.lastDebugValues);
     const v = this.lastDebugValues;
 
     const updateElement = (id: string, text: string, highlight: boolean = false) => {
@@ -528,6 +535,9 @@ export class DiagnosePhase {
           el.style.color = '#ff8800';
           el.style.fontWeight = '700';
         }
+        console.log(`  ✓ Updated ${id}: ${text}`);
+      } else {
+        console.error(`  ✗ Element not found: ${id}`);
       }
     };
 
