@@ -120,8 +120,19 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   // Step 11: Calculate weight vector magnitude (L2 norm) for quality validation
   const weightMagnitude = vectorMagnitude(weightVector);
 
+  // DEBUG LOGGING: Show weight magnitude details
+  console.log('🧠 GMIA Training Debug:', {
+    numSamples,
+    featureDim,
+    meanCosine: meanCosine.toFixed(4),
+    scalingConstant: scalingConstant.toFixed(6),
+    weightMagnitude: weightMagnitude.toFixed(6),
+    minThreshold: 0.0001,
+    isAboveThreshold: weightMagnitude >= 0.0001,
+  });
+
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
-  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(4)} (${weightMagnitude >= 0.038 ? 'SUFFICIENT' : 'LOW - degenerate signal'})`);
+  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(6)} (threshold: 0.0001, status: ${weightMagnitude >= 0.0001 ? 'PASS ✓' : 'FAIL ✗'})`);
   logger.info(`✅ GMIA model trained successfully!`);
 
   // Calculate total training duration based on window size per sample.

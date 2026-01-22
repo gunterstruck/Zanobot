@@ -548,6 +548,14 @@ export function classifyDiagnosticState(
     // Step 3: Calculate health score using existing scoring function
     const score = calculateHealthScore(adjustedCosine, model.scalingConstant);
 
+    // DEBUG LOGGING: Show comparison for each model
+    console.log(`📊 Model "${model.label}" evaluation:`, {
+      cosine: cosine.toFixed(4),
+      magnitudeFactor: magnitudeFactor.toFixed(4),
+      adjustedCosine: adjustedCosine.toFixed(4),
+      score: score.toFixed(1),
+    });
+
     // Step 4: Check if this is the best match so far
     if (score > bestScore) {
       bestScore = score;
@@ -641,17 +649,30 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
   const featureMagnitude = vectorMagnitude(featureVector);
   const weightMagnitude = vectorMagnitude(weightVector);
 
+  // DEBUG LOGGING: Show magnitude values
+  console.log('🔍 Magnitude Factor Debug:', {
+    featureMagnitude: featureMagnitude.toFixed(6),
+    weightMagnitude: weightMagnitude.toFixed(6),
+    threshold: MIN_REFERENCE_MAGNITUDE,
+    ratio: (featureMagnitude / weightMagnitude).toFixed(3),
+    willBlock: weightMagnitude < MIN_REFERENCE_MAGNITUDE,
+  });
+
   if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) || weightMagnitude === 0) {
+    console.warn('⚠️ Magnitude Factor: Invalid values detected!');
     return 0;
   }
 
   // CRITICAL FIX: Reject models trained on very low-energy/diffuse signals
   // Threshold 0.2: Rejects pure noise (~0.05-0.15) but accepts machines in noisy environments (~0.2-0.6)
   if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
+    console.error('❌ Magnitude Factor: weightMagnitude too low! Model rejected.');
     return 0; // Model is unreliable - force score to 0
   }
 
-  return Math.min(1, featureMagnitude / weightMagnitude);
+  const factor = Math.min(1, featureMagnitude / weightMagnitude);
+  console.log(`✅ Magnitude Factor: ${factor.toFixed(3)}`);
+  return factor;
 }
 
 /**
