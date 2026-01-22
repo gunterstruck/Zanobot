@@ -54,6 +54,13 @@ export class ReferencePhase {
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
+
+    // DEBUG LOGGING: Show which machine is being used for reference recording
+    console.log('📝 ReferencePhase Constructor:', {
+      machineId: machine.id,
+      machineName: machine.name,
+      numExistingModels: machine.referenceModels?.length || 0,
+    });
   }
 
   /**
@@ -578,6 +585,14 @@ export class ReferencePhase {
     const modal = document.getElementById('recording-modal');
     if (modal) {
       modal.style.display = 'flex';
+    }
+
+    // CRITICAL FIX: Update machine name in modal subtitle
+    // This was showing hardcoded "MACHINE 002" from index.html instead of selected machine
+    const machineIdElement = document.getElementById('machine-id');
+    if (machineIdElement) {
+      machineIdElement.textContent = this.machine.name;
+      console.log('✅ Modal machine name updated:', this.machine.name);
     }
 
     // Add status message element if it doesn't exist

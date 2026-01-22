@@ -73,6 +73,13 @@ export class DiagnosePhase {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
 
+    // DEBUG LOGGING: Show which machine is being used for diagnosis
+    console.log('🔬 DiagnosePhase Constructor:', {
+      machineId: machine.id,
+      machineName: machine.name,
+      numModels: machine.referenceModels?.length || 0,
+    });
+
     // Initialize with default config (will be updated when AudioContext is created)
     this.chunkSize = Math.floor(DEFAULT_DSP_CONFIG.windowSize * this.requestedSampleRate);
     this.dspConfig = { ...DEFAULT_DSP_CONFIG };
@@ -660,6 +667,14 @@ export class DiagnosePhase {
     const modal = document.getElementById('recording-modal');
     if (modal) {
       modal.style.display = 'flex';
+    }
+
+    // CRITICAL FIX: Update machine name in modal subtitle
+    // This was showing hardcoded "MACHINE 002" from index.html instead of selected machine
+    const machineIdElement = document.getElementById('machine-id');
+    if (machineIdElement) {
+      machineIdElement.textContent = this.machine.name;
+      console.log('✅ Modal machine name updated:', this.machine.name);
     }
 
     // Update button text and behavior
