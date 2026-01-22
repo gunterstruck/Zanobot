@@ -519,6 +519,8 @@ export function classifyDiagnosticState(
   let bestLabel = 'UNKNOWN';
   let bestModel: GMIAModel | null = null;
   let bestCosine = 0;
+  let bestMagnitudeFactor = 0;
+  let bestRawCosine = 0;
 
   // Loop through all models to find best match
   for (const model of models) {
@@ -562,6 +564,8 @@ export function classifyDiagnosticState(
       bestLabel = model.label;
       bestModel = model;
       bestCosine = adjustedCosine;
+      bestMagnitudeFactor = magnitudeFactor;
+      bestRawCosine = cosine;
     }
   }
 
@@ -578,7 +582,10 @@ export function classifyDiagnosticState(
     status = bestModel.type; // 'healthy' or 'faulty' from the winning model
   }
 
-  // Generate diagnosis result
+  // Calculate feature magnitude for debug info
+  const featureMagnitude = vectorMagnitude(featureVector.features);
+
+  // Generate diagnosis result with debug information
   const diagnosis: DiagnosisResult = {
     id: `diag-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     machineId: bestModel?.machineId || models[0].machineId,
@@ -591,6 +598,16 @@ export function classifyDiagnosticState(
       detectedState: bestLabel,
       multiclassMode: true,
       evaluatedModels: models.length,
+      // DEBUG INFO: Add detailed calculation values for troubleshooting
+      debug: bestModel ? {
+        weightMagnitude: vectorMagnitude(bestModel.weightVector),
+        featureMagnitude: featureMagnitude,
+        magnitudeFactor: bestMagnitudeFactor,
+        cosine: bestRawCosine,
+        adjustedCosine: bestCosine,
+        scalingConstant: bestModel.scalingConstant,
+        rawScore: bestScore,
+      } : undefined,
     },
     analysis: {
       hint: generateMulticlassHint(bestScore, bestLabel, status),
