@@ -663,6 +663,36 @@ export function classifyDiagnosticState(
  * @returns Magnitude ratio clamped to [0, 1], or 0 if reference is too weak
  */
 export function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
+  // ============================================================================
+  // TEMPORARY DEACTIVATION: "Back to Baseline"
+  // ============================================================================
+  //
+  // REASON: The magnitude factor extension (not part of the original GMIA paper)
+  // is causing instability and rejecting all models due to near-zero weight
+  // magnitudes after feature standardization.
+  //
+  // Current behavior:
+  // - weightMagnitude is ~0.000000 (far below MIN_REFERENCE_MAGNITUDE)
+  // - All models get rejected with score = 0
+  // - This prevents proper diagnosis
+  //
+  // TEMPORARY FIX:
+  // - Return 1.0 (no magnitude adjustment)
+  // - This reverts to pure cosine similarity (original paper implementation)
+  // - adjustedCosine = cosine * 1.0 = cosine
+  //
+  // KNOWN TRADE-OFF:
+  // - This may allow false positives (silence/noise matching patterns)
+  // - This is acceptable for now - we prioritize getting stable scores first
+  // - RMS amplitude check in qualityCheck.ts should still catch pure silence
+  //
+  // TODO: Re-investigate magnitude factor after baseline is verified
+  // ============================================================================
+
+  console.log('🔍 Magnitude Factor: DISABLED (return 1.0 - pure cosine similarity)');
+  return 1.0;
+
+  /* ORIGINAL IMPLEMENTATION (COMMENTED OUT):
   const featureMagnitude = vectorMagnitude(featureVector);
   const weightMagnitude = vectorMagnitude(weightVector);
 
@@ -690,6 +720,7 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
   const factor = Math.min(1, featureMagnitude / weightMagnitude);
   console.log(`✅ Magnitude Factor: ${factor.toFixed(3)}`);
   return factor;
+  */
 }
 
 /**
