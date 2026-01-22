@@ -595,14 +595,39 @@ export class ReferencePhase {
       console.log('✅ Modal machine name updated:', this.machine.name);
     }
 
-    // Add status message element if it doesn't exist
+    // Add existing models info and status message
     const modalBody = document.querySelector('#recording-modal .modal-body');
     if (modalBody && !document.getElementById('recording-status')) {
+      // Show existing models info
+      const existingModels = this.machine.referenceModels || [];
+      const existingModelsInfo = existingModels.length > 0
+        ? existingModels.map(m => {
+            const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return `${m.label} (${trainingDate})`;
+          }).join(', ')
+        : 'Noch keine Referenzmodelle vorhanden';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'existing-models-info';
+      infoDiv.style.cssText = 'background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;';
+      infoDiv.innerHTML = `
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">VORHANDENE MODELLE:</div>
+        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${existingModelsInfo}</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${existingModels.length} Zustand(e) bereits trainiert</div>
+      `;
+      modalBody.insertBefore(infoDiv, modalBody.firstChild);
+
       const statusDiv = document.createElement('div');
       statusDiv.id = 'recording-status';
       statusDiv.className = 'recording-status';
       statusDiv.textContent = 'Initialisierung...';
-      modalBody.insertBefore(statusDiv, modalBody.firstChild);
+      modalBody.insertBefore(statusDiv, infoDiv.nextSibling);
     }
 
     // Setup stop button
@@ -627,6 +652,12 @@ export class ReferencePhase {
     const statusElement = document.getElementById('recording-status');
     if (statusElement) {
       statusElement.remove();
+    }
+
+    // Clean up existing models info
+    const existingModelsInfo = modal?.querySelector('.existing-models-info');
+    if (existingModelsInfo) {
+      existingModelsInfo.remove();
     }
   }
 
