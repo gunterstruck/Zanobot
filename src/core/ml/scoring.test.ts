@@ -810,15 +810,16 @@ describe('Health Scoring', () => {
       expect(result.status).toBe('healthy');
     });
 
-    it('should reject models trained on low-energy signals (brown noise protection)', () => {
-      // Create a model trained on brown noise (very low magnitude)
-      // CRITICAL: Weight vector magnitude must be < MIN_REFERENCE_MAGNITUDE (0.038)
-      // Using [0.02, 0.01, 0.005] → magnitude = sqrt(0.0004 + 0.0001 + 0.000025) = ~0.0213 < 0.038
-      const brownNoiseModel: GMIAModel = {
+    it('should reject only completely degenerate models (near-zero weight vectors)', () => {
+      // Create a completely degenerate model (pure silence / zero signal)
+      // UPDATED: With new threshold (0.0001), only EXTREME cases are rejected
+      // Weight vector magnitude must be < 0.0001 to be blocked
+      // Using [0.00001, 0.00001, 0.00001] → magnitude ~0.000017 < 0.0001
+      const degenerateModel: GMIAModel = {
         machineId: 'test-machine',
-        label: 'Brown Noise Reference',
+        label: 'Degenerate Model (Pure Silence)',
         type: 'healthy',
-        weightVector: new Float64Array([0.02, 0.01, 0.005]), // Magnitude: ~0.021 (< 0.038 threshold)
+        weightVector: new Float64Array([0.00001, 0.00001, 0.00001]), // Magnitude: ~0.000017 (< 0.0001 threshold)
         regularization: 1e9,
         scalingConstant: 2.5,
         featureDimension: 3,
@@ -826,25 +827,25 @@ describe('Health Scoring', () => {
         trainingDuration: 10,
         sampleRate: 44100,
         metadata: {
-          meanCosineSimilarity: 0.95,
-          targetScore: 0.9,
+          meanCosineSimilarity: 0.5,
+          targetScore: 0.5,
         },
       };
 
-      const models = [brownNoiseModel];
+      const models = [degenerateModel];
 
-      // Test with another brown noise signal (similar magnitude)
-      const brownNoiseTest: FeatureVector = {
-        features: new Float64Array([0.015, 0.008, 0.004]), // Magnitude: ~0.017
-        absoluteFeatures: new Float64Array([0.015, 0.008, 0.004]),
+      // Test with any signal
+      const testSignal: FeatureVector = {
+        features: new Float64Array([0.3, 0.4, 0.3]),
+        absoluteFeatures: new Float64Array([0.3, 0.4, 0.3]),
         bins: 3,
         frequencyRange: [0, 22050],
       };
 
-      const result = classifyDiagnosticState(models, brownNoiseTest, 44100);
+      const result = classifyDiagnosticState(models, testSignal, 44100);
 
-      // CRITICAL FIX: Magnitude factor should be 0 because reference magnitude < 0.038
-      // This forces health score to 0, preventing false "healthy" diagnosis
+      // NEW BEHAVIOR: Magnitude factor = 0 because weight magnitude < 0.0001 (extreme degenerate case)
+      // This forces health score to 0, preventing false diagnosis from completely broken models
       expect(result.healthScore).toBe(0);
       expect(result.status).toBe('uncertain');
       expect(result.metadata?.detectedState).toBe('UNKNOWN');

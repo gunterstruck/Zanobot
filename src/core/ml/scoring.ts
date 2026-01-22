@@ -466,25 +466,25 @@ const UNCERTAINTY_THRESHOLD = 70;
 
 /**
  * Minimum reference magnitude threshold.
- * Models trained with lower magnitude are considered unreliable (e.g., pure brown noise).
  *
- * IMPORTANT: This threshold is for L1-normalized features (sum = 1).
- * For 512-dimensional vectors with sum=1, L2 magnitudes are naturally low:
+ * UPDATED (2026-01-21): Lowered from 0.038 to 0.0001
  *
- * Threshold tuning for normalized features:
- * - Pure brown noise / degenerate signal: ~0.035-0.037 (REJECT)
- * - Machine with background noise: ~0.038-0.045 (ACCEPT)
- * - Clean machine signal: ~0.045-0.055 (ACCEPT)
+ * REASON FOR CHANGE:
+ * - Features are now standardized (mean=0, variance=1) BEFORE FFT
+ * - This makes weight vectors VERY small (0.001-0.01 range) regardless of signal strength
+ * - Old threshold (0.038) rejected ALL recordings, even loud ones (hair dryer!)
+ * - New threshold (0.0001) only blocks pure silence / completely degenerate models
  *
- * Value 0.038 balances:
- * - Rejecting only the most degenerate/uniform noise patterns
- * - Accepting all real machine signals in typical industrial environments
+ * PRIMARY VALIDATION:
+ * - We now rely on RMS amplitude check (pre-standardization) in qualityCheck.ts
+ * - RMS check is MUCH more reliable: measures true signal strength before normalization
+ * - This threshold is just a safety net for extreme cases (zero signal, NaN, etc.)
  *
- * Mathematical background:
- * - For uniform distribution (512 bins, sum=1): L2 = √(1/512) ≈ 0.0442
- * - Real signals have concentrated energy → slightly higher magnitudes
+ * Typical weight vector magnitudes (after standardization):
+ * - Pure silence/zero: ~0.00001-0.0001 (REJECT)
+ * - Real signals (loud or quiet): ~0.001-0.01 (ACCEPT)
  */
-const MIN_REFERENCE_MAGNITUDE = 0.038;
+const MIN_REFERENCE_MAGNITUDE = 0.0001;
 
 /**
  * Multiclass Diagnosis - Classify machine state across multiple trained models

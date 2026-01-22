@@ -961,60 +961,14 @@ export class ReferencePhase {
       // Train GMIA model
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
 
-      // CRITICAL FIX: Validate model weight magnitude
-      // UPDATED: Lowered threshold from 0.038 to 0.005 because absoluteFeatures
-      // (from FFT magnitudes) have naturally small values (0.001-0.1 range)
-      // We rely primarily on the intelligent Brown Noise Check (signalMagnitude from qualityCheck)
-      // This check is mainly to catch extreme cases (pure silence, completely degenerate signals)
-      const MIN_REFERENCE_MAGNITUDE = 0.005; // Lowered from 0.038
-      let weightMagnitude = 0;
-      for (const value of model.weightVector) {
-        weightMagnitude += value * value;
-      }
-      weightMagnitude = Math.sqrt(weightMagnitude);
-
-      if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
-        logger.error(
-          `Model weight magnitude too low: ${weightMagnitude.toFixed(4)} < ${MIN_REFERENCE_MAGNITUDE}`
-        );
-
-        // DEBUGGING FEATURE: Calculate what the score would be WITHOUT magnitude rejection
-        // This helps verify that the algorithm itself works, even if the signal is too weak
-        const { calculateHealthScore } = await import('@core/ml/scoring.js');
-        const theoreticalScore = calculateHealthScore(1.0, model.scalingConstant); // Assume perfect match
-        const theoreticalScoreFormatted = theoreticalScore.toFixed(1);
-
-        logger.warn(
-          `⚠️ DEBUG INFO: Without magnitude check, this model would show ~${theoreticalScoreFormatted}% for matching signals (misleading!)`
-        );
-
-        notify.error(
-          '⛔ REFERENZMODELL ABGELEHNT\n\n' +
-            '❌ Dieses Modell würde bei der Live-Diagnose IMMER 0% anzeigen!\n' +
-            '   (Grund: Magnitude-Filter verwirft zu schwache Referenzsignale)\n\n' +
-            `📊 Signal-Stärke des Modells: ${(weightMagnitude * 100).toFixed(1)}%\n` +
-            `   Minimum erforderlich: ${(MIN_REFERENCE_MAGNITUDE * 100).toFixed(1)}%\n\n` +
-            `🔬 DEBUG-INFO (nur zur Verifikation):\n` +
-            `   Ohne Magnitude-Filter würde das Modell ~${theoreticalScoreFormatted}% zeigen\n` +
-            `   (irreführend, da Signal zu schwach!)\n\n` +
-            '📋 Mögliche Ursachen:\n' +
-            '   • Mikrofon zu weit von der Maschine entfernt (10-30cm empfohlen)\n' +
-            '   • Maschine läuft zu leise oder ist ausgeschaltet\n' +
-            '   • Nur Hintergrundrauschen wurde aufgenommen\n' +
-            '   • Audio-Signal zu schwach (Mikrofonverstärkung prüfen)\n\n' +
-            '✅ Lösung - Aufnahme wiederholen mit:\n' +
-            '   • Näher an die Maschine herangehen\n' +
-            '   • Sicherstellen, dass Maschine läuft und hörbar ist\n' +
-            '   • Ruhigere Umgebung wählen (weniger Hintergrundrauschen)\n' +
-            '   • Eventuell Mikrofonverstärkung erhöhen',
-          new Error('Model weight magnitude too low'),
-          { duration: 0, title: '⛔ Referenzmodell ungeeignet' }
-        );
-        return;
-      }
+      // REMOVED: Weight magnitude validation check
+      // This check was too strict and caused false negatives (rejecting good recordings like hair dryer)
+      // Reason: Weight vectors from standardized features are naturally small (0.001-0.01 range)
+      // We now rely on the RMS amplitude check above, which is much more reliable
+      // The RMS check validates BEFORE standardization, preserving true signal strength
 
       logger.info(
-        `✅ Model weight magnitude OK: ${weightMagnitude.toFixed(4)} >= ${MIN_REFERENCE_MAGNITUDE}`
+        `✅ Model trained successfully (scaling constant: ${model.scalingConstant.toFixed(3)})`
       );
 
       // Add label and type to model
