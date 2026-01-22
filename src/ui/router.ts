@@ -86,6 +86,17 @@ export class Router {
 
     this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
+
+    // CRITICAL FIX: Register callback to update UI when reference model is saved
+    // This ensures the diagnose phase UI updates immediately after training
+    this.referencePhase.setOnMachineUpdated((updatedMachine) => {
+      // Update diagnose phase with new machine data
+      if (this.diagnosePhase) {
+        (this.diagnosePhase as any).machine = updatedMachine;
+      }
+      // Update UI to show new model count and enable diagnosis
+      this.updateMachineDisplay(updatedMachine);
+    });
   }
 
   /**

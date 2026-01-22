@@ -24,6 +24,7 @@ import { BUTTON_TEXT } from '@ui/constants.js';
 export class ReferencePhase {
   private machine: Machine;
   private selectedDeviceId: string | undefined; // Selected microphone device ID
+  private onMachineUpdated: ((machine: Machine) => void) | null = null; // Callback when machine is updated
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
@@ -53,6 +54,13 @@ export class ReferencePhase {
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
+  }
+
+  /**
+   * Set callback to be notified when machine is updated (new model saved)
+   */
+  public setOnMachineUpdated(callback: (machine: Machine) => void): void {
+    this.onMachineUpdated = callback;
   }
 
   /**
@@ -985,6 +993,12 @@ export class ReferencePhase {
       const updatedMachine = await getMachine(this.machine.id);
       if (updatedMachine) {
         this.machine = updatedMachine;
+
+        // CRITICAL FIX: Notify other phases (especially DiagnosePhase) about the updated machine
+        // This ensures the UI updates and diagnosis can use the new model immediately
+        if (this.onMachineUpdated) {
+          this.onMachineUpdated(updatedMachine);
+        }
       }
 
       // Hide review modal
