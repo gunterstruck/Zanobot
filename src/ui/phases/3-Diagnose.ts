@@ -114,6 +114,19 @@ export class DiagnosePhase {
         return;
       }
 
+      // DEBUG LOGGING: Show which machine and models are loaded
+      console.log('🤖 Diagnosis Start Debug:', {
+        machineId: this.machine.id,
+        machineName: this.machine.name,
+        numModels: this.machine.referenceModels?.length || 0,
+        models: this.machine.referenceModels?.map(m => ({
+          label: m.label,
+          trainingDate: new Date(m.trainingDate).toLocaleString(),
+          sampleRate: m.sampleRate,
+          weightMagnitude: m.metadata?.weightMagnitude?.toFixed(6) || 'N/A',
+        })) || [],
+      });
+
       // Check if machine has reference models (multiclass)
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         notify.error('Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.');

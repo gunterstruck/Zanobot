@@ -966,6 +966,15 @@ export class ReferencePhase {
 
       logger.info('💾 Saving reference model...');
 
+      // DEBUG LOGGING: Show which machine we're saving to
+      console.log('💾 Reference Save Debug:', {
+        machineId: this.machine.id,
+        machineName: this.machine.name,
+        label: label,
+        type: type,
+        existingModels: this.machine.referenceModels?.length || 0,
+      });
+
       // Train GMIA model
       const model = trainGMIA(this.currentTrainingData, this.machine.id);
 
