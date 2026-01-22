@@ -372,11 +372,17 @@ function determineRating(
   // CRITICAL FIX: Check signal magnitude (brown noise detection)
   // UPDATED: Using RMS amplitude (pre-standardization) for TRUE amplitude measure
   // Typical RMS values: 0.001-0.01 (silent), 0.01-0.05 (quiet), 0.05-0.2 (normal), 0.2+ (loud)
+
+  // DEBUG LOGGING: Show actual RMS value
+  console.log(`🔊 RMS Amplitude Check: ${signalMagnitude.toFixed(4)} (threshold warnings: <0.01 critical, <0.02 warning)`);
+
   if (signalMagnitude < 0.01) {
     issues.push(
       'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.'
     );
-  } else if (signalMagnitude < 0.03) {
+  } else if (signalMagnitude < 0.02) {
+    // ADJUSTED: Lowered from 0.03 to 0.02 to reduce false warnings
+    // Hair dryer, fans, and normal machines typically have RMS > 0.02
     issues.push(
       'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.'
     );
@@ -388,8 +394,12 @@ function determineRating(
   if (score >= 90) {
     rating = 'GOOD';
     // Clear issues array for GOOD rating (only minor issues allowed)
-    if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.05) {
+    // ADJUSTED: If score is excellent (>95%) and signal is stable, ignore RMS warnings
+    // Rationale: Score already validates quality; low RMS might just be normalization artifact
+    if (score >= 95 && outlierRatio < 0.05 && variance < 0.0001) {
       issues.length = 0; // No issues for excellent quality
+    } else if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.05) {
+      issues.length = 0; // No issues for perfect quality
     }
   } else if (score >= 75) {
     rating = 'OK';
