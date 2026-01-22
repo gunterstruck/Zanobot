@@ -737,15 +737,11 @@ export class DiagnosePhase {
       modal.style.display = 'none';
 
       // CRITICAL FIX: Clean up live display within modal only
+      // Note: .reference-model-info is inside .live-display, so removing
+      // .live-display automatically removes .reference-model-info as well
       const liveDisplay = modal.querySelector('.live-display');
       if (liveDisplay) {
         liveDisplay.remove();
-      }
-
-      // Clean up reference model info
-      const refModelInfo = modal.querySelector('.reference-model-info');
-      if (refModelInfo) {
-        refModelInfo.remove();
       }
     }
   }
