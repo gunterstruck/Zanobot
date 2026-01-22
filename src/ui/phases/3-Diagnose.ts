@@ -58,6 +58,17 @@ export class DiagnosePhase {
   private useAudioWorklet: boolean = true;
   private isStarting: boolean = false;
 
+  // DEBUG: Store last calculation values for UI display
+  private lastDebugValues: {
+    weightMagnitude: number;
+    featureMagnitude: number;
+    magnitudeFactor: number;
+    cosine: number;
+    adjustedCosine: number;
+    scalingConstant: number;
+    rawScore: number;
+  } | null = null;
+
   // Configuration
   private chunkSize: number; // 330ms in samples
   // CRITICAL FIX: Use 48000 Hz to match AUDIO_CONSTRAINTS.sampleRate
@@ -424,10 +435,16 @@ export class DiagnosePhase {
       // Step 5: Derive status from filtered score for consistency
       const filteredStatus = classifyHealthStatus(filteredScore);
 
-      // Step 6: Update UI in real-time with detected state
-      this.updateLiveDisplay(filteredScore, filteredStatus, detectedState);
+      // Step 6: Store debug values from diagnosis metadata
+      if (diagnosis.metadata?.debug) {
+        this.lastDebugValues = diagnosis.metadata.debug as any;
+      }
 
-      // Step 7: Store for final save (use filtered score/status for consistency)
+      // Step 7: Update UI in real-time with detected state and debug values
+      this.updateLiveDisplay(filteredScore, filteredStatus, detectedState);
+      this.updateDebugDisplay();
+
+      // Step 8: Store for final save (use filtered score/status for consistency)
       this.lastProcessedScore = filteredScore;
       this.lastProcessedStatus = filteredStatus;
       this.lastDetectedState = detectedState; // MULTICLASS: Store detected state (will be replaced by majority vote on save)
@@ -493,6 +510,34 @@ export class DiagnosePhase {
         statusElement.style.display = 'none';
       }
     }
+  }
+
+  /**
+   * Update debug display with calculation values
+   */
+  private updateDebugDisplay(): void {
+    if (!this.lastDebugValues) return;
+
+    const v = this.lastDebugValues;
+
+    const updateElement = (id: string, text: string, highlight: boolean = false) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = text;
+        if (highlight) {
+          el.style.color = '#ff8800';
+          el.style.fontWeight = '700';
+        }
+      }
+    };
+
+    updateElement('debug-weight-magnitude', `weightMagnitude: ${v.weightMagnitude.toFixed(6)}`);
+    updateElement('debug-feature-magnitude', `featureMagnitude: ${v.featureMagnitude.toFixed(6)}`);
+    updateElement('debug-magnitude-factor', `magnitudeFactor: ${v.magnitudeFactor.toFixed(4)}`, v.magnitudeFactor < 0.5);
+    updateElement('debug-cosine', `cosine: ${v.cosine.toFixed(4)}`);
+    updateElement('debug-adjusted-cosine', `adjustedCosine: ${v.adjustedCosine.toFixed(4)}`);
+    updateElement('debug-scaling-constant', `scalingConstant: ${v.scalingConstant.toFixed(4)}`);
+    updateElement('debug-raw-score', `RAW SCORE: ${v.rawScore.toFixed(1)}%`, v.rawScore === 0);
   }
 
   /**
@@ -716,6 +761,16 @@ export class DiagnosePhase {
           <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">REFERENZMODELL(E):</div>
           <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${this.activeModels.length} Zustand(e) trainiert</div>
+        </div>
+        <div class="debug-info" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
+          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">🔍 DEBUG VALUES:</div>
+          <div id="debug-weight-magnitude" style="color: var(--text-primary);">weightMagnitude: --</div>
+          <div id="debug-feature-magnitude" style="color: var(--text-primary);">featureMagnitude: --</div>
+          <div id="debug-magnitude-factor" style="color: var(--text-primary);">magnitudeFactor: --</div>
+          <div id="debug-cosine" style="color: var(--text-primary);">cosine: --</div>
+          <div id="debug-adjusted-cosine" style="color: var(--text-primary);">adjustedCosine: --</div>
+          <div id="debug-scaling-constant" style="color: var(--text-primary);">scalingConstant: --</div>
+          <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">RAW SCORE: --</div>
         </div>
         <div class="live-score-container">
           <p class="live-hint">Move phone closer to machine for optimal signal</p>
