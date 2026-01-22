@@ -218,10 +218,25 @@ function standardizeSignal(signal: Float32Array): Float32Array {
   const variance = varianceSum / n;
   const stdDev = Math.sqrt(variance);
 
-  // Standardize
+  // CRITICAL FIX: If signal is too constant (stdDev ≈ 0), skip standardization
+  // This prevents division by zero and generating all-zero feature vectors
+  // Threshold: 1e-6 allows very stable signals while protecting against pure constants
+  const MIN_STDDEV = 1e-6;
+
+  if (stdDev < MIN_STDDEV) {
+    console.warn(`⚠️ Signal too constant (stdDev=${stdDev.toExponential(2)}), skipping standardization`);
+    // Return mean-centered signal without variance scaling
+    const standardized = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      standardized[i] = signal[i] - mean;
+    }
+    return standardized;
+  }
+
+  // Standardize normally (mean=0, variance=1)
   const standardized = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    standardized[i] = stdDev > 0 ? (signal[i] - mean) / stdDev : 0;
+    standardized[i] = (signal[i] - mean) / stdDev;
   }
 
   return standardized;

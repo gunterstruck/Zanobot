@@ -133,6 +133,12 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
 
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
   logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(6)} (threshold: 0.0001, status: ${weightMagnitude >= 0.0001 ? 'PASS ✓' : 'FAIL ✗'})`);
+
+  // CRITICAL: Validate weight vector is not degenerate (all zeros)
+  if (weightMagnitude < 1e-10) {
+    throw new Error(`GMIA Training failed: Weight vector is degenerate (magnitude = ${weightMagnitude.toExponential(2)}). This indicates the input features are all zero or nearly constant. Please ensure the audio signal has sufficient variation.`);
+  }
+
   logger.info(`✅ GMIA model trained successfully!`);
 
   // Calculate total training duration based on window size per sample.
