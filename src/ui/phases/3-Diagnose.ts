@@ -694,10 +694,29 @@ export class DiagnosePhase {
     const modalBody = document.querySelector('#recording-modal .modal-body');
     // CRITICAL FIX: Check within modal only to prevent conflicts with other UI elements
     if (modalBody && modal && !modal.querySelector('.live-display')) {
+      // Get reference model info for display
+      const refModelInfo = this.activeModels.length > 0
+        ? this.activeModels.map(m => {
+            const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return `${m.label} (${trainingDate})`;
+          }).join(', ')
+        : 'Keine Modelle geladen';
+
       const liveDisplay = document.createElement('div');
       liveDisplay.className = 'live-display';
       liveDisplay.innerHTML = `
         <div id="smart-start-status" class="smart-start-status">Initialisierung...</div>
+        <div class="reference-model-info" style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">REFERENZMODELL(E):</div>
+          <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${this.activeModels.length} Zustand(e) trainiert</div>
+        </div>
         <div class="live-score-container">
           <p class="live-hint">Move phone closer to machine for optimal signal</p>
           <p class="live-score-label">Current Health Score:</p>
@@ -721,6 +740,12 @@ export class DiagnosePhase {
       const liveDisplay = modal.querySelector('.live-display');
       if (liveDisplay) {
         liveDisplay.remove();
+      }
+
+      // Clean up reference model info
+      const refModelInfo = modal.querySelector('.reference-model-info');
+      if (refModelInfo) {
+        refModelInfo.remove();
       }
     }
   }
