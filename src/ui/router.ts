@@ -41,6 +41,19 @@ export class Router {
   private onMachineSelected(machine: Machine): void {
     logger.info(`🤖 Machine selected: ${machine.name} (${machine.id})`);
 
+    // DEBUG LOGGING: Show selected machine details
+    console.log('🎯 Machine Selection Debug:', {
+      machineId: machine.id,
+      machineName: machine.name,
+      createdAt: new Date(machine.createdAt).toLocaleString(),
+      numModels: machine.referenceModels?.length || 0,
+      models: machine.referenceModels?.map(m => ({
+        label: m.label,
+        trainingDate: new Date(m.trainingDate).toLocaleString(),
+        weightMagnitude: m.metadata?.weightMagnitude?.toFixed(6) || 'N/A',
+      })) || [],
+    });
+
     // Stop any active IdentifyPhase resources (e.g., temporary microphone streams)
     this.identifyPhase.cleanup();
 
