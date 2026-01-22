@@ -130,8 +130,22 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
   // Step 1: Standardize the chunk
   const standardized = standardizeSignal(chunk.samples);
 
+  // CRITICAL FIX: Validate standardized signal is not degenerate
+  // If RMS of standardized signal is too low, use non-standardized signal instead
+  let standardizedRms = 0;
+  for (let i = 0; i < standardized.length; i++) {
+    standardizedRms += standardized[i] * standardized[i];
+  }
+  standardizedRms = Math.sqrt(standardizedRms / standardized.length);
+
+  let signalToUse = standardized;
+  if (standardizedRms < 1e-6) {
+    console.warn(`⚠️ Standardization produced near-zero signal (RMS=${standardizedRms.toExponential(2)}), using non-standardized signal instead`);
+    signalToUse = chunk.samples; // Use original signal
+  }
+
   // Step 2: Apply Hanning window
-  const windowed = applyHanningWindow(standardized);
+  const windowed = applyHanningWindow(signalToUse);
 
   // Step 3: Pad to power of 2 for FFT efficiency
   const padded = padToPowerOfTwo(windowed);
@@ -147,6 +161,22 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
 
   // Step 7: Bin into frequency groups
   const binnedEnergy = binFrequencies(positiveFreqs, config.frequencyBins);
+
+  // CRITICAL VALIDATION: Check if features are degenerate (all zeros or near-zeros)
+  let totalEnergy = 0;
+  for (let i = 0; i < binnedEnergy.length; i++) {
+    totalEnergy += binnedEnergy[i];
+  }
+
+  if (totalEnergy < 1e-10) {
+    console.error(`❌ Feature extraction failed: Total energy = ${totalEnergy.toExponential(2)} (degenerate signal)`);
+    console.error(`   This indicates the signal is too constant or silent.`);
+    console.error(`   RMS amplitude: ${rmsAmplitude.toFixed(6)}`);
+    throw new Error(
+      `Feature extraction failed: Signal is too constant or silent (total energy = ${totalEnergy.toExponential(2)}). ` +
+      `This can happen with very stable noise sources. Please ensure the signal has sufficient variation.`
+    );
+  }
 
   // Step 8: Calculate relative features (sum = 1)
   const relativeFeatures = normalizeFeatures(binnedEnergy);
