@@ -127,6 +127,19 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
         logger.warn('   ⚠️ BREAKING CHANGE: referenceModel → referenceModels[]');
         logger.warn('   ⚠️ All existing data will be cleared (machines, recordings, diagnoses)');
 
+        // CRITICAL: Store migration info in localStorage to show user warning
+        // This will be displayed on next page load in main.ts
+        try {
+          localStorage.setItem('zanobot-migration-v3-occurred', JSON.stringify({
+            timestamp: Date.now(),
+            oldVersion,
+            newVersion: 3,
+            dataCleared: true
+          }));
+        } catch (e) {
+          logger.error('   ❌ Could not save migration info to localStorage:', e);
+        }
+
         try {
           // Clear all stores to start fresh
           const machineStore = transaction.objectStore('machines');
@@ -138,6 +151,8 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
           diagnosisStore.clear();
 
           logger.info('   ✅ Database reset complete - ready for multiclass diagnosis');
+          logger.warn('   ⚠️ IMPORTANT: All previous data has been deleted due to schema incompatibility');
+          logger.warn('   ℹ️ You will need to re-record reference audio for all machines');
         } catch (error) {
           logger.error('   ❌ Migration error:', error);
         }
