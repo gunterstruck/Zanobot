@@ -584,14 +584,49 @@ export function classifyDiagnosticState(
     const adjustedCosine = cosine * magnitudeFactor;
 
     // Step 3: Calculate health score using existing scoring function
-    const score = calculateHealthScore(adjustedCosine, model.scalingConstant);
+    let score = calculateHealthScore(adjustedCosine, model.scalingConstant);
+
+    // Step 3.5: SCORE CALIBRATION - Normalize using baseline score
+    // ============================================================================
+    // If the model has a baseline score (self-recognition score from training),
+    // normalize the raw score to ensure perfect matches show 100%.
+    //
+    // Formula: CalibratedScore = (RawScore / BaselineScore) * 100
+    // Cap at 100% to prevent scores > 100%
+    //
+    // Example:
+    //   Raw Score: 92%, Baseline: 92% → Calibrated: 100%
+    //   Raw Score: 85%, Baseline: 92% → Calibrated: 92.4%
+    //   Raw Score: 46%, Baseline: 92% → Calibrated: 50%
+    //
+    // Fallback: If no baseline score exists (old models), use raw score as-is.
+    // This maintains backward compatibility with existing models.
+    // ============================================================================
+    let calibratedScore = score;
+    if (model.baselineScore && model.baselineScore > 0) {
+      const rawScore = score;
+      calibratedScore = (score / model.baselineScore) * 100;
+      calibratedScore = Math.min(100, calibratedScore); // Cap at 100%
+
+      logger.debug(
+        `📊 Score Calibration for "${model.label}": Raw=${rawScore.toFixed(1)}%, Baseline=${model.baselineScore.toFixed(1)}%, Calibrated=${calibratedScore.toFixed(1)}%`
+      );
+
+      score = calibratedScore; // Use calibrated score for comparison
+    } else {
+      logger.debug(
+        `📊 No baseline score for "${model.label}" - using raw score (backward compatibility)`
+      );
+    }
 
     // DEBUG LOGGING: Show comparison for each model
     console.log(`📊 Model "${model.label}" evaluation:`, {
       cosine: cosine.toFixed(4),
       magnitudeFactor: magnitudeFactor.toFixed(4),
       adjustedCosine: adjustedCosine.toFixed(4),
-      score: score.toFixed(1),
+      rawScore: score.toFixed(1),
+      baselineScore: model.baselineScore?.toFixed(1) || 'N/A',
+      calibratedScore: calibratedScore.toFixed(1),
     });
 
     // Step 4: Check if this is the best match so far

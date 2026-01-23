@@ -31,6 +31,7 @@ export interface GMIAModel {
   trainingDate: number; // Timestamp
   trainingDuration: number; // Recording duration in seconds
   sampleRate: number; // Audio sample rate (Hz)
+  baselineScore?: number; // Self-recognition score (model tested against its own training data)
   metadata: {
     meanCosineSimilarity: number; // μ for C calculation
     targetScore: number; // Target score (e.g., 0.9)

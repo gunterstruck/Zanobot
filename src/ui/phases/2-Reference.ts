@@ -20,6 +20,7 @@ import { notify } from '@utils/notifications.js';
 import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT } from '@ui/constants.js';
+import { classifyDiagnosticState } from '@core/ml/scoring.js';
 
 export class ReferencePhase {
   private machine: Machine;
@@ -1211,7 +1212,84 @@ export class ReferencePhase {
         `✅ Model trained successfully (scaling constant: ${model.scalingConstant.toFixed(3)})`
       );
 
-      // Add label and type to model
+      // ============================================================================
+      // SCORE CALIBRATION: Self-Test for Baseline Score
+      // ============================================================================
+      // After training, we test the model against its own training data to determine
+      // the "baseline score" - how well the model recognizes itself.
+      //
+      // This baseline score is used to normalize diagnosis scores:
+      // DisplayedScore = (RawScore / BaselineScore) * 100
+      //
+      // This ensures that a perfect match (reference vs. same signal) shows 100%,
+      // even if the mathematical raw score is only 85-95% due to GMIA algorithm characteristics.
+      //
+      // Quality Gate: If baseline score < 75%, the recording is too noisy/unstable
+      // and should be rejected to prevent unreliable diagnoses.
+      // ============================================================================
+      logger.info('🎯 Performing self-test for baseline score calibration...');
+
+      // Test model against multiple samples from its own training data
+      const numSamplesToTest = Math.min(20, this.currentFeatures.length);
+      const step = Math.max(1, Math.floor(this.currentFeatures.length / numSamplesToTest));
+      const testScores: number[] = [];
+
+      for (let i = 0; i < numSamplesToTest; i++) {
+        const featureIndex = Math.min(i * step, this.currentFeatures.length - 1);
+        const testFeature = this.currentFeatures[featureIndex];
+
+        try {
+          const diagnosis = classifyDiagnosticState(
+            [model],
+            testFeature,
+            this.currentTrainingData.config.sampleRate
+          );
+          testScores.push(diagnosis.healthScore);
+        } catch (error) {
+          logger.warn(`⚠️ Self-test sample ${i} failed:`, error);
+          // Continue with remaining samples
+        }
+      }
+
+      // Calculate average baseline score
+      if (testScores.length === 0) {
+        throw new Error('Self-test failed: No valid scores could be calculated');
+      }
+
+      const baselineScore = testScores.reduce((sum, s) => sum + s, 0) / testScores.length;
+      logger.info(
+        `✅ Baseline Score: ${baselineScore.toFixed(1)}% (averaged from ${testScores.length} samples)`
+      );
+      logger.info(`   Score range: ${Math.min(...testScores).toFixed(1)}% - ${Math.max(...testScores).toFixed(1)}%`);
+
+      // QUALITY GATE: Reject reference if baseline score is too low
+      const MIN_BASELINE_SCORE = 75;
+      if (baselineScore < MIN_BASELINE_SCORE) {
+        logger.error(
+          `❌ Baseline score too low: ${baselineScore.toFixed(1)}% (minimum: ${MIN_BASELINE_SCORE}%)`
+        );
+        notify.error(
+          `Referenzaufnahme zu undeutlich oder verrauscht.\n\n` +
+            `Selbsterkennungs-Score: ${baselineScore.toFixed(1)}%\n` +
+            `Minimum erforderlich: ${MIN_BASELINE_SCORE}%\n\n` +
+            `Mögliche Ursachen:\n` +
+            `• Signal zu schwach oder instabil\n` +
+            `• Zu viel Hintergrundgeräusch\n` +
+            `• Maschine läuft nicht konstant\n\n` +
+            `Bitte Aufnahme unter besseren Bedingungen wiederholen:\n` +
+            `• Mikrofon näher an der Maschine (10-30cm)\n` +
+            `• Ruhige Umgebung\n` +
+            `• Maschine läuft stabil während gesamter Aufnahme`,
+          new Error('Baseline score too low'),
+          { title: 'Referenzaufnahme ungeeignet', duration: 0 }
+        );
+        return;
+      }
+
+      logger.info(`✅ Quality Gate passed: Baseline score ${baselineScore.toFixed(1)}% ≥ ${MIN_BASELINE_SCORE}%`);
+
+      // Add baseline score, label and type to model
+      model.baselineScore = baselineScore;
       model.label = label;
       model.type = type;
 
