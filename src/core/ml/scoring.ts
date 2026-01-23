@@ -26,6 +26,23 @@ const HEALTH_THRESHOLDS = {
 };
 
 /**
+ * Minimum score for confident state detection
+ * Below this threshold, detected state labels are hidden to avoid confusion
+ */
+export const MIN_CONFIDENT_MATCH_SCORE = 70;
+
+/**
+ * Confidence calculation parameters
+ */
+const CONFIDENCE_PARAMS = {
+  healthyBase: 70,      // Base confidence for healthy status
+  healthyMultiplier: 1.2, // Multiplier for score above healthy threshold
+  uncertainMultiplier: 0.8, // Multiplier for uncertain range
+  uncertainBase: 50,    // Base confidence for uncertain status
+  faultyMultiplier: 1.0, // Multiplier for faulty status
+};
+
+/**
  * Calculate health score from cosine similarity
  *
  * Applies tanh scaling: Score = 100 * (tanh(C * cosine))^2
@@ -79,13 +96,13 @@ export function getClassificationDetails(score: number): {
   let recommendation: string;
 
   if (status === 'healthy') {
-    confidence = Math.min(100, 70 + (score - 75) * 1.2);
+    confidence = Math.min(100, CONFIDENCE_PARAMS.healthyBase + (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier);
     recommendation = 'Machine is operating normally. Continue regular monitoring.';
   } else if (status === 'uncertain') {
-    confidence = 50 + (score - 50) * 0.8;
+    confidence = CONFIDENCE_PARAMS.uncertainBase + (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
     recommendation = 'Machine shows some deviation. Schedule inspection to verify condition.';
   } else {
-    confidence = Math.max(20, 50 - (50 - score) * 0.6);
+    confidence = Math.max(20, HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6);
     recommendation = 'Machine shows significant deviation. Immediate inspection recommended.';
   }
 

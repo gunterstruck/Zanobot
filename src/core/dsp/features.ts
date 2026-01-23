@@ -13,6 +13,7 @@
 
 import { fft, getMagnitude, applyHanningWindow, padToPowerOfTwo } from './fft.js';
 import type { FeatureVector, AudioChunk, DSPConfig } from '@data/types.js';
+import { logger } from '@utils/logger.js';
 
 /**
  * Default DSP configuration based on Technical Report
@@ -68,12 +69,41 @@ export function extractFeatures(
       }
     : config;
 
-  // Validate minimum audio buffer length
+  // CRITICAL FIX: Validate frequency range
+  const [minFreq, maxFreq] = effectiveConfig.frequencyRange;
+  if (!isFinite(minFreq) || !isFinite(maxFreq) || minFreq < 0 || maxFreq <= minFreq) {
+    throw new Error(
+      `Invalid frequency range: [${minFreq}, ${maxFreq}]Hz. ` +
+      `Min must be >= 0, Max must be > Min, both must be finite.`
+    );
+  }
+
+  // Validate against Nyquist frequency
+  const nyquistFreq = effectiveConfig.sampleRate / 2;
+  if (maxFreq > nyquistFreq) {
+    throw new Error(
+      `Frequency range max (${maxFreq}Hz) exceeds Nyquist frequency (${nyquistFreq}Hz) ` +
+      `for sample rate ${effectiveConfig.sampleRate}Hz`
+    );
+  }
+
+  // Validate audio buffer duration (both minimum and maximum)
   const minDuration = effectiveConfig.windowSize; // At least one window size
+  const maxDuration = 300; // 5 minutes maximum to prevent browser freeze
+
   if (audioBuffer.duration < minDuration) {
     throw new Error(
       `Audio buffer too short: ${audioBuffer.duration.toFixed(2)}s (minimum: ${minDuration.toFixed(2)}s)`
     );
+  }
+
+  if (audioBuffer.duration > maxDuration) {
+    logger.warn(
+      `⚠️ Audio buffer very long (${audioBuffer.duration.toFixed(1)}s), ` +
+      `this may cause performance issues. Maximum recommended: ${maxDuration}s`
+    );
+    // Note: We continue processing but warn the user
+    // Truncation would require more complex buffer manipulation
   }
 
   // Get mono channel data

@@ -22,6 +22,7 @@ import {
   getClassificationDetails,
   classifyDiagnosticState,
   classifyHealthStatus,
+  MIN_CONFIDENT_MATCH_SCORE,
 } from '@core/ml/scoring.js';
 import { saveDiagnosis, getMachine } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
@@ -599,9 +600,9 @@ export class DiagnosePhase {
 
     const statusElement = document.getElementById('live-status');
     if (statusElement) {
-      // UX FIX: Only show detected state if score >= 70% (confident match)
-      // Below 70% the match is uncertain, showing the label would be confusing
-      const shouldShowState = score >= 70 && detectedState && detectedState !== 'UNKNOWN';
+      // UX FIX: Only show detected state if score meets confident match threshold
+      // Below threshold the match is uncertain, showing the label would be confusing
+      const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
 
       if (shouldShowState) {
         statusElement.textContent = `${status} | ${detectedState}`;
@@ -684,8 +685,8 @@ export class DiagnosePhase {
       // Get classification details
       const classification = getClassificationDetails(finalScore);
 
-      // UX FIX: Hide detected state if score < 70% (uncertain match)
-      const effectiveDetectedState = finalScore >= 70 ? detectedState : 'UNKNOWN';
+      // UX FIX: Hide detected state if score below confident match threshold
+      const effectiveDetectedState = finalScore >= MIN_CONFIDENT_MATCH_SCORE ? detectedState : 'UNKNOWN';
 
       // MULTICLASS: Generate hint based on detected state
       let hint = classification.recommendation;
