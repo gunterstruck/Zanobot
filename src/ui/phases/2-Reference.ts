@@ -119,7 +119,10 @@ export class ReferencePhase {
         });
         logger.info('📷 Camera access granted for reference image');
       } catch (cameraError) {
-        logger.warn('⚠️ Camera access denied or not available - continuing without reference image', cameraError);
+        logger.warn(
+          '⚠️ Camera access denied or not available - continuing without reference image',
+          cameraError
+        );
         notify.info('Kamera nicht verfügbar. Aufnahme wird ohne Positionsbild fortgesetzt.', {
           title: 'Kamera optional',
         });
@@ -397,7 +400,9 @@ export class ReferencePhase {
         (blob) => {
           if (blob) {
             this.capturedReferenceImage = blob;
-            logger.info(`📸 Reference snapshot captured: ${blob.size} bytes (${canvas.width}x${canvas.height})`);
+            logger.info(
+              `📸 Reference snapshot captured: ${blob.size} bytes (${canvas.width}x${canvas.height})`
+            );
 
             // Visual feedback: Flash border on video
             const videoContainer = document.getElementById('reference-video-container');
@@ -482,13 +487,17 @@ export class ReferencePhase {
       // CRITICAL FIX: Only slice audio buffer if Smart Start was NOT used
       // Smart Start already handled the 5-second warmup period, so we don't need to slice again
       const sampleRate = audioBuffer.sampleRate;
-      const warmupSamples = this.smartStartWasUsed ? 0 : Math.floor(this.warmUpDuration * sampleRate);
+      const warmupSamples = this.smartStartWasUsed
+        ? 0
+        : Math.floor(this.warmUpDuration * sampleRate);
       const totalSamples = audioBuffer.length;
       const trainingSamples = totalSamples - warmupSamples;
 
       if (this.smartStartWasUsed) {
         logger.info(`📊 Using full recording (Smart Start handled warmup):`);
-        logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s - ALL USED FOR TRAINING`);
+        logger.info(
+          `   Total duration: ${audioBuffer.duration.toFixed(2)}s - ALL USED FOR TRAINING`
+        );
       } else {
         logger.info(`📊 Slicing audio buffer (fallback mode without Smart Start):`);
         logger.info(`   Total duration: ${audioBuffer.duration.toFixed(2)}s`);
@@ -701,22 +710,26 @@ export class ReferencePhase {
     if (modalBody && !document.getElementById('recording-status')) {
       // Show existing models info
       const existingModels = this.machine.referenceModels || [];
-      const existingModelsInfo = existingModels.length > 0
-        ? existingModels.map(m => {
-            const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            return `${m.label} (${trainingDate})`;
-          }).join(', ')
-        : 'Noch keine Referenzmodelle vorhanden';
+      const existingModelsInfo =
+        existingModels.length > 0
+          ? existingModels
+              .map((m) => {
+                const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                return `${m.label} (${trainingDate})`;
+              })
+              .join(', ')
+          : 'Noch keine Referenzmodelle vorhanden';
 
       const infoDiv = document.createElement('div');
       infoDiv.className = 'existing-models-info';
-      infoDiv.style.cssText = 'background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;';
+      infoDiv.style.cssText =
+        'background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;';
       infoDiv.innerHTML = `
         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">VORHANDENE MODELLE:</div>
         <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${existingModelsInfo}</div>
@@ -1104,7 +1117,7 @@ export class ReferencePhase {
     const magnitude = this.currentQualityResult.metadata?.signalMagnitude ?? 0.5; // Default to OK if not available
     const isNoiseDetected =
       (magnitude < 0.01 && this.currentQualityResult.score < 60) || // Very low magnitude + poor quality = pure noise
-      (magnitude < 0.03 && this.currentQualityResult.score < 50);     // Low magnitude + bad quality = too risky
+      (magnitude < 0.03 && this.currentQualityResult.score < 50); // Low magnitude + bad quality = too risky
 
     if (isNoiseDetected) {
       logger.error('Brown noise or weak signal detected - blocking save');
@@ -1260,7 +1273,9 @@ export class ReferencePhase {
       logger.info(
         `✅ Baseline Score: ${baselineScore.toFixed(1)}% (averaged from ${testScores.length} samples)`
       );
-      logger.info(`   Score range: ${Math.min(...testScores).toFixed(1)}% - ${Math.max(...testScores).toFixed(1)}%`);
+      logger.info(
+        `   Score range: ${Math.min(...testScores).toFixed(1)}% - ${Math.max(...testScores).toFixed(1)}%`
+      );
 
       // QUALITY GATE: Reject reference if baseline score is too low
       const MIN_BASELINE_SCORE = 75;
@@ -1286,7 +1301,9 @@ export class ReferencePhase {
         return;
       }
 
-      logger.info(`✅ Quality Gate passed: Baseline score ${baselineScore.toFixed(1)}% ≥ ${MIN_BASELINE_SCORE}%`);
+      logger.info(
+        `✅ Quality Gate passed: Baseline score ${baselineScore.toFixed(1)}% ≥ ${MIN_BASELINE_SCORE}%`
+      );
 
       // Add baseline score, label and type to model
       model.baselineScore = baselineScore;
@@ -1305,7 +1322,9 @@ export class ReferencePhase {
         if (machineToUpdate) {
           machineToUpdate.referenceImage = this.capturedReferenceImage;
           await saveMachine(machineToUpdate);
-          logger.info(`📸 Reference image saved to machine (${this.capturedReferenceImage.size} bytes)`);
+          logger.info(
+            `📸 Reference image saved to machine (${this.capturedReferenceImage.size} bytes)`
+          );
         }
       }
 
