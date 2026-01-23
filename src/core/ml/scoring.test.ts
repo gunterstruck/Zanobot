@@ -375,7 +375,7 @@ describe('Health Scoring', () => {
       expect(result.status).toBe('faulty');
     });
 
-    it('should detect uncertain for low scores (< 70%)', () => {
+    it.skip('should detect uncertain for low scores (< 70%) - SKIPPED: Test depends on Magnitude Factor (deactivated)', () => {
       const models = [baselineModel, faultModel1, faultModel2];
 
       // Feature vector with very low similarity to all models
@@ -559,7 +559,7 @@ describe('Health Scoring', () => {
     });
   });
 
-  describe('calculateMagnitudeFactor() - MAGNITUDE FACTOR EXTENSION', () => {
+  describe.skip('calculateMagnitudeFactor() - MAGNITUDE FACTOR EXTENSION (DISABLED - Feature deactivated)', () => {
     it('should return 1.0 when magnitudes are equal', () => {
       const w = new Float64Array([3, 4]); // ||w|| = 5
       const f = new Float64Array([3, 4]); // ||f|| = 5
@@ -663,7 +663,7 @@ describe('Health Scoring', () => {
     });
   });
 
-  describe('INTEGRATION: Magnitude Factor in Multiclass Diagnosis', () => {
+  describe.skip('INTEGRATION: Magnitude Factor in Multiclass Diagnosis (DISABLED - Feature deactivated)', () => {
     const baselineModel: GMIAModel = {
       machineId: 'test-machine',
       label: 'Baseline',

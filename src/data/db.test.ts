@@ -59,7 +59,7 @@ describe('Database Operations', () => {
       const db = await initDB();
 
       expect(db).toBeDefined();
-      expect(db.version).toBe(4); // Current DB version (optimized machine + timestamp index)
+      expect(db.version).toBe(5); // Current DB version (Visual Positioning + Baseline Score)
     });
 
     it('should create all required object stores', async () => {

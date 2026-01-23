@@ -35,10 +35,10 @@ export const MIN_CONFIDENT_MATCH_SCORE = 70;
  * Confidence calculation parameters
  */
 const CONFIDENCE_PARAMS = {
-  healthyBase: 70,      // Base confidence for healthy status
+  healthyBase: 70, // Base confidence for healthy status
   healthyMultiplier: 1.2, // Multiplier for score above healthy threshold
   uncertainMultiplier: 0.8, // Multiplier for uncertain range
-  uncertainBase: 50,    // Base confidence for uncertain status
+  uncertainBase: 50, // Base confidence for uncertain status
   faultyMultiplier: 1.0, // Multiplier for faulty status
 };
 
@@ -96,13 +96,22 @@ export function getClassificationDetails(score: number): {
   let recommendation: string;
 
   if (status === 'healthy') {
-    confidence = Math.min(100, CONFIDENCE_PARAMS.healthyBase + (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier);
+    confidence = Math.min(
+      100,
+      CONFIDENCE_PARAMS.healthyBase +
+        (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier
+    );
     recommendation = 'Machine is operating normally. Continue regular monitoring.';
   } else if (status === 'uncertain') {
-    confidence = CONFIDENCE_PARAMS.uncertainBase + (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
+    confidence =
+      CONFIDENCE_PARAMS.uncertainBase +
+      (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
     recommendation = 'Machine shows some deviation. Schedule inspection to verify condition.';
   } else {
-    confidence = Math.max(20, HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6);
+    confidence = Math.max(
+      20,
+      HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6
+    );
     recommendation = 'Machine shows significant deviation. Immediate inspection recommended.';
   }
 
@@ -311,7 +320,7 @@ export const SCORE_HISTORY_SIZE = 10;
 export function filterHealthScoreForDisplay(scores: number[]): number {
   // CRITICAL FIX: Filter out invalid values (NaN, Infinity, out of range) FIRST
   // This prevents NaN propagation through reduce() operations
-  const validScores = scores.filter(s => isFinite(s) && s >= 0 && s <= 100);
+  const validScores = scores.filter((s) => isFinite(s) && s >= 0 && s <= 100);
 
   if (validScores.length === 0) {
     logger.warn('No valid scores in history, returning 0');
@@ -670,15 +679,17 @@ export function classifyDiagnosticState(
       multiclassMode: true,
       evaluatedModels: models.length,
       // DEBUG INFO: Add detailed calculation values for troubleshooting
-      debug: bestModel ? {
-        weightMagnitude: vectorMagnitude(bestModel.weightVector),
-        featureMagnitude: featureMagnitude,
-        magnitudeFactor: bestMagnitudeFactor,
-        cosine: bestRawCosine,
-        adjustedCosine: bestCosine,
-        scalingConstant: bestModel.scalingConstant,
-        rawScore: bestScore,
-      } : undefined,
+      debug: bestModel
+        ? {
+            weightMagnitude: vectorMagnitude(bestModel.weightVector),
+            featureMagnitude: featureMagnitude,
+            magnitudeFactor: bestMagnitudeFactor,
+            cosine: bestRawCosine,
+            adjustedCosine: bestCosine,
+            scalingConstant: bestModel.scalingConstant,
+            rawScore: bestScore,
+          }
+        : undefined,
     },
     analysis: {
       hint: generateMulticlassHint(bestScore, bestLabel, status),
@@ -733,7 +744,10 @@ export function classifyDiagnosticState(
  * @param featureVector - Test feature vector
  * @returns Magnitude ratio clamped to [0, 1], or 0 if reference is too weak
  */
-export function calculateMagnitudeFactor(weightVector: Float64Array, featureVector: Float64Array): number {
+export function calculateMagnitudeFactor(
+  _weightVector: Float64Array,
+  _featureVector: Float64Array
+): number {
   // ============================================================================
   // TEMPORARY DEACTIVATION: "Back to Baseline"
   // ============================================================================
