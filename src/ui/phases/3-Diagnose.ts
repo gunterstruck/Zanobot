@@ -105,6 +105,18 @@ export class DiagnosePhase {
   }
 
   /**
+   * Update machine data (e.g., after new reference model is added)
+   */
+  public setMachine(machine: Machine): void {
+    this.machine = machine;
+    logger.debug('🔄 Machine updated in DiagnosePhase:', {
+      machineId: machine.id,
+      machineName: machine.name,
+      numModels: machine.referenceModels?.length || 0,
+    });
+  }
+
+  /**
    * Initialize the diagnose phase UI
    */
   public init(): void {
@@ -480,7 +492,9 @@ export class DiagnosePhase {
       this.scoreHistory.addScore(diagnosis.healthScore);
 
       // CRITICAL FIX: Add label to history for majority voting
-      const detectedState = diagnosis.metadata?.detectedState || 'UNKNOWN';
+      const detectedState = (typeof diagnosis.metadata?.detectedState === 'string'
+        ? diagnosis.metadata.detectedState
+        : 'UNKNOWN');
       this.labelHistory.addLabel(detectedState);
 
       // Step 4: Get filtered score (trimmed mean of last 10)
@@ -491,7 +505,16 @@ export class DiagnosePhase {
 
       // Step 6: Store debug values from diagnosis metadata
       if (diagnosis.metadata?.debug) {
-        this.lastDebugValues = diagnosis.metadata.debug as any;
+        const debug = diagnosis.metadata.debug as {
+          weightMagnitude: number;
+          featureMagnitude: number;
+          magnitudeFactor: number;
+          cosine: number;
+          adjustedCosine: number;
+          scalingConstant: number;
+          rawScore: number;
+        };
+        this.lastDebugValues = debug;
         logger.debug('✅ Debug values stored:', this.lastDebugValues);
       } else {
         logger.warn('⚠️ No debug values in diagnosis.metadata!', diagnosis.metadata);

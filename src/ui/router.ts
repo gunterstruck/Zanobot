@@ -105,7 +105,7 @@ export class Router {
     this.referencePhase.setOnMachineUpdated((updatedMachine) => {
       // Update diagnose phase with new machine data
       if (this.diagnosePhase) {
-        (this.diagnosePhase as any).machine = updatedMachine;
+        this.diagnosePhase.setMachine(updatedMachine);
       }
       // Update UI to show new model count and enable diagnosis
       this.updateMachineDisplay(updatedMachine);

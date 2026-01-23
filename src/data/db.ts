@@ -290,12 +290,12 @@ export async function saveRecording(recording: Recording): Promise<void> {
   const db = await initDB();
 
   // Serialize AudioBuffer for IndexedDB storage
-  const serializedRecording = {
+  const serializedRecording: SerializedRecording = {
     ...recording,
     audioBuffer: serializeAudioBuffer(recording.audioBuffer),
   };
 
-  await db.put('recordings', serializedRecording as any);
+  await db.put('recordings', serializedRecording as unknown as Recording);
   logger.info(`🎙️ Recording saved: ${recording.id}`);
 }
 
@@ -619,14 +619,20 @@ function deserializeAudioBuffer(serialized: SerializedAudioBuffer): AudioBuffer 
  * @param obj - Object to check
  * @returns True if object is serialized AudioBuffer
  */
-function isSerializedAudioBuffer(obj: any): obj is SerializedAudioBuffer {
+function isSerializedAudioBuffer(obj: unknown): obj is SerializedAudioBuffer {
   return (
-    obj &&
+    obj !== null &&
+    obj !== undefined &&
     typeof obj === 'object' &&
+    '_serialized' in obj &&
     obj._serialized === true &&
+    'numberOfChannels' in obj &&
     typeof obj.numberOfChannels === 'number' &&
+    'sampleRate' in obj &&
     typeof obj.sampleRate === 'number' &&
+    'length' in obj &&
     typeof obj.length === 'number' &&
+    'channelData' in obj &&
     Array.isArray(obj.channelData)
   );
 }
@@ -676,11 +682,11 @@ export async function importData(
     for (const recording of data.recordings) {
       // CRITICAL FIX: IndexedDB requires serialized AudioBuffers, not real AudioBuffer objects
       // AudioBuffer is not structure-cloneable and causes DataCloneError
-      let serializedRecording: any;
+      let serializedRecording: SerializedRecording;
 
       if (isSerializedAudioBuffer(recording.audioBuffer)) {
         // Already serialized - use directly (format matches IndexedDB storage)
-        serializedRecording = recording;
+        serializedRecording = recording as SerializedRecording;
       } else {
         // Real AudioBuffer - serialize it before storing in IndexedDB
         serializedRecording = {
@@ -689,7 +695,7 @@ export async function importData(
         };
       }
 
-      await db.put('recordings', serializedRecording);
+      await db.put('recordings', serializedRecording as unknown as Recording);
     }
     logger.info(`📥 Imported ${data.recordings.length} recordings`);
   }

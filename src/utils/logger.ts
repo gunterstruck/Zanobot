@@ -64,7 +64,7 @@ class Logger {
   /**
    * Debug log (development only)
    */
-  public debug(message: string, ...args: any[]): void {
+  public debug(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.DEBUG) {
       this.log('DEBUG', message, args, console.debug);
     }
@@ -73,7 +73,7 @@ class Logger {
   /**
    * Info log
    */
-  public info(message: string, ...args: any[]): void {
+  public info(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.INFO) {
       this.log('INFO', message, args, console.log);
     }
@@ -82,7 +82,7 @@ class Logger {
   /**
    * Warning log
    */
-  public warn(message: string, ...args: any[]): void {
+  public warn(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.WARN) {
       this.log('WARN', message, args, console.warn);
     }
@@ -91,7 +91,7 @@ class Logger {
   /**
    * Error log
    */
-  public error(message: string, error?: Error | unknown, ...args: any[]): void {
+  public error(message: string, error?: Error | unknown, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.ERROR) {
       const errorInfo = error instanceof Error ? error.message : String(error);
       const stack =
@@ -108,7 +108,7 @@ class Logger {
   /**
    * Internal log method
    */
-  private log(level: string, message: string, args: any[], logFn: (...data: any[]) => void): void {
+  private log(level: string, message: string, args: unknown[], logFn: (...data: unknown[]) => void): void {
     const timestamp = this.config.enableTimestamp ? new Date().toISOString() : '';
     const prefix = timestamp ? `[${timestamp}] [${level}]` : `[${level}]`;
 
@@ -129,9 +129,9 @@ export const logger = new Logger();
  * Shorthand logging functions (for convenience)
  */
 export const log = {
-  debug: (message: string, ...args: any[]) => logger.debug(message, ...args),
-  info: (message: string, ...args: any[]) => logger.info(message, ...args),
-  warn: (message: string, ...args: any[]) => logger.warn(message, ...args),
-  error: (message: string, error?: Error | unknown, ...args: any[]) =>
+  debug: (message: string, ...args: unknown[]) => logger.debug(message, ...args),
+  info: (message: string, ...args: unknown[]) => logger.info(message, ...args),
+  warn: (message: string, ...args: unknown[]) => logger.warn(message, ...args),
+  error: (message: string, error?: Error | unknown, ...args: unknown[]) =>
     logger.error(message, error, ...args),
 };
