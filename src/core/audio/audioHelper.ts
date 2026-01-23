@@ -39,12 +39,9 @@ export function buildAudioConstraints(deviceId?: string): MediaStreamConstraints
   const baseConstraints: MediaStreamConstraints = {
     audio: {
       ...AUDIO_CONSTRAINTS.audio, // Deep copy of nested audio object
+      ...(deviceId && { deviceId: { exact: deviceId } }),
     },
   };
-
-  if (deviceId) {
-    (baseConstraints.audio as any).deviceId = { exact: deviceId };
-  }
 
   return baseConstraints;
 }

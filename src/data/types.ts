@@ -90,7 +90,7 @@ export interface DiagnosisResult {
   status: 'healthy' | 'uncertain' | 'faulty'; // Strict type for proper type checking
   confidence: number; // 0-100% (model quality indicator)
   rawCosineSimilarity?: number; // Raw cosine value (optional for real-time)
-  metadata?: Record<string, any>; // Flexible metadata
+  metadata?: Record<string, unknown>; // Flexible metadata
   analysis?: {
     frequencyAnomalies?: Array<{ frequency: number; deviation: number }>;
     hint?: string;

@@ -97,7 +97,15 @@ export class AudioWorkletManager {
   /**
    * Handle messages from AudioWorklet
    */
-  private handleWorkletMessage(message: any): void {
+  private handleWorkletMessage(message:
+    | { type: 'init-complete'; sampleRate: number; chunkSize: number; bufferSize: number }
+    | { type: 'audio-data-ready'; writePos: number }
+    | { type: 'audio-chunk'; chunk: Float32Array; chunkIndex: number; writePos: number }
+    | { type: 'smart-start-state'; state: string; phase: 'idle' | 'warmup' | 'waiting' | 'recording'; remainingWarmUp: number }
+    | { type: 'smart-start-complete'; rms: number }
+    | { type: 'smart-start-timeout' }
+    | { type: 'debug-rms'; rms: number; threshold: number }
+  ): void {
     switch (message.type) {
       case 'init-complete':
         // Worklet initialization confirmed with actual sample rate, chunk size, and buffer size

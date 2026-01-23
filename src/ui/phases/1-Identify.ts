@@ -203,7 +203,7 @@ export class IdentifyPhase {
   /**
    * Handle successful scan
    */
-  private async onScanSuccess(decodedText: string, decodedResult: any): Promise<void> {
+  private async onScanSuccess(decodedText: string, decodedResult: unknown): Promise<void> {
     logger.info('Code detected:', decodedText);
 
     // Stop scanner immediately
@@ -348,7 +348,12 @@ export class IdentifyPhase {
   private playSuccessBeep(): void {
     try {
       // Create a simple beep using Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) {
+        logger.warn('AudioContext not supported in this browser');
+        return;
+      }
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 

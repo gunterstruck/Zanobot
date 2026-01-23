@@ -12,6 +12,7 @@ import { initDB, getDBStats } from '@data/db.js';
 import { Router } from '@ui/router.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+import { initErrorBoundary } from '@utils/errorBoundary.js';
 
 /**
  * Global type declarations for theme-bootstrap.js API
@@ -28,7 +29,7 @@ declare global {
       applyCustomColors: (colors: Record<string, string>) => void;
       reset: () => void;
     };
-    ZANOBOT_CONFIG?: any;
+    ZANOBOT_CONFIG?: Record<string, unknown>;
   }
 }
 
@@ -43,6 +44,11 @@ class ZanobotApp {
    * Initialize application
    */
   private async init(): Promise<void> {
+    // Initialize error boundary first to catch any errors during initialization
+    initErrorBoundary({
+      showDetails: import.meta.env.DEV || import.meta.env.MODE === 'development',
+    });
+
     logger.info('🤖 Zanobot AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');
 
@@ -97,7 +103,9 @@ class ZanobotApp {
     const missing: string[] = [];
 
     // Check Web Audio API
-    if (typeof AudioContext === 'undefined' && typeof (window as any).webkitAudioContext === 'undefined') {
+    const hasAudioContext = typeof AudioContext !== 'undefined' ||
+      typeof (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext !== 'undefined';
+    if (!hasAudioContext) {
       missing.push('- Web Audio API (required for audio processing)');
     }
 
