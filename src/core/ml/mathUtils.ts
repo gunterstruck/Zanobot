@@ -85,6 +85,21 @@ export function matrixTranspose(A: Float64Array[]): Float64Array[] {
 export function matrixInverse(A: Float64Array[]): Float64Array[] {
   const n = A.length;
 
+  // CRITICAL FIX: Validate input matrix
+  if (n === 0) {
+    throw new Error('Cannot invert empty matrix');
+  }
+
+  // Validate that matrix is square and all rows exist
+  for (let i = 0; i < n; i++) {
+    if (!A[i] || A[i].length !== n) {
+      throw new Error(
+        `Matrix must be square. Row ${i} has length ` +
+        `${A[i]?.length ?? 'undefined'}, expected ${n}`
+      );
+    }
+  }
+
   // Create augmented matrix [A | I]
   const augmented: number[][] = [];
 
@@ -339,6 +354,21 @@ export function featuresToMatrix(features: Float64Array[]): Float64Array[] {
 
   const numFeatures = features[0].length;
   const numSamples = features.length;
+
+  // CRITICAL FIX: Validate all features have the same length
+  // This prevents undefined/NaN values in the resulting matrix
+  const expectedLength = features[0].length;
+  for (let j = 0; j < numSamples; j++) {
+    if (!features[j]) {
+      throw new Error(`Feature vector at index ${j} is undefined/null`);
+    }
+    if (features[j].length !== expectedLength) {
+      throw new Error(
+        `Feature vector length mismatch at index ${j}: ` +
+        `expected ${expectedLength}, got ${features[j].length}`
+      );
+    }
+  }
 
   const matrix: Float64Array[] = [];
 

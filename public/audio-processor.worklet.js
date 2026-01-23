@@ -213,6 +213,13 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
         // Check for timeout
         if (waitElapsedSamples >= this.maxWaitSamples) {
+          // CRITICAL FIX: Clean up ring buffer state before signaling timeout
+          // This prevents old audio data from being processed on retry
+          this.ringBuffer.fill(0);
+          this.writePos = 0;
+          this.readPos = 0;
+          this.samplesWritten = 0;
+
           this.port.postMessage({
             type: 'smart-start-timeout'
           });
@@ -278,6 +285,14 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
       const samplesSinceLastChunk = this.samplesWritten - this.readPos;
 
       if (samplesSinceLastChunk >= this.chunkSize) {
+        // CRITICAL FIX: Ensure we don't read beyond available samples
+        // This prevents reading old/invalid data from the ring buffer
+        const availableSamples = this.samplesWritten - this.readPos;
+        if (availableSamples < this.chunkSize) {
+          // Not enough data yet, wait for more (safety check, should not happen)
+          return true;
+        }
+
         // Extract chunk from readPos (not from writePos backwards!)
         // This ensures we process all data sequentially without gaps
         const chunk = new Float32Array(this.chunkSize);

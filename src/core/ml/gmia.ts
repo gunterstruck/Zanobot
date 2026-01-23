@@ -187,8 +187,15 @@ function calculateScalingConstant(features: Float64Array[], weightVector: Float6
   const mu = mean(cosineSimilarities);
 
   // Sanity check: Signal quality must be sufficient for training
-  if (Math.abs(mu) < 1e-9) {
-    throw new Error('Signal quality too low for training');
+  // CRITICAL FIX: Increased threshold from 1e-9 to 1e-6 for numerical stability
+  // 1e-9 is too close to floating-point precision limits and can cause NaN in atanh()
+  if (Math.abs(mu) < 1e-6 || !isFinite(mu)) {
+    throw new Error(
+      'Signal zu schwach oder inkonsistent für Training. ' +
+      'Bitte sicherstellen: Mikrofon nah an Maschine, ' +
+      'Maschine läuft, kein reines Hintergrundrauschen. ' +
+      `(Durchschnittliche Cosinus-Ähnlichkeit: ${mu.toExponential(2)})`
+    );
   }
 
   // Target score (0.9 = 90%)
