@@ -44,7 +44,7 @@ interface ZanobotDB extends DBSchema {
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 4; // Incremented for optimized machine + timestamp index
+const DB_VERSION = 5; // Incremented for Visual Positioning Assistant (referenceImage field)
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -165,6 +165,15 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
           diagnosisStore.createIndex('by-machine-timestamp', ['machineId', 'timestamp']);
           logger.info('   ✅ Added compound index: by-machine-timestamp');
         }
+      }
+
+      // Migration from v4 to v5: Visual Positioning Assistant
+      // NON-BREAKING CHANGE: Added optional referenceImage field to Machine interface
+      // No data migration required - existing machines will simply not have this field
+      if (oldVersion < 5) {
+        logger.info('🔄 Migrating database from v4 to v5 (Visual Positioning Assistant)');
+        logger.info('   ✅ Added optional referenceImage field to Machine schema');
+        logger.info('   ℹ️ Existing machines will work without changes (non-breaking)');
       }
     },
   });

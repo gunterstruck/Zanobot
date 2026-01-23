@@ -14,6 +14,7 @@ export interface Machine {
   createdAt: number; // Timestamp
   lastDiagnosisAt?: number; // Last diagnosis timestamp
   referenceModels: GMIAModel[]; // Trained reference models (multiclass diagnosis)
+  referenceImage?: Blob; // Optional reference image for visual positioning (Ghost Image Overlay)
 }
 
 /**
