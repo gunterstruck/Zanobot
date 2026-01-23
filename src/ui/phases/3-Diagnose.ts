@@ -43,6 +43,7 @@ export class DiagnosePhase {
   private selectedDeviceId: string | undefined; // Selected microphone device ID
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
+  private cameraStream: MediaStream | null = null; // VISUAL POSITIONING: Camera stream for ghost overlay
   private audioWorkletManager: AudioWorkletManager | null = null;
   private visualizer: AudioVisualizer | null = null;
   private healthGauge: HealthGauge | null = null;
@@ -194,6 +195,22 @@ export class DiagnosePhase {
 
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
+
+      // VISUAL POSITIONING: Request camera access for ghost overlay
+      // Non-blocking: If camera access fails, continue with audio only
+      try {
+        this.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }, // Prefer back camera on mobile
+          audio: false,
+        });
+        logger.info('📷 Camera access granted for ghost overlay');
+      } catch (cameraError) {
+        logger.warn('⚠️ Camera access denied or not available - continuing without ghost overlay', cameraError);
+        notify.info('Kamera nicht verfügbar. Diagnose wird ohne Positionshilfe fortgesetzt.', {
+          title: 'Kamera optional',
+        });
+        this.cameraStream = null;
+      }
 
       // Create audio context with the expected sample rate
       // Note: Browser may still override this based on hardware capabilities
@@ -361,6 +378,12 @@ export class DiagnosePhase {
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
+    }
+
+    // VISUAL POSITIONING: Stop camera stream
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach((track) => track.stop());
+      this.cameraStream = null;
     }
 
     // Close audio context with error handling to prevent leaks
@@ -834,6 +857,77 @@ export class DiagnosePhase {
       `;
       modalBody.appendChild(liveDisplay);
     }
+
+    // VISUAL POSITIONING: Add ghost overlay if camera and reference image are available
+    if (this.cameraStream && this.machine.referenceImage && modalBody) {
+      // Create container for ghost overlay
+      const ghostContainer = document.createElement('div');
+      ghostContainer.id = 'ghost-overlay-container';
+      ghostContainer.className = 'ghost-overlay-container';
+      ghostContainer.style.cssText = `
+        position: relative;
+        width: 100%;
+        max-width: 300px;
+        margin: 12px auto;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid var(--primary-color);
+      `;
+
+      // Create video element (live feed)
+      const video = document.createElement('video');
+      video.id = 'diagnosis-video';
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;
+      video.style.cssText = `
+        width: 100%;
+        height: auto;
+        display: block;
+      `;
+      video.srcObject = this.cameraStream;
+
+      // Create ghost image overlay (reference image)
+      const ghostImage = document.createElement('img');
+      ghostImage.id = 'ghost-overlay-image';
+      ghostImage.className = 'ghost-overlay-image';
+      ghostImage.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 10;
+      `;
+
+      // Convert Blob to URL for image src
+      const imageUrl = URL.createObjectURL(this.machine.referenceImage);
+      ghostImage.src = imageUrl;
+
+      // Add hint text
+      const hint = document.createElement('p');
+      hint.className = 'ghost-overlay-hint';
+      hint.style.cssText = `
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 8px;
+      `;
+      hint.textContent = '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen';
+
+      // Assemble elements
+      ghostContainer.appendChild(video);
+      ghostContainer.appendChild(ghostImage);
+
+      // Insert at top of modal body
+      modalBody.insertBefore(ghostContainer, modalBody.firstChild);
+      modalBody.insertBefore(hint, ghostContainer.nextSibling);
+
+      logger.info('✅ Ghost overlay added to diagnosis modal');
+    }
   }
 
   /**
@@ -850,6 +944,21 @@ export class DiagnosePhase {
       const liveDisplay = modal.querySelector('.live-display');
       if (liveDisplay) {
         liveDisplay.remove();
+      }
+
+      // VISUAL POSITIONING: Clean up ghost overlay elements
+      const ghostContainer = modal.querySelector('#ghost-overlay-container');
+      if (ghostContainer) {
+        // Revoke blob URL to prevent memory leaks
+        const ghostImage = ghostContainer.querySelector('#ghost-overlay-image') as HTMLImageElement | null;
+        if (ghostImage && ghostImage.src) {
+          URL.revokeObjectURL(ghostImage.src);
+        }
+        ghostContainer.remove();
+      }
+      const ghostHint = modal.querySelector('.ghost-overlay-hint');
+      if (ghostHint) {
+        ghostHint.remove();
       }
     }
   }

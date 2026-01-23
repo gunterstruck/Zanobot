@@ -27,6 +27,7 @@ export class ReferencePhase {
   private onMachineUpdated: ((machine: Machine) => void) | null = null; // Callback when machine is updated
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
+  private cameraStream: MediaStream | null = null; // VISUAL POSITIONING: Camera stream for reference image
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
@@ -50,6 +51,9 @@ export class ReferencePhase {
 
   // CRITICAL FIX: Store event listener reference for proper cleanup
   private recordButtonClickHandler: (() => void) | null = null;
+
+  // VISUAL POSITIONING: Reference image captured during recording
+  private capturedReferenceImage: Blob | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -104,6 +108,22 @@ export class ReferencePhase {
 
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
+
+      // VISUAL POSITIONING: Request camera access for reference image
+      // Non-blocking: If camera access fails, continue with audio only
+      try {
+        this.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }, // Prefer back camera on mobile
+          audio: false,
+        });
+        logger.info('📷 Camera access granted for reference image');
+      } catch (cameraError) {
+        logger.warn('⚠️ Camera access denied or not available - continuing without reference image', cameraError);
+        notify.info('Kamera nicht verfügbar. Aufnahme wird ohne Positionsbild fortgesetzt.', {
+          title: 'Kamera optional',
+        });
+        this.cameraStream = null;
+      }
 
       if (typeof MediaRecorder === 'undefined') {
         notify.error(
@@ -241,6 +261,12 @@ export class ReferencePhase {
       this.mediaStream = null;
     }
 
+    // VISUAL POSITIONING: Stop camera stream
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach((track) => track.stop());
+      this.cameraStream = null;
+    }
+
     // Close audio context with error handling to prevent leaks
     if (this.audioContext && this.audioContext.state !== 'closed') {
       try {
@@ -315,10 +341,81 @@ export class ReferencePhase {
       this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
       }, recordingDuration * 1000);
+
+      // VISUAL POSITIONING: Capture reference image at midpoint of recording
+      // Calculate snapshot time: halfway through the actual recording (after warmup)
+      const snapshotDelay = this.smartStartWasUsed
+        ? 5000 // 5 seconds into 10-second recording (Smart Start)
+        : 10000; // 10 seconds into 15-second recording (5s warmup + 5s into training)
+
+      setTimeout(() => {
+        this.captureReferenceSnapshot();
+      }, snapshotDelay);
     };
 
     // Start recording (will trigger onstart event)
     this.mediaRecorder.start();
+  }
+
+  /**
+   * VISUAL POSITIONING: Capture reference snapshot from camera stream
+   *
+   * Creates a snapshot of the current video frame and stores it as Blob.
+   * This image will be saved to the machine for later use in diagnosis.
+   */
+  private captureReferenceSnapshot(): void {
+    // Check if camera stream is available
+    if (!this.cameraStream) {
+      logger.info('📷 No camera stream available - skipping reference snapshot');
+      return;
+    }
+
+    try {
+      // Get video element
+      const video = document.getElementById('reference-video') as HTMLVideoElement | null;
+      if (!video || video.videoWidth === 0) {
+        logger.warn('⚠️ Video element not ready - skipping snapshot');
+        return;
+      }
+
+      // Create canvas for snapshot
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw current video frame to canvas
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        logger.error('❌ Failed to get canvas context');
+        return;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert canvas to Blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            this.capturedReferenceImage = blob;
+            logger.info(`📸 Reference snapshot captured: ${blob.size} bytes (${canvas.width}x${canvas.height})`);
+
+            // Visual feedback: Flash border on video
+            const videoContainer = document.getElementById('reference-video-container');
+            if (videoContainer) {
+              videoContainer.style.borderColor = 'var(--status-healthy)';
+              setTimeout(() => {
+                videoContainer.style.borderColor = 'var(--primary-color)';
+              }, 300);
+            }
+          } else {
+            logger.error('❌ Failed to create blob from canvas');
+          }
+        },
+        'image/jpeg',
+        0.8 // 80% quality for reasonable file size
+      );
+    } catch (error) {
+      logger.error('Snapshot capture error:', error);
+    }
   }
 
   /**
@@ -641,6 +738,55 @@ export class ReferencePhase {
       stopBtn.textContent = BUTTON_TEXT.STOP_REFERENCE;
       stopBtn.onclick = () => this.stopRecording();
     }
+
+    // VISUAL POSITIONING: Add video preview if camera is available
+    if (this.cameraStream && modalBody) {
+      // Create video container
+      const videoContainer = document.createElement('div');
+      videoContainer.id = 'reference-video-container';
+      videoContainer.className = 'reference-video-container';
+      videoContainer.style.cssText = `
+        position: relative;
+        width: 100%;
+        max-width: 300px;
+        margin: 12px auto;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid var(--primary-color);
+      `;
+
+      // Create video element
+      const video = document.createElement('video');
+      video.id = 'reference-video';
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;
+      video.style.cssText = `
+        width: 100%;
+        height: auto;
+        display: block;
+      `;
+
+      // Attach camera stream to video
+      video.srcObject = this.cameraStream;
+
+      // Add hint text
+      const hint = document.createElement('p');
+      hint.className = 'video-hint';
+      hint.style.cssText = `
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 8px;
+      `;
+      hint.textContent = '📷 Positionsbild wird automatisch aufgenommen';
+
+      videoContainer.appendChild(video);
+      modalBody.insertBefore(videoContainer, modalBody.firstChild);
+      modalBody.insertBefore(hint, videoContainer.nextSibling);
+
+      logger.info('✅ Reference video preview added to modal');
+    }
   }
 
   /**
@@ -661,6 +807,16 @@ export class ReferencePhase {
     const existingModelsInfo = modal?.querySelector('.existing-models-info');
     if (existingModelsInfo) {
       existingModelsInfo.remove();
+    }
+
+    // VISUAL POSITIONING: Clean up video elements
+    const videoContainer = document.getElementById('reference-video-container');
+    if (videoContainer) {
+      videoContainer.remove();
+    }
+    const videoHint = modal?.querySelector('.video-hint');
+    if (videoHint) {
+      videoHint.remove();
     }
   }
 
@@ -895,6 +1051,7 @@ export class ReferencePhase {
     this.currentQualityResult = null;
     this.currentTrainingData = null;
     this.recordedBlob = null;
+    this.capturedReferenceImage = null; // VISUAL POSITIONING: Clear reference image
 
     // Show info message
     notify.info('Sie können eine neue Referenzaufnahme starten.', { title: 'Aufnahme verworfen' });
@@ -1062,6 +1219,17 @@ export class ReferencePhase {
       await updateMachineModel(this.machine.id, model);
 
       logger.info(`✅ Reference model "${label}" trained and saved!`);
+
+      // VISUAL POSITIONING: Save reference image to machine (if captured)
+      if (this.capturedReferenceImage) {
+        const { getMachine, saveMachine } = await import('@data/db.js');
+        const machineToUpdate = await getMachine(this.machine.id);
+        if (machineToUpdate) {
+          machineToUpdate.referenceImage = this.capturedReferenceImage;
+          await saveMachine(machineToUpdate);
+          logger.info(`📸 Reference image saved to machine (${this.capturedReferenceImage.size} bytes)`);
+        }
+      }
 
       // Reload machine to get updated referenceModels array
       const { getMachine } = await import('@data/db.js');
