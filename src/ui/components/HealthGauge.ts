@@ -43,22 +43,51 @@ export class HealthGauge {
   /**
    * Draw gauge with score and status (Real-time compatible)
    *
+   * CRITICAL FIX: Comprehensive input validation to prevent canvas errors
+   *
    * @param score - Health score (0-100)
    * @param status - Status label (optional, auto-calculated if omitted)
    */
   public draw(score: number, status?: string): void {
-    this.score = Math.max(0, Math.min(100, score));
-    this.customStatus = status;
+    // CRITICAL FIX: Validate score is a valid number
+    if (!isFinite(score) || score < 0 || score > 100) {
+      console.error(`❌ HealthGauge: Invalid score: ${score}, using 0`);
+      this.score = 0;
+    } else {
+      this.score = Math.max(0, Math.min(100, score));
+    }
+
+    // CRITICAL FIX: Validate status if provided
+    if (status !== undefined) {
+      const validStatuses = ['healthy', 'uncertain', 'faulty', 'UNKNOWN'];
+      if (!validStatuses.includes(status)) {
+        console.error(`❌ HealthGauge: Invalid status: ${status}, using UNKNOWN`);
+        this.customStatus = 'UNKNOWN';
+      } else {
+        this.customStatus = status;
+      }
+    } else {
+      this.customStatus = status;
+    }
+
     this.render();
   }
 
   /**
    * Update and render the gauge with new score
    *
+   * CRITICAL FIX: Input validation to prevent invalid scores
+   *
    * @param score - Health score (0-100)
    * @param animate - Whether to animate the transition
    */
   public updateScore(score: number, animate: boolean = true): void {
+    // CRITICAL FIX: Validate score is a valid number
+    if (!isFinite(score) || score < 0 || score > 100) {
+      console.error(`❌ HealthGauge.updateScore: Invalid score: ${score}, using 0`);
+      score = 0;
+    }
+
     const targetScore = Math.max(0, Math.min(100, score));
 
     // CRITICAL FIX: Reset custom status to allow auto-calculated status
