@@ -218,17 +218,32 @@ class ZanobotApp {
    * CRITICAL FIX: Preserve original display mode (flex, grid, etc.)
    * instead of hardcoding 'block'. Also check computed style instead
    * of only inline style to handle CSS-defined visibility.
+   *
+   * CRITICAL FIX: Added debouncing to prevent issues from rapid clicks
    */
   private setupCollapsibleSections(): void {
     const headers = document.querySelectorAll('.section-header');
+    let isAnimating = false;
 
     headers.forEach((header) => {
       header.addEventListener('click', () => {
+        // CRITICAL FIX: Debounce to prevent double-clicks causing UI issues
+        if (isAnimating) {
+          return;
+        }
+        isAnimating = true;
+
         const target = header.getAttribute('data-target');
-        if (!target) return;
+        if (!target) {
+          isAnimating = false;
+          return;
+        }
 
         const content = document.getElementById(target);
-        if (!content) return;
+        if (!content) {
+          isAnimating = false;
+          return;
+        }
 
         // CRITICAL FIX: Store original display mode on first interaction
         // This preserves flex, grid, or any other display value
@@ -257,6 +272,11 @@ class ZanobotApp {
         if (icon) {
           icon.classList.toggle('rotated');
         }
+
+        // Reset debounce flag after animation completes (300ms matches CSS transition)
+        setTimeout(() => {
+          isAnimating = false;
+        }, 300);
       });
     });
   }

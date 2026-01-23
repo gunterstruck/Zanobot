@@ -10,6 +10,31 @@
  * - Better performance for DSP operations
  */
 
+// CONFIGURATION CONSTANTS
+// These values are tuned for industrial machine diagnostics
+
+// Signal detection threshold (RMS value)
+// Reduced from 0.02 to 0.002 for very weak signals
+// Testing showed that even "loud enough" machine sounds can be < 0.005 RMS
+// Value 0.002 is ~2.5x more sensitive, catching weak machine signals
+// while still above typical background noise (~0.0001 - 0.001)
+const SIGNAL_THRESHOLD_RMS = 0.002;
+
+// Maximum wait time for signal detection (30 seconds)
+const MAX_WAIT_TIME_SECONDS = 30;
+
+// Default sample rate (will be overridden by actual AudioContext rate)
+const DEFAULT_SAMPLE_RATE = 44100;
+
+// DSP window size in seconds (matches feature extraction)
+const DSP_WINDOW_SIZE_SECONDS = 0.330;
+
+// Ring buffer size multiplier (2x chunk size for safety margin)
+const RING_BUFFER_SIZE_MULTIPLIER = 2;
+
+// Minimum ring buffer size in samples
+const MIN_RING_BUFFER_SIZE = 32768;
+
 class ZanobotAudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -18,11 +43,7 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.smartStartActive = false;
     this.warmUpStartSample = 0;
     this.warmUpDurationSamples = 0; // Will be set in init based on sample rate
-    // CRITICAL FIX: Reduced threshold from 0.02 to 0.002 for very weak signals
-    // Testing showed that even with "loud enough" sound, RMS values can be < 0.005
-    // New threshold 0.002 is ~2.5x more sensitive, catching weak machine signals
-    // while still above typical background noise (~0.0001 - 0.001)
-    this.signalThreshold = 0.002;
+    this.signalThreshold = SIGNAL_THRESHOLD_RMS;
     this.maxWaitSamples = 0; // Will be set in init
     this.waitStartSample = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording
@@ -30,14 +51,14 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
     // Dynamic chunk size based on actual sample rate
     // Will be set via 'init' message from manager
-    this.sampleRate = 44100; // Default, will be overridden
-    this.chunkSize = Math.floor(0.330 * this.sampleRate); // 330ms window
+    this.sampleRate = DEFAULT_SAMPLE_RATE;
+    this.chunkSize = Math.floor(DSP_WINDOW_SIZE_SECONDS * this.sampleRate);
 
     // CRITICAL FIX: Ring buffer size must be larger than chunkSize
     // At 96kHz: chunkSize = 31680 samples
     // We need bufferSize >= chunkSize for proper circular buffer operation
     // Use 2x chunkSize as safety margin for high sample rates
-    this.bufferSize = Math.max(32768, this.chunkSize * 2); // Minimum 32768 or 2x chunkSize
+    this.bufferSize = Math.max(MIN_RING_BUFFER_SIZE, this.chunkSize * RING_BUFFER_SIZE_MULTIPLIER);
     this.ringBuffer = new Float32Array(this.bufferSize);
     this.writePos = 0;
     this.readPos = 0;
@@ -58,11 +79,11 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         // Initialize with actual sample rate from AudioContext
         if (message.sampleRate) {
           this.sampleRate = message.sampleRate;
-          this.chunkSize = Math.floor(0.330 * this.sampleRate);
+          this.chunkSize = Math.floor(DSP_WINDOW_SIZE_SECONDS * this.sampleRate);
 
           // CRITICAL FIX: Resize ring buffer based on actual chunk size
           // This ensures bufferSize >= chunkSize at all sample rates
-          this.bufferSize = Math.max(32768, this.chunkSize * 2);
+          this.bufferSize = Math.max(MIN_RING_BUFFER_SIZE, this.chunkSize * RING_BUFFER_SIZE_MULTIPLIER);
           this.ringBuffer = new Float32Array(this.bufferSize);
           this.writePos = 0;
           this.readPos = 0;
@@ -78,8 +99,8 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
             this.warmUpDurationSamples = Math.floor(5 * this.sampleRate);
           }
 
-          // Max wait time: 30 seconds in samples
-          this.maxWaitSamples = Math.floor(30 * this.sampleRate);
+          // Max wait time in samples
+          this.maxWaitSamples = Math.floor(MAX_WAIT_TIME_SECONDS * this.sampleRate);
 
           // Acknowledge initialization
           this.port.postMessage({
