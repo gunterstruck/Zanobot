@@ -50,21 +50,80 @@ class ZanobotApp {
     // Double-check pattern prevents edge case where event fires between check and listener registration
     if (document.readyState === 'loading') {
       await new Promise<void>((resolve) => {
+        let resolved = false;
+
+        // Handler to resolve promise (with guard against multiple calls)
+        const handler = () => {
+          if (!resolved) {
+            resolved = true;
+            resolve();
+          }
+        };
+
         // Set up listener with once: true to ensure it only fires once
-        const handler = () => resolve();
         document.addEventListener('DOMContentLoaded', handler, { once: true });
 
         // RACE CONDITION FIX: Re-check state after adding listener
         // If DOM loaded between initial check and listener registration, manually resolve
         if (document.readyState !== 'loading') {
           document.removeEventListener('DOMContentLoaded', handler);
-          resolve();
+          handler();
         }
+
+        // SAFETY NET: Timeout to ensure promise resolves even in edge cases
+        // If DOM is ready but event somehow didn't fire, resolve after 100ms
+        setTimeout(() => {
+          if (!resolved && document.readyState !== 'loading') {
+            logger.warn('⚠️ DOM ready but DOMContentLoaded did not fire, proceeding anyway');
+            handler();
+          }
+        }, 100);
       });
     }
 
     // Always call setup after DOM is ready
     await this.setup();
+  }
+
+  /**
+   * Check browser compatibility before app initialization
+   *
+   * CRITICAL FIX: Check all required features upfront instead of discovering
+   * incompatibility when user tries to use them
+   *
+   * @returns Compatibility check result with missing features list
+   */
+  private checkBrowserCompatibility(): { isCompatible: boolean; missing: string[] } {
+    const missing: string[] = [];
+
+    // Check Web Audio API
+    if (typeof AudioContext === 'undefined' && typeof (window as any).webkitAudioContext === 'undefined') {
+      missing.push('- Web Audio API (required for audio processing)');
+    }
+
+    // Check MediaRecorder API
+    if (typeof MediaRecorder === 'undefined') {
+      missing.push('- MediaRecorder API (required for audio recording)');
+    }
+
+    // Check IndexedDB
+    if (typeof indexedDB === 'undefined') {
+      missing.push('- IndexedDB (required for data storage)');
+    }
+
+    // Check AudioWorklet support (needed for real-time diagnosis)
+    try {
+      if (typeof AudioContext !== 'undefined' && !('audioWorklet' in AudioContext.prototype)) {
+        missing.push('- AudioWorklet (required for real-time diagnosis)');
+      }
+    } catch (e) {
+      // AudioContext might not be available, already caught above
+    }
+
+    return {
+      isCompatible: missing.length === 0,
+      missing
+    };
   }
 
   /**
@@ -74,6 +133,29 @@ class ZanobotApp {
    * This ensures buttons and event listeners are set up regardless of DB status
    */
   private async setup(): Promise<void> {
+    // CRITICAL FIX: Check browser compatibility FIRST before any initialization
+    const compatibility = this.checkBrowserCompatibility();
+
+    if (!compatibility.isCompatible) {
+      logger.error('❌ Browser compatibility check failed');
+      logger.error('   Missing features:');
+      compatibility.missing.forEach(feature => logger.error(`   ${feature}`));
+
+      notify.error(
+        'Ihr Browser ist nicht kompatibel mit Zanobot.\n\n' +
+        'Fehlende Features:\n' +
+        compatibility.missing.join('\n') +
+        '\n\nBitte verwenden Sie einen modernen Browser wie Chrome, Edge, Firefox oder Safari.',
+        new Error('Browser incompatible'),
+        { title: 'Browser nicht unterstützt', duration: 0 }
+      );
+
+      // Don't initialize app if incompatible
+      return;
+    }
+
+    logger.info('✅ Browser compatibility check passed');
+
     let dbAvailable = false;
 
     // Initialize database (with graceful degradation)

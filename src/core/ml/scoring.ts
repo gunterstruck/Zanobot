@@ -417,6 +417,7 @@ export class LabelHistory {
    */
   getMajorityLabel(): string {
     if (this.labels.length === 0) {
+      logger.warn('⚠️ Label history empty, returning UNKNOWN');
       return 'UNKNOWN';
     }
 
@@ -436,6 +437,15 @@ export class LabelHistory {
         maxCount = count;
         majorityLabel = label;
       }
+    }
+
+    // CRITICAL FIX: Check if all labels are UNKNOWN despite having full history
+    // This indicates diagnosis has completely failed (should not happen in normal operation)
+    if (majorityLabel === 'UNKNOWN' && this.labels.length >= this.maxSize) {
+      logger.error(
+        `❌ All labels in full history are UNKNOWN (${this.labels.length} labels) - diagnosis failed completely`
+      );
+      logger.error(`   This indicates a critical issue with feature extraction or model inference`);
     }
 
     return majorityLabel;

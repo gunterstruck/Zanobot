@@ -176,26 +176,42 @@ export class DiagnosePhase {
       this.scoreHistory.clear();
       this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
+      // CRITICAL FIX: Validate sample rate compatibility BEFORE creating any resources
+      // This prevents allocating AudioContext/MediaStream that must be immediately destroyed
+      const expectedSampleRate = this.machine.referenceModels[0]?.sampleRate;
+      if (!expectedSampleRate) {
+        notify.error('Kein Referenzmodell mit gültiger Sample Rate gefunden.');
+        this.isStarting = false;
+        return;
+      }
+
+      // Check if all models have the same sample rate
+      const uniqueRates = [...new Set(this.machine.referenceModels.map(m => m.sampleRate))];
+      if (uniqueRates.length > 1) {
+        logger.warn(`⚠️ Multiple sample rates in models: ${uniqueRates.join(', ')}Hz`);
+      }
+
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // Create audio context
-      this.audioContext = new AudioContext({ sampleRate: this.requestedSampleRate });
+      // Create audio context with the expected sample rate
+      // Note: Browser may still override this based on hardware capabilities
+      this.audioContext = new AudioContext({ sampleRate: expectedSampleRate });
 
       // CRITICAL FIX: Update configuration with actual sample rate
       this.actualSampleRate = this.audioContext.sampleRate;
 
-      if (this.actualSampleRate !== this.requestedSampleRate) {
+      if (this.actualSampleRate !== expectedSampleRate) {
         logger.warn(
-          `⚠️ AudioContext sample rate is ${this.actualSampleRate}Hz instead of requested ${this.requestedSampleRate}Hz`
+          `⚠️ AudioContext sample rate is ${this.actualSampleRate}Hz instead of requested ${expectedSampleRate}Hz`
         );
-        logger.info(
-          `✅ Adapting feature extraction to use actual sample rate: ${this.actualSampleRate}Hz`
+        logger.warn(
+          `⚠️ This indicates hardware does not support ${expectedSampleRate}Hz - sample rate mismatch!`
         );
       }
 
-      // CRITICAL: Validate sample rate compatibility with trained models BEFORE starting
-      // This prevents wasting time on a diagnosis that will fail
+      // CRITICAL: Validate sample rate compatibility with trained models
+      // This check now happens AFTER we know the actual hardware rate
       this.activeModels = this.machine.referenceModels.filter(
         (model) => model.sampleRate === this.actualSampleRate
       );
@@ -395,7 +411,20 @@ export class DiagnosePhase {
       return;
     }
 
+    // CRITICAL FIX: Comprehensive chunk validation to prevent runtime errors
     try {
+      // Validate chunk exists and is correct type
+      if (!chunk || !(chunk instanceof Float32Array)) {
+        logger.error('❌ Invalid chunk received: not a Float32Array');
+        return;
+      }
+
+      // Validate chunk is not empty
+      if (chunk.length === 0) {
+        logger.debug('⏳ Empty chunk received, skipping');
+        return;
+      }
+
       // CRITICAL: Ensure chunk has minimum required samples for feature extraction
       // Required: this.chunkSize samples (330ms window = ~15840 samples at 48kHz, ~14553 at 44.1kHz)
       // If chunk is smaller, skip processing and wait for more data from AudioWorklet
