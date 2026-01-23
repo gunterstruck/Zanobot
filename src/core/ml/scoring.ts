@@ -14,6 +14,7 @@
 
 import type { GMIAModel, DiagnosisResult, FeatureVector } from '@data/types.js';
 import { inferGMIA } from './gmia.js';
+import { logger } from '@utils/logger.js';
 
 /**
  * Thresholds for health status classification
@@ -291,15 +292,23 @@ export const SCORE_HISTORY_SIZE = 10;
  * @returns Filtered (smoothed) health score
  */
 export function filterHealthScoreForDisplay(scores: number[]): number {
+  // CRITICAL FIX: Filter out invalid values (NaN, Infinity, out of range) FIRST
+  // This prevents NaN propagation through reduce() operations
+  const validScores = scores.filter(s => isFinite(s) && s >= 0 && s <= 100);
+
+  if (validScores.length === 0) {
+    logger.warn('No valid scores in history, returning 0');
+    return 0;
+  }
+
   // Need at least SCORE_HISTORY_SIZE scores for proper filtering
-  if (scores.length < SCORE_HISTORY_SIZE) {
-    // Fallback: return mean of available scores
-    if (scores.length === 0) return 0;
-    return scores.reduce((sum, val) => sum + val, 0) / scores.length;
+  if (validScores.length < SCORE_HISTORY_SIZE) {
+    // Fallback: return mean of available valid scores
+    return validScores.reduce((sum, val) => sum + val, 0) / validScores.length;
   }
 
   // Take last SCORE_HISTORY_SIZE scores
-  const lastN = scores.slice(-SCORE_HISTORY_SIZE);
+  const lastN = validScores.slice(-SCORE_HISTORY_SIZE);
 
   // Sort ascending
   const sorted = [...lastN].sort((a, b) => a - b);
@@ -307,7 +316,7 @@ export function filterHealthScoreForDisplay(scores: number[]): number {
   // Remove 2 lowest (indices 0, 1) and 2 highest (indices 8, 9)
   const trimmed = sorted.slice(2, 8);
 
-  // Guard against empty array (should not happen, but prevents division by zero)
+  // Guard against empty array (should not happen after validation, but prevents division by zero)
   if (trimmed.length === 0) {
     return sorted.reduce((sum, val) => sum + val, 0) / sorted.length;
   }
@@ -705,8 +714,11 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
     willBlock: weightMagnitude < MIN_REFERENCE_MAGNITUDE,
   });
 
-  if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) || weightMagnitude === 0) {
-    console.warn('⚠️ Magnitude Factor: Invalid values detected!');
+  // CRITICAL FIX: Enhanced validation to prevent NaN values
+  // Check both magnitudes for validity AND zero feature magnitude
+  if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) ||
+      weightMagnitude === 0 || featureMagnitude === 0) {
+    console.warn('⚠️ Magnitude Factor: Invalid or zero values detected!');
     return 0;
   }
 
@@ -718,6 +730,13 @@ export function calculateMagnitudeFactor(weightVector: Float64Array, featureVect
   }
 
   const factor = Math.min(1, featureMagnitude / weightMagnitude);
+
+  // CRITICAL FIX: Final safety check to ensure result is valid
+  if (!isFinite(factor)) {
+    console.error('❌ Magnitude Factor: Calculation resulted in NaN/Infinity!');
+    return 0;
+  }
+
   console.log(`✅ Magnitude Factor: ${factor.toFixed(3)}`);
   return factor;
   */

@@ -403,7 +403,10 @@ export class ReferencePhase {
       }
 
       // CRITICAL FIX: Validate that we have enough samples for training
-      const MIN_TRAINING_DURATION = 2.0; // Minimum 2 seconds of training data
+      // UPDATED: Increased from 2.0s to 5.0s for stable GMIA models
+      // With 330ms windows + 66ms hop: 5s = ~70-80 chunks (sufficient for statistical stability)
+      // 2s was too short (~26 chunks), leading to high variance and unreliable models
+      const MIN_TRAINING_DURATION = 5.0; // Minimum 5 seconds of training data
       const minTrainingSamples = Math.floor(MIN_TRAINING_DURATION * sampleRate);
 
       if (trainingSamples <= 0) {
@@ -672,6 +675,13 @@ export class ReferencePhase {
    * Phase 2 (0-10s or 5-15s): "Aufnahme..." (actual recording used for training)
    */
   private startTimer(): void {
+    // CRITICAL FIX: Clear any existing timer first to prevent memory leaks
+    // This handles the case where startTimer() is called multiple times
+    if (this.timerInterval !== null) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
     let elapsed = 0;
     const timerElement = document.getElementById('recording-timer');
     const statusElement = document.getElementById('recording-status');
@@ -682,6 +692,16 @@ export class ReferencePhase {
 
     // Store interval reference for cleanup
     this.timerInterval = setInterval(() => {
+      // CRITICAL FIX: Check if recording is still active (defensive programming)
+      // If recording was stopped prematurely, clear the timer
+      if (!this.isRecordingActive) {
+        if (this.timerInterval !== null) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        return;
+      }
+
       elapsed++;
 
       // Update phase-specific UI

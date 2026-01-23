@@ -57,6 +57,7 @@ export class DiagnosePhase {
   private hasValidMeasurement: boolean = false; // Track if actual measurement occurred
   private useAudioWorklet: boolean = true;
   private isStarting: boolean = false;
+  private isSaving: boolean = false; // CRITICAL FIX: Prevent duplicate save calls
 
   // DEBUG: Store last calculation values for UI display
   private lastDebugValues: {
@@ -586,6 +587,14 @@ export class DiagnosePhase {
    * Stop recording and save final result
    */
   private stopRecording(): void {
+    // CRITICAL FIX: Prevent duplicate calls (e.g., user clicking Stop button twice)
+    // This prevents saving the same diagnosis multiple times
+    if (this.isSaving) {
+      logger.warn('⚠️ Stop already in progress, ignoring duplicate call');
+      return;
+    }
+
+    this.isSaving = true;
     logger.info('⏹️ Stopping diagnosis...');
 
     // CRITICAL FIX: Save ALL values BEFORE cleanup (cleanup resets them!)
@@ -712,6 +721,10 @@ export class DiagnosePhase {
         duration: 0,
       });
       this.hideRecordingModal();
+    } finally {
+      // CRITICAL FIX: Reset flag after save completes (success or error)
+      // This allows future diagnoses to be saved
+      this.isSaving = false;
     }
   }
 
