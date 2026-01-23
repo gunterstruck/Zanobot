@@ -135,6 +135,71 @@
                             <!-- Machine buttons will be added dynamically -->
                         </div>
                     </div>
+
+                    <!-- Maschinenübersicht -->
+                    <div class="machine-selection-option">
+                        <div class="option-divider">
+                            <span>Übersicht</span>
+                        </div>
+                        <div class="option-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <!-- List/Grid Icon -->
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                            </svg>
+                            <h5 class="option-title">Maschinenübersicht</h5>
+                        </div>
+                        <div id="machine-overview" class="machine-list">
+                            <!-- Example Machine Items -->
+                            <div class="machine-item">
+                                <div class="machine-info">
+                                    <h4 class="machine-name">Zanobo 123</h4>
+                                    <p class="machine-status status-healthy">Healthy</p>
+                                    <p class="machine-time">Letzte Prüfung vor 3min</p>
+                                </div>
+                                <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                            <div class="machine-item">
+                                <div class="machine-info">
+                                    <h4 class="machine-name">Zanobo 9</h4>
+                                    <p class="machine-status status-uncertain">Uncertain</p>
+                                    <p class="machine-time">Letzte Prüfung vor 12min</p>
+                                </div>
+                                <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                            <button class="add-reference-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Neue Referenz
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Historie -->
+                    <div class="machine-selection-option">
+                        <div class="option-divider">
+                            <span>Verlauf</span>
+                        </div>
+                        <div class="option-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <!-- Clock/History Icon -->
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <h5 class="option-title">Historie</h5>
+                        </div>
+                        <div id="history" class="history-list">
+                            <p class="empty-state">Noch keine Messungen vorhanden</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -191,84 +256,7 @@
             </div>
         </section>
 
-        <!-- Container 5: Maschinenübersicht -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="machine-overview">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- List/Grid Icon -->
-                        <rect x="3" y="3" width="7" height="7"/>
-                        <rect x="14" y="3" width="7" height="7"/>
-                        <rect x="3" y="14" width="7" height="7"/>
-                        <rect x="14" y="14" width="7" height="7"/>
-                    </svg>
-                    <h3 class="container-title">Maschinenübersicht</h3>
-                </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="machine-overview" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <div class="machine-list">
-                        <!-- Example Machine Items -->
-                        <div class="machine-item">
-                            <div class="machine-info">
-                                <h4 class="machine-name">Zanobo 123</h4>
-                                <p class="machine-status status-healthy">Healthy</p>
-                                <p class="machine-time">Letzte Prüfung vor 3min</p>
-                            </div>
-                            <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </div>
-                        <div class="machine-item">
-                            <div class="machine-info">
-                                <h4 class="machine-name">Zanobo 9</h4>
-                                <p class="machine-status status-uncertain">Uncertain</p>
-                                <p class="machine-time">Letzte Prüfung vor 12min</p>
-                            </div>
-                            <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </div>
-                        <button class="add-reference-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Neue Referenz
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Container 6: Historie -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="history">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Clock/History Icon -->
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <h3 class="container-title">Historie</h3>
-                </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="history" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <div class="history-list">
-                        <p class="empty-state">Noch keine Messungen vorhanden</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Container 7: Einstellungen -->
+        <!-- Container 5: Einstellungen -->
         <section class="main-container collapsible">
             <div class="main-header section-header" data-target="settings">
                 <div class="header-with-icon">
