@@ -40,6 +40,20 @@ export function extractFeatures(
   audioBuffer: AudioBuffer,
   config: DSPConfig = DEFAULT_DSP_CONFIG
 ): FeatureVector[] {
+  // CRITICAL FIX: Validate sample rate before using it
+  // Prevents mathematical errors from invalid sample rates (0, NaN, Infinity, negative)
+  if (
+    !audioBuffer.sampleRate ||
+    !isFinite(audioBuffer.sampleRate) ||
+    audioBuffer.sampleRate <= 0 ||
+    audioBuffer.sampleRate > 192000
+  ) {
+    throw new Error(
+      `Ungültige Sample Rate: ${audioBuffer.sampleRate}Hz. ` +
+      `Erwartet: 8000-192000Hz (typisch: 44100Hz oder 48000Hz)`
+    );
+  }
+
   // OPTIMIZATION: Check if config needs adjustment for actual audio buffer sample rate
   // Improves readability by separating condition from conditional assignment
   const needsSampleRateAdjustment =
