@@ -184,7 +184,7 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
 
   let signalToUse = standardized;
   if (standardizedRms < 1e-6) {
-    console.warn(`⚠️ Standardization produced near-zero signal (RMS=${standardizedRms.toExponential(2)}), using non-standardized signal instead`);
+    logger.warn(`⚠️ Standardization produced near-zero signal (RMS=${standardizedRms.toExponential(2)}), using non-standardized signal instead`);
     signalToUse = chunk.samples; // Use original signal
   }
 
@@ -213,9 +213,9 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
   }
 
   if (totalEnergy < 1e-10) {
-    console.error(`❌ Feature extraction failed: Total energy = ${totalEnergy.toExponential(2)} (degenerate signal)`);
-    console.error(`   This indicates the signal is too constant or silent.`);
-    console.error(`   RMS amplitude: ${rmsAmplitude.toFixed(6)}`);
+    logger.error(`❌ Feature extraction failed: Total energy = ${totalEnergy.toExponential(2)} (degenerate signal)`);
+    logger.error(`   This indicates the signal is too constant or silent.`);
+    logger.error(`   RMS amplitude: ${rmsAmplitude.toFixed(6)}`);
     throw new Error(
       `Feature extraction failed: Signal is too constant or silent (total energy = ${totalEnergy.toExponential(2)}). ` +
       `This can happen with very stable noise sources. Please ensure the signal has sufficient variation.`
@@ -298,7 +298,7 @@ function standardizeSignal(signal: Float32Array): Float32Array {
   const MIN_STDDEV = 1e-6;
 
   if (stdDev < MIN_STDDEV) {
-    console.warn(`⚠️ Signal too constant (stdDev=${stdDev.toExponential(2)}), skipping standardization`);
+    logger.warn(`⚠️ Signal too constant (stdDev=${stdDev.toExponential(2)}), skipping standardization`);
     // Return mean-centered signal without variance scaling
     const standardized = new Float32Array(n);
     for (let i = 0; i < n; i++) {

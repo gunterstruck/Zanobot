@@ -11,8 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
@@ -21,6 +21,7 @@
     "idb": "^8.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^22.19.7",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
@@ -31,6 +32,7 @@
     "fake-indexeddb": "^6.2.5",
     "prettier": "^3.7.4",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.53.1",
     "vite": "^6.0.7",
     "vite-plugin-html": "^3.2.2",
     "vite-plugin-pwa": "^0.21.1",

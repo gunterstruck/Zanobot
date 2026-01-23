@@ -5,6 +5,8 @@
  * Color-coded: Green (healthy), Yellow (uncertain), Red (faulty).
  */
 
+import { logger } from '@utils/logger.js';
+
 export class HealthGauge {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -51,7 +53,7 @@ export class HealthGauge {
   public draw(score: number, status?: string): void {
     // CRITICAL FIX: Validate score is a valid number
     if (!isFinite(score) || score < 0 || score > 100) {
-      console.error(`❌ HealthGauge: Invalid score: ${score}, using 0`);
+      logger.error(`❌ HealthGauge: Invalid score: ${score}, using 0`);
       this.score = 0;
     } else {
       this.score = Math.max(0, Math.min(100, score));
@@ -61,7 +63,7 @@ export class HealthGauge {
     if (status !== undefined) {
       const validStatuses = ['healthy', 'uncertain', 'faulty', 'UNKNOWN'];
       if (!validStatuses.includes(status)) {
-        console.error(`❌ HealthGauge: Invalid status: ${status}, using UNKNOWN`);
+        logger.error(`❌ HealthGauge: Invalid status: ${status}, using UNKNOWN`);
         this.customStatus = 'UNKNOWN';
       } else {
         this.customStatus = status;
@@ -84,7 +86,7 @@ export class HealthGauge {
   public updateScore(score: number, animate: boolean = true): void {
     // CRITICAL FIX: Validate score is a valid number
     if (!isFinite(score) || score < 0 || score > 100) {
-      console.error(`❌ HealthGauge.updateScore: Invalid score: ${score}, using 0`);
+      logger.error(`❌ HealthGauge.updateScore: Invalid score: ${score}, using 0`);
       score = 0;
     }
 

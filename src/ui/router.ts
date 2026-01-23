@@ -42,7 +42,7 @@ export class Router {
     logger.info(`🤖 Machine selected: ${machine.name} (${machine.id})`);
 
     // DEBUG LOGGING: Show selected machine details
-    console.log('🎯 Machine Selection Debug:', {
+    logger.debug('🎯 Machine Selection Debug:', {
       machineId: machine.id,
       machineName: machine.name,
       createdAt: new Date(machine.createdAt).toLocaleString(),

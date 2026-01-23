@@ -61,7 +61,7 @@ export class ReferencePhase {
     this.selectedDeviceId = selectedDeviceId;
 
     // DEBUG LOGGING: Show which machine is being used for reference recording
-    console.log('📝 ReferencePhase Constructor:', {
+    logger.debug('📝 ReferencePhase Constructor:', {
       machineId: machine.id,
       machineName: machine.name,
       numExistingModels: machine.referenceModels?.length || 0,
@@ -702,7 +702,7 @@ export class ReferencePhase {
     const machineIdElement = document.getElementById('machine-id');
     if (machineIdElement) {
       machineIdElement.textContent = this.machine.name;
-      console.log('✅ Modal machine name updated:', this.machine.name);
+      logger.debug('✅ Modal machine name updated:', this.machine.name);
     }
 
     // Add existing models info and status message
@@ -1204,7 +1204,7 @@ export class ReferencePhase {
       logger.info('💾 Saving reference model...');
 
       // DEBUG LOGGING: Show which machine we're saving to
-      console.log('💾 Reference Save Debug:', {
+      logger.debug('💾 Reference Save Debug:', {
         machineId: this.machine.id,
         machineName: this.machine.name,
         label: label,

@@ -11,6 +11,30 @@ import type { FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
 /**
+ * Quality assessment thresholds
+ */
+const QUALITY_THRESHOLDS = {
+  // RMS amplitude thresholds (pre-standardization)
+  RMS_CRITICAL: 0.01, // Below this: very weak/diffuse signal (likely noise)
+  RMS_WARNING: 0.02, // Below this: weak tonal signal
+
+  // Score thresholds for rating
+  SCORE_GOOD: 90, // >= 90%: GOOD rating
+  SCORE_EXCELLENT: 95, // >= 95%: Excellent quality
+  SCORE_OK: 75, // >= 75%: OK rating
+
+  // Variance thresholds
+  VARIANCE_HIGH: 0.0001, // Above this: high spectral variance
+  VARIANCE_VERY_HIGH: 0.0005, // Above this: very high variance
+  VARIANCE_ACCEPTABLE: 0.00005, // Below this: acceptable for excellent quality
+
+  // Outlier ratio thresholds
+  OUTLIER_RATIO_LOW: 0.02, // Below this: very few outliers (perfect quality)
+  OUTLIER_RATIO_ACCEPTABLE: 0.05, // Below this: acceptable for excellent quality
+  OUTLIER_RATIO_HIGH: 0.1, // Above this: too many outliers
+} as const;
+
+/**
  * Assess recording quality based on extracted features
  *
  * This function analyzes the feature vectors from a reference recording
@@ -355,7 +379,7 @@ function determineRating(
   // Check for specific issues
   const outlierRatio = outlierCount / numFrames;
 
-  if (variance > 0.0001) {
+  if (variance > QUALITY_THRESHOLDS.VARIANCE_HIGH) {
     issues.push('Hohe Spektralvarianz - Signal instabil');
   }
 
@@ -365,7 +389,7 @@ function determineRating(
     );
   }
 
-  if (variance > 0.0005) {
+  if (variance > QUALITY_THRESHOLDS.VARIANCE_VERY_HIGH) {
     issues.push('Sehr hohe Varianz - Bitte in ruhigerer Umgebung aufnehmen');
   }
 
@@ -374,15 +398,13 @@ function determineRating(
   // Typical RMS values: 0.001-0.01 (silent), 0.01-0.05 (quiet), 0.05-0.2 (normal), 0.2+ (loud)
 
   // DEBUG LOGGING: Show actual RMS value
-  console.log(`🔊 RMS Amplitude Check: ${signalMagnitude.toFixed(4)} (threshold warnings: <0.01 critical, <0.02 warning)`);
+  logger.debug(`🔊 RMS Amplitude Check: ${signalMagnitude.toFixed(4)} (threshold warnings: <${QUALITY_THRESHOLDS.RMS_CRITICAL} critical, <${QUALITY_THRESHOLDS.RMS_WARNING} warning)`);
 
-  if (signalMagnitude < 0.01) {
+  if (signalMagnitude < QUALITY_THRESHOLDS.RMS_CRITICAL) {
     issues.push(
       'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.'
     );
-  } else if (signalMagnitude < 0.02) {
-    // ADJUSTED: Lowered from 0.03 to 0.02 to reduce false warnings
-    // Hair dryer, fans, and normal machines typically have RMS > 0.02
+  } else if (signalMagnitude < QUALITY_THRESHOLDS.RMS_WARNING) {
     issues.push(
       'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.'
     );
@@ -391,17 +413,17 @@ function determineRating(
   // Determine rating based on score
   let rating: 'GOOD' | 'OK' | 'BAD';
 
-  if (score >= 90) {
+  if (score >= QUALITY_THRESHOLDS.SCORE_GOOD) {
     rating = 'GOOD';
     // Clear issues array for GOOD rating (only minor issues allowed)
     // ADJUSTED: If score is excellent (>95%) and signal is stable, ignore RMS warnings
     // Rationale: Score already validates quality; low RMS might just be normalization artifact
-    if (score >= 95 && outlierRatio < 0.05 && variance < 0.0001) {
+    if (score >= QUALITY_THRESHOLDS.SCORE_EXCELLENT && outlierRatio < QUALITY_THRESHOLDS.OUTLIER_RATIO_ACCEPTABLE && variance < QUALITY_THRESHOLDS.VARIANCE_HIGH) {
       issues.length = 0; // No issues for excellent quality
-    } else if (outlierRatio < 0.02 && variance < 0.00005 && signalMagnitude >= 0.05) {
+    } else if (outlierRatio < QUALITY_THRESHOLDS.OUTLIER_RATIO_LOW && variance < QUALITY_THRESHOLDS.VARIANCE_ACCEPTABLE && signalMagnitude >= 0.05) {
       issues.length = 0; // No issues for perfect quality
     }
-  } else if (score >= 75) {
+  } else if (score >= QUALITY_THRESHOLDS.SCORE_OK) {
     rating = 'OK';
   } else {
     rating = 'BAD';

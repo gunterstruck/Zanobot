@@ -537,12 +537,12 @@ export class IdentifyPhase {
       await saveMachine(machine);
 
       // DEBUG LOGGING: Show created machine
-      console.log('✅ Machine Created:', {
+      logger.debug('✅ Machine Created:', {
         id: machine.id,
         name: machine.name,
         createdAt: new Date(machine.createdAt).toLocaleString(),
       });
-      console.log('📞 Calling onMachineSelected() with new machine...');
+      logger.debug('📞 Calling onMachineSelected() with new machine...');
 
       // Clear inputs
       nameInput.value = '';
@@ -1005,12 +1005,12 @@ export class IdentifyPhase {
       logger.info(`Quick select: ${machine.name} (${machine.id})`);
 
       // DEBUG LOGGING: Show quick-selected machine
-      console.log('🎯 Quick-Select Clicked:', {
+      logger.debug('🎯 Quick-Select Clicked:', {
         id: machine.id,
         name: machine.name,
         numModels: machine.referenceModels?.length || 0,
       });
-      console.log('📞 Calling onMachineSelected() with quick-selected machine...');
+      logger.debug('📞 Calling onMachineSelected() with quick-selected machine...');
 
       this.showNotification(`Maschine geladen: ${machine.name}`);
       this.onMachineSelected(machine);

@@ -121,18 +121,18 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   const weightMagnitude = vectorMagnitude(weightVector);
 
   // DEBUG LOGGING: Show weight magnitude details
-  console.log('🧠 GMIA Training Debug:', {
+  logger.debug('🧠 GMIA Training Debug:', {
     numSamples,
     featureDim,
     meanCosine: meanCosine.toFixed(4),
     scalingConstant: scalingConstant.toFixed(6),
-    weightMagnitude: weightMagnitude.toFixed(6),
-    minThreshold: 0.0001,
-    isAboveThreshold: weightMagnitude >= 0.0001,
+    weightMagnitude: weightMagnitude.toExponential(2),
+    minThreshold: 1e-10,
+    isAboveThreshold: weightMagnitude >= 1e-10,
   });
 
   logger.debug(`   Mean cosine similarity: ${meanCosine.toFixed(4)}`);
-  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toFixed(6)} (threshold: 0.0001, status: ${weightMagnitude >= 0.0001 ? 'PASS ✓' : 'FAIL ✗'})`);
+  logger.debug(`   Weight vector magnitude: ${weightMagnitude.toExponential(2)} (threshold: 1e-10, status: ${weightMagnitude >= 1e-10 ? 'PASS ✓' : 'FAIL ✗'})`);
 
   // CRITICAL: Validate weight vector is not degenerate (all zeros)
   if (weightMagnitude < 1e-10) {
