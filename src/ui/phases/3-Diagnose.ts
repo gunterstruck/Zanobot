@@ -88,7 +88,7 @@ export class DiagnosePhase {
     this.selectedDeviceId = selectedDeviceId;
 
     // DEBUG LOGGING: Show which machine is being used for diagnosis
-    console.log('🔬 DiagnosePhase Constructor:', {
+    logger.debug('🔬 DiagnosePhase Constructor:', {
       machineId: machine.id,
       machineName: machine.name,
       numModels: machine.referenceModels?.length || 0,
@@ -136,7 +136,7 @@ export class DiagnosePhase {
       }
 
       // DEBUG LOGGING: Show which machine and models are loaded
-      console.log('🤖 Diagnosis Start Debug:', {
+      logger.debug('🤖 Diagnosis Start Debug:', {
         machineId: this.machine.id,
         machineName: this.machine.name,
         numModels: this.machine.referenceModels?.length || 0,
@@ -492,9 +492,9 @@ export class DiagnosePhase {
       // Step 6: Store debug values from diagnosis metadata
       if (diagnosis.metadata?.debug) {
         this.lastDebugValues = diagnosis.metadata.debug as any;
-        console.log('✅ Debug values stored:', this.lastDebugValues);
+        logger.debug('✅ Debug values stored:', this.lastDebugValues);
       } else {
-        console.warn('⚠️ No debug values in diagnosis.metadata!', diagnosis.metadata);
+        logger.warn('⚠️ No debug values in diagnosis.metadata!', diagnosis.metadata);
       }
 
       // Step 7: Update UI in real-time with detected state and debug values
@@ -574,11 +574,11 @@ export class DiagnosePhase {
    */
   private updateDebugDisplay(): void {
     if (!this.lastDebugValues) {
-      console.warn('⚠️ updateDebugDisplay: No debug values available!');
+      logger.warn('⚠️ updateDebugDisplay: No debug values available!');
       return;
     }
 
-    console.log('🔧 Updating debug display with values:', this.lastDebugValues);
+    logger.debug('🔧 Updating debug display with values:', this.lastDebugValues);
     const v = this.lastDebugValues;
 
     const updateElement = (id: string, text: string, highlight: boolean = false) => {
@@ -589,9 +589,9 @@ export class DiagnosePhase {
           el.style.color = '#ff8800';
           el.style.fontWeight = '700';
         }
-        console.log(`  ✓ Updated ${id}: ${text}`);
+        logger.debug(`  ✓ Updated ${id}: ${text}`);
       } else {
-        console.error(`  ✗ Element not found: ${id}`);
+        logger.error(`  ✗ Element not found: ${id}`);
       }
     };
 
@@ -795,7 +795,7 @@ export class DiagnosePhase {
     const machineIdElement = document.getElementById('machine-id');
     if (machineIdElement) {
       machineIdElement.textContent = this.machine.name;
-      console.log('✅ Modal machine name updated:', this.machine.name);
+      logger.debug('✅ Modal machine name updated:', this.machine.name);
     }
 
     // Update button text and behavior

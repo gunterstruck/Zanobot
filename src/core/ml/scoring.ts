@@ -14,6 +14,7 @@
 
 import type { GMIAModel, DiagnosisResult, FeatureVector } from '@data/types.js';
 import { inferGMIA } from './gmia.js';
+import { vectorMagnitude } from './mathUtils.js';
 import { logger } from '@utils/logger.js';
 
 /**
@@ -509,27 +510,6 @@ export class LabelHistory {
  */
 const UNCERTAINTY_THRESHOLD = 70;
 
-/**
- * Minimum reference magnitude threshold.
- *
- * UPDATED (2026-01-21): Lowered from 0.038 to 0.0001
- *
- * REASON FOR CHANGE:
- * - Features are now standardized (mean=0, variance=1) BEFORE FFT
- * - This makes weight vectors VERY small (0.001-0.01 range) regardless of signal strength
- * - Old threshold (0.038) rejected ALL recordings, even loud ones (hair dryer!)
- * - New threshold (0.0001) only blocks pure silence / completely degenerate models
- *
- * PRIMARY VALIDATION:
- * - We now rely on RMS amplitude check (pre-standardization) in qualityCheck.ts
- * - RMS check is MUCH more reliable: measures true signal strength before normalization
- * - This threshold is just a safety net for extreme cases (zero signal, NaN, etc.)
- *
- * Typical weight vector magnitudes (after standardization):
- * - Pure silence/zero: ~0.00001-0.0001 (REJECT)
- * - Real signals (loud or quiet): ~0.001-0.01 (ACCEPT)
- */
-const MIN_REFERENCE_MAGNITUDE = 0.0001;
 
 /**
  * Multiclass Diagnosis - Classify machine state across multiple trained models
@@ -564,8 +544,6 @@ export function classifyDiagnosticState(
   let bestLabel = 'UNKNOWN';
   let bestModel: GMIAModel | null = null;
   let bestCosine = 0;
-  let bestMagnitudeFactor = 0;
-  let bestRawCosine = 0;
 
   // Loop through all models to find best match
   for (const model of models) {
@@ -574,28 +552,10 @@ export function classifyDiagnosticState(
     const cosineSimilarities = inferGMIA(model, [featureVector], testSampleRate);
     const cosine = cosineSimilarities[0];
 
-    // Step 2: Adjust similarity using magnitude to avoid low-energy false matches
-    //
-    // CRITICAL ENHANCEMENT (not in original GMIA paper):
-    // Multiply cosine similarity by magnitude ratio to prevent false positives
-    // when test signal is much quieter than training signal (e.g., machine off,
-    // microphone too far away, background noise only).
-    //
-    // Physics: Cosine similarity is normalized (ignores vector magnitude).
-    // A very quiet signal with random noise can have high cosine similarity
-    // by chance, leading to incorrect "healthy" classification.
-    //
-    // Solution: Scale down the similarity if ||test|| << ||reference||
-    // Formula: adjustedCosine = cos(α) · min(1, ||f|| / ||w||)
-    //
-    // See: MAGNITUDE_FACTOR_ANALYSIS.md for detailed explanation
-    const magnitudeFactor = calculateMagnitudeFactor(model.weightVector, featureVector.features);
-    const adjustedCosine = cosine * magnitudeFactor;
+    // Step 2: Calculate health score using existing scoring function
+    let score = calculateHealthScore(cosine, model.scalingConstant);
 
-    // Step 3: Calculate health score using existing scoring function
-    let score = calculateHealthScore(adjustedCosine, model.scalingConstant);
-
-    // Step 3.5: SCORE CALIBRATION - Normalize using baseline score
+    // Step 2.5: SCORE CALIBRATION - Normalize using baseline score
     // ============================================================================
     // If the model has a baseline score (self-recognition score from training),
     // normalize the raw score to ensure perfect matches show 100%.
@@ -629,27 +589,23 @@ export function classifyDiagnosticState(
     }
 
     // DEBUG LOGGING: Show comparison for each model
-    console.log(`📊 Model "${model.label}" evaluation:`, {
+    logger.debug(`📊 Model "${model.label}" evaluation:`, {
       cosine: cosine.toFixed(4),
-      magnitudeFactor: magnitudeFactor.toFixed(4),
-      adjustedCosine: adjustedCosine.toFixed(4),
       rawScore: score.toFixed(1),
       baselineScore: model.baselineScore?.toFixed(1) || 'N/A',
       calibratedScore: calibratedScore.toFixed(1),
     });
 
-    // Step 4: Check if this is the best match so far
+    // Step 3: Check if this is the best match so far
     if (score > bestScore) {
       bestScore = score;
       bestLabel = model.label;
       bestModel = model;
-      bestCosine = adjustedCosine;
-      bestMagnitudeFactor = magnitudeFactor;
-      bestRawCosine = cosine;
+      bestCosine = cosine;
     }
   }
 
-  // Step 5: Uncertainty check - is the best score too low?
+  // Step 4: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
   if (bestScore < UNCERTAINTY_THRESHOLD || bestModel === null) {
     // Anomaly detected, but doesn't match any known pattern
@@ -661,9 +617,6 @@ export function classifyDiagnosticState(
     // This allows multiple healthy states (e.g., "Idle", "Full Load") and multiple faults
     status = bestModel.type; // 'healthy' or 'faulty' from the winning model
   }
-
-  // Calculate feature magnitude for debug info
-  const featureMagnitude = vectorMagnitude(featureVector.features);
 
   // Generate diagnosis result with debug information
   const diagnosis: DiagnosisResult = {
@@ -682,12 +635,10 @@ export function classifyDiagnosticState(
       debug: bestModel
         ? {
             weightMagnitude: vectorMagnitude(bestModel.weightVector),
-            featureMagnitude: featureMagnitude,
-            magnitudeFactor: bestMagnitudeFactor,
-            cosine: bestRawCosine,
-            adjustedCosine: bestCosine,
+            featureMagnitude: vectorMagnitude(featureVector.features),
+            cosine: bestCosine,
             scalingConstant: bestModel.scalingConstant,
-            rawScore: bestScore,
+            score: bestScore,
           }
         : undefined,
     },
@@ -700,137 +651,27 @@ export function classifyDiagnosticState(
 }
 
 /**
- * Calculate magnitude ratio between test features and model weights.
+ * Calculate magnitude factor for cosine similarity adjustment.
  *
- * IMPORTANT: This is an EXTENSION of the original GMIA algorithm (not in paper).
+ * NOTE: This function always returns 1.0 (no adjustment).
+ * The original GMIA paper uses pure cosine similarity without magnitude scaling.
  *
- * Purpose: Prevent false positives when test signal has much lower energy than
- * the reference model (e.g., machine turned off, microphone too far away).
+ * Magnitude-based adjustments were considered but removed due to:
+ * - Feature standardization produces very small weight magnitudes (~1e-6)
+ * - Threshold-based rejection was too aggressive
+ * - RMS amplitude check in qualityCheck.ts provides adequate signal validation
  *
- * Mathematical Background:
- * - Cosine similarity is normalized: cos(α) = (w·f) / (||w|| · ||f||)
- * - This makes it magnitude-invariant (same score for loud and quiet signals)
- * - Problem: Silent noise can randomly match patterns → false positive
- *
- * Solution:
- * - Calculate energy ratio: ||test|| / ||reference||
- * - If test is quieter: Apply proportional penalty
- * - If test is louder: No penalty (clamped to 1.0)
- *
- * Formula: factor = min(1, ||featureVector|| / ||weightVector||)
- *
- * ADDITIONAL FIX (Brown Noise Protection):
- * - If reference model has very low magnitude (< 0.038), it was likely trained
- *   on pure noise or degenerate signal and is unreliable.
- * - Return 0 to force health score to 0 and prevent false diagnoses.
- * - This prevents the case where both test and reference are brown noise,
- *   resulting in acceptable magnitude ratio but meaningless comparison.
- * - Threshold 0.038 blocks degenerate patterns while accepting real machines.
- *
- * Example (for L1-normalized 512-dimensional features):
- *   Reference magnitude: 0.050, Test magnitude: 0.025
- *   → factor = 0.5
- *   → adjustedCosine = cosine * 0.5 (50% penalty, signal too quiet)
- *
- *   Reference magnitude: 0.036 (pure brown noise), Test magnitude: 0.035
- *   → factor = 0 (reference unreliable, reject)
- *
- *   Reference magnitude: 0.045 (machine signal), Test magnitude: 0.044
- *   → factor = 0.98 (acceptable, minimal penalty)
- *
- * See MAGNITUDE_FACTOR_ANALYSIS.md for comprehensive analysis.
- *
- * @param weightVector - Model weight vector (reference)
- * @param featureVector - Test feature vector
- * @returns Magnitude ratio clamped to [0, 1], or 0 if reference is too weak
+ * @param _weightVector - Model weight vector (unused)
+ * @param _featureVector - Test feature vector (unused)
+ * @returns Always 1.0 (no magnitude adjustment)
  */
 export function calculateMagnitudeFactor(
   _weightVector: Float64Array,
   _featureVector: Float64Array
 ): number {
-  // ============================================================================
-  // TEMPORARY DEACTIVATION: "Back to Baseline"
-  // ============================================================================
-  //
-  // REASON: The magnitude factor extension (not part of the original GMIA paper)
-  // is causing instability and rejecting all models due to near-zero weight
-  // magnitudes after feature standardization.
-  //
-  // Current behavior:
-  // - weightMagnitude is ~0.000000 (far below MIN_REFERENCE_MAGNITUDE)
-  // - All models get rejected with score = 0
-  // - This prevents proper diagnosis
-  //
-  // TEMPORARY FIX:
-  // - Return 1.0 (no magnitude adjustment)
-  // - This reverts to pure cosine similarity (original paper implementation)
-  // - adjustedCosine = cosine * 1.0 = cosine
-  //
-  // KNOWN TRADE-OFF:
-  // - This may allow false positives (silence/noise matching patterns)
-  // - This is acceptable for now - we prioritize getting stable scores first
-  // - RMS amplitude check in qualityCheck.ts should still catch pure silence
-  //
-  // TODO: Re-investigate magnitude factor after baseline is verified
-  // ============================================================================
-
-  console.log('🔍 Magnitude Factor: DISABLED (return 1.0 - pure cosine similarity)');
   return 1.0;
-
-  /* ORIGINAL IMPLEMENTATION (COMMENTED OUT):
-  const featureMagnitude = vectorMagnitude(featureVector);
-  const weightMagnitude = vectorMagnitude(weightVector);
-
-  // DEBUG LOGGING: Show magnitude values
-  console.log('🔍 Magnitude Factor Debug:', {
-    featureMagnitude: featureMagnitude.toFixed(6),
-    weightMagnitude: weightMagnitude.toFixed(6),
-    threshold: MIN_REFERENCE_MAGNITUDE,
-    ratio: (featureMagnitude / weightMagnitude).toFixed(3),
-    willBlock: weightMagnitude < MIN_REFERENCE_MAGNITUDE,
-  });
-
-  // CRITICAL FIX: Enhanced validation to prevent NaN values
-  // Check both magnitudes for validity AND zero feature magnitude
-  if (!isFinite(featureMagnitude) || !isFinite(weightMagnitude) ||
-      weightMagnitude === 0 || featureMagnitude === 0) {
-    console.warn('⚠️ Magnitude Factor: Invalid or zero values detected!');
-    return 0;
-  }
-
-  // CRITICAL FIX: Reject models trained on very low-energy/diffuse signals
-  // Threshold 0.2: Rejects pure noise (~0.05-0.15) but accepts machines in noisy environments (~0.2-0.6)
-  if (weightMagnitude < MIN_REFERENCE_MAGNITUDE) {
-    console.error('❌ Magnitude Factor: weightMagnitude too low! Model rejected.');
-    return 0; // Model is unreliable - force score to 0
-  }
-
-  const factor = Math.min(1, featureMagnitude / weightMagnitude);
-
-  // CRITICAL FIX: Final safety check to ensure result is valid
-  if (!isFinite(factor)) {
-    console.error('❌ Magnitude Factor: Calculation resulted in NaN/Infinity!');
-    return 0;
-  }
-
-  console.log(`✅ Magnitude Factor: ${factor.toFixed(3)}`);
-  return factor;
-  */
 }
 
-/**
- * Calculate vector magnitude (L2 norm).
- *
- * @param vector - Vector to measure
- * @returns Magnitude
- */
-function vectorMagnitude(vector: Float64Array): number {
-  let sumSquares = 0;
-  for (const value of vector) {
-    sumSquares += value * value;
-  }
-  return Math.sqrt(sumSquares);
-}
 
 /**
  * Calculate confidence from score for multiclass diagnosis
