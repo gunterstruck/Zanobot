@@ -1604,9 +1604,9 @@ body {
     /* 4. Footer: Darf NICHT aus dem Bild rutschen */
     .footer, .app-footer {
         flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
-        margin-top: 6px !important;
-        padding: 6px !important;
-        background-color: var(--bg-color, #000); /* Hintergrund damit lesbar */
+        margin-top: 4px !important;
+        padding: 3px 4px !important;
+        background-color: transparent !important; /* wie im normalen Layout */
         z-index: 10;
     }
     /* Links nebeneinander */
@@ -1619,6 +1619,23 @@ body {
     }
     .footer-link {
         display: inline-block !important;
+    }
+
+    /* Bei geöffnetem Bereich: normales Scrollen, Footer darf verschwinden */
+    body.compact-expanded .container {
+        overflow-y: auto !important;
+    }
+
+    body.compact-expanded .main-actions,
+    body.compact-expanded .phases-container {
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+        justify-content: flex-start !important;
+    }
+
+    body.compact-expanded .footer,
+    body.compact-expanded .app-footer {
+        display: none !important;
     }
 }
 

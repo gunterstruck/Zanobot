@@ -232,6 +232,15 @@ class ZanobotApp {
   private setupCollapsibleSections(): void {
     const headers = document.querySelectorAll('.section-header');
     let isAnimating = false;
+    const updateCompactExpandedState = () => {
+      const contents = Array.from(
+        document.querySelectorAll<HTMLElement>('.collapsible-content')
+      );
+      const hasOpenSection = contents.some(
+        (content) => window.getComputedStyle(content).display !== 'none'
+      );
+      document.body.classList.toggle('compact-expanded', hasOpenSection);
+    };
 
     headers.forEach((header) => {
       header.addEventListener('click', () => {
@@ -281,12 +290,16 @@ class ZanobotApp {
           icon.classList.toggle('rotated');
         }
 
+        updateCompactExpandedState();
+
         // Reset debounce flag after animation completes (300ms matches CSS transition)
         setTimeout(() => {
           isAnimating = false;
         }, 300);
       });
     });
+
+    updateCompactExpandedState();
   }
 
   /**
