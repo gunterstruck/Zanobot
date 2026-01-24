@@ -345,7 +345,7 @@ body {
 }
 
 /* ===================================
-   MAIN ACTIONS LAYOUT
+   MAIN ACTIONS LAYOUT (Fixed Centered Column)
    =================================== */
 .main-actions {
     display: flex;
@@ -353,6 +353,7 @@ body {
     flex: 1;
     justify-content: space-evenly;
     gap: var(--spacing-lg);
+    /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
@@ -1528,58 +1529,63 @@ body {
     }
 }
 
-/* Compact height adjustments */
+/* ===================================
+   COMPACT MODE (iPhone SE / Small Screens)
+   Force "One-Screen-Experience"
+   =================================== */
 @media (max-height: 700px) {
+    /* Container fast randlos machen */
     .container {
         padding: 5px !important;
         padding-bottom: 5px !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
     }
-
-    .footer,
-    .app-footer,
-    .layout-footer {
-        padding: 4px !important;
-        font-size: 0.7rem !important;
+    /* Header/Logo radikal kleiner */
+    .hero-header, header img, .logo svg {
+        height: 30px !important;
+        min-height: 0 !important;
+        margin-bottom: 5px !important;
     }
-
-    .footer-link,
-    .footer p,
-    .footer a,
-    .separator,
-    .copyright {
-        margin: 0 5px !important;
-        display: inline-block;
-        font-size: 0.7rem !important;
-    }
-
-    .main-actions,
-    .container-content {
+    .brand-title { font-size: 1.2rem !important; }
+    .brand-subtitle { font-size: 0.6rem !important; }
+    /* Abstände killen */
+    .main-actions {
         gap: 4px !important;
-        padding: 5px !important;
+        justify-content: center !important;
     }
-
-    button,
-    .action-btn {
-        padding: 8px 10px !important;
+    /* Footer extrem kompakt und NEBENEINANDER */
+    .footer, .app-footer, .layout-footer {
+        margin-top: 5px !important;
+        padding-top: 5px !important;
+        padding-bottom: 5px !important;
+    }
+    .legal-info {
+        gap: 8px !important;
+        margin-bottom: 0 !important;
+    }
+    .footer-link, .separator, .copyright {
+        font-size: 0.65rem !important;
+        display: inline-block !important; /* Nebeneinander erzwingen */
+        margin: 0 !important;
+    }
+    /* Buttons flach machen und Schriftgröße dynamisch anpassen */
+    .action-btn, button {
+        padding: 6px 10px !important; /* Sehr flach */
         min-height: 0 !important;
         height: auto !important;
+        /* Schrift passt sich an, bricht NIEMALS um */
+        font-size: clamp(0.7rem, 2vh, 0.9rem) !important;
+        white-space: nowrap !important;
     }
-
-    button,
-    .action-btn,
-    h2,
-    h3,
-    .container-title {
-        font-size: clamp(0.75rem, 2.5vh, 1rem) !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    /* Icons in Buttons kleiner */
+    .action-btn svg {
+        width: 14px !important;
+        height: 14px !important;
     }
-
-    .hero-header,
-    header img,
-    .logo {
-        height: 30px !important;
+    /* Verstecke unwichtige Deko im Kompaktmodus */
+    .header-divider, .welcome-subtitle {
+        display: none !important;
     }
 }
 
