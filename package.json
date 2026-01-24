@@ -1,7 +1,7 @@
 {
-  "name": "zanobot",
+  "name": "zanobo",
   "version": "2.0.0",
-  "description": "Zanobot - Industrial Machine Diagnostics PWA using GMIA Algorithm",
+  "description": "Zanobo - Industrial Machine Diagnostics PWA using GMIA Algorithm",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -45,6 +45,6 @@
     "gmia",
     "typescript"
   ],
-  "author": "Zanobot Team",
+  "author": "Zanobo Team",
   "license": "MIT"
 }

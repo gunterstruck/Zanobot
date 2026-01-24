@@ -49,7 +49,7 @@ class ZanobotApp {
       showDetails: import.meta.env.DEV || import.meta.env.MODE === 'development',
     });
 
-    logger.info('🤖 Zanobot AI Assistant starting...');
+    logger.info('🤖 Zanobo AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');
 
     // CRITICAL FIX: Wait for DOM with enhanced race condition protection
@@ -150,7 +150,7 @@ class ZanobotApp {
       compatibility.missing.forEach(feature => logger.error(`   ${feature}`));
 
       notify.error(
-        'Ihr Browser ist nicht kompatibel mit Zanobot.\n\n' +
+        'Ihr Browser ist nicht kompatibel mit Zanobo.\n\n' +
         'Fehlende Features:\n' +
         compatibility.missing.join('\n') +
         '\n\nBitte verwenden Sie einen modernen Browser wie Chrome, Edge, Firefox oder Safari.',
@@ -206,9 +206,9 @@ class ZanobotApp {
       // See vite.config.ts and the auto-generated registerSW.js script
 
       if (dbAvailable) {
-        logger.info('✅ Zanobot initialized successfully!');
+        logger.info('✅ Zanobo initialized successfully!');
       } else {
-        logger.warn('⚠️ Zanobot initialized with limited functionality (no database)');
+        logger.warn('⚠️ Zanobo initialized with limited functionality (no database)');
         logger.warn('   Some features may not work correctly without database access');
       }
     } catch (error) {
