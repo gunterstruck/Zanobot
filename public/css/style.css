@@ -485,6 +485,7 @@ body {
     align-items: center;
     cursor: pointer;
     padding: clamp(0.5rem, 1.8vh, var(--spacing-md)) clamp(0.75rem, 3vw, var(--spacing-lg));
+    min-height: clamp(52px, 7vh, 72px);
     border-bottom: 1px solid var(--divider-color);
     transition: background 0.2s ease;
 }
@@ -1034,9 +1035,21 @@ body {
    =================================== */
 .footer {
     margin-top: auto;
-    padding-top: clamp(0.4rem, 1.5vh, var(--spacing-lg));
-    border-top: 1px solid var(--divider-color);
+    width: 100%;
+    max-width: 420px;
+    height: clamp(60px, 10vh, 120px);
+    margin-left: auto;
+    margin-right: auto;
+    padding: clamp(0.5rem, 1.5vh, var(--spacing-lg));
     text-align: center;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(7, 18, 33, 0.85) 0%, rgba(17, 40, 64, 0.85) 100%);
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.12);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .footer-compact {
@@ -1542,6 +1555,7 @@ body {
 @media (max-height: 700px) {
     /* 1. Haupt-Container fixieren */
     .container {
+        --compact-gap: clamp(6px, 1.4vh, 12px);
         height: 100dvh !important; /* Nutze den vollen Viewport */
         width: 100% !important;
         padding: 8px !important;
@@ -1555,10 +1569,17 @@ body {
         flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
         height: clamp(90px, 18vh, 140px) !important;
         min-height: 90px !important;
-        margin-bottom: 6px !important;
+        margin-bottom: var(--compact-gap) !important;
     }
     /* Logo sichtbar halten, aber klein */
-    .hero-header img, .logo svg, .logo {
+    .hero-header img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+        display: block !important;
+    }
+    .logo svg, .logo {
         height: 100% !important;
         width: auto !important;
         display: block !important;
@@ -1576,8 +1597,8 @@ body {
         /* Layout: Eng zusammenpacken */
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important; /* Mittig zentrieren statt verteilen */
-        gap: 6px !important; /* Sehr kleiner Abstand */
+        justify-content: space-between !important;
+        gap: var(--compact-gap) !important;
         padding: 0 !important;
         width: 100% !important;
         max-width: 360px !important; /* Etwas schmaler für kleine Handys */
@@ -1587,7 +1608,8 @@ body {
         margin-bottom: 0 !important;
     }
     .main-header {
-        padding: 8px 12px !important;
+        min-height: clamp(48px, 7vh, 66px) !important;
+        padding: clamp(0.5rem, 2vh, 0.9rem) clamp(0.75rem, 3vw, 1.1rem) !important;
     }
     .container-title {
         font-size: 0.95rem !important;
@@ -1605,8 +1627,8 @@ body {
     .footer, .app-footer {
         flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
         margin-top: 4px !important;
-        padding: 3px 4px !important;
-        background-color: transparent !important; /* wie im normalen Layout */
+        padding: 6px 8px !important;
+        height: clamp(45px, 8vh, 70px) !important;
         z-index: 10;
     }
     /* Links nebeneinander */
@@ -1615,10 +1637,11 @@ body {
         justify-content: center !important;
         gap: 8px !important;
         margin: 0 !important;
-        font-size: 0.65rem !important;
+        font-size: 0.55rem !important;
     }
-    .footer-link {
+    .footer-link, .separator {
         display: inline-block !important;
+        font-size: 0.55rem !important;
     }
 
     /* Bei geöffnetem Bereich: normales Scrollen, Footer darf verschwinden */
