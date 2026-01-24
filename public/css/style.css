@@ -325,9 +325,9 @@ body {
     max-width: 420px;
     margin-left: auto;
     margin-right: auto;
-    height: 20vh;
-    min-height: 150px;
-    max-height: 300px;
+    height: clamp(120px, 20vh, 240px);
+    min-height: 120px;
+    max-height: 260px;
     margin-bottom: var(--spacing-lg);
     overflow: hidden;
     border-radius: var(--radius-lg);
@@ -352,7 +352,8 @@ body {
     flex-direction: column;
     flex: 1;
     justify-content: space-evenly;
-    gap: var(--spacing-lg);
+    gap: clamp(8px, 2vh, var(--spacing-lg));
+    align-items: stretch;
     /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
     max-width: 400px;
@@ -454,10 +455,11 @@ body {
    MAIN CONTAINERS
    =================================== */
 .main-container {
+    width: 100%;
     max-width: 420px;
     margin-left: auto;
     margin-right: auto;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 0;
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -482,7 +484,7 @@ body {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: clamp(0.5rem, 1.8vh, var(--spacing-md)) clamp(0.75rem, 3vw, var(--spacing-lg));
     border-bottom: 1px solid var(--divider-color);
     transition: background 0.2s ease;
 }
@@ -492,7 +494,7 @@ body {
 }
 
 .container-title {
-    font-size: 1.125rem;
+    font-size: clamp(0.95rem, 2.2vw, 1.125rem);
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -1031,8 +1033,8 @@ body {
    FOOTER
    =================================== */
 .footer {
-    margin-top: var(--spacing-xl);
-    padding-top: var(--spacing-lg);
+    margin-top: auto;
+    padding-top: clamp(0.4rem, 1.5vh, var(--spacing-lg));
     border-top: 1px solid var(--divider-color);
     text-align: center;
 }
@@ -1542,7 +1544,7 @@ body {
     .container {
         height: 100dvh !important; /* Nutze den vollen Viewport */
         width: 100% !important;
-        padding: 5px !important;
+        padding: 8px !important;
         box-sizing: border-box !important;
         overflow: hidden !important; /* VERHINDERT Scrollen des gesamten Screens */
         display: flex !important;
@@ -1551,13 +1553,13 @@ body {
     /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
     .hero-header {
         flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
-        min-height: auto !important;
-        margin-bottom: 5px !important;
-        padding: 5px !important;
+        height: clamp(90px, 18vh, 140px) !important;
+        min-height: 90px !important;
+        margin-bottom: 6px !important;
     }
     /* Logo sichtbar halten, aber klein */
     .hero-header img, .logo svg, .logo {
-        height: 35px !important;
+        height: 100% !important;
         width: auto !important;
         display: block !important;
     }
@@ -1578,23 +1580,32 @@ body {
         gap: 6px !important; /* Sehr kleiner Abstand */
         padding: 0 !important;
         width: 100% !important;
-        max-width: 350px !important; /* Etwas schmaler für kleine Handys */
+        max-width: 360px !important; /* Etwas schmaler für kleine Handys */
         margin: 0 auto !important;
+    }
+    .main-actions .main-container {
+        margin-bottom: 0 !important;
+    }
+    .main-header {
+        padding: 8px 12px !important;
+    }
+    .container-title {
+        font-size: 0.95rem !important;
     }
     /* Button-Styling kompakt */
     .action-btn, button {
         flex: 0 0 auto !important; /* Buttons behalten ihre Größe */
         height: auto !important;
-        padding: 8px 12px !important;
+        padding: 6px 10px !important;
         margin: 0 !important;
-        font-size: 0.9rem !important;
+        font-size: 0.8rem !important;
         white-space: nowrap !important;
     }
     /* 4. Footer: Darf NICHT aus dem Bild rutschen */
     .footer, .app-footer {
         flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
-        margin-top: 5px !important;
-        padding: 5px !important;
+        margin-top: 6px !important;
+        padding: 6px !important;
         background-color: var(--bg-color, #000); /* Hintergrund damit lesbar */
         z-index: 10;
     }
@@ -1602,9 +1613,9 @@ body {
     .legal-info, .footer p {
         display: flex !important;
         justify-content: center !important;
-        gap: 10px !important;
+        gap: 8px !important;
         margin: 0 !important;
-        font-size: 0.7rem !important;
+        font-size: 0.65rem !important;
     }
     .footer-link {
         display: inline-block !important;
