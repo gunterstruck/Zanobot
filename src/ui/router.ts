@@ -65,6 +65,9 @@ export class Router {
     // Unlock Phase 2 and 3
     this.unlockPhases();
 
+    // Collapse the machine selection container after successful selection
+    this.collapseSection('select-machine-content');
+
     // Initialize Phase 2 and 3 with the selected machine
     this.initializePhases(machine);
   }
@@ -194,6 +197,32 @@ export class Router {
           description.textContent = '⚠️ Bitte erst Referenz aufnehmen';
         }
       }
+    }
+  }
+
+  /**
+   * Collapse a collapsible section by content ID
+   */
+  private collapseSection(sectionId: string): void {
+    const content = document.getElementById(sectionId);
+    if (!content) {
+      return;
+    }
+
+    if (!content.dataset.originalDisplay) {
+      const computedStyle = window.getComputedStyle(content);
+      content.dataset.originalDisplay = computedStyle.display;
+    }
+
+    const computedDisplay = window.getComputedStyle(content).display;
+    if (computedDisplay !== 'none') {
+      content.style.display = 'none';
+    }
+
+    const header = document.querySelector(`.section-header[data-target="${sectionId}"]`);
+    const icon = header?.querySelector('.collapse-icon');
+    if (icon) {
+      icon.classList.remove('rotated');
     }
   }
 }
