@@ -327,16 +327,23 @@ class ZanobotApp {
    * Setup quick theme toggle button (header)
    */
   private setupQuickThemeToggle(): void {
-    const quickToggleBtn = document.getElementById('quick-theme-toggle');
-    if (quickToggleBtn) {
-      quickToggleBtn.addEventListener('click', () => {
+    const quickToggleBtns = Array.from(
+      document.querySelectorAll<HTMLElement>('.quick-theme-toggle')
+    );
+    const legacyToggleBtn = document.getElementById('quick-theme-toggle');
+    if (legacyToggleBtn && !quickToggleBtns.includes(legacyToggleBtn)) {
+      quickToggleBtns.push(legacyToggleBtn);
+    }
+
+    quickToggleBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
         // Use the global ZanobotTheme API from theme-bootstrap.js
         if (window.ZanobotTheme?.toggleTheme) {
           window.ZanobotTheme.toggleTheme();
           logger.debug('🎨 Theme toggled via quick toggle button');
         }
       });
-    }
+    });
   }
 
   /**

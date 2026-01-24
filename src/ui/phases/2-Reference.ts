@@ -80,6 +80,7 @@ export class ReferencePhase {
    * Initialize the reference phase UI
    */
   public init(): void {
+    this.applyAppShellLayout();
     const recordBtn = document.getElementById('record-btn');
     if (recordBtn) {
       // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
@@ -1477,6 +1478,19 @@ export class ReferencePhase {
 
     // Show container
     statusContainer.style.display = 'block';
+  }
+
+  private applyAppShellLayout(): void {
+    const modal = document.getElementById('review-modal');
+    if (!modal) return;
+
+    const modalContent = modal.querySelector('.modal-content');
+    if (!modalContent) return;
+
+    modalContent.classList.add('app-shell-container');
+    modalContent.querySelector('.modal-header')?.classList.add('shell-header');
+    modalContent.querySelector('.modal-body')?.classList.add('shell-content');
+    modalContent.querySelector('.modal-actions')?.classList.add('shell-footer');
   }
 
   /**
