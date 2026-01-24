@@ -54,6 +54,11 @@
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
     --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
 
+    /* Footer Surface */
+    --footer-bg: rgba(245, 250, 255, 0.94);
+    --footer-text: #0b1c2f;
+    --footer-border: rgba(15, 23, 42, 0.16);
+
     /* Visualizer Colors (Theme-Aware) */
     --viz-bg: #0a0a0a;
     --viz-grid: rgba(255, 255, 255, 0.05);
@@ -102,6 +107,11 @@
     --glow-primary: 0 0 25px rgba(0, 243, 255, 0.4);
     --glow-strong: 0 0 40px rgba(0, 243, 255, 0.6);
 
+    /* Footer Surface */
+    --footer-bg: rgba(15, 23, 42, 0.92);
+    --footer-text: #f8fafc;
+    --footer-border: rgba(0, 243, 255, 0.25);
+
     /* Visualizer Colors */
     --viz-bg: #000000;
     --viz-grid: rgba(0, 243, 255, 0.08);
@@ -149,6 +159,11 @@
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
     --glow-primary: 0 0 20px rgba(15, 23, 42, 0.15);
     --glow-strong: 0 0 30px rgba(15, 23, 42, 0.2);
+
+    /* Footer Surface */
+    --footer-bg: rgba(255, 255, 255, 0.97);
+    --footer-text: #0f172a;
+    --footer-border: rgba(15, 23, 42, 0.12);
 
     /* Visualizer Colors */
     --viz-bg: #f8fafc;
@@ -227,6 +242,11 @@
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
     --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
 
+    /* Footer Surface */
+    --footer-bg: rgba(17, 40, 64, 0.9);
+    --footer-text: #ffffff;
+    --footer-border: rgba(0, 212, 255, 0.2);
+
     /* Visualizer Colors */
     --viz-bg: #0a0a0a;
     --viz-grid: rgba(0, 212, 255, 0.08);
@@ -270,6 +290,7 @@ body {
     padding-bottom: var(--spacing-xl);
     display: flex;
     flex-direction: column;
+    gap: clamp(12px, 2vh, var(--spacing-lg));
     min-height: 100dvh;
 }
 
@@ -325,10 +346,11 @@ body {
     max-width: 420px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: var(--spacing-sm);
     height: clamp(120px, 20vh, 240px);
     min-height: 120px;
     max-height: 260px;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 0;
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, rgba(7, 18, 33, 0.8) 0%, rgba(17, 40, 64, 0.8) 100%);
@@ -340,7 +362,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: center 30%;
     display: block;
 }
 
@@ -350,14 +372,32 @@ body {
 .main-actions {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    justify-content: space-evenly;
+    flex: 0 0 auto;
+    justify-content: flex-start;
     gap: clamp(8px, 2vh, var(--spacing-lg));
     align-items: stretch;
     /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+    .hero-header,
+    .main-actions,
+    .main-container,
+    .footer {
+        max-width: 520px;
+    }
+
+    .main-actions {
+        gap: clamp(16px, 2.2vh, 28px);
+    }
+
+    .main-header {
+        padding-left: clamp(1rem, 2vw, 1.5rem);
+        padding-right: clamp(1rem, 2vw, 1.5rem);
+    }
 }
 
 /* ===================================
@@ -1034,22 +1074,23 @@ body {
    FOOTER
    =================================== */
 .footer {
-    margin-top: auto;
+    margin-top: 0;
     width: 100%;
     max-width: 420px;
-    height: clamp(48px, 8vh, 96px);
+    height: clamp(64px, 12vh, 144px);
     margin-left: auto;
     margin-right: auto;
-    padding: clamp(0.35rem, 1.1vh, 1.25rem);
+    padding: clamp(0.6rem, 1.8vh, 1.6rem);
     text-align: center;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, rgba(7, 18, 33, 0.85) 0%, rgba(17, 40, 64, 0.85) 100%);
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.12);
-    border: 1px solid rgba(0, 212, 255, 0.18);
+    background: var(--footer-bg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--footer-border);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 0.5rem;
+    color: var(--footer-text);
 }
 
 .footer-compact {
@@ -1083,7 +1124,7 @@ body {
 .footer-link {
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: var(--footer-text);
     font-size: 0.875rem;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -1095,13 +1136,15 @@ body {
 }
 
 .separator {
-    color: var(--text-muted);
+    color: var(--footer-text);
+    opacity: 0.65;
     font-size: 0.875rem;
 }
 
 .copyright {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--footer-text);
+    opacity: 0.6;
 }
 
 /* ===================================
