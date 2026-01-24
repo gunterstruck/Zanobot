@@ -463,14 +463,18 @@
 
     <!-- Modal for Recording -->
     <div id="recording-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Referenz aufnehmen</h3>
-                <p class="modal-subtitle" id="machine-id">MACHINE 002</p>
+        <div class="modal-content app-shell-container">
+            <div class="modal-header shell-header">
+                <h3>Referenzaufnahme</h3>
+                <div class="modal-subtitle" id="recording-machine-name">Maschine</div>
+                <div class="modal-subtitle" id="recording-machine-id">MACHINE 002</div>
+                <p class="modal-subtitle">Halten Sie das Mikrofon nah an die Maschine.</p>
             </div>
-            <div class="modal-body">
-                <canvas id="waveform-canvas" width="300" height="150"></canvas>
-                <canvas id="health-gauge-canvas" width="300" height="300" style="display: none;"></canvas>
+            <div class="modal-body shell-content">
+                <div id="visualizer-container">
+                    <canvas id="waveform-canvas" width="300" height="150"></canvas>
+                    <canvas id="health-gauge-canvas" width="300" height="300" style="display: none;"></canvas>
+                </div>
                 <p class="recording-status" id="recording-status">High audio quality detected</p>
                 <p class="recording-timer" id="recording-timer">00:00</p>
                 <div class="fingerprint-quality">
@@ -480,7 +484,7 @@
                     <span>Fingerprint Quality: <strong id="fingerprint-quality">CONFIDENT</strong></span>
                 </div>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions shell-footer">
                 <button class="modal-btn btn-secondary" id="stop-recording-btn">Stop Recording</button>
                 <button class="modal-btn btn-primary" id="save-reference-btn" style="display: none;">Save Reference</button>
             </div>
@@ -489,12 +493,20 @@
 
     <!-- Modal for Review Recording (Phase 2) -->
     <div id="review-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content app-shell-container">
+            <div class="modal-header shell-header">
                 <h3>Aufnahme prüfen</h3>
                 <p class="modal-subtitle">Qualitätskontrolle</p>
+                <div class="modal-header-actions">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body shell-content">
                 <!-- Audio Player -->
                 <div class="review-audio-player">
                     <h4 class="review-section-title">Aufnahme anhören</h4>
@@ -542,7 +554,7 @@
                 </div>
             </div>
 
-            <div class="modal-actions">
+            <div class="modal-actions shell-footer">
                 <button class="modal-btn btn-secondary" id="review-discard-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
@@ -651,17 +663,25 @@
 
     <!-- Modal for Diagnosis Results -->
     <div id="diagnosis-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content app-shell-container">
+            <div class="modal-header shell-header">
                 <h3>Diagnoseergebnisse</h3>
-                <button class="close-modal-btn" id="close-diagnosis-modal">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+                <div class="modal-header-actions">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                        </svg>
+                    </button>
+                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Diagnose schließen">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body shell-content">
                 <div class="result-card">
                     <div class="result-barcode">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
@@ -693,7 +713,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions shell-footer">
                 <button class="modal-btn btn-secondary" id="view-history-btn">View History</button>
             </div>
         </div>

@@ -80,6 +80,7 @@ export class ReferencePhase {
    * Initialize the reference phase UI
    */
   public init(): void {
+    this.applyAppShellLayout();
     const recordBtn = document.getElementById('record-btn');
     if (recordBtn) {
       // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
@@ -700,15 +701,21 @@ export class ReferencePhase {
 
     // CRITICAL FIX: Update machine name in modal subtitle
     // This was showing hardcoded "MACHINE 002" from index.html instead of selected machine
-    const machineIdElement = document.getElementById('machine-id');
-    if (machineIdElement) {
-      machineIdElement.textContent = this.machine.name;
+    const machineNameElement = document.getElementById('recording-machine-name');
+    if (machineNameElement) {
+      machineNameElement.textContent = this.machine.name;
       logger.debug('✅ Modal machine name updated:', this.machine.name);
+    }
+
+    const machineIdElement = document.getElementById('recording-machine-id');
+    if (machineIdElement) {
+      machineIdElement.textContent = this.machine.id;
+      logger.debug('✅ Modal machine id updated:', this.machine.id);
     }
 
     // Add existing models info and status message
     const modalBody = document.querySelector('#recording-modal .modal-body');
-    if (modalBody && !document.getElementById('recording-status')) {
+    if (modalBody && !modalBody.querySelector('.existing-models-info')) {
       // Show existing models info
       const existingModels = this.machine.referenceModels || [];
       const existingModelsInfo =
@@ -737,12 +744,11 @@ export class ReferencePhase {
         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${existingModels.length} Zustand(e) bereits trainiert</div>
       `;
       modalBody.insertBefore(infoDiv, modalBody.firstChild);
+    }
 
-      const statusDiv = document.createElement('div');
-      statusDiv.id = 'recording-status';
-      statusDiv.className = 'recording-status';
-      statusDiv.textContent = 'Initialisierung...';
-      modalBody.insertBefore(statusDiv, infoDiv.nextSibling);
+    const statusElement = document.getElementById('recording-status');
+    if (statusElement) {
+      statusElement.textContent = 'Initialisierung...';
     }
 
     // Setup stop button
@@ -1477,6 +1483,22 @@ export class ReferencePhase {
 
     // Show container
     statusContainer.style.display = 'block';
+  }
+
+  private applyAppShellLayout(): void {
+    const modalIds = ['recording-modal', 'review-modal'];
+    modalIds.forEach((modalId) => {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
+      const modalContent = modal.querySelector('.modal-content');
+      if (!modalContent) return;
+
+      modalContent.classList.add('app-shell-container');
+      modalContent.querySelector('.modal-header')?.classList.add('shell-header');
+      modalContent.querySelector('.modal-body')?.classList.add('shell-content');
+      modalContent.querySelector('.modal-actions')?.classList.add('shell-footer');
+    });
   }
 
   /**
