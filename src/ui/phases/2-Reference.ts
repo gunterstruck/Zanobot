@@ -55,6 +55,7 @@ export class ReferencePhase {
 
   // VISUAL POSITIONING: Reference image captured during recording
   private capturedReferenceImage: Blob | null = null;
+  private reviewImageUrl: string | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -941,6 +942,23 @@ export class ReferencePhase {
     audioSource.type = this.recordedBlob.type || 'audio/webm';
     audioElement.load();
 
+    const imageContainer = document.getElementById('review-reference-image-container');
+    const imageElement = document.getElementById('review-reference-image') as HTMLImageElement | null;
+
+    if (imageContainer && imageElement) {
+      if (this.capturedReferenceImage) {
+        if (this.reviewImageUrl) {
+          URL.revokeObjectURL(this.reviewImageUrl);
+        }
+        this.reviewImageUrl = URL.createObjectURL(this.capturedReferenceImage);
+        imageElement.src = this.reviewImageUrl;
+        imageContainer.style.display = 'block';
+      } else {
+        imageElement.removeAttribute('src');
+        imageContainer.style.display = 'none';
+      }
+    }
+
     // Update quality indicator
     this.updateQualityIndicator(this.currentQualityResult);
 
@@ -980,6 +998,17 @@ export class ReferencePhase {
         URL.revokeObjectURL(audioSource.src);
         audioSource.src = '';
       }
+    }
+
+    if (this.reviewImageUrl) {
+      URL.revokeObjectURL(this.reviewImageUrl);
+      this.reviewImageUrl = null;
+    }
+    const imageContainer = document.getElementById('review-reference-image-container');
+    const imageElement = document.getElementById('review-reference-image') as HTMLImageElement | null;
+    if (imageContainer && imageElement) {
+      imageElement.removeAttribute('src');
+      imageContainer.style.display = 'none';
     }
   }
 
