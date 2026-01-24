@@ -13,6 +13,11 @@
 
 import { logger } from '@utils/logger.js';
 import { isIOS } from '@utils/platform.js';
+import {
+  getVisualizerSettings,
+  VISUALIZER_SETTINGS_EVENT,
+  type VisualizerSettings,
+} from '@utils/visualizerSettings.js';
 
 export class AudioVisualizer {
   private canvas: HTMLCanvasElement;
@@ -20,6 +25,8 @@ export class AudioVisualizer {
   private analyser: AnalyserNode | null = null;
   private animationFrame: number | null = null;
   private dataArray: Uint8Array | null = null;
+  private visualizerSettings: VisualizerSettings;
+  private settingsListener: ((event: Event) => void) | null = null;
 
   // CRITICAL FIX: Store audio source reference to properly disconnect in stop()
   // Without this, the audio graph continues running and causes resource leaks
@@ -49,6 +56,15 @@ export class AudioVisualizer {
 
     this.ctx = ctx;
     this.setCanvasSize();
+
+    this.visualizerSettings = getVisualizerSettings();
+    this.settingsListener = (event: Event) => {
+      const detail = (event as CustomEvent<VisualizerSettings>).detail;
+      if (detail) {
+        this.visualizerSettings = detail;
+      }
+    };
+    window.addEventListener(VISUALIZER_SETTINGS_EVENT, this.settingsListener);
   }
 
   private setCanvasSize(): void {
@@ -219,23 +235,9 @@ export class AudioVisualizer {
     if (!this.dataArray) return;
 
     const barWidth = width / this.barCount;
-    const binStep = Math.floor(this.dataArray.length / this.barCount);
 
     for (let i = 0; i < this.barCount; i++) {
-      // Get frequency bin value (average multiple bins for smoother display)
-      let sum = 0;
-      let count = 0;
-
-      for (let j = 0; j < binStep; j++) {
-        const index = i * binStep + j;
-        if (index < this.dataArray.length) {
-          sum += this.dataArray[index];
-          count++;
-        }
-      }
-
-      const value = count > 0 ? sum / count : 0;
-      const normalizedValue = value / 255; // 0-1
+      const normalizedValue = this.getNormalizedValueForBar(i);
 
       // Calculate bar height
       const barHeight = normalizedValue * height;
@@ -272,23 +274,10 @@ export class AudioVisualizer {
 
     const points: { x: number; y: number }[] = [];
     const barWidth = width / this.barCount;
-    const binStep = Math.floor(this.dataArray.length / this.barCount);
 
     // Collect points
     for (let i = 0; i < this.barCount; i++) {
-      let sum = 0;
-      let count = 0;
-
-      for (let j = 0; j < binStep; j++) {
-        const index = i * binStep + j;
-        if (index < this.dataArray.length) {
-          sum += this.dataArray[index];
-          count++;
-        }
-      }
-
-      const value = count > 0 ? sum / count : 0;
-      const normalizedValue = value / 255;
+      const normalizedValue = this.getNormalizedValueForBar(i);
       const barHeight = normalizedValue * height;
 
       points.push({
@@ -392,6 +381,7 @@ export class AudioVisualizer {
   private drawFrequencyLabels(width: number, height: number): void {
     // CRITICAL FIX: Use actual sample rate from AudioContext (e.g., 48000 Hz)
     const maxFreq = this.sampleRate / 2; // Nyquist frequency
+    const isLogScale = this.visualizerSettings.frequencyScale === 'log';
 
     // Calculate frequency labels dynamically based on actual sample rate
     // Format: 0 Hz, 25%, 50%, 75%, 100% of Nyquist frequency
@@ -401,13 +391,35 @@ export class AudioVisualizer {
       return freq.toString();
     };
 
-    const labels = [
-      { pos: 0, freq: 0 },
-      { pos: 0.25, freq: maxFreq * 0.25 },
-      { pos: 0.5, freq: maxFreq * 0.5 },
-      { pos: 0.75, freq: maxFreq * 0.75 },
-      { pos: 1, freq: maxFreq },
-    ];
+    const labels = isLogScale
+      ? [
+          { pos: 0, freq: 0 },
+          { freq: 20 },
+          { freq: 50 },
+          { freq: 100 },
+          { freq: 500 },
+          { freq: 1000 },
+          { freq: 5000 },
+          { freq: 10000 },
+          { freq: maxFreq },
+        ].map((label) => {
+          if (label.freq === 0) {
+            return { pos: 0, freq: 0 };
+          }
+          const minFreq = Math.min(20, maxFreq);
+          const logMin = Math.log10(minFreq);
+          const logMax = Math.log10(maxFreq);
+          const clamped = Math.min(Math.max(label.freq, minFreq), maxFreq);
+          const pos = (Math.log10(clamped) - logMin) / (logMax - logMin);
+          return { pos, freq: clamped };
+        })
+      : [
+          { pos: 0, freq: 0 },
+          { pos: 0.25, freq: maxFreq * 0.25 },
+          { pos: 0.5, freq: maxFreq * 0.5 },
+          { pos: 0.75, freq: maxFreq * 0.75 },
+          { pos: 1, freq: maxFreq },
+        ];
 
     // Use theme-aware text color
     const textColor = getComputedStyle(document.documentElement)
@@ -426,7 +438,9 @@ export class AudioVisualizer {
 
     // Draw amplitude label
     this.ctx.textAlign = 'left';
-    this.ctx.fillText('Amplitude', 5, 15);
+    const amplitudeLabel =
+      this.visualizerSettings.amplitudeScale === 'log' ? 'Amplitude (dB, log)' : 'Amplitude (dB)';
+    this.ctx.fillText(amplitudeLabel, 5, 15);
   }
 
   /**
@@ -493,5 +507,75 @@ export class AudioVisualizer {
    */
   public destroy(): void {
     this.stop();
+    if (this.settingsListener) {
+      window.removeEventListener(VISUALIZER_SETTINGS_EVENT, this.settingsListener);
+    }
+  }
+
+  private getNormalizedValueForBar(barIndex: number): number {
+    if (!this.dataArray) return 0;
+
+    const { start, end } = this.getFrequencyBinRange(barIndex);
+    let sum = 0;
+    let count = 0;
+
+    for (let i = start; i < end; i++) {
+      if (i >= 0 && i < this.dataArray.length) {
+        sum += this.dataArray[i];
+        count++;
+      }
+    }
+
+    const value = count > 0 ? sum / count : 0;
+    let normalizedValue = value / 255;
+
+    if (this.visualizerSettings.amplitudeScale === 'log') {
+      normalizedValue = Math.log10(1 + normalizedValue * 9);
+    }
+
+    return normalizedValue;
+  }
+
+  private getFrequencyBinRange(barIndex: number): { start: number; end: number } {
+    if (!this.dataArray) {
+      return { start: 0, end: 0 };
+    }
+
+    const totalBins = this.dataArray.length;
+    const maxBinIndex = totalBins - 1;
+
+    if (this.visualizerSettings.frequencyScale !== 'log' || this.sampleRate <= 0) {
+      const binStep = Math.max(1, Math.floor(totalBins / this.barCount));
+      const start = Math.min(barIndex * binStep, totalBins - 1);
+      const end = Math.min(start + binStep, totalBins);
+      return { start, end };
+    }
+
+    const maxFreq = this.sampleRate / 2;
+    const minFreq = Math.min(20, maxFreq);
+
+    if (maxFreq <= minFreq) {
+      const binStep = Math.max(1, Math.floor(totalBins / this.barCount));
+      const start = Math.min(barIndex * binStep, totalBins - 1);
+      const end = Math.min(start + binStep, totalBins);
+      return { start, end };
+    }
+
+    const logMin = Math.log10(minFreq);
+    const logMax = Math.log10(maxFreq);
+    const ratioStart = barIndex / this.barCount;
+    const ratioEnd = (barIndex + 1) / this.barCount;
+
+    const startFreq =
+      barIndex === 0 ? 0 : Math.pow(10, logMin + (logMax - logMin) * ratioStart);
+    const endFreq = Math.pow(10, logMin + (logMax - logMin) * ratioEnd);
+
+    const start = Math.floor((startFreq / maxFreq) * maxBinIndex);
+    const end = Math.min(
+      maxBinIndex + 1,
+      Math.max(start + 1, Math.ceil((endFreq / maxFreq) * maxBinIndex))
+    );
+
+    return { start, end };
   }
 }
