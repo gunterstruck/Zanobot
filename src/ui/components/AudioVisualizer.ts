@@ -12,6 +12,7 @@
  */
 
 import { logger } from '@utils/logger.js';
+import { isIOS } from '@utils/platform.js';
 
 export class AudioVisualizer {
   private canvas: HTMLCanvasElement;
@@ -84,7 +85,7 @@ export class AudioVisualizer {
     // CRITICAL FIX: Add GainNode for signal amplification to improve visualization
     // Amplify the microphone signal by 3x to make weak signals more visible in the spectrogram
     this.gainNode = audioContext.createGain();
-    this.gainNode.gain.value = 3.0; // 3x amplification (same as AudioWorkletManager)
+    this.gainNode.gain.value = isIOS() ? 3.0 : 1.0; // iOS boost only; keep Android/Desktop unchanged
 
     // CRITICAL FIX: Store source reference for proper cleanup in stop()
     // Without storing the reference, we cannot disconnect it later,
