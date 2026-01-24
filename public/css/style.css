@@ -159,6 +159,35 @@
     --viz-text: rgba(15, 23, 42, 0.5);
 }
 
+/* Light theme surface tuning for better readability */
+[data-theme="light"] .sub-container {
+    background: var(--bg-primary);
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .machine-selection-option {
+    background: var(--bg-primary);
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .machine-input {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.2);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .machine-input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .option-divider span {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
 /* ===================================
    THEME: BRAND (Zanobot Original)
    Vibe: Corporate identity, balanced, professional cyan/teal
