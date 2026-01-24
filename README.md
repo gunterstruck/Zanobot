@@ -1,10 +1,10 @@
-# 🤖 Zanobot 2.0 - Industrial Machine Diagnostics PWA
+# 🤖 Zanobo 2.0 - Industrial Machine Diagnostics PWA
 
 **Acoustic Machine Health Monitoring using GMIA Algorithm**
 
 ## 📋 Overview
 
-Zanobot ist eine **Progressive Web App (PWA)** für industrielle Maschinendiagnose mittels akustischer Analyse. Die App nutzt den **GMIA (Gaussian Model Independent Attributes)** Algorithmus zur Erkennung von Anomalien in Maschinengeräuschen.
+Zanobo ist eine **Progressive Web App (PWA)** für industrielle Maschinendiagnose mittels akustischer Analyse. Die App nutzt den **GMIA (Gaussian Model Independent Attributes)** Algorithmus zur Erkennung von Anomalien in Maschinengeräuschen.
 
 ### Key Features
 

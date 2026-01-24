@@ -18,8 +18,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'assets/**/*'],
       manifest: {
-        name: 'Zanobot - AI Assistant',
-        short_name: 'Zanobot',
+        name: 'Zanobo - AI Assistant',
+        short_name: 'Zanobo',
         description: 'Industrial Machine Diagnostics using Acoustic Analysis',
         theme_color: '#0A1929',
         background_color: '#0A1929',

@@ -191,7 +191,7 @@
             const names = {
                 'neon': 'Neon Industrial',
                 'light': 'Daylight',
-                'brand': 'Zanobot'
+                'brand': 'Zanobo'
             };
             return names[theme] || theme;
         },
@@ -205,7 +205,7 @@
             const descriptions = {
                 'neon': 'Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.',
                 'light': 'Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.',
-                'brand': 'Original Zanobot Design. Ausgewogen & professionell.'
+                'brand': 'Original Zanobo Design. Ausgewogen & professionell.'
             };
             return descriptions[theme] || '';
         },

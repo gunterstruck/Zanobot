@@ -248,6 +248,12 @@ body {
     }
 }
 
+@media (min-width: 900px) {
+    .container {
+        max-width: 520px;
+    }
+}
+
 /* ===================================
    MICROPHONE STATUS BADGE
    =================================== */
