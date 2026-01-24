@@ -484,8 +484,8 @@ body {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    padding: clamp(0.5rem, 1.8vh, var(--spacing-md)) clamp(0.75rem, 3vw, var(--spacing-lg));
-    min-height: clamp(52px, 7vh, 72px);
+    padding: clamp(0.75rem, 2.7vh, 2.25rem) clamp(0.75rem, 3vw, var(--spacing-lg));
+    min-height: clamp(78px, 10.5vh, 108px);
     border-bottom: 1px solid var(--divider-color);
     transition: background 0.2s ease;
 }
@@ -1037,10 +1037,10 @@ body {
     margin-top: auto;
     width: 100%;
     max-width: 420px;
-    height: clamp(60px, 10vh, 120px);
+    height: clamp(48px, 8vh, 96px);
     margin-left: auto;
     margin-right: auto;
-    padding: clamp(0.5rem, 1.5vh, var(--spacing-lg));
+    padding: clamp(0.35rem, 1.1vh, 1.25rem);
     text-align: center;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, rgba(7, 18, 33, 0.85) 0%, rgba(17, 40, 64, 0.85) 100%);
@@ -1563,13 +1563,14 @@ body {
         overflow: hidden !important; /* VERHINDERT Scrollen des gesamten Screens */
         display: flex !important;
         flex-direction: column !important;
+        gap: 0 !important;
     }
     /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
     .hero-header {
         flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
         height: clamp(90px, 18vh, 140px) !important;
         min-height: 90px !important;
-        margin-bottom: var(--compact-gap) !important;
+        margin-bottom: 0 !important;
     }
     /* Logo sichtbar halten, aber klein */
     .hero-header img {
@@ -1597,8 +1598,8 @@ body {
         /* Layout: Eng zusammenpacken */
         display: flex !important;
         flex-direction: column !important;
-        justify-content: space-between !important;
-        gap: var(--compact-gap) !important;
+        justify-content: space-evenly !important;
+        gap: 0 !important;
         padding: 0 !important;
         width: 100% !important;
         max-width: 360px !important; /* Etwas schmaler für kleine Handys */
@@ -1608,8 +1609,8 @@ body {
         margin-bottom: 0 !important;
     }
     .main-header {
-        min-height: clamp(48px, 7vh, 66px) !important;
-        padding: clamp(0.5rem, 2vh, 0.9rem) clamp(0.75rem, 3vw, 1.1rem) !important;
+        min-height: clamp(72px, 10.5vh, 96px) !important;
+        padding: clamp(0.75rem, 3vh, 1.35rem) clamp(0.75rem, 3vw, 1.1rem) !important;
     }
     .container-title {
         font-size: 0.95rem !important;
@@ -1626,9 +1627,9 @@ body {
     /* 4. Footer: Darf NICHT aus dem Bild rutschen */
     .footer, .app-footer {
         flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
-        margin-top: 4px !important;
-        padding: 6px 8px !important;
-        height: clamp(45px, 8vh, 70px) !important;
+        margin-top: 0 !important;
+        padding: 4px 6px !important;
+        height: clamp(36px, 6vh, 54px) !important;
         z-index: 10;
     }
     /* Links nebeneinander */
