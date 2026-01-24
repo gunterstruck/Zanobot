@@ -1933,6 +1933,24 @@ select:focus-visible {
     margin-bottom: var(--spacing-lg);
 }
 
+.review-reference-image {
+    margin-bottom: var(--spacing-lg);
+}
+
+.review-image-frame {
+    width: 100%;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+}
+
+.review-image-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
 .review-section-title {
     font-size: 1rem;
     font-weight: 600;
