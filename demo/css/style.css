@@ -980,6 +980,24 @@ body {
     text-align: right;
 }
 
+.setting-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.setting-toggle input[type="checkbox"] {
+    margin-top: 0.2rem;
+    accent-color: var(--primary-color);
+}
+
+.setting-description {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
 /* ===================================
    FOOTER
    =================================== */

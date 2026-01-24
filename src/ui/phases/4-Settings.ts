@@ -13,6 +13,10 @@
 import { exportData, importData, getDBStats, clearAllData } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+import {
+  getVisualizerSettings,
+  setVisualizerSettings,
+} from '@utils/visualizerSettings.js';
 
 export class SettingsPhase {
   constructor() {}
@@ -45,8 +49,43 @@ export class SettingsPhase {
       statsBtn.addEventListener('click', () => this.showStats());
     }
 
+    this.initVisualizerScaleSettings();
+
     // Load stats on init
     this.showStats();
+  }
+
+  private initVisualizerScaleSettings(): void {
+    const freqToggle = document.getElementById(
+      'frequency-scale-toggle'
+    ) as HTMLInputElement | null;
+    const ampToggle = document.getElementById(
+      'amplitude-scale-toggle'
+    ) as HTMLInputElement | null;
+
+    if (!freqToggle && !ampToggle) {
+      return;
+    }
+
+    const settings = getVisualizerSettings();
+
+    if (freqToggle) {
+      freqToggle.checked = settings.frequencyScale === 'log';
+      freqToggle.addEventListener('change', () => {
+        setVisualizerSettings({
+          frequencyScale: freqToggle.checked ? 'log' : 'linear',
+        });
+      });
+    }
+
+    if (ampToggle) {
+      ampToggle.checked = settings.amplitudeScale === 'log';
+      ampToggle.addEventListener('change', () => {
+        setVisualizerSettings({
+          amplitudeScale: ampToggle.checked ? 'log' : 'linear',
+        });
+      });
+    }
   }
 
   /**
