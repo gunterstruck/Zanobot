@@ -343,13 +343,13 @@ body {
    =================================== */
 .hero-header {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
     margin-left: auto;
     margin-right: auto;
     margin-top: var(--spacing-sm);
-    height: clamp(120px, 20vh, 240px);
-    min-height: 120px;
-    max-height: 260px;
+    height: clamp(108px, 18vh, 216px);
+    min-height: 108px;
+    max-height: 234px;
     margin-bottom: 0;
     overflow: hidden;
     border-radius: var(--radius-lg);
@@ -1076,11 +1076,11 @@ body {
 .footer {
     margin-top: 0;
     width: 100%;
-    max-width: 420px;
-    height: clamp(64px, 12vh, 144px);
+    max-width: 400px;
+    height: clamp(80px, 9vh, 160px);
     margin-left: auto;
     margin-right: auto;
-    padding: clamp(0.6rem, 1.8vh, 1.6rem);
+    padding: clamp(0.35rem, 0.9vh, 0.9rem);
     text-align: center;
     border-radius: var(--radius-lg);
     background: var(--footer-bg);
@@ -1089,7 +1089,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
     color: var(--footer-text);
 }
 
