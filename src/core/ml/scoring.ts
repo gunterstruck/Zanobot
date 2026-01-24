@@ -544,6 +544,17 @@ export function classifyDiagnosticState(
   let bestLabel = 'UNKNOWN';
   let bestModel: GMIAModel | null = null;
   let bestCosine = 0;
+  let bestDebug:
+    | {
+        weightMagnitude: number;
+        featureMagnitude: number;
+        magnitudeFactor: number;
+        cosine: number;
+        adjustedCosine: number;
+        scalingConstant: number;
+        rawScore: number;
+      }
+    | null = null;
 
   // Loop through all models to find best match
   for (const model of models) {
@@ -552,8 +563,11 @@ export function classifyDiagnosticState(
     const cosineSimilarities = inferGMIA(model, [featureVector], testSampleRate);
     const cosine = cosineSimilarities[0];
 
-    // Step 2: Calculate health score using existing scoring function
-    let score = calculateHealthScore(cosine, model.scalingConstant);
+    // Step 2: Calculate magnitude adjustment + health score
+    const magnitudeFactor = calculateMagnitudeFactor(model.weightVector, featureVector.features);
+    const adjustedCosine = cosine * magnitudeFactor;
+    const rawScore = calculateHealthScore(adjustedCosine, model.scalingConstant);
+    let score = rawScore;
 
     // Step 2.5: SCORE CALIBRATION - Normalize using baseline score
     // ============================================================================
@@ -573,12 +587,12 @@ export function classifyDiagnosticState(
     // ============================================================================
     let calibratedScore = score;
     if (model.baselineScore && model.baselineScore > 0) {
-      const rawScore = score;
+      const baselineRawScore = score;
       calibratedScore = (score / model.baselineScore) * 100;
       calibratedScore = Math.min(100, calibratedScore); // Cap at 100%
 
       logger.debug(
-        `📊 Score Calibration for "${model.label}": Raw=${rawScore.toFixed(1)}%, Baseline=${model.baselineScore.toFixed(1)}%, Calibrated=${calibratedScore.toFixed(1)}%`
+        `📊 Score Calibration for "${model.label}": Raw=${baselineRawScore.toFixed(1)}%, Baseline=${model.baselineScore.toFixed(1)}%, Calibrated=${calibratedScore.toFixed(1)}%`
       );
 
       score = calibratedScore; // Use calibrated score for comparison
@@ -591,7 +605,9 @@ export function classifyDiagnosticState(
     // DEBUG LOGGING: Show comparison for each model
     logger.debug(`📊 Model "${model.label}" evaluation:`, {
       cosine: cosine.toFixed(4),
-      rawScore: score.toFixed(1),
+      magnitudeFactor: magnitudeFactor.toFixed(4),
+      adjustedCosine: adjustedCosine.toFixed(4),
+      rawScore: rawScore.toFixed(1),
       baselineScore: model.baselineScore?.toFixed(1) || 'N/A',
       calibratedScore: calibratedScore.toFixed(1),
     });
@@ -602,6 +618,15 @@ export function classifyDiagnosticState(
       bestLabel = model.label;
       bestModel = model;
       bestCosine = cosine;
+      bestDebug = {
+        weightMagnitude: vectorMagnitude(model.weightVector),
+        featureMagnitude: vectorMagnitude(featureVector.features),
+        magnitudeFactor,
+        cosine,
+        adjustedCosine,
+        scalingConstant: model.scalingConstant,
+        rawScore,
+      };
     }
   }
 
@@ -633,12 +658,14 @@ export function classifyDiagnosticState(
       evaluatedModels: models.length,
       // DEBUG INFO: Add detailed calculation values for troubleshooting
       debug: bestModel
-        ? {
+        ? bestDebug ?? {
             weightMagnitude: vectorMagnitude(bestModel.weightVector),
             featureMagnitude: vectorMagnitude(featureVector.features),
+            magnitudeFactor: 1,
             cosine: bestCosine,
+            adjustedCosine: bestCosine,
             scalingConstant: bestModel.scalingConstant,
-            score: bestScore,
+            rawScore: bestScore,
           }
         : undefined,
     },
