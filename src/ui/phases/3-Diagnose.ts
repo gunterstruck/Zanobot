@@ -120,6 +120,7 @@ export class DiagnosePhase {
    * Initialize the diagnose phase UI
    */
   public init(): void {
+    this.applyAppShellLayout();
     const diagnoseBtn = document.getElementById('diagnose-btn');
     if (diagnoseBtn) {
       // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
@@ -1051,6 +1052,19 @@ export class DiagnosePhase {
         modal.style.display = 'none';
       };
     }
+  }
+
+  private applyAppShellLayout(): void {
+    const modal = document.getElementById('diagnosis-modal');
+    if (!modal) return;
+
+    const modalContent = modal.querySelector('.modal-content');
+    if (!modalContent) return;
+
+    modalContent.classList.add('app-shell-container');
+    modalContent.querySelector('.modal-header')?.classList.add('shell-header');
+    modalContent.querySelector('.modal-body')?.classList.add('shell-content');
+    modalContent.querySelector('.modal-actions')?.classList.add('shell-footer');
   }
 
   /**

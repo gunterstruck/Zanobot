@@ -1084,6 +1084,24 @@ body {
     animation: slideUp 0.3s ease-out;
 }
 
+.app-shell-container {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+.shell-header,
+.shell-footer {
+    flex: 0 0 auto;
+}
+
+.shell-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .modal-header {
     padding: var(--spacing-lg);
     border-bottom: 1px solid var(--divider-color);
@@ -1120,6 +1138,21 @@ body {
 .close-modal-btn:hover {
     background: rgba(255, 82, 82, 0.1);
     color: var(--status-error);
+}
+
+.modal-header-actions {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.modal-header-actions .close-modal-btn {
+    position: static;
+    top: auto;
+    right: auto;
 }
 
 .modal-body {
