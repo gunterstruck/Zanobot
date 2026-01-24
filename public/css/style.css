@@ -485,6 +485,7 @@ body {
     align-items: center;
     cursor: pointer;
     padding: clamp(0.5rem, 1.8vh, var(--spacing-md)) clamp(0.75rem, 3vw, var(--spacing-lg));
+    min-height: clamp(52px, 7vh, 72px);
     border-bottom: 1px solid var(--divider-color);
     transition: background 0.2s ease;
 }
@@ -1595,9 +1596,9 @@ body {
         /* Layout: Eng zusammenpacken */
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important; /* Mittig zentrieren statt verteilen */
-        gap: 6px !important; /* Sehr kleiner Abstand */
-        padding: 0 !important;
+        justify-content: space-between !important;
+        gap: clamp(6px, 1.4vh, 12px) !important;
+        padding: clamp(6px, 2vh, 16px) 0 !important;
         width: 100% !important;
         max-width: 360px !important; /* Etwas schmaler für kleine Handys */
         margin: 0 auto !important;
@@ -1606,7 +1607,8 @@ body {
         margin-bottom: 0 !important;
     }
     .main-header {
-        padding: 8px 12px !important;
+        min-height: clamp(48px, 7vh, 66px) !important;
+        padding: clamp(0.5rem, 2vh, 0.9rem) clamp(0.75rem, 3vw, 1.1rem) !important;
     }
     .container-title {
         font-size: 0.95rem !important;
