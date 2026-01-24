@@ -703,7 +703,7 @@ export class ReferencePhase {
     // This was showing hardcoded "MACHINE 002" from index.html instead of selected machine
     const machineIdElement = document.getElementById('machine-id');
     if (machineIdElement) {
-      machineIdElement.textContent = this.machine.name;
+      machineIdElement.textContent = `${this.machine.name} (${this.machine.id})`;
       logger.debug('✅ Modal machine name updated:', this.machine.name);
     }
 
@@ -737,13 +737,18 @@ export class ReferencePhase {
         <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${existingModelsInfo}</div>
         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${existingModels.length} Zustand(e) bereits trainiert</div>
       `;
-      modalBody.insertBefore(infoDiv, modalBody.firstChild);
+      const visualizerContainer = modalBody.querySelector('#visualizer-container');
+      if (visualizerContainer) {
+        visualizerContainer.insertAdjacentElement('afterend', infoDiv);
+      } else {
+        modalBody.insertBefore(infoDiv, modalBody.firstChild);
+      }
 
       const statusDiv = document.createElement('div');
       statusDiv.id = 'recording-status';
       statusDiv.className = 'recording-status';
       statusDiv.textContent = 'Initialisierung...';
-      modalBody.insertBefore(statusDiv, infoDiv.nextSibling);
+      infoDiv.insertAdjacentElement('afterend', statusDiv);
     }
 
     // Setup stop button
@@ -1481,6 +1486,54 @@ export class ReferencePhase {
   }
 
   private applyAppShellLayout(): void {
+    const recordingModal = document.getElementById('recording-modal');
+    if (recordingModal) {
+      const recordingContent = recordingModal.querySelector('.modal-content');
+      if (recordingContent) {
+        recordingContent.classList.add('app-shell-container');
+        const header = recordingContent.querySelector('.modal-header');
+        const body = recordingContent.querySelector('.modal-body');
+        const footer = recordingContent.querySelector('.modal-actions');
+
+        header?.classList.add('shell-header');
+        body?.classList.add('shell-content');
+        footer?.classList.add('shell-footer');
+
+        if (header && !header.querySelector('#reference-instruction')) {
+          const instruction = document.createElement('p');
+          instruction.id = 'reference-instruction';
+          instruction.className = 'modal-instruction';
+          instruction.textContent = 'Halten Sie das Mikrofon 10–30 cm vor die Maschine.';
+          header.appendChild(instruction);
+        }
+
+        if (body) {
+          let visualizerContainer = body.querySelector<HTMLDivElement>('#visualizer-container');
+          if (!visualizerContainer) {
+            visualizerContainer = document.createElement('div');
+            visualizerContainer.id = 'visualizer-container';
+            visualizerContainer.className = 'visualizer-container';
+          }
+
+          const waveformCanvas = body.querySelector('#waveform-canvas');
+          const gaugeCanvas = body.querySelector('#health-gauge-canvas');
+
+          if (waveformCanvas && waveformCanvas.parentElement !== visualizerContainer) {
+            visualizerContainer.appendChild(waveformCanvas);
+          }
+          if (gaugeCanvas && gaugeCanvas.parentElement !== visualizerContainer) {
+            visualizerContainer.appendChild(gaugeCanvas);
+          }
+
+          if (!visualizerContainer.parentElement) {
+            body.insertBefore(visualizerContainer, body.firstChild);
+          } else if (body.firstChild !== visualizerContainer) {
+            body.insertBefore(visualizerContainer, body.firstChild);
+          }
+        }
+      }
+    }
+
     const modal = document.getElementById('review-modal');
     if (!modal) return;
 
