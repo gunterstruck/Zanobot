@@ -1558,7 +1558,14 @@ body {
         margin-bottom: 6px !important;
     }
     /* Logo sichtbar halten, aber klein */
-    .hero-header img, .logo svg, .logo {
+    .hero-header img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+        display: block !important;
+    }
+    .logo svg, .logo {
         height: 100% !important;
         width: auto !important;
         display: block !important;
@@ -1615,10 +1622,11 @@ body {
         justify-content: center !important;
         gap: 8px !important;
         margin: 0 !important;
-        font-size: 0.65rem !important;
+        font-size: 0.55rem !important;
     }
-    .footer-link {
+    .footer-link, .separator {
         display: inline-block !important;
+        font-size: 0.55rem !important;
     }
 
     /* Bei geöffnetem Bereich: normales Scrollen, Footer darf verschwinden */

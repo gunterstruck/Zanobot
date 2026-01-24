@@ -278,6 +278,31 @@ class ZanobotApp {
         if (isVisible) {
           content.style.display = 'none';
         } else {
+          headers.forEach((otherHeader) => {
+            if (otherHeader === header) {
+              return;
+            }
+
+            const otherTarget = otherHeader.getAttribute('data-target');
+            if (!otherTarget) {
+              return;
+            }
+
+            const otherContent = document.getElementById(otherTarget);
+            if (!otherContent) {
+              return;
+            }
+
+            if (window.getComputedStyle(otherContent).display !== 'none') {
+              otherContent.style.display = 'none';
+            }
+
+            const otherIcon = otherHeader.querySelector('.collapse-icon');
+            if (otherIcon) {
+              otherIcon.classList.remove('rotated');
+            }
+          });
+
           // CRITICAL FIX: Restore original display mode instead of hardcoding 'block'
           const originalDisplay = content.dataset.originalDisplay;
           content.style.display =
