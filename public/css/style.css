@@ -1533,59 +1533,81 @@ body {
    COMPACT MODE (iPhone SE / Small Screens)
    Force "One-Screen-Experience"
    =================================== */
+/* ===================================
+   COMPACT MODE (iPhone SE / Small Screens)
+   Strict "One-Screen" Enforcement
+   =================================== */
 @media (max-height: 700px) {
-    /* Container fast randlos machen */
+    /* 1. Haupt-Container fixieren */
     .container {
+        height: 100dvh !important; /* Nutze den vollen Viewport */
+        width: 100% !important;
         padding: 5px !important;
-        padding-bottom: 5px !important;
-        height: 100dvh !important;
-        overflow: hidden !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important; /* VERHINDERT Scrollen des gesamten Screens */
+        display: flex !important;
+        flex-direction: column !important;
     }
-    /* Header/Logo radikal kleiner */
-    .hero-header, header img, .logo svg {
-        height: 30px !important;
-        min-height: 0 !important;
+    /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
+    .hero-header {
+        flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
+        min-height: auto !important;
         margin-bottom: 5px !important;
+        padding: 5px !important;
     }
-    .brand-title { font-size: 1.2rem !important; }
-    .brand-subtitle { font-size: 0.6rem !important; }
-    /* Abstände killen */
-    .main-actions {
-        gap: 4px !important;
-        justify-content: center !important;
+    /* Logo sichtbar halten, aber klein */
+    .hero-header img, .logo svg, .logo {
+        height: 35px !important;
+        width: auto !important;
+        display: block !important;
     }
-    /* Footer extrem kompakt und NEBENEINANDER */
-    .footer, .app-footer, .layout-footer {
-        margin-top: 5px !important;
-        padding-top: 5px !important;
-        padding-bottom: 5px !important;
+    /* Unnötige Texte im Header ausblenden um Platz zu sparen */
+    .brand-subtitle, .header-divider {
+        display: none !important;
     }
-    .legal-info {
-        gap: 8px !important;
-        margin-bottom: 0 !important;
+    /* 3. Mittelteil (Buttons): Packt sich zusammen */
+    .main-actions, .phases-container {
+        flex: 1 1 auto !important; /* Nimmt restlichen Platz */
+        min-height: 0 !important; /* WICHTIG: Erlaubt Schrumpfen unter Inhalt-Größe */
+        overflow-y: auto !important; /* Scrollen NUR hier, falls nötig */
+        
+        /* Layout: Eng zusammenpacken */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important; /* Mittig zentrieren statt verteilen */
+        gap: 6px !important; /* Sehr kleiner Abstand */
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 350px !important; /* Etwas schmaler für kleine Handys */
+        margin: 0 auto !important;
     }
-    .footer-link, .separator, .copyright {
-        font-size: 0.65rem !important;
-        display: inline-block !important; /* Nebeneinander erzwingen */
-        margin: 0 !important;
-    }
-    /* Buttons flach machen und Schriftgröße dynamisch anpassen */
+    /* Button-Styling kompakt */
     .action-btn, button {
-        padding: 6px 10px !important; /* Sehr flach */
-        min-height: 0 !important;
+        flex: 0 0 auto !important; /* Buttons behalten ihre Größe */
         height: auto !important;
-        /* Schrift passt sich an, bricht NIEMALS um */
-        font-size: clamp(0.7rem, 2vh, 0.9rem) !important;
+        padding: 8px 12px !important;
+        margin: 0 !important;
+        font-size: 0.9rem !important;
         white-space: nowrap !important;
     }
-    /* Icons in Buttons kleiner */
-    .action-btn svg {
-        width: 14px !important;
-        height: 14px !important;
+    /* 4. Footer: Darf NICHT aus dem Bild rutschen */
+    .footer, .app-footer {
+        flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
+        margin-top: 5px !important;
+        padding: 5px !important;
+        background-color: var(--bg-color, #000); /* Hintergrund damit lesbar */
+        z-index: 10;
     }
-    /* Verstecke unwichtige Deko im Kompaktmodus */
-    .header-divider, .welcome-subtitle {
-        display: none !important;
+    /* Links nebeneinander */
+    .legal-info, .footer p {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        margin: 0 !important;
+        font-size: 0.7rem !important;
+    }
+    .footer-link {
+        display: inline-block !important;
     }
 }
 
