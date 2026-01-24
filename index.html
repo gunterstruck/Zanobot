@@ -38,246 +38,247 @@
             <img src="./icons/zanobo_banner_1024x500.png" alt="ZANOBO AI Assistant - AI-powered machine health monitoring through sound analysis" class="hero-image">
         </section>
 
-        <!-- Container 2: Maschine auswählen -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="select-machine-content">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Professional Machine/Settings Icon -->
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
-                        <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
-                        <path d="M16.24 7.76l-8.48 8.48M7.76 7.76l8.48 8.48" stroke-width="1"/>
+        <div class="main-actions">
+            <!-- Container 2: Maschine auswählen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="select-machine-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Professional Machine/Settings Icon -->
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                            <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
+                            <path d="M16.24 7.76l-8.48 8.48M7.76 7.76l8.48 8.48" stroke-width="1"/>
+                        </svg>
+                        <h3 class="container-title">Maschine auswählen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
                     </svg>
-                    <h3 class="container-title">Maschine auswählen</h3>
                 </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="select-machine-content" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <!-- Option 1: Scan QR Code -->
-                    <div class="machine-selection-option">
-                        <div class="option-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Professional QR/Scan Icon -->
-                                <rect x="3" y="3" width="8" height="8" rx="1"/>
-                                <rect x="13" y="3" width="8" height="8" rx="1"/>
-                                <rect x="3" y="13" width="8" height="8" rx="1"/>
-                                <rect x="5" y="5" width="4" height="4"/>
-                                <rect x="15" y="5" width="4" height="4"/>
-                                <rect x="5" y="15" width="4" height="4"/>
-                                <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
-                            </svg>
-                            <h5 class="option-title">QR-Code scannen</h5>
-                        </div>
-                        <p class="option-description">Identifiziere Maschine via QR-Code</p>
-                        <button class="action-btn secondary-btn" id="scan-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Professional Camera/Scan Icon -->
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                                <circle cx="12" cy="13" r="4"/>
-                            </svg>
-                            Scannen
-                        </button>
-                    </div>
-
-                    <div class="option-divider">
-                        <span>oder</span>
-                    </div>
-
-                    <!-- Option 2: Manual Entry -->
-                    <div class="machine-selection-option">
-                        <div class="option-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Professional Edit/Create Icon -->
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                            <h5 class="option-title">Manuell anlegen</h5>
-                        </div>
-                        <p class="option-description">Neue Maschine mit Namen erstellen</p>
-                        <div class="input-group">
-                            <label for="machine-name-input">Maschinenname</label>
-                            <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
-                        </div>
-                        <div class="input-group">
-                            <label for="machine-id-input">Maschinen-ID (optional)</label>
-                            <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
-                        </div>
-                        <button class="action-btn" id="create-machine-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Professional Save Icon -->
-                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                                <polyline points="17 21 17 13 7 13 7 21"/>
-                                <polyline points="7 3 7 8 15 8"/>
-                            </svg>
-                            Speichern
-                        </button>
-                    </div>
-
-                    <!-- Quick Select: Recently Used Machines -->
-                    <div id="quick-select-section" class="machine-selection-option" style="display: none;">
-                        <div class="option-divider">
-                            <span>Schnellwahl</span>
-                        </div>
-                        <div class="option-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Professional History/Clock Icon -->
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <h5 class="option-title">Zuletzt verwendet</h5>
-                        </div>
-                        <p class="option-description">Schneller Zugriff auf kürzlich verwendete Maschinen</p>
-                        <div id="quick-select-list" class="quick-select-list">
-                            <!-- Machine buttons will be added dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Maschinenübersicht -->
-                    <div class="machine-selection-option">
-                        <div class="option-divider">
-                            <span>Übersicht</span>
-                        </div>
-                        <div class="option-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- List/Grid Icon -->
-                                <rect x="3" y="3" width="7" height="7"/>
-                                <rect x="14" y="3" width="7" height="7"/>
-                                <rect x="3" y="14" width="7" height="7"/>
-                                <rect x="14" y="14" width="7" height="7"/>
-                            </svg>
-                            <h5 class="option-title">Maschinenübersicht</h5>
-                        </div>
-                        <div id="machine-overview" class="machine-list">
-                            <!-- Example Machine Items -->
-                            <div class="machine-item">
-                                <div class="machine-info">
-                                    <h4 class="machine-name">Zanobo 123</h4>
-                                    <p class="machine-status status-healthy">Healthy</p>
-                                    <p class="machine-time">Letzte Prüfung vor 3min</p>
-                                </div>
-                                <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="9 18 15 12 9 6"/>
+                <div id="select-machine-content" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <!-- Option 1: Scan QR Code -->
+                        <div class="machine-selection-option">
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional QR/Scan Icon -->
+                                    <rect x="3" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="13" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="3" y="13" width="8" height="8" rx="1"/>
+                                    <rect x="5" y="5" width="4" height="4"/>
+                                    <rect x="15" y="5" width="4" height="4"/>
+                                    <rect x="5" y="15" width="4" height="4"/>
+                                    <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
                                 </svg>
+                                <h5 class="option-title">QR-Code scannen</h5>
                             </div>
-                            <div class="machine-item">
-                                <div class="machine-info">
-                                    <h4 class="machine-name">Zanobo 9</h4>
-                                    <p class="machine-status status-uncertain">Uncertain</p>
-                                    <p class="machine-time">Letzte Prüfung vor 12min</p>
-                                </div>
-                                <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="9 18 15 12 9 6"/>
+                            <p class="option-description">Identifiziere Maschine via QR-Code</p>
+                            <button class="action-btn secondary-btn" id="scan-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Camera/Scan Icon -->
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
                                 </svg>
-                            </div>
-                            <button class="add-reference-btn">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"/>
-                                    <line x1="5" y1="12" x2="19" y2="12"/>
-                                </svg>
-                                Neue Referenz
+                                Scannen
                             </button>
                         </div>
-                    </div>
 
-                    <!-- Historie -->
-                    <div class="machine-selection-option">
                         <div class="option-divider">
-                            <span>Verlauf</span>
+                            <span>oder</span>
                         </div>
-                        <div class="option-header">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Clock/History Icon -->
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <h5 class="option-title">Historie</h5>
+
+                        <!-- Option 2: Manual Entry -->
+                        <div class="machine-selection-option">
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Edit/Create Icon -->
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                <h5 class="option-title">Manuell anlegen</h5>
+                            </div>
+                            <p class="option-description">Neue Maschine mit Namen erstellen</p>
+                            <div class="input-group">
+                                <label for="machine-name-input">Maschinenname</label>
+                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
+                            </div>
+                            <div class="input-group">
+                                <label for="machine-id-input">Maschinen-ID (optional)</label>
+                                <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
+                            </div>
+                            <button class="action-btn" id="create-machine-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Save Icon -->
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                                Speichern
+                            </button>
                         </div>
-                        <div id="history" class="history-list">
-                            <p class="empty-state">Noch keine Messungen vorhanden</p>
+
+                        <!-- Quick Select: Recently Used Machines -->
+                        <div id="quick-select-section" class="machine-selection-option" style="display: none;">
+                            <div class="option-divider">
+                                <span>Schnellwahl</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional History/Clock Icon -->
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <h5 class="option-title">Zuletzt verwendet</h5>
+                            </div>
+                            <p class="option-description">Schneller Zugriff auf kürzlich verwendete Maschinen</p>
+                            <div id="quick-select-list" class="quick-select-list">
+                                <!-- Machine buttons will be added dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Maschinenübersicht -->
+                        <div class="machine-selection-option">
+                            <div class="option-divider">
+                                <span>Übersicht</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- List/Grid Icon -->
+                                    <rect x="3" y="3" width="7" height="7"/>
+                                    <rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="3" y="14" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/>
+                                </svg>
+                                <h5 class="option-title">Maschinenübersicht</h5>
+                            </div>
+                            <div id="machine-overview" class="machine-list">
+                                <!-- Example Machine Items -->
+                                <div class="machine-item">
+                                    <div class="machine-info">
+                                        <h4 class="machine-name">Zanobo 123</h4>
+                                        <p class="machine-status status-healthy">Healthy</p>
+                                        <p class="machine-time">Letzte Prüfung vor 3min</p>
+                                    </div>
+                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+                                <div class="machine-item">
+                                    <div class="machine-info">
+                                        <h4 class="machine-name">Zanobo 9</h4>
+                                        <p class="machine-status status-uncertain">Uncertain</p>
+                                        <p class="machine-time">Letzte Prüfung vor 12min</p>
+                                    </div>
+                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+                                <button class="add-reference-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    Neue Referenz
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Historie -->
+                        <div class="machine-selection-option">
+                            <div class="option-divider">
+                                <span>Verlauf</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Clock/History Icon -->
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <h5 class="option-title">Historie</h5>
+                            </div>
+                            <div id="history" class="history-list">
+                                <p class="empty-state">Noch keine Messungen vorhanden</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Container 3: Referenz aufnehmen -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="record-reference-content">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Professional Microphone Icon -->
-                        <rect x="9" y="2" width="6" height="12" rx="3"/>
-                        <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
-                        <line x1="12" y1="19" x2="12" y2="22"/>
-                        <line x1="8" y1="22" x2="16" y2="22"/>
+            <!-- Container 3: Referenz aufnehmen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="record-reference-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Professional Microphone Icon -->
+                            <rect x="9" y="2" width="6" height="12" rx="3"/>
+                            <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="22"/>
+                            <line x1="8" y1="22" x2="16" y2="22"/>
+                        </svg>
+                        <h3 class="container-title">Referenz aufnehmen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
                     </svg>
-                    <h3 class="container-title">Referenz aufnehmen</h3>
                 </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="record-reference-content" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <p class="sub-description">10-Sekunden Referenzaufnahme</p>
-                    <button class="action-btn" id="record-btn">Aufnehmen</button>
+                <div id="record-reference-content" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <p class="sub-description">10-Sekunden Referenzaufnahme</p>
+                        <button class="action-btn" id="record-btn">Aufnehmen</button>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Container 4: Diagnose starten -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="run-diagnosis-content">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Stethoscope Icon -->
-                        <path d="M6 3v4a4 4 0 0 0 8 0V3"/>
-                        <path d="M10 7v5a4 4 0 0 0 8 0v-2"/>
-                        <circle cx="18" cy="12" r="2"/>
+            <!-- Container 4: Diagnose starten -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="run-diagnosis-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Stethoscope Icon -->
+                            <path d="M6 3v4a4 4 0 0 0 8 0V3"/>
+                            <path d="M10 7v5a4 4 0 0 0 8 0v-2"/>
+                            <circle cx="18" cy="12" r="2"/>
+                        </svg>
+                        <h3 class="container-title">Diagnose starten</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
                     </svg>
-                    <h3 class="container-title">Diagnose starten</h3>
                 </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <p class="sub-description">Live-Analyse durchführen</p>
-                    <button class="action-btn" id="diagnose-btn">Analysieren</button>
+                <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <p class="sub-description">Live-Analyse durchführen</p>
+                        <button class="action-btn" id="diagnose-btn">Analysieren</button>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Container 5: Einstellungen -->
-        <section class="main-container collapsible">
-            <div class="main-header section-header" data-target="settings">
-                <div class="header-with-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Settings/Gear Icon -->
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+            <!-- Container 5: Einstellungen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="settings">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Settings/Gear Icon -->
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                        </svg>
+                        <h3 class="container-title">Einstellungen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
                     </svg>
-                    <h3 class="container-title">Einstellungen</h3>
                 </div>
-                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-            <div id="settings" class="collapsible-content" style="display: none;">
-                <div class="container-content">
-                    <div class="settings-list">
-                        <!-- Theme Selection Section -->
-                        <div class="setting-category">
-                            <h4 class="setting-category-title">Erscheinungsbild</h4>
-                            <div class="theme-cards" id="theme-cards">
-                                <!-- Theme Card: Neon Industrial -->
-                                <div class="theme-card" data-theme="neon">
-                                    <div class="theme-card-icon">
+                <div id="settings" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <div class="settings-list">
+                            <!-- Theme Selection Section -->
+                            <div class="setting-category">
+                                <h4 class="setting-category-title">Erscheinungsbild</h4>
+                                <div class="theme-cards" id="theme-cards">
+                                    <!-- Theme Card: Neon Industrial -->
+                                    <div class="theme-card" data-theme="neon">
+                                        <div class="theme-card-icon">
                                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                                             <circle cx="12" cy="12" r="1" fill="currentColor"/>
@@ -447,6 +448,7 @@
                 </div>
             </div>
         </section>
+        </div>
 
         <!-- Footer / Legal Info -->
         <footer class="footer">
