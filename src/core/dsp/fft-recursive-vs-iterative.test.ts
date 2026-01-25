@@ -4,7 +4,7 @@
  * CRITICAL TEST: Ensures that the new iterative FFT produces
  * IDENTICAL results to the old recursive FFT.
  *
- * This validates compliance with the Technical Report.
+ * This validates compliance with GMIA algorithm requirements.
  */
 
 import { describe, it, expect } from 'vitest';

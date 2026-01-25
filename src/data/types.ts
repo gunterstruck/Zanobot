@@ -2,7 +2,7 @@
  * ZANOBOT - TYPE DEFINITIONS
  *
  * Core TypeScript interfaces for the entire application.
- * Based on GMIA Technical Report specifications.
+ * Based on GMIA specifications.
  */
 
 /**

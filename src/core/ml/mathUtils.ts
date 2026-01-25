@@ -3,8 +3,6 @@
  *
  * Core mathematical operations for GMIA algorithm.
  * Implements matrix operations, statistical functions, etc.
- *
- * Reference: Technical Report Section 2.3 (GMIA Model)
  */
 
 /**
