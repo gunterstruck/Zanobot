@@ -52,4 +52,3 @@ npm run build    # Production build
 - PWA (Service Worker)
 
 **Version**: 2.0.0
-**Basiert auf**: Technical Report F-202-01-01 (GMIA)

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Der **Magnitude Factor** ist eine **nicht-dokumentierte Erweiterung** des ursprünglichen GMIA-Algorithmus aus dem Technical Report. Diese Erweiterung wurde in `src/core/ml/scoring.ts` implementiert, um **False Positives bei niedrig-energetischen Signalen** zu verhindern.
+Der **Magnitude Factor** ist eine **nicht-dokumentierte Erweiterung** des ursprünglichen GMIA-Algorithmus. Diese Erweiterung wurde in `src/core/ml/scoring.ts` implementiert, um **False Positives bei niedrig-energetischen Signalen** zu verhindern.
 
 **Status**: ⚠️ Mathematisch sinnvoll, aber ungetestet und undokumentiert
 
@@ -10,7 +10,7 @@ Der **Magnitude Factor** ist eine **nicht-dokumentierte Erweiterung** des urspr�
 
 ## 1. Mathematischer Hintergrund
 
-### Original GMIA Algorithmus (aus dem Paper)
+### Original GMIA Algorithmus
 
 Der GMIA-Algorithmus berechnet die Ähnlichkeit zwischen Test-Features und Referenz-Modell über die **Cosinus-Ähnlichkeit**:
 
@@ -139,7 +139,7 @@ Mit Magnitude Factor:
 ### ⚠️ Potenzielle Probleme
 
 #### Problem 1: **Undokumentiert**
-- Nicht im Technical Report erwähnt
+- Nicht im ursprünglichen GMIA-Algorithmus erwähnt
 - Keine wissenschaftliche Referenz
 - Schwer für andere Entwickler nachvollziehbar
 
@@ -251,7 +251,7 @@ it('should accept loud signal with similar pattern', () => {
 
 ---
 
-## 6. Vergleich mit Original-Paper
+## 6. Vergleich mit Original GMIA
 
 | Aspekt | Original GMIA | Ihre Implementierung |
 |--------|---------------|---------------------|
@@ -260,7 +260,7 @@ it('should accept loud signal with similar pattern', () => {
 | Regularisierung λ=10⁹ | ✅ Ja | ✅ Ja |
 | **Magnitude-Korrektur** | ❌ **Nein** | ✅ **Ja (Erweiterung)** |
 
-**Bewertung**: Die Magnitude-Korrektur ist eine **pragmatische Erweiterung**, die ein reales Problem löst (False Positives bei Stille). Sie ist **nicht** Teil des Original-Papers.
+**Bewertung**: Die Magnitude-Korrektur ist eine **pragmatische Erweiterung**, die ein reales Problem löst (False Positives bei Stille). Sie ist **nicht** Teil des ursprünglichen GMIA-Algorithmus.
 
 ---
 
@@ -312,7 +312,7 @@ it('should accept loud signal with similar pattern', () => {
 - Praxisnah
 
 **Contra**:
-- Undokumentiert (nicht im Paper)
+- Undokumentiert (nicht im ursprünglichen GMIA-Algorithmus)
 - Keine Tests
 - Inkonsistent verwendet (nur Multiclass)
 - Asymmetrisches Verhalten (nur Penalty für leise Signale)

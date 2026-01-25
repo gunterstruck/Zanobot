@@ -160,7 +160,7 @@ describe('GMIA Algorithm', () => {
 
       const model = trainGMIA(trainingData, 'test-machine');
 
-      // Verify regularization as per Technical Report (p.25)
+      // Verify regularization parameter (λ = 10^9)
       expect(model.regularization).toBe(1e9);
     });
 

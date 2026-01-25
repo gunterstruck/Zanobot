@@ -3,8 +3,6 @@
  *
  * Implements FFT for audio signal processing.
  * Based on Cooley-Tukey radix-2 algorithm.
- *
- * Reference: Technical Report Section 2.2 (Signal Processing)
  */
 
 /**

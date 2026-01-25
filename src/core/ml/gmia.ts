@@ -3,7 +3,7 @@
  *
  * The CORE machine learning algorithm for acoustic diagnostics.
  *
- * Reference: Technical Report Section 2.3, Equation 2
+ * GMIA Equation 2
  * Formula: w_p(λ) = X_p * (X_p^T * X_p + λI)^(-1) * 1
  *
  * Where:
@@ -30,10 +30,10 @@ import type { GMIAModel, FeatureVector, TrainingData } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
 /**
- * Regularization parameter from Technical Report (p.25)
+ * Regularization parameter for GMIA
  * "regularization factor lambda was set of 10^9"
  *
- * ⚠️ DO NOT CHANGE: Scientific constant from Siemens Report (p.25, Equation 2)
+ * ⚠️ DO NOT CHANGE: Scientific constant (Equation 2)
  * Regularization parameter MUST be exactly 10^9 for GMIA algorithm correctness.
  * Any modification will break the mathematical foundation of the system.
  */
@@ -168,8 +168,6 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
 /**
  * Calculate scaling constant C for tanh transformation
  *
- * Reference: Technical Report Appendix B
- *
  * Goal: Average health score of training data should be ~90%
  *
  * Steps:
@@ -221,9 +219,8 @@ function calculateScalingConstant(features: Float64Array[], weightVector: Float6
  * A model trained at 48kHz cannot perform inference at 44.1kHz due to
  * frequency bin mismatch. This would cause incorrect feature alignment.
  *
- * Reference: SiMobile Technical Report - Energy Spectral Densities (ESD)
- * are calculated from FFT, which maps bins to physical frequencies based on
- * sample rate: f = (bin * sampleRate) / fftSize
+ * Energy Spectral Densities (ESD) are calculated from FFT, which maps bins
+ * to physical frequencies based on sample rate: f = (bin * sampleRate) / fftSize
  *
  * @param modelSampleRate - Sample rate used during model training
  * @param testSampleRate - Sample rate of current test data

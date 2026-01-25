@@ -4,7 +4,6 @@
  * Extracts Energy Spectral Densities from audio signals.
  * This is THE core feature extraction method for GMIA.
  *
- * Reference: Technical Report Section 2.2, Pages 6-7
  * - Chunking: 0.330s windows with 0.066s hop size
  * - FFT: Calculate frequency spectrum
  * - Binning: Group into 512 frequency bins
@@ -16,11 +15,11 @@ import type { FeatureVector, AudioChunk, DSPConfig } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
 /**
- * Default DSP configuration based on Technical Report
+ * Default DSP configuration for GMIA
  */
 export const DEFAULT_DSP_CONFIG: DSPConfig = {
   sampleRate: 48000, // High quality audio sample rate (matches config.json)
-  windowSize: 0.33, // 330ms (from Technical Report)
+  windowSize: 0.33, // 330ms
   hopSize: 0.066, // 66ms overlap
   fftSize: 2048, // Fixed FFT size (matches config.json)
   frequencyBins: 512, // Tested optimal value (Report p.19)
@@ -268,7 +267,7 @@ function chunkSignal(signal: Float32Array, sampleRate: number, config: DSPConfig
 /**
  * Standardize signal (zero mean, unit variance)
  *
- * Critical preprocessing step mentioned in Technical Report.
+ * Critical preprocessing step for GMIA.
  *
  * @param signal - Input signal
  * @returns Standardized signal
@@ -334,7 +333,7 @@ function binFrequencies(magnitudes: Float64Array, numBins: number): Float64Array
     const startIdx = bin * binSize;
     const endIdx = bin === numBins - 1 ? magnitudes.length : (bin + 1) * binSize;
 
-    // Calculate Square Root Mean Value (as mentioned in Technical Report)
+    // Calculate Square Root Mean Value
     let sum = 0;
     let count = 0;
 
@@ -353,7 +352,7 @@ function binFrequencies(magnitudes: Float64Array, numBins: number): Float64Array
 /**
  * Normalize features to relative values (sum = 1)
  *
- * As specified in Technical Report: rf_j = f_j / f_tot
+ * Formula: rf_j = f_j / f_tot
  *
  * @param features - Absolute feature values
  * @returns Normalized relative features

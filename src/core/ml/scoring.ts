@@ -4,7 +4,7 @@
  * Converts cosine similarity to health score (0-100%).
  * Uses hyperbolic tangent scaling for non-linear transformation.
  *
- * Reference: Technical Report Pages 31-32, Equation 4
+ * GMIA Equation 4
  * Formula: Score = 100 * (tanh(C * cos(α)))^2
  *
  * Where:
@@ -299,14 +299,13 @@ export function calculateDegradation(previousScore: number, currentScore: number
 
 /**
  * Score history buffer size for filtering
- * As specified in Technical Report (p.12)
  */
 export const SCORE_HISTORY_SIZE = 10;
 
 /**
  * UI Post-Processing Filter for score smoothing
  *
- * Implements the filtering strategy from Technical Report (p.12):
+ * Filtering strategy:
  * 1. Take last 10 calculated scores
  * 2. Sort by value
  * 3. Remove 2 highest values
@@ -681,7 +680,7 @@ export function classifyDiagnosticState(
  * Calculate magnitude factor for cosine similarity adjustment.
  *
  * NOTE: This function always returns 1.0 (no adjustment).
- * The original GMIA paper uses pure cosine similarity without magnitude scaling.
+ * The original GMIA algorithm uses pure cosine similarity without magnitude scaling.
  *
  * Magnitude-based adjustments were considered but removed due to:
  * - Feature standardization produces very small weight magnitudes (~1e-6)

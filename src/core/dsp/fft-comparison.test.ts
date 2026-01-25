@@ -2,7 +2,7 @@
  * ZANOBOT - FFT COMPARISON TEST
  *
  * Verifies that iterative FFT produces IDENTICAL results to recursive FFT.
- * This is critical to ensure compliance with Technical Report.
+ * This is critical to ensure compliance with GMIA algorithm requirements.
  */
 
 import { describe, it, expect } from 'vitest';
