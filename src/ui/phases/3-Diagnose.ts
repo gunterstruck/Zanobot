@@ -862,7 +862,7 @@ export class DiagnosePhase {
           <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${this.activeModels.length} Zustand(e) trainiert</div>
         </div>
-        <div class="debug-info" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
+        <div class="debug-info" data-view-level="expert" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
           <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">🔍 DEBUG VALUES:</div>
           <div id="debug-weight-magnitude" style="color: var(--text-primary);">weightMagnitude: --</div>
           <div id="debug-feature-magnitude" style="color: var(--text-primary);">featureMagnitude: --</div>

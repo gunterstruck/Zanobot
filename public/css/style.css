@@ -2854,6 +2854,10 @@ html[data-view-level="expert"] .result-confidence[data-view-level="expert"] {
     display: block !important;
 }
 
+html[data-view-level="expert"] .debug-info[data-view-level="expert"] {
+    display: block !important;
+}
+
 /* Responsive adjustments for view level selector */
 @media (max-width: 480px) {
     .view-level-selector {
