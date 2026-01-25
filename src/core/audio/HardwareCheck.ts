@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@utils/logger.js';
+import { isIOS } from '@utils/platform.js';
 
 /**
  * Audio Quality Report
@@ -227,6 +228,96 @@ export class HardwareCheck {
   }
 
   /**
+   * Special deviceId marker for iOS rear microphone workaround
+   * When this deviceId is passed to getRawAudioStream(), it triggers the Video+Audio workaround
+   */
+  public static readonly IOS_REAR_MIC_DEVICE_ID = '__ios_rear_mic__';
+
+  /**
+   * iOS-specific: Get rear microphone stream via Video+Audio workaround
+   *
+   * CRITICAL iOS LIMITATION:
+   * - iOS Safari does NOT expose separate microphones via enumerateDevices()
+   * - It only shows "iPhone Microphone" or "Internal Microphone"
+   * - The ONLY way to access the rear microphone on iOS is through the camera API
+   *
+   * This method requests a video+audio stream with facingMode: "environment" (back camera),
+   * which forces iOS to use the rear microphone associated with the back camera.
+   * The video tracks are immediately stopped (we only need audio).
+   *
+   * @returns MediaStream with rear microphone audio, or null if not available
+   */
+  public static async getiOSRearMicStream(): Promise<MediaStream | null> {
+    if (!isIOS()) {
+      logger.debug('📱 getiOSRearMicStream: Not iOS, skipping');
+      return null;
+    }
+
+    try {
+      logger.info('📱 iOS detected: Attempting rear microphone via camera workaround...');
+
+      // Request video+audio with back camera (facingMode: "environment")
+      // This forces iOS to use the rear microphone associated with the back camera
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { exact: 'environment' }, // Back camera
+          width: { ideal: 1 }, // Minimal resolution (we don't need video)
+          height: { ideal: 1 },
+        },
+        audio: {
+          // CRITICAL: Disable all audio processing for raw machine sounds
+          echoCancellation: false,
+          autoGainControl: false,
+          noiseSuppression: false,
+        },
+      });
+
+      // Extract audio tracks
+      const audioTracks = stream.getAudioTracks();
+
+      if (audioTracks.length === 0) {
+        logger.warn('📱 iOS rear mic workaround: No audio tracks received');
+        stream.getTracks().forEach((track) => track.stop());
+        return null;
+      }
+
+      // IMPORTANT: Stop video tracks immediately (we only need audio)
+      // This releases the camera resource
+      stream.getVideoTracks().forEach((track) => {
+        logger.debug(`📱 Stopping video track: ${track.label}`);
+        track.stop();
+      });
+
+      // Create audio-only stream
+      const audioOnlyStream = new MediaStream(audioTracks);
+
+      logger.info(
+        `✅ iOS rear mic workaround successful: "${audioTracks[0].label}" (via back camera)`
+      );
+
+      return audioOnlyStream;
+    } catch (error) {
+      // Expected errors:
+      // - NotAllowedError: User denied camera permission
+      // - OverconstrainedError: Device has no back camera (e.g., iPad mini)
+      // - NotFoundError: No camera available
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorName = error instanceof Error ? error.name : 'Unknown';
+
+      if (errorName === 'NotAllowedError') {
+        logger.info('📱 iOS rear mic: Camera permission denied, falling back to default mic');
+      } else if (errorName === 'OverconstrainedError') {
+        logger.info('📱 iOS rear mic: No back camera available, falling back to default mic');
+      } else {
+        logger.warn(`📱 iOS rear mic workaround failed: ${errorName} - ${errorMessage}`);
+      }
+
+      return null;
+    }
+  }
+
+  /**
    * Find the best microphone for machine diagnosis (Smart Microphone Auto-Selection)
    *
    * This method searches for rear/environment microphones that are optimized for
@@ -237,12 +328,47 @@ export class HardwareCheck {
    * - They apply aggressive noise suppression that filters out machine sounds
    * - Rear/camera mics are optimized for video recording (unfiltered room audio)
    *
+   * iOS SPECIAL HANDLING:
+   * - iOS does not expose separate microphones via enumerateDevices()
+   * - We use the Video+Audio workaround with facingMode: "environment"
+   * - Returns a special deviceId (__ios_rear_mic__) that triggers the workaround
+   *
    * @returns Promise<{ deviceId: string; label: string } | undefined>
    *          Returns device info if a preferred mic is found, undefined otherwise
    */
   public static async findBestMicrophone(): Promise<{ deviceId: string; label: string } | undefined> {
     try {
-      // Get all available audio input devices
+      // ============================================
+      // iOS SPECIAL PATH: Video+Audio Workaround
+      // ============================================
+      if (isIOS()) {
+        logger.info('📱 findBestMicrophone: iOS detected, attempting rear mic workaround...');
+
+        // Try to get rear microphone via camera API
+        const iosStream = await this.getiOSRearMicStream();
+
+        if (iosStream) {
+          // Success! Stop the stream (we'll get a new one when needed)
+          const label = iosStream.getAudioTracks()[0]?.label || 'iPhone Rückseiten-Mikrofon';
+          iosStream.getTracks().forEach((track) => track.stop());
+
+          logger.info(`✅ iOS: Rear microphone available: "${label}"`);
+
+          // Return special marker deviceId - getRawAudioStream() will handle this
+          return {
+            deviceId: this.IOS_REAR_MIC_DEVICE_ID,
+            label: `${label} (optimiert für Diagnose)`,
+          };
+        }
+
+        // Fallback: iOS rear mic not available, use default
+        logger.info('📱 iOS: Rear mic not available, using default microphone');
+        return undefined;
+      }
+
+      // ============================================
+      // STANDARD PATH: Keyword-based device search
+      // ============================================
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audioInputs = devices.filter((device) => device.kind === 'audioinput');
 
