@@ -58,6 +58,30 @@ export class HardwareCheck {
   private static readonly MIN_SAMPLE_RATE = 44100;
 
   /**
+   * Priority-ordered keywords for identifying rear/environment microphones
+   * These mics are optimized for room recording (far-field) rather than voice (near-field)
+   *
+   * Priority:
+   * 1. back/rück/rear - iOS typical rear mic naming
+   * 2. environment - Professional/industrial hardware
+   * 3. camcorder/video - Android camera mic (optimized for video recording)
+   * 4. camera - Generic camera-associated mic
+   */
+  private static readonly PREFERRED_MIC_KEYWORDS = [
+    // Priority 1: iOS rear microphone (highest priority)
+    'back',
+    'rück',
+    'rear',
+    // Priority 2: Professional/industrial hardware
+    'environment',
+    // Priority 3: Android video/camcorder microphone
+    'camcorder',
+    'video',
+    // Priority 4: Generic camera microphone (lowest priority in preferred list)
+    'camera',
+  ];
+
+  /**
    * Analyze current audio device
    *
    * @param label - Device label from MediaDeviceInfo or getUserMedia
@@ -200,5 +224,61 @@ export class HardwareCheck {
     ];
 
     return builtInKeywords.some((keyword) => lowerLabel.includes(keyword));
+  }
+
+  /**
+   * Find the best microphone for machine diagnosis (Smart Microphone Auto-Selection)
+   *
+   * This method searches for rear/environment microphones that are optimized for
+   * room recording (far-field) rather than voice calls (near-field).
+   *
+   * Rationale:
+   * - Default smartphone mics (bottom/front) are optimized for telephony
+   * - They apply aggressive noise suppression that filters out machine sounds
+   * - Rear/camera mics are optimized for video recording (unfiltered room audio)
+   *
+   * @returns Promise<{ deviceId: string; label: string } | undefined>
+   *          Returns device info if a preferred mic is found, undefined otherwise
+   */
+  public static async findBestMicrophone(): Promise<{ deviceId: string; label: string } | undefined> {
+    try {
+      // Get all available audio input devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((device) => device.kind === 'audioinput');
+
+      // Check if we have labels (requires permission)
+      const hasLabels = audioInputs.some((device) => device.label && device.label.length > 0);
+
+      if (!hasLabels) {
+        logger.warn('🎤 findBestMicrophone: No device labels available (permission may be required)');
+        return undefined;
+      }
+
+      logger.info(`🎤 findBestMicrophone: Scanning ${audioInputs.length} audio inputs...`);
+
+      // Search by priority - first keyword match wins
+      for (const keyword of this.PREFERRED_MIC_KEYWORDS) {
+        for (const device of audioInputs) {
+          const lowerLabel = device.label.toLowerCase();
+
+          if (lowerLabel.includes(keyword)) {
+            logger.info(
+              `✅ findBestMicrophone: Found preferred mic "${device.label}" (keyword: "${keyword}")`
+            );
+            return {
+              deviceId: device.deviceId,
+              label: device.label,
+            };
+          }
+        }
+      }
+
+      // No preferred microphone found - fallback to default
+      logger.info('🎤 findBestMicrophone: No preferred mic found, using system default');
+      return undefined;
+    } catch (error) {
+      logger.error('❌ findBestMicrophone: Failed to enumerate devices:', error);
+      return undefined;
+    }
   }
 }

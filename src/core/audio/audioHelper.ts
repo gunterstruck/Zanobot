@@ -15,14 +15,28 @@ import { isIOS } from '@utils/platform.js';
 /**
  * Standard audio constraints for raw, unprocessed audio
  *
- * These settings disable all OS-level audio processing to ensure
- * that we capture the pure acoustic signal from the machine.
+ * CRITICAL: We use explicit boolean `false` instead of `{ exact: false }` to force
+ * iOS/Android to switch from "Voice Processing Mode" to "Media Recording Mode".
+ *
+ * Voice Processing Mode (default for telephony):
+ * - Uses front/bottom microphone
+ * - Applies aggressive noise suppression (filters machine sounds as "noise")
+ * - Echo cancellation (removes reverb/room acoustics)
+ * - Auto gain control (normalizes volume, removes dynamic range)
+ *
+ * Media Recording Mode (what we need):
+ * - Can use rear/camera microphone (far-field, room recording)
+ * - Raw, unfiltered audio with full frequency response
+ * - Preserves machine sound characteristics for AI diagnosis
+ *
+ * The explicit `false` boolean often triggers this mode switch on mobile browsers.
  */
 export const AUDIO_CONSTRAINTS = {
   audio: {
-    echoCancellation: { exact: false },
-    autoGainControl: { exact: false },
-    noiseSuppression: { exact: false },
+    // HARDCORE: Force disable all audio processing
+    echoCancellation: false,
+    autoGainControl: false,
+    noiseSuppression: false,
     channelCount: 1, // Mono is more robust
     sampleRate: 48000, // High quality audio (matches config.json)
   },
@@ -31,16 +45,24 @@ export const AUDIO_CONSTRAINTS = {
 /**
  * Build audio constraints with optional device ID
  *
+ * IMPORTANT: Uses explicit boolean `false` for all audio processing flags
+ * to force "Media Recording Mode" instead of "Voice Processing Mode".
+ *
  * @param deviceId - Optional specific device ID to use
  * @returns Audio constraints object
  */
 export function buildAudioConstraints(deviceId?: string): MediaStreamConstraints {
-  // CRITICAL FIX: Deep copy to prevent mutation of global AUDIO_CONSTRAINTS
-  // Shallow copy ({ ...AUDIO_CONSTRAINTS }) would leave the nested 'audio' object as a reference
+  // CRITICAL: Deep copy to prevent mutation of global AUDIO_CONSTRAINTS
+  // Use explicit boolean `false` to maximize compatibility and force raw audio mode
   const baseConstraints: MediaStreamConstraints = {
     audio: {
-      ...AUDIO_CONSTRAINTS.audio, // Deep copy of nested audio object
-      ...(isIOS() && { echoCancellation: false }),
+      // HARDCORE: Explicit boolean false for all processing (not { exact: false })
+      echoCancellation: false,
+      autoGainControl: false,
+      noiseSuppression: false,
+      channelCount: AUDIO_CONSTRAINTS.audio.channelCount,
+      sampleRate: AUDIO_CONSTRAINTS.audio.sampleRate,
+      // Device selection (use exact for specific device targeting)
       ...(deviceId && { deviceId: { exact: deviceId } }),
     },
   };
