@@ -103,7 +103,7 @@
                                 <label for="machine-name-input">Maschinenname</label>
                                 <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
                             </div>
-                            <div class="input-group">
+                            <div class="input-group" data-view-level="advanced">
                                 <label for="machine-id-input">Maschinen-ID (optional)</label>
                                 <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
                             </div>
@@ -184,8 +184,8 @@
                             </div>
                         </div>
 
-                        <!-- Historie -->
-                        <div class="machine-selection-option">
+                        <!-- Historie (Advanced+) -->
+                        <div class="machine-selection-option" data-view-level="advanced">
                             <div class="option-divider">
                                 <span>Verlauf</span>
                             </div>
@@ -272,6 +272,50 @@
                 <div id="settings" class="collapsible-content" style="display: none;">
                     <div class="container-content">
                         <div class="settings-list">
+                            <!-- View Level Selection Section -->
+                            <div class="setting-category">
+                                <h4 class="setting-category-title">Ansichtsmodus</h4>
+                                <p class="setting-category-description">Passen Sie die Komplexität der Benutzeroberfläche an Ihre Bedürfnisse an.</p>
+                                <div class="view-level-selector" id="view-level-selector">
+                                    <button class="view-level-btn active" data-level="basic" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Basis</span>
+                                        <span class="view-level-desc">Einfach</span>
+                                    </button>
+                                    <button class="view-level-btn" data-level="advanced" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Fortgeschritten</span>
+                                        <span class="view-level-desc">Details</span>
+                                    </button>
+                                    <button class="view-level-btn" data-level="expert" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="16 18 22 12 16 6"/>
+                                                <polyline points="8 6 2 12 8 18"/>
+                                                <line x1="12" y1="2" x2="12" y2="22"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Experte</span>
+                                        <span class="view-level-desc">Technisch</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="settings-divider"></div>
+
                             <!-- Theme Selection Section -->
                             <div class="setting-category">
                                 <h4 class="setting-category-title">Erscheinungsbild</h4>
@@ -350,8 +394,8 @@
                         <div class="setting-category">
                             <h4 class="setting-category-title">Audioeinstellungen</h4>
 
-                            <!-- Hardware Intelligence Card -->
-                            <div class="hardware-info-card">
+                            <!-- Hardware Intelligence Card (Advanced+) -->
+                            <div class="hardware-info-card" data-view-level="advanced">
                                 <div class="hardware-header">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="9" y="2" width="6" height="12" rx="3"/>
@@ -385,12 +429,12 @@
                                 </div>
                             </div>
 
-                            <div class="setting-item">
+                            <div class="setting-item" data-view-level="expert">
                                 <label for="confidence-threshold">Vertrauensschwelle</label>
                                 <input type="range" id="confidence-threshold" min="0" max="100" value="75">
                                 <span id="confidence-value">75%</span>
                             </div>
-                            <div class="setting-item">
+                            <div class="setting-item" data-view-level="expert">
                                 <label for="recording-duration">Aufnahmedauer</label>
                                 <select id="recording-duration">
                                     <option value="5">5 Sekunden</option>
@@ -398,14 +442,14 @@
                                     <option value="15">15 Sekunden</option>
                                 </select>
                             </div>
-                            <div class="setting-item">
+                            <div class="setting-item" data-view-level="expert">
                                 <label for="frequency-scale-toggle">Frequenzachse</label>
                                 <div class="setting-toggle">
                                     <input type="checkbox" id="frequency-scale-toggle">
                                     <p class="setting-description">Logarithmisch (mehr Details im Bereich 20–500 Hz)</p>
                                 </div>
                             </div>
-                            <div class="setting-item">
+                            <div class="setting-item" data-view-level="expert">
                                 <label for="amplitude-scale-toggle">Y-Achse / Amplitude</label>
                                 <div class="setting-toggle">
                                     <input type="checkbox" id="amplitude-scale-toggle">
@@ -417,8 +461,8 @@
                         <!-- Divider -->
                         <div class="settings-divider"></div>
 
-                        <!-- Database Management -->
-                        <div class="setting-category">
+                        <!-- Database Management (Expert only) -->
+                        <div class="setting-category" data-view-level="expert">
                             <h4 class="setting-category-title">Datenverwaltung</h4>
                             <div class="setting-item">
                                 <button class="action-btn secondary-btn" id="export-data-btn">
@@ -695,7 +739,7 @@
             </div>
             <div class="modal-body shell-content">
                 <div class="result-card">
-                    <div class="result-barcode">
+                    <div class="result-barcode" data-view-level="advanced">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="3" y="6" width="2" height="12"/>
                             <rect x="6" y="6" width="1" height="12"/>
@@ -710,15 +754,15 @@
                     <div class="result-fingerprint">
                         <h4>Fingerprint</h4>
                         <p class="result-status status-healthy" id="result-status">HEALTHY</p>
-                        <p class="result-confidence"><span id="result-confidence">87</span>% Confidence score</p>
+                        <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% Confidence score</p>
                     </div>
-                    <div class="result-analysis">
+                    <div class="result-analysis" data-view-level="expert">
                         <h4>Variance</h4>
                         <p class="analysis-label">Frequency anomaly</p>
                         <canvas id="analysis-canvas" width="300" height="100"></canvas>
                         <p class="analysis-hint" id="analysis-hint">Hint: Slightly increased signal around 20 kHz</p>
                     </div>
-                    <div class="result-quality">
+                    <div class="result-quality" data-view-level="advanced">
                         <h4>Reference Quality</h4>
                         <p class="quality-status status-good">GOOD</p>
                         <p class="quality-description">Reference recording meets recommended conditions</p>
