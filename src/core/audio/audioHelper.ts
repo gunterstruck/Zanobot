@@ -11,6 +11,7 @@
 
 import { logger } from '@utils/logger.js';
 import { isIOS } from '@utils/platform.js';
+import { HardwareCheck } from './HardwareCheck.js';
 
 /**
  * Standard audio constraints for raw, unprocessed audio
@@ -132,11 +133,37 @@ export interface SmartStartState {
  * Attempts to use exact constraints first, falls back to simple booleans
  * if the browser doesn't support exact syntax.
  *
- * @param deviceId - Optional specific device ID to use
+ * iOS SPECIAL HANDLING:
+ * - If deviceId is IOS_REAR_MIC_DEVICE_ID, uses the Video+Audio workaround
+ * - This forces iOS to use the rear microphone associated with the back camera
+ *
+ * @param deviceId - Optional specific device ID to use (or IOS_REAR_MIC_DEVICE_ID for iOS workaround)
  * @returns MediaStream with raw audio
  */
 export async function getRawAudioStream(deviceId?: string): Promise<MediaStream> {
   try {
+    // ============================================
+    // iOS SPECIAL PATH: Rear Microphone Workaround
+    // ============================================
+    if (deviceId === HardwareCheck.IOS_REAR_MIC_DEVICE_ID) {
+      logger.info('📱 getRawAudioStream: iOS rear mic workaround requested');
+
+      const iosStream = await HardwareCheck.getiOSRearMicStream();
+
+      if (iosStream) {
+        logger.info('✅ iOS rear mic stream obtained successfully');
+        return iosStream;
+      }
+
+      // Fallback to default mic if workaround fails
+      logger.warn('📱 iOS rear mic workaround failed, falling back to default microphone');
+      const fallbackConstraints = buildAudioConstraints(undefined);
+      return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+    }
+
+    // ============================================
+    // STANDARD PATH: Normal device selection
+    // ============================================
     // Build constraints with optional device ID
     const constraints = buildAudioConstraints(deviceId);
 
