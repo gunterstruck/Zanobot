@@ -13,6 +13,12 @@ import { Router } from '@ui/router.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 import { initErrorBoundary } from '@utils/errorBoundary.js';
+import {
+  applyViewLevel,
+  setViewLevel,
+  getViewLevel,
+  type ViewLevel,
+} from '@utils/viewLevelSettings.js';
 
 /**
  * Global type declarations for theme-bootstrap.js API
@@ -200,6 +206,7 @@ class ZanobotApp {
       this.setupCollapsibleSections();
       this.setupThemeSwitcher();
       this.setupQuickThemeToggle();
+      this.setupViewLevelSelector();
       this.setupFooterLinks();
 
       // Note: Service Worker is automatically registered by VitePWA plugin
@@ -380,6 +387,54 @@ class ZanobotApp {
           window.ZanobotTheme.toggleTheme();
           logger.debug('🎨 Theme toggled via quick toggle button');
         }
+      });
+    });
+  }
+
+  /**
+   * Setup view level selector (Basic / Advanced / Expert)
+   *
+   * This controls the UI complexity based on user preference.
+   * The view level is persisted in localStorage.
+   */
+  private setupViewLevelSelector(): void {
+    // Apply saved view level on startup
+    const savedLevel = applyViewLevel();
+    logger.info(`👁️ View level set to: ${savedLevel}`);
+
+    // Get all view level buttons
+    const viewLevelBtns = document.querySelectorAll<HTMLButtonElement>(
+      '.view-level-btn[data-level]'
+    );
+
+    // Set initial active state
+    viewLevelBtns.forEach((btn) => {
+      const level = btn.getAttribute('data-level') as ViewLevel;
+      if (level === savedLevel) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Add click handlers
+    viewLevelBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const level = btn.getAttribute('data-level') as ViewLevel;
+        if (!level) return;
+
+        // Apply the new view level
+        setViewLevel(level);
+        logger.debug(`👁️ View level changed to: ${level}`);
+
+        // Update active state on all buttons
+        viewLevelBtns.forEach((b) => {
+          if (b.getAttribute('data-level') === level) {
+            b.classList.add('active');
+          } else {
+            b.classList.remove('active');
+          }
+        });
       });
     });
   }
