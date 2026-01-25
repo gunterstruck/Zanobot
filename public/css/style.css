@@ -1636,6 +1636,7 @@ body {
         height: clamp(90px, 18vh, 140px) !important;
         min-height: 90px !important;
         margin-bottom: 0 !important;
+        max-width: 360px !important; /* Gleiche Breite wie main-actions */
     }
     /* Logo sichtbar halten, aber klein */
     .hero-header img {
@@ -1695,6 +1696,7 @@ body {
         margin-top: 0 !important;
         padding: 4px 6px !important;
         height: clamp(36px, 6vh, 54px) !important;
+        max-width: 360px !important; /* Gleiche Breite wie main-actions */
         z-index: 10;
     }
     /* Links nebeneinander */
