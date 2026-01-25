@@ -14,6 +14,11 @@
     const DEFAULT_THEME = 'neon'; // Neon Industrial is the default (as per UX requirements)
     const AVAILABLE_THEMES = ['neon', 'light', 'brand'];
 
+    // View Level Configuration
+    const VIEW_LEVEL_STORAGE_KEY = 'zanobot.view-level';
+    const DEFAULT_VIEW_LEVEL = 'basic';
+    const AVAILABLE_VIEW_LEVELS = ['basic', 'advanced', 'expert'];
+
     /**
      * Get stored theme preference or default
      */
@@ -27,10 +32,34 @@
     }
 
     /**
+     * Get stored view level preference or default
+     */
+    function getStoredViewLevel() {
+        try {
+            const level = localStorage.getItem(VIEW_LEVEL_STORAGE_KEY);
+            if (level && AVAILABLE_VIEW_LEVELS.includes(level)) {
+                return level;
+            }
+            return DEFAULT_VIEW_LEVEL;
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+            return DEFAULT_VIEW_LEVEL;
+        }
+    }
+
+    /**
      * Apply theme to document
      */
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    /**
+     * Apply view level to document
+     * CRITICAL: This must run before CSS is parsed to prevent white screen
+     */
+    function applyViewLevel(level) {
+        document.documentElement.setAttribute('data-view-level', level);
     }
 
     /**
@@ -102,6 +131,11 @@
         // Apply stored theme immediately (before config loads)
         const theme = getStoredTheme();
         applyTheme(theme);
+
+        // CRITICAL: Apply view level immediately to prevent white screen
+        // This must happen before CSS rules that depend on data-view-level
+        const viewLevel = getStoredViewLevel();
+        applyViewLevel(viewLevel);
 
         // Load config and apply brand colors
         if (document.readyState === 'loading') {
