@@ -623,14 +623,41 @@ export class IdentifyPhase {
 
   /**
    * Initialize hardware check on page load
+   *
+   * SMART MICROPHONE AUTO-SELECTION:
+   * 1. Request initial audio permission (gets device labels)
+   * 2. Search for optimal rear/environment microphone
+   * 3. Automatically switch to best mic if found
+   * 4. Notify user of optimization
    */
   private async initializeHardwareCheck(): Promise<void> {
     let tempStream: MediaStream | null = null;
     try {
-      // Request audio stream to check current device
+      // Step 1: Request initial audio permission to get device labels
       tempStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // Get current device info
+      // Step 2: SMART MICROPHONE AUTO-SELECTION
+      // Now that we have permission, device labels are available
+      const bestMic = await HardwareCheck.findBestMicrophone();
+
+      if (bestMic && bestMic.deviceId !== this.selectedDeviceId) {
+        logger.info(`🎤 Smart Auto-Selection: Switching to "${bestMic.label}"`);
+
+        // Stop the initial stream before switching
+        tempStream.getTracks().forEach((track) => track.stop());
+        tempStream = null;
+
+        // Set the optimal microphone
+        this.selectedDeviceId = bestMic.deviceId;
+
+        // Get new stream with the optimal microphone
+        tempStream = await getRawAudioStream(this.selectedDeviceId);
+
+        // Notify user of automatic optimization
+        notify.success(`Mikrofon automatisch auf "${bestMic.label}" optimiert für beste Diagnose`);
+      }
+
+      // Step 3: Analyze the (potentially new) hardware
       const currentDevice = await HardwareCheck.getCurrentDevice(tempStream);
 
       if (currentDevice) {
