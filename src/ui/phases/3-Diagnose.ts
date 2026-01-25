@@ -642,7 +642,30 @@ export class DiagnosePhase {
     // Update score display if visible in modal
     const scoreElement = document.getElementById('live-health-score');
     if (scoreElement) {
-      scoreElement.textContent = `${score.toFixed(1)}%`;
+      // Only update the numeric value (% symbol is in HTML)
+      const scoreValue = score.toFixed(1);
+      const unitSpan = scoreElement.querySelector('.live-score-unit');
+      if (unitSpan) {
+        scoreElement.childNodes[0].textContent = scoreValue;
+      } else {
+        scoreElement.textContent = `${scoreValue}%`;
+      }
+    }
+
+    // Update the score display container with color class based on score
+    const scoreDisplay = document.getElementById('live-score-display');
+    if (scoreDisplay) {
+      // Remove existing score color classes
+      scoreDisplay.classList.remove('score-healthy', 'score-uncertain', 'score-faulty');
+
+      // Add appropriate color class based on score thresholds
+      if (score >= 75) {
+        scoreDisplay.classList.add('score-healthy');
+      } else if (score >= 50) {
+        scoreDisplay.classList.add('score-uncertain');
+      } else {
+        scoreDisplay.classList.add('score-faulty');
+      }
     }
 
     const statusElement = document.getElementById('live-status');
@@ -873,10 +896,13 @@ export class DiagnosePhase {
           <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">RAW SCORE: --</div>
         </div>
         <div class="live-score-container">
-          <p class="live-hint">Move phone closer to machine for optimal signal</p>
-          <p class="live-score-label">Current Health Score:</p>
-          <p id="live-health-score" class="live-score">--</p>
-          <p id="live-status" class="live-status">UNKNOWN</p>
+          <p class="live-hint">Telefon näher an die Maschine halten für optimales Signal</p>
+          <div id="live-score-display" class="live-score-display is-active">
+            <div class="live-score-ring"></div>
+            <p class="live-score-label">Health Score</p>
+            <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
+          </div>
+          <p id="live-status" class="live-status">ANALYSIERE...</p>
         </div>
       `;
       modalBody.appendChild(liveDisplay);
