@@ -2773,9 +2773,9 @@ select:focus-visible {
    are hidden based on current view level
    =================================== */
 
-/* Default: Hide advanced and expert elements */
-[data-view-level="advanced"],
-[data-view-level="expert"] {
+/* Default: Hide advanced and expert elements (exclude html element itself) */
+:not(html)[data-view-level="advanced"],
+:not(html)[data-view-level="expert"] {
     display: none !important;
 }
 
