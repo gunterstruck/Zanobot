@@ -31,6 +31,7 @@ const YAMNET_TFHUB_URL =
  */
 export class YAMNetExtractor {
   private static instance: YAMNetExtractor | null = null;
+  private static initPromise: Promise<YAMNetExtractor> | null = null;
   private model: GraphModel | null = null;
   private isInitialized = false;
   private backendUsed: 'webgpu' | 'webgl' | 'cpu' = 'webgl';
@@ -42,13 +43,20 @@ export class YAMNetExtractor {
   /**
    * Get Singleton Instance
    * Model is loaded only once on first call
+   *
+   * CRITICAL: Uses Promise caching to prevent race conditions
+   * when multiple callers request getInstance() simultaneously.
    */
   static async getInstance(): Promise<YAMNetExtractor> {
-    if (!YAMNetExtractor.instance) {
-      YAMNetExtractor.instance = new YAMNetExtractor();
-      await YAMNetExtractor.instance.initialize();
+    if (!YAMNetExtractor.initPromise) {
+      YAMNetExtractor.initPromise = (async () => {
+        const instance = new YAMNetExtractor();
+        await instance.initialize();
+        YAMNetExtractor.instance = instance;
+        return instance;
+      })();
     }
-    return YAMNetExtractor.instance;
+    return YAMNetExtractor.initPromise;
   }
 
   /**
@@ -174,20 +182,30 @@ export class YAMNetExtractor {
 
   /**
    * Extract embeddings using YAMNet model
+   *
+   * PERFORMANCE: Uses Float32Array directly without Array.from() conversion
+   * SAFETY: Validates YAMNet output structure before accessing
    */
   private extractWithYAMNet(audioData: Float32Array): Float32Array {
     return tf.tidy(() => {
       // Prepare input tensor (YAMNet expects [batch, samples] or [samples])
-      const inputTensor = tf.tensor1d(Array.from(audioData));
+      // PERFORMANCE FIX: Pass Float32Array directly - no Array.from() needed
+      const inputTensor = tf.tensor1d(audioData);
 
       // Run inference
-      const output = this.model!.predict(inputTensor) as tf.Tensor;
+      const output = this.model!.predict(inputTensor) as tf.Tensor | tf.Tensor[];
 
       // Get embeddings (may need to select correct output)
       let embeddings: tf.Tensor;
       if (Array.isArray(output)) {
         // YAMNet returns [scores, embeddings, spectrogram]
-        embeddings = output[1] as tf.Tensor;
+        // SAFETY FIX: Validate output structure
+        if (output.length < 2) {
+          throw new Error(
+            `Unexpected YAMNet output structure: expected at least 2 tensors (scores, embeddings), got ${output.length}`
+          );
+        }
+        embeddings = output[1];
       } else {
         embeddings = output;
       }
@@ -195,9 +213,9 @@ export class YAMNetExtractor {
       // Average over time dimension
       const meanEmbedding = embeddings.mean(0);
 
-      // Ensure 1024 dimensions
-      const result = meanEmbedding.dataSync() as Float32Array;
-      return new Float32Array(result);
+      // TYPE SAFETY FIX: dataSync() returns TypedArray, explicitly convert to Float32Array
+      const syncedData = meanEmbedding.dataSync();
+      return new Float32Array(syncedData);
     });
   }
 
@@ -208,10 +226,13 @@ export class YAMNetExtractor {
    * 1. STFT for time-frequency analysis
    * 2. Mel filterbank application
    * 3. Statistics extraction across time
+   *
+   * PERFORMANCE FIX: Uses Float32Array directly without Array.from() conversion
    */
   private extractSpectralEmbeddings(audioData: Float32Array): Float32Array {
     return tf.tidy(() => {
-      const signal = tf.tensor1d(Array.from(audioData));
+      // PERFORMANCE FIX: Pass Float32Array directly - no Array.from() needed
+      const signal = tf.tensor1d(audioData);
 
       // Parameters
       const fftSize = 2048;
@@ -253,8 +274,9 @@ export class YAMNetExtractor {
       // Normalize
       const normalized = embedding.div(embedding.norm().add(1e-10));
 
-      const result = normalized.dataSync() as Float32Array;
-      return new Float32Array(result);
+      // TYPE SAFETY FIX: dataSync() returns TypedArray, explicitly convert to Float32Array
+      const syncedData = normalized.dataSync();
+      return new Float32Array(syncedData);
     });
   }
 
@@ -333,6 +355,8 @@ export class YAMNetExtractor {
 
   /**
    * Memory cleanup (call on app shutdown)
+   *
+   * CRITICAL: Also resets initPromise to allow re-initialization
    */
   dispose(): void {
     if (this.model) {
@@ -342,6 +366,7 @@ export class YAMNetExtractor {
     tf.disposeVariables();
     this.isInitialized = false;
     YAMNetExtractor.instance = null;
+    YAMNetExtractor.initPromise = null; // Reset promise to allow re-initialization
     console.log('🧹 YAMNet resources disposed');
   }
 
