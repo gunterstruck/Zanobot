@@ -131,6 +131,11 @@ export interface TrainingData {
 }
 
 /**
+ * Detection Mode (Level 1 vs Level 2)
+ */
+export type DetectionMode = 'STATIONARY' | 'CYCLIC';
+
+/**
  * Settings & Configuration
  */
 export interface AppSettings {
@@ -138,6 +143,7 @@ export interface AppSettings {
   confidenceThreshold: number; // Default: 75%
   theme: 'light' | 'dark' | 'brand';
   debugMode: boolean;
+  detectionMode: DetectionMode; // Default: 'STATIONARY' (Level 1)
 }
 
 /**
