@@ -3,7 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
-  base: './',  // Use relative paths, will be transformed manually in HTML
+  base: '/',  // Absolute paths for Vercel deployment
   resolve: {
     alias: {
       '@core': path.resolve(__dirname, './src/core'),
@@ -24,8 +24,8 @@ export default defineConfig({
         theme_color: '#0A1929',
         background_color: '#0A1929',
         display: 'standalone',
-        scope: './',
-        start_url: './',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: 'icons/icon-192.png',
