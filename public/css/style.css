@@ -3425,6 +3425,173 @@ html[data-view-level="expert"] .debug-info[data-view-level="expert"] {
 }
 
 /* ===================================
+   DETECTION MODE VISIBILITY
+   Mode-dependent content show/hide based on body[data-detection-mode]
+   =================================== */
+
+/* Default: hide mode-specific content */
+.level1-content,
+.level2-content {
+    display: none;
+}
+
+/* Show Level 1 content when in STATIONARY mode */
+body[data-detection-mode="STATIONARY"] .level1-content {
+    display: block;
+}
+
+/* Show Level 2 content when in CYCLIC mode */
+body[data-detection-mode="CYCLIC"] .level2-content {
+    display: block;
+}
+
+/* Hide GMIA-specific settings when in Level 2 mode */
+body[data-detection-mode="CYCLIC"] [data-detection-mode="STATIONARY"] {
+    display: none !important;
+}
+
+/* Hide Level 2-specific settings when in Level 1 mode */
+body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level1-content):not(.level2-content) {
+    display: none !important;
+}
+
+/* Mode Settings Info in Settings Page */
+.mode-settings-info {
+    margin-top: var(--spacing-md);
+}
+
+.mode-settings-info .info-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.mode-settings-info .info-badge svg {
+    flex-shrink: 0;
+    color: var(--primary-color);
+}
+
+/* ===================================
+   MODE SELECTOR CUSTOM STYLES
+   Additional styling for the mode selector component
+   =================================== */
+
+#analysis-mode-selector {
+    margin-top: var(--spacing-md);
+}
+
+/* Override mode-selector-component styles for dark theme compatibility */
+.mode-selector-component {
+    padding: 0;
+}
+
+.mode-selector-component .mode-selector-title {
+    display: none; /* Title is provided by setting-category-title */
+}
+
+.mode-selector-component .mode-selector-description {
+    display: none; /* Description is provided by setting-category-description */
+}
+
+.mode-selector-component .mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.mode-selector-component .mode-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-selector-component .mode-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+}
+
+.mode-selector-component .mode-card.selected {
+    border-color: var(--primary-color);
+    background: rgba(0, 212, 255, 0.08);
+}
+
+.mode-selector-component .mode-card-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.mode-selector-component .mode-card-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.mode-selector-component .mode-card-description {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.mode-selector-component .mode-card-check {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.mode-selector-component .mode-card.selected .mode-card-check {
+    opacity: 1;
+}
+
+.mode-selector-component .mode-info {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+
+.mode-selector-component .mode-features h4 {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.mode-selector-component .mode-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mode-selector-component .mode-features li {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: var(--spacing-xs) 0;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {

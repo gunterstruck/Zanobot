@@ -17,8 +17,13 @@ import {
   getVisualizerSettings,
   setVisualizerSettings,
 } from '@utils/visualizerSettings.js';
+import { ModeSelector, injectModeSelectorStyles } from '@ui/components/ModeSelector.js';
+import { getDetectionModeManager } from '@core/detection-mode.js';
 
 export class SettingsPhase {
+  private modeSelector: ModeSelector | null = null;
+  private unsubscribeModeChange?: () => void;
+
   constructor() {}
 
   /**
@@ -51,8 +56,54 @@ export class SettingsPhase {
 
     this.initVisualizerScaleSettings();
 
+    // Initialize mode selector for analysis method selection
+    this.initModeSelector();
+
     // Load stats on init
     this.showStats();
+  }
+
+  /**
+   * Initialize the Mode Selector component for GIMA/YAMNet toggle
+   */
+  private initModeSelector(): void {
+    // Inject styles
+    injectModeSelectorStyles();
+
+    // Create and render the mode selector
+    this.modeSelector = new ModeSelector();
+    this.modeSelector.render('analysis-mode-selector');
+
+    // Subscribe to mode changes to update visibility of mode-dependent settings
+    const modeManager = getDetectionModeManager();
+    this.unsubscribeModeChange = modeManager.onModeChange((newMode) => {
+      this.updateModeVisibility(newMode);
+    });
+
+    // Set initial visibility based on current mode
+    this.updateModeVisibility(modeManager.getMode());
+
+    logger.info('🎛️ Mode selector initialized');
+  }
+
+  /**
+   * Update visibility of mode-dependent settings
+   */
+  private updateModeVisibility(mode: 'STATIONARY' | 'CYCLIC'): void {
+    // Update data-detection-mode attribute on body for CSS-based visibility
+    document.body.setAttribute('data-detection-mode', mode);
+
+    // Update info badges in the mode settings info section
+    const infoSection = document.getElementById('mode-settings-info');
+    if (infoSection) {
+      const badges = infoSection.querySelectorAll('[data-detection-mode]');
+      badges.forEach((badge) => {
+        const badgeMode = badge.getAttribute('data-detection-mode');
+        (badge as HTMLElement).style.display = badgeMode === mode ? 'flex' : 'none';
+      });
+    }
+
+    logger.debug(`Mode visibility updated: ${mode}`);
   }
 
   private initVisualizerScaleSettings(): void {
@@ -292,6 +343,16 @@ export class SettingsPhase {
    * Cleanup
    */
   public destroy(): void {
-    // Nothing to clean up
+    // Cleanup mode selector
+    if (this.modeSelector) {
+      this.modeSelector.destroy();
+      this.modeSelector = null;
+    }
+
+    // Unsubscribe from mode changes
+    if (this.unsubscribeModeChange) {
+      this.unsubscribeModeChange();
+      this.unsubscribeModeChange = undefined;
+    }
   }
 }

@@ -223,9 +223,14 @@
                     </svg>
                 </div>
                 <div id="record-reference-content" class="collapsible-content" style="display: none;">
-                    <div class="container-content">
+                    <!-- Level 1 (GMIA) Reference Content -->
+                    <div class="container-content level1-content" data-detection-mode="STATIONARY">
                         <p class="sub-description">10-Sekunden Referenzaufnahme</p>
                         <button class="action-btn" id="record-btn">Aufnehmen</button>
+                    </div>
+                    <!-- Level 2 (YAMNet) Reference Content - rendered dynamically -->
+                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-reference-container">
+                        <!-- Content rendered by Level2ReferencePhase -->
                     </div>
                 </div>
             </section>
@@ -247,9 +252,14 @@
                     </svg>
                 </div>
                 <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
-                    <div class="container-content">
+                    <!-- Level 1 (GMIA) Diagnose Content -->
+                    <div class="container-content level1-content" data-detection-mode="STATIONARY">
                         <p class="sub-description">Live-Analyse durchführen</p>
                         <button class="action-btn" id="diagnose-btn">Analysieren</button>
+                    </div>
+                    <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
+                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
+                        <!-- Content rendered by Level2DiagnosePhase -->
                     </div>
                 </div>
             </section>
@@ -429,7 +439,8 @@
                                 </div>
                             </div>
 
-                            <div class="setting-item" data-view-level="expert">
+                            <!-- GMIA-specific confidence threshold (Level 1 only) -->
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
                                 <label for="confidence-threshold">Vertrauensschwelle</label>
                                 <input type="range" id="confidence-threshold" min="0" max="100" value="75">
                                 <span id="confidence-value">75%</span>
@@ -442,18 +453,51 @@
                                     <option value="15">15 Sekunden</option>
                                 </select>
                             </div>
-                            <div class="setting-item" data-view-level="expert">
+                            <!-- GMIA-specific settings (Level 1 only) -->
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
                                 <label for="frequency-scale-toggle">Frequenzachse</label>
                                 <div class="setting-toggle">
                                     <input type="checkbox" id="frequency-scale-toggle">
                                     <p class="setting-description">Logarithmisch (mehr Details im Bereich 20–500 Hz)</p>
                                 </div>
                             </div>
-                            <div class="setting-item" data-view-level="expert">
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
                                 <label for="amplitude-scale-toggle">Y-Achse / Amplitude</label>
                                 <div class="setting-toggle">
                                     <input type="checkbox" id="amplitude-scale-toggle">
                                     <p class="setting-description">Logarithmisch (dB) – betont leise Signale</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="settings-divider"></div>
+
+                        <!-- Analysis Method Selection (Expert only) -->
+                        <div class="setting-category" data-view-level="expert">
+                            <h4 class="setting-category-title">Analysemethode</h4>
+                            <p class="setting-category-description">Wählen Sie die passende Analysemethode für Ihre Maschine.</p>
+
+                            <!-- Mode Selector Container - rendered by ModeSelector component -->
+                            <div id="analysis-mode-selector"></div>
+
+                            <!-- Mode-dependent settings info -->
+                            <div class="mode-settings-info" id="mode-settings-info">
+                                <div class="info-badge" data-detection-mode="STATIONARY">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="16" x2="12" y2="12"/>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                    <span>Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv</span>
+                                </div>
+                                <div class="info-badge" data-detection-mode="CYCLIC">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="16" x2="12" y2="12"/>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                    <span>Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse</span>
                                 </div>
                             </div>
                         </div>
