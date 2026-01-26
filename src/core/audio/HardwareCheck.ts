@@ -141,15 +141,18 @@ export class HardwareCheck {
   /**
    * Get all available audio input devices
    *
+   * CRITICAL FIX: Uses finally block to ensure stream is always released,
+   * even if an error occurs after getUserMedia but before stop().
+   * This prevents microphone from being locked, which would block phone calls.
+   *
    * @returns List of audio input devices
    */
   public static async getAvailableDevices(): Promise<AudioDeviceInfo[]> {
+    let stream: MediaStream | null = null;
+
     try {
       // Request permissions first (required for device labels)
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Stop the stream immediately - we only needed it for permissions
-      stream.getTracks().forEach((track) => track.stop());
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audioInputs = devices
@@ -166,6 +169,13 @@ export class HardwareCheck {
     } catch (error) {
       logger.error('Failed to enumerate audio devices:', error);
       throw new Error('Mikrofonzugriff verweigert oder nicht verfügbar');
+    } finally {
+      // CRITICAL: Always release the microphone stream, even on error
+      // This ensures phone calls can still work if this method fails
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        logger.debug('🎤 Permission stream released in getAvailableDevices()');
+      }
     }
   }
 
@@ -245,6 +255,9 @@ export class HardwareCheck {
    * which forces iOS to use the rear microphone associated with the back camera.
    * The video tracks are immediately stopped (we only need audio).
    *
+   * CRITICAL FIX: Uses try-finally pattern to ensure all tracks are stopped on error,
+   * preventing microphone/camera from being locked (which would block phone calls).
+   *
    * @returns MediaStream with rear microphone audio, or null if not available
    */
   public static async getiOSRearMicStream(): Promise<MediaStream | null> {
@@ -253,12 +266,14 @@ export class HardwareCheck {
       return null;
     }
 
+    let stream: MediaStream | null = null;
+
     try {
       logger.info('📱 iOS detected: Attempting rear microphone via camera workaround...');
 
       // Request video+audio with back camera (facingMode: "environment")
       // This forces iOS to use the rear microphone associated with the back camera
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: 'environment' }, // Back camera
           width: { ideal: 1 }, // Minimal resolution (we don't need video)
@@ -277,7 +292,7 @@ export class HardwareCheck {
 
       if (audioTracks.length === 0) {
         logger.warn('📱 iOS rear mic workaround: No audio tracks received');
-        stream.getTracks().forEach((track) => track.stop());
+        // Stream will be cleaned up in finally block
         return null;
       }
 
@@ -294,6 +309,10 @@ export class HardwareCheck {
       logger.info(
         `✅ iOS rear mic workaround successful: "${audioTracks[0].label}" (via back camera)`
       );
+
+      // Mark stream as successfully transferred to audioOnlyStream
+      // Set to null so finally block doesn't stop the audio tracks we want to return
+      stream = null;
 
       return audioOnlyStream;
     } catch (error) {
@@ -314,6 +333,13 @@ export class HardwareCheck {
       }
 
       return null;
+    } finally {
+      // CRITICAL FIX: Always release the stream on failure or early return
+      // This ensures microphone/camera are released for phone calls
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        logger.debug('📱 iOS rear mic stream released in finally block');
+      }
     }
   }
 
