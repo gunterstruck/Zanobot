@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="de" data-view-level="basic">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0A1929">
+    <meta name="description" content="Zanobo - AI Assistant für akustische Maschinenüberwachung">
+
+    <title>Zanobo - AI Assistant</title>
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-512.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/toast.css">
+
+    <!-- Theme Bootstrap (loads before render) -->
+  <script type="module" crossorigin src="./assets/index-B89Mh_RT.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/vendor-idb-DQ2Q1noU.js">
+  <link rel="modulepreload" crossorigin href="./assets/data-CHglu3FA.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-qr-DORAJuxy.js">
+  <link rel="modulepreload" crossorigin href="./assets/dsp-CDZtT2db.js">
+  <link rel="modulepreload" crossorigin href="./assets/ml-DKXvlLf-.js">
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+<body>
+    <!-- Microphone Status Badge -->
+    <div id="mic-status-badge" class="status-badge" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <span id="mic-status-text">Mikrofon bereit</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Hero Header Image -->
+        <section class="hero-header">
+            <img src="./icons/zanobo_banner_1024x500.png" alt="ZANOBO AI Assistant - AI-powered machine health monitoring through sound analysis" class="hero-image">
+        </section>
+
+        <div class="main-actions">
+            <!-- Container 2: Maschine auswählen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="select-machine-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Professional Machine/Settings Icon -->
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                            <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
+                            <path d="M16.24 7.76l-8.48 8.48M7.76 7.76l8.48 8.48" stroke-width="1"/>
+                        </svg>
+                        <h3 class="container-title">Maschine auswählen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div id="select-machine-content" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <!-- Option 1: Scan QR Code -->
+                        <div class="machine-selection-option">
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional QR/Scan Icon -->
+                                    <rect x="3" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="13" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="3" y="13" width="8" height="8" rx="1"/>
+                                    <rect x="5" y="5" width="4" height="4"/>
+                                    <rect x="15" y="5" width="4" height="4"/>
+                                    <rect x="5" y="15" width="4" height="4"/>
+                                    <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
+                                </svg>
+                                <h5 class="option-title">QR-Code scannen</h5>
+                            </div>
+                            <p class="option-description">Identifiziere Maschine via QR-Code</p>
+                            <button class="action-btn secondary-btn" id="scan-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Camera/Scan Icon -->
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
+                                Scannen
+                            </button>
+                        </div>
+
+                        <div class="option-divider">
+                            <span>oder</span>
+                        </div>
+
+                        <!-- Option 2: Manual Entry -->
+                        <div class="machine-selection-option">
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Edit/Create Icon -->
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                <h5 class="option-title">Manuell anlegen</h5>
+                            </div>
+                            <p class="option-description">Neue Maschine mit Namen erstellen</p>
+                            <div class="input-group">
+                                <label for="machine-name-input">Maschinenname</label>
+                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
+                            </div>
+                            <div class="input-group" data-view-level="advanced">
+                                <label for="machine-id-input">Maschinen-ID (optional)</label>
+                                <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
+                            </div>
+                            <button class="action-btn" id="create-machine-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional Save Icon -->
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                                Speichern
+                            </button>
+                        </div>
+
+                        <!-- Quick Select: Recently Used Machines -->
+                        <div id="quick-select-section" class="machine-selection-option" style="display: none;">
+                            <div class="option-divider">
+                                <span>Schnellwahl</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Professional History/Clock Icon -->
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <h5 class="option-title">Zuletzt verwendet</h5>
+                            </div>
+                            <p class="option-description">Schneller Zugriff auf kürzlich verwendete Maschinen</p>
+                            <div id="quick-select-list" class="quick-select-list">
+                                <!-- Machine buttons will be added dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Maschinenübersicht -->
+                        <div class="machine-selection-option">
+                            <div class="option-divider">
+                                <span>Übersicht</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- List/Grid Icon -->
+                                    <rect x="3" y="3" width="7" height="7"/>
+                                    <rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="3" y="14" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/>
+                                </svg>
+                                <h5 class="option-title">Maschinenübersicht</h5>
+                            </div>
+                            <div id="machine-overview" class="machine-list">
+                                <!-- Example Machine Items -->
+                                <div class="machine-item">
+                                    <div class="machine-info">
+                                        <h4 class="machine-name">Zanobo 123</h4>
+                                        <p class="machine-status status-healthy">Healthy</p>
+                                        <p class="machine-time">Letzte Prüfung vor 3min</p>
+                                    </div>
+                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+                                <div class="machine-item">
+                                    <div class="machine-info">
+                                        <h4 class="machine-name">Zanobo 9</h4>
+                                        <p class="machine-status status-uncertain">Uncertain</p>
+                                        <p class="machine-time">Letzte Prüfung vor 12min</p>
+                                    </div>
+                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+                                <button class="add-reference-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    Neue Referenz
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Historie (Advanced+) -->
+                        <div class="machine-selection-option" data-view-level="advanced">
+                            <div class="option-divider">
+                                <span>Verlauf</span>
+                            </div>
+                            <div class="option-header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Clock/History Icon -->
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <h5 class="option-title">Historie</h5>
+                            </div>
+                            <div id="history" class="history-list">
+                                <p class="empty-state">Noch keine Messungen vorhanden</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Container 3: Referenz aufnehmen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="record-reference-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Professional Microphone Icon -->
+                            <rect x="9" y="2" width="6" height="12" rx="3"/>
+                            <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="22"/>
+                            <line x1="8" y1="22" x2="16" y2="22"/>
+                        </svg>
+                        <h3 class="container-title">Referenz aufnehmen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div id="record-reference-content" class="collapsible-content" style="display: none;">
+                    <!-- Level 1 (GMIA) Reference Content -->
+                    <div class="container-content level1-content" data-detection-mode="STATIONARY">
+                        <p class="sub-description">10-Sekunden Referenzaufnahme</p>
+                        <button class="action-btn" id="record-btn">Aufnehmen</button>
+                    </div>
+                    <!-- Level 2 (YAMNet) Reference Content - rendered dynamically -->
+                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-reference-container">
+                        <!-- Content rendered by Level2ReferencePhase -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Container 4: Diagnose starten -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="run-diagnosis-content">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Stethoscope Icon -->
+                            <path d="M6 3v4a4 4 0 0 0 8 0V3"/>
+                            <path d="M10 7v5a4 4 0 0 0 8 0v-2"/>
+                            <circle cx="18" cy="12" r="2"/>
+                        </svg>
+                        <h3 class="container-title">Diagnose starten</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
+                    <!-- Level 1 (GMIA) Diagnose Content -->
+                    <div class="container-content level1-content" data-detection-mode="STATIONARY">
+                        <p class="sub-description">Live-Analyse durchführen</p>
+                        <button class="action-btn" id="diagnose-btn">Analysieren</button>
+                    </div>
+                    <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
+                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
+                        <!-- Content rendered by Level2DiagnosePhase -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Container 5: Einstellungen -->
+            <section class="main-container collapsible">
+                <div class="main-header section-header" data-target="settings">
+                    <div class="header-with-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Settings/Gear Icon -->
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                        </svg>
+                        <h3 class="container-title">Einstellungen</h3>
+                    </div>
+                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div id="settings" class="collapsible-content" style="display: none;">
+                    <div class="container-content">
+                        <div class="settings-list">
+                            <!-- View Level Selection Section -->
+                            <div class="setting-category">
+                                <h4 class="setting-category-title">Ansichtsmodus</h4>
+                                <p class="setting-category-description">Passen Sie die Komplexität der Benutzeroberfläche an Ihre Bedürfnisse an.</p>
+                                <div class="view-level-selector" id="view-level-selector">
+                                    <button class="view-level-btn active" data-level="basic" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Basis</span>
+                                        <span class="view-level-desc">Einfach</span>
+                                    </button>
+                                    <button class="view-level-btn" data-level="advanced" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Fortgeschritten</span>
+                                        <span class="view-level-desc">Details</span>
+                                    </button>
+                                    <button class="view-level-btn" data-level="expert" type="button">
+                                        <span class="view-level-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="16 18 22 12 16 6"/>
+                                                <polyline points="8 6 2 12 8 18"/>
+                                                <line x1="12" y1="2" x2="12" y2="22"/>
+                                            </svg>
+                                        </span>
+                                        <span class="view-level-label">Experte</span>
+                                        <span class="view-level-desc">Technisch</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="settings-divider"></div>
+
+                            <!-- Theme Selection Section -->
+                            <div class="setting-category">
+                                <h4 class="setting-category-title">Erscheinungsbild</h4>
+                                <div class="theme-cards" id="theme-cards">
+                                    <!-- Theme Card: Neon Industrial -->
+                                    <div class="theme-card" data-theme="neon">
+                                        <div class="theme-card-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                            <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                                        </svg>
+                                    </div>
+                                    <div class="theme-card-content">
+                                        <h5 class="theme-card-title">Neon Industrial</h5>
+                                        <p class="theme-card-description">Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.</p>
+                                    </div>
+                                    <div class="theme-card-colors">
+                                        <span class="theme-color-dot" style="background: #00f3ff;"></span>
+                                        <span class="theme-color-dot" style="background: #ff8800;"></span>
+                                        <span class="theme-color-dot" style="background: #0f172a;"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Theme Card: Daylight -->
+                                <div class="theme-card" data-theme="light">
+                                    <div class="theme-card-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="5"/>
+                                            <line x1="12" y1="1" x2="12" y2="3"/>
+                                            <line x1="12" y1="21" x2="12" y2="23"/>
+                                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                                            <line x1="1" y1="12" x2="3" y2="12"/>
+                                            <line x1="21" y1="12" x2="23" y2="12"/>
+                                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                                        </svg>
+                                    </div>
+                                    <div class="theme-card-content">
+                                        <h5 class="theme-card-title">Daylight</h5>
+                                        <p class="theme-card-description">Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.</p>
+                                    </div>
+                                    <div class="theme-card-colors">
+                                        <span class="theme-color-dot" style="background: #0f172a;"></span>
+                                        <span class="theme-color-dot" style="background: #ea580c;"></span>
+                                        <span class="theme-color-dot" style="background: #ffffff; border: 1px solid #e5e7eb;"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Theme Card: Brand -->
+                                <div class="theme-card" data-theme="brand">
+                                    <div class="theme-card-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                                        </svg>
+                                    </div>
+                                    <div class="theme-card-content">
+                                        <h5 class="theme-card-title">Zanobo</h5>
+                                        <p class="theme-card-description">Original Zanobo Design. Ausgewogen & professionell.</p>
+                                    </div>
+                                    <div class="theme-card-colors">
+                                        <span class="theme-color-dot" style="background: #00D4FF;"></span>
+                                        <span class="theme-color-dot" style="background: #00FFC6;"></span>
+                                        <span class="theme-color-dot" style="background: #0A1929;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="settings-divider"></div>
+
+                        <!-- Audio Settings -->
+                        <div class="setting-category">
+                            <h4 class="setting-category-title">Audioeinstellungen</h4>
+
+                            <!-- Hardware Intelligence Card (Advanced+) -->
+                            <div class="hardware-info-card" data-view-level="advanced">
+                                <div class="hardware-header">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="2" width="6" height="12" rx="3"/>
+                                        <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+                                        <line x1="12" y1="19" x2="12" y2="22"/>
+                                        <line x1="8" y1="22" x2="16" y2="22"/>
+                                    </svg>
+                                    <h5 class="hardware-title">Audio Hardware</h5>
+                                </div>
+                                <div class="hardware-content">
+                                    <div class="hardware-status">
+                                        <div id="hardware-status-icon" class="hardware-icon">
+                                            <!-- Icon will be set dynamically -->
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="M12 6v6l4 2"/>
+                                            </svg>
+                                        </div>
+                                        <div class="hardware-info">
+                                            <div id="hardware-device-label" class="hardware-device">Erkenne Mikrofon...</div>
+                                            <div id="hardware-status-text" class="hardware-message">Initialisiere Hardware-Check</div>
+                                        </div>
+                                    </div>
+                                    <button class="action-btn secondary-btn" id="change-microphone-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                                        </svg>
+                                        Anderes Mikrofon wählen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- GMIA-specific confidence threshold (Level 1 only) -->
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
+                                <label for="confidence-threshold">Vertrauensschwelle</label>
+                                <input type="range" id="confidence-threshold" min="0" max="100" value="75">
+                                <span id="confidence-value">75%</span>
+                            </div>
+                            <div class="setting-item" data-view-level="expert">
+                                <label for="recording-duration">Aufnahmedauer</label>
+                                <select id="recording-duration">
+                                    <option value="5">5 Sekunden</option>
+                                    <option value="10" selected>10 Sekunden</option>
+                                    <option value="15">15 Sekunden</option>
+                                </select>
+                            </div>
+                            <!-- GMIA-specific settings (Level 1 only) -->
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
+                                <label for="frequency-scale-toggle">Frequenzachse</label>
+                                <div class="setting-toggle">
+                                    <input type="checkbox" id="frequency-scale-toggle">
+                                    <p class="setting-description">Logarithmisch (mehr Details im Bereich 20–500 Hz)</p>
+                                </div>
+                            </div>
+                            <div class="setting-item" data-view-level="expert" data-detection-mode="STATIONARY">
+                                <label for="amplitude-scale-toggle">Y-Achse / Amplitude</label>
+                                <div class="setting-toggle">
+                                    <input type="checkbox" id="amplitude-scale-toggle">
+                                    <p class="setting-description">Logarithmisch (dB) – betont leise Signale</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="settings-divider"></div>
+
+                        <!-- Analysis Method Selection (Expert only) -->
+                        <div class="setting-category" data-view-level="expert">
+                            <h4 class="setting-category-title">Analysemethode</h4>
+                            <p class="setting-category-description">Wählen Sie die passende Analysemethode für Ihre Maschine.</p>
+
+                            <!-- Mode Selector Container - rendered by ModeSelector component -->
+                            <div id="analysis-mode-selector"></div>
+
+                            <!-- Mode-dependent settings info -->
+                            <div class="mode-settings-info" id="mode-settings-info">
+                                <div class="info-badge" data-detection-mode="STATIONARY">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="16" x2="12" y2="12"/>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                    <span>Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv</span>
+                                </div>
+                                <div class="info-badge" data-detection-mode="CYCLIC">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="16" x2="12" y2="12"/>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                    <span>Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="settings-divider"></div>
+
+                        <!-- Database Management (Expert only) -->
+                        <div class="setting-category" data-view-level="expert">
+                            <h4 class="setting-category-title">Datenverwaltung</h4>
+                            <div class="setting-item">
+                                <button class="action-btn secondary-btn" id="export-data-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Datenbank exportieren
+                                </button>
+                            </div>
+                            <div class="setting-item">
+                                <button class="action-btn secondary-btn" id="import-data-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    Datenbank importieren
+                                </button>
+                            </div>
+                            <div class="setting-item">
+                                <p class="setting-stats">
+                                    <strong>Statistik:</strong>
+                                    <span id="stats-machines">0</span> Maschinen,
+                                    <span id="stats-recordings">0</span> Aufnahmen,
+                                    <span id="stats-diagnoses">0</span> Diagnosen
+                                </p>
+                            </div>
+                            <div class="setting-item">
+                                <button class="action-btn secondary-btn" id="clear-data-btn" style="border-color: var(--status-error); color: var(--status-error);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                    Alle Daten löschen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <!-- Footer / Legal Info -->
+        <footer class="footer">
+            <div class="legal-info">
+                <button class="footer-link" id="impressum-btn">Impressum</button>
+                <span class="separator">•</span>
+                <button class="footer-link" id="datenschutz-btn">Datenschutz</button>
+                <br>
+                <button class="footer-link" id="about-btn">Über Zanobo</button>
+            </div>
+            <p class="copyright">© 2026 Zanobo AI Assistant</p>
+        </footer>
+    </div>
+
+    <!-- Modal for Recording -->
+    <div id="recording-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Referenz aufnehmen</h3>
+                <p class="modal-subtitle" id="machine-id">MACHINE 002</p>
+            </div>
+            <div class="modal-body">
+                <canvas id="waveform-canvas" width="300" height="150"></canvas>
+                <canvas id="health-gauge-canvas" width="300" height="300" style="display: none;"></canvas>
+                <p class="recording-status" id="recording-status">High audio quality detected</p>
+                <p class="recording-timer" id="recording-timer">00:00</p>
+                <div class="fingerprint-quality">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                    </svg>
+                    <span>Fingerprint Quality: <strong id="fingerprint-quality">CONFIDENT</strong></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="stop-recording-btn">Stop Recording</button>
+                <button class="modal-btn btn-primary" id="save-reference-btn" style="display: none;">Save Reference</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Review Recording (Phase 2) -->
+    <div id="review-modal" class="modal" style="display: none;">
+        <div class="modal-content app-shell-container">
+            <div class="modal-header shell-header">
+                <h3>Aufnahme prüfen</h3>
+                <p class="modal-subtitle">Qualitätskontrolle</p>
+                <div class="modal-header-actions">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body shell-content">
+                <!-- Audio Player -->
+                <div class="review-audio-player">
+                    <h4 class="review-section-title">Aufnahme anhören</h4>
+                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;">
+                        <source id="review-audio-source" type="audio/webm">
+                        Ihr Browser unterstützt keine Audio-Wiedergabe.
+                    </audio>
+                    <p class="review-info">15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)</p>
+                </div>
+
+                <div class="review-reference-image" id="review-reference-image-container" style="display: none;">
+                    <h4 class="review-section-title">Gespeichertes Positionsbild</h4>
+                    <div class="review-image-frame">
+                        <img id="review-reference-image" alt="Gespeichertes Positionsbild der Maschine">
+                    </div>
+                    <p class="review-info">Prüfen Sie, ob das Bild die korrekte Position zeigt.</p>
+                </div>
+
+                <!-- Quality Assessment -->
+                <div class="review-quality">
+                    <h4 class="review-section-title">Qualitätsbewertung</h4>
+
+                    <!-- Quality Traffic Light -->
+                    <div class="quality-indicator" id="quality-indicator">
+                        <div class="quality-icon" id="quality-icon">
+                            <!-- Icon will be set dynamically -->
+                        </div>
+                        <div class="quality-details">
+                            <p class="quality-score">
+                                Qualität: <strong id="quality-score">--</strong>%
+                            </p>
+                            <p class="quality-rating" id="quality-rating-text">
+                                <!-- Rating text will be set dynamically -->
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Quality Issues (if any) -->
+                    <div class="quality-issues" id="quality-issues" style="display: none;">
+                        <h5>Erkannte Probleme:</h5>
+                        <ul id="quality-issues-list">
+                            <!-- Issues will be added dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions shell-footer">
+                <button class="modal-btn btn-secondary" id="review-discard-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Verwerfen / Neu
+                </button>
+                <button class="modal-btn btn-primary" id="review-save-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Als Referenz speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for QR/Barcode Scanner -->
+    <div id="scanner-modal" class="modal" style="display: none;">
+        <div class="modal-content scanner-modal-content">
+            <div class="modal-header">
+                <h3>Maschine scannen</h3>
+                <button class="close-modal-btn" id="close-scanner-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Scanner Container -->
+                <div id="scanner-container" class="scanner-container">
+                    <div id="qr-reader" class="qr-reader"></div>
+                    <div class="scanner-overlay">
+                        <div class="scanner-frame">
+                            <div class="scanner-corner corner-tl"></div>
+                            <div class="scanner-corner corner-tr"></div>
+                            <div class="scanner-corner corner-bl"></div>
+                            <div class="scanner-corner corner-br"></div>
+                        </div>
+                        <p class="scanner-hint">QR-Code oder Barcode in den Rahmen halten</p>
+                    </div>
+                </div>
+
+                <!-- Error/Permission Message -->
+                <div id="scanner-error" class="scanner-error" style="display: none;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--status-error)" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p id="scanner-error-message">Kamerazugriff wurde verweigert</p>
+                    <p class="scanner-error-hint">Bitte erlauben Sie den Kamerazugriff in Ihren Browser-Einstellungen</p>
+                </div>
+
+                <!-- Success Message -->
+                <div id="scanner-success" class="scanner-success" style="display: none;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <p id="scanner-success-message">Code erkannt!</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="manual-input-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Manuell eingeben
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Machine ID Modal -->
+    <div id="manual-input-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Maschinen-ID eingeben</h3>
+                <button class="close-modal-btn" id="close-manual-input-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="manual-machine-id-input">Maschinen-ID</label>
+                <input
+                    type="text"
+                    id="manual-machine-id-input"
+                    class="machine-input"
+                    placeholder="z.B. 1GB4-636A0-Ba1"
+                />
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="manual-input-cancel">Abbrechen</button>
+                <button class="modal-btn btn-primary" id="manual-input-confirm">Weiter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Diagnosis Results -->
+    <div id="diagnosis-modal" class="modal" style="display: none;">
+        <div class="modal-content app-shell-container">
+            <div class="modal-header shell-header">
+                <h3>Diagnoseergebnisse</h3>
+                <div class="modal-header-actions">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                        </svg>
+                    </button>
+                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Diagnose schließen">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body shell-content">
+                <div class="result-card">
+                    <div class="result-barcode" data-view-level="advanced">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="3" y="6" width="2" height="12"/>
+                            <rect x="6" y="6" width="1" height="12"/>
+                            <rect x="8" y="6" width="2" height="12"/>
+                            <rect x="11" y="6" width="1" height="12"/>
+                            <rect x="13" y="6" width="3" height="12"/>
+                            <rect x="17" y="6" width="1" height="12"/>
+                            <rect x="19" y="6" width="2" height="12"/>
+                        </svg>
+                        <span id="machine-barcode">1GB4-636A0-Ba1</span>
+                    </div>
+                    <div class="result-fingerprint">
+                        <h4>Fingerprint</h4>
+                        <p class="result-status status-healthy" id="result-status">HEALTHY</p>
+                        <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% Confidence score</p>
+                    </div>
+                    <div class="result-analysis" data-view-level="expert">
+                        <h4>Variance</h4>
+                        <p class="analysis-label">Frequency anomaly</p>
+                        <canvas id="analysis-canvas" width="300" height="100"></canvas>
+                        <p class="analysis-hint" id="analysis-hint">Hint: Slightly increased signal around 20 kHz</p>
+                    </div>
+                    <div class="result-quality" data-view-level="advanced">
+                        <h4>Reference Quality</h4>
+                        <p class="quality-status status-good">GOOD</p>
+                        <p class="quality-description">Reference recording meets recommended conditions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions shell-footer">
+                <button class="modal-btn btn-secondary" id="view-history-btn">View History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Microphone Selection -->
+    <div id="microphone-selection-modal" class="modal" style="display: none;">
+        <div class="modal-content microphone-modal-content">
+            <div class="modal-header">
+                <h3>Mikrofon auswählen</h3>
+                <button class="close-modal-btn" id="close-microphone-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">
+                    Wählen Sie das beste Mikrofon für die Maschinendiagnose.
+                    Vermeiden Sie Headsets und Bluetooth-Geräte, da diese für Sprache optimiert sind.
+                </p>
+                <div id="microphone-device-list" class="microphone-device-list">
+                    <!-- Device items will be added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Impressum -->
+    <div id="impressum-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="impressum-title" aria-modal="true">
+        <div class="modal-content legal-modal-content">
+            <div class="modal-header">
+                <h3 id="impressum-title">Impressum</h3>
+                <button class="close-modal-btn" id="close-impressum-modal" aria-label="Impressum schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body legal-modal-body">
+                <h4>Angaben gemäß § 5 TMG</h4>
+                <p>
+                    <strong>Zanobo Team</strong><br>
+                    Entwickler und Betreiber der Zanobo PWA
+                </p>
+
+                <h4>Kontakt</h4>
+                <p>
+                    E-Mail: info@zanobot.de<br>
+                    Website: https://zanobot.de
+                </p>
+
+                <h4>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h4>
+                <p>
+                    Zanobo Development Team
+                </p>
+
+                <h4>Haftungsausschluss</h4>
+                <h5>Haftung für Inhalte</h5>
+                <p>
+                    Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+                </p>
+
+                <h5>Haftung für Links</h5>
+                <p>
+                    Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
+                </p>
+
+                <h5>Urheberrecht</h5>
+                <p>
+                    Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+                </p>
+
+                <h4>Open Source Lizenz</h4>
+                <p>
+                    Diese Software steht unter der MIT-Lizenz und basiert auf dem GMIA (Gaussian Model Independent Attributes) Algorithmus.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-primary" id="close-impressum-btn">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Datenschutz -->
+    <div id="datenschutz-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="datenschutz-title" aria-modal="true">
+        <div class="modal-content legal-modal-content">
+            <div class="modal-header">
+                <h3 id="datenschutz-title">Datenschutzerklärung</h3>
+                <button class="close-modal-btn" id="close-datenschutz-modal" aria-label="Datenschutzerklärung schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body legal-modal-body">
+                <h4>1. Datenschutz auf einen Blick</h4>
+                <h5>Allgemeine Hinweise</h5>
+                <p>
+                    Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Progressive Web App (PWA) nutzen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.
+                </p>
+
+                <h4>2. Datenverarbeitung in Zanobo</h4>
+                <h5>Lokale Datenspeicherung (Offline-First)</h5>
+                <p>
+                    Zanobo ist eine <strong>Offline-First Progressive Web App</strong>. Alle Ihre Daten werden ausschließlich <strong>lokal in Ihrem Browser</strong> gespeichert und verarbeitet:
+                </p>
+                <ul>
+                    <li><strong>IndexedDB</strong>: Speicherung von Maschinenreferenzen, Aufnahmen und Diagnosehistorie</li>
+                    <li><strong>Web Audio API</strong>: Lokale Audioverarbeitung ohne Serverübertragung</li>
+                    <li><strong>Service Worker</strong>: Offline-Funktionalität und Caching</li>
+                </ul>
+                <p>
+                    <strong>Es werden keine Daten an externe Server übertragen.</strong> Die gesamte Verarbeitung (FFT-Analyse, GMIA-Algorithmus, Gesundheitsscoring) erfolgt vollständig in Ihrem Browser.
+                </p>
+
+                <h5>Audioaufnahmen</h5>
+                <p>
+                    Die App erfasst Audioaufnahmen über Ihr Mikrofon zur akustischen Maschinenanalyse. Diese Aufnahmen:
+                </p>
+                <ul>
+                    <li>Werden nur mit Ihrer expliziten Zustimmung aufgezeichnet (Browser-Mikrofonberechtigung)</li>
+                    <li>Bleiben ausschließlich lokal auf Ihrem Gerät gespeichert</li>
+                    <li>Werden nicht übertragen, hochgeladen oder mit Dritten geteilt</li>
+                    <li>Können jederzeit über die Einstellungen gelöscht werden</li>
+                </ul>
+
+                <h4>3. Keine Cookies oder Tracking</h4>
+                <p>
+                    Zanobo verwendet <strong>keine Cookies</strong> und führt <strong>kein Tracking</strong> durch. Es gibt:
+                </p>
+                <ul>
+                    <li>Keine Webanalyse (z.B. Google Analytics)</li>
+                    <li>Keine Werbe-Tracker</li>
+                    <li>Keine Verbindung zu externen Diensten</li>
+                    <li>Keine Benutzerkonten oder Cloud-Synchronisierung</li>
+                </ul>
+
+                <h4>4. Ihre Rechte</h4>
+                <p>
+                    Da alle Daten lokal gespeichert werden, haben Sie vollständige Kontrolle:
+                </p>
+                <ul>
+                    <li><strong>Recht auf Auskunft</strong>: Alle Daten sind in Ihrem Browser einsehbar</li>
+                    <li><strong>Recht auf Löschung</strong>: Nutzen Sie die Funktion "Alle Daten löschen" in den Einstellungen</li>
+                    <li><strong>Recht auf Datenübertragbarkeit</strong>: Exportieren Sie Ihre Daten als JSON-Datei</li>
+                </ul>
+
+                <h4>5. Mikrofonzugriff</h4>
+                <p>
+                    Die App benötigt Zugriff auf Ihr Mikrofon für die akustische Analyse. Der Mikrofonzugriff:
+                </p>
+                <ul>
+                    <li>Wird über die standardmäßige Browser-Berechtigung angefordert</li>
+                    <li>Kann jederzeit in den Browser-Einstellungen widerrufen werden</li>
+                    <li>Erfolgt nur während aktiver Aufnahmen (nicht kontinuierlich)</li>
+                    <li>Wird durch ein Status-Badge visuell angezeigt</li>
+                </ul>
+
+                <h4>6. Kamerazugriff (QR-Scanner)</h4>
+                <p>
+                    Der optionale QR-Code-Scanner benötigt Kamerazugriff zur Maschinenidentifikation:
+                </p>
+                <ul>
+                    <li>Wird nur bei Nutzung der Scan-Funktion angefordert</li>
+                    <li>Kann jederzeit abgebrochen werden</li>
+                    <li>QR-Codes werden lokal verarbeitet, nicht übertragen</li>
+                </ul>
+
+                <h4>7. Datensicherheit</h4>
+                <p>
+                    Durch die rein lokale Speicherung gibt es keine Übertragungsrisiken. Die Daten sind durch die Sicherheitsmechanismen Ihres Browsers und Betriebssystems geschützt.
+                </p>
+
+                <h4>8. Änderungen der Datenschutzerklärung</h4>
+                <p>
+                    Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen rechtlichen Anforderungen entspricht.
+                </p>
+
+                <p class="legal-footer">
+                    <strong>Stand:</strong> Januar 2026
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-primary" id="close-datenschutz-btn">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Über Zanobo -->
+    <div id="about-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="about-title" aria-modal="true">
+        <div class="modal-content legal-modal-content">
+            <div class="modal-header">
+                <h3 id="about-title">Über Zanobo</h3>
+                <button class="close-modal-btn" id="close-about-modal" aria-label="Über Zanobo schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body legal-modal-body">
+                <div class="about-hero">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2">
+                        <circle cx="12" cy="12" r="9"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
+                    </svg>
+                    <h4>ZANOBO 2.0</h4>
+                    <p class="about-subtitle">AI Assistant für akustische Maschinenüberwachung</p>
+                </div>
+
+                <h4>Was ist Zanobo?</h4>
+                <p>
+                    Zanobo ist eine <strong>Progressive Web App (PWA)</strong> für industrielle Maschinendiagnose mittels akustischer Analyse. Die App ermöglicht es, den Gesundheitszustand von Maschinen durch ihre Geräuschsignatur zu bewerten und Anomalien frühzeitig zu erkennen.
+                </p>
+
+                <h4>Kernfunktionen</h4>
+                <ul>
+                    <li><strong>Offline-First</strong>: Alle Berechnungen erfolgen lokal im Browser - keine Internetverbindung erforderlich</li>
+                    <li><strong>GMIA-Algorithmus</strong>: Wissenschaftlich fundierte Anomalieerkennung basierend auf Gaussian Model Independent Attributes</li>
+                    <li><strong>Echtzeit-Analyse</strong>: Live-Audioverarbeitung mit FFT und spektraler Frequenzanalyse</li>
+                    <li><strong>Health Scoring</strong>: Nicht-lineare Tanh-Skalierung für intuitive Gesundheitsbewertung (0-100%)</li>
+                    <li><strong>Persistente Speicherung</strong>: IndexedDB für dauerhafte Speicherung von Maschinenmodellen und Diagnosehistorie</li>
+                    <li><strong>QR-Code Integration</strong>: Schnelle Maschinenidentifikation per Scan</li>
+                </ul>
+
+                <h4>Technologie</h4>
+                <p>
+                    Zanobo wurde mit modernsten Web-Technologien entwickelt:
+                </p>
+                <ul>
+                    <li><strong>Vanilla TypeScript</strong>: Keine externen ML-Bibliotheken, reine mathematische Implementierung</li>
+                    <li><strong>Web Audio API</strong>: Hochwertige Audioerfassung mit 48 kHz Abtastrate</li>
+                    <li><strong>DSP-Algorithmen</strong>: FFT, spektrale Merkmalsextraktion, Cosinus-Similarity</li>
+                    <li><strong>PWA-Standard</strong>: Installierbar auf Mobilgeräten und Desktop</li>
+                    <li><strong>Service Worker</strong>: Zuverlässige Offline-Funktionalität</li>
+                </ul>
+
+                <h4>GMIA-Algorithmus</h4>
+                <p>
+                    Der Kern von Zanobo ist der <strong>GMIA (Gaussian Model Independent Attributes)</strong> Algorithmus. Der Algorithmus:
+                </p>
+                <ul>
+                    <li>Erstellt spektrale Fingerprints aus Referenzaufnahmen (10 Sekunden)</li>
+                    <li>Berechnet Modelgewichte durch regularisierte Least-Squares (λ = 10⁹)</li>
+                    <li>Vergleicht Live-Diagnosen mit dem Referenzmodell</li>
+                    <li>Bewertet Abweichungen mittels Cosinus-Ähnlichkeit und nicht-linearer Skalierung</li>
+                </ul>
+
+                <h4>Workflow</h4>
+                <p>
+                    Zanobo folgt einem einfachen 3-Phasen-Prozess:
+                </p>
+                <ol>
+                    <li><strong>Identifizieren</strong>: Maschine per QR-Code scannen oder manuell anlegen</li>
+                    <li><strong>Referenz</strong>: 10-Sekunden-Aufnahme der Maschine im gesunden Zustand</li>
+                    <li><strong>Diagnose</strong>: Live-Analyse und Vergleich mit der Referenz</li>
+                </ol>
+
+                <h4>Anwendungsfälle</h4>
+                <ul>
+                    <li>Predictive Maintenance in der Industrie 4.0</li>
+                    <li>Qualitätssicherung in der Produktion</li>
+                    <li>Früherkennung von Lagerschäden und Unwuchten</li>
+                    <li>Überwachung von Pumpen, Motoren und Lüftern</li>
+                    <li>Dokumentation des Maschinenzustands</li>
+                </ul>
+
+                <h4>Open Source & Lizenz</h4>
+                <p>
+                    Zanobo ist unter der <strong>MIT-Lizenz</strong> veröffentlicht und steht als Open-Source-Projekt zur Verfügung. Der Quellcode demonstriert die praktische Umsetzung des GMIA-Algorithmus ohne Abhängigkeit von externen Machine-Learning-Frameworks.
+                </p>
+
+                <div class="about-version">
+                    <p><strong>Version:</strong> 2.0.0</p>
+                    <p><strong>Entwickelt von:</strong> Zanobo Team</p>
+                    <p><strong>Technologie:</strong> TypeScript 5.7, Vite, Web Audio API</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-primary" id="close-about-btn">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+</body>
+</html>
