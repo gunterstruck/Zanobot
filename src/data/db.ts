@@ -437,6 +437,27 @@ export async function getDiagnosesByStatus(
   return await db.getAllFromIndex('diagnoses', 'by-status', status);
 }
 
+/**
+ * Get all diagnoses sorted by timestamp (newest first)
+ *
+ * @param limit - Maximum number of results (optional)
+ * @returns Array of all diagnoses
+ */
+export async function getAllDiagnoses(limit?: number): Promise<DiagnosisResult[]> {
+  const db = await initDB();
+  const allDiagnoses = await db.getAll('diagnoses');
+
+  // Sort by timestamp descending (newest first)
+  allDiagnoses.sort((a, b) => b.timestamp - a.timestamp);
+
+  // Apply limit if specified
+  if (limit !== undefined && limit > 0) {
+    return allDiagnoses.slice(0, limit);
+  }
+
+  return allDiagnoses;
+}
+
 // ============================================================================
 // UTILITY OPERATIONS
 // ============================================================================

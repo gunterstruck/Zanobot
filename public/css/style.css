@@ -1028,12 +1028,111 @@ body {
    HISTORY SECTION
    =================================== */
 .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.history-list:empty,
+.history-list:has(.empty-state:only-child) {
     text-align: center;
+}
+
+.history-item {
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+.history-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.history-machine-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-details {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.history-status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.history-status-badge.status-healthy {
+    background: rgba(0, 212, 115, 0.15);
+    color: var(--status-healthy);
+}
+
+.history-status-badge.status-uncertain {
+    background: rgba(255, 193, 7, 0.15);
+    color: var(--status-uncertain);
+}
+
+.history-status-badge.status-faulty {
+    background: rgba(255, 82, 82, 0.15);
+    color: var(--status-error);
+}
+
+.history-score {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.history-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Additional machine status classes */
+.machine-status.status-no-data {
+    color: var(--text-muted);
+}
+
+.machine-status.status-ready {
+    color: var(--primary-color);
+}
+
+.machine-status.status-faulty {
+    color: var(--status-error);
 }
 
 .empty-state {
     color: var(--text-muted);
     font-size: 0.875rem;
+    text-align: center;
+    padding: var(--spacing-md) 0;
 }
 
 /* ===================================

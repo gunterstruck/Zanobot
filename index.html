@@ -138,7 +138,7 @@
                         </div>
 
                         <!-- Maschinenübersicht -->
-                        <div class="machine-selection-option">
+                        <div class="machine-selection-option" id="machine-overview-section">
                             <div class="option-divider">
                                 <span>Übersicht</span>
                             </div>
@@ -153,39 +153,20 @@
                                 <h5 class="option-title">Maschinenübersicht</h5>
                             </div>
                             <div id="machine-overview" class="machine-list">
-                                <!-- Example Machine Items -->
-                                <div class="machine-item">
-                                    <div class="machine-info">
-                                        <h4 class="machine-name">Zanobo 123</h4>
-                                        <p class="machine-status status-healthy">Healthy</p>
-                                        <p class="machine-time">Letzte Prüfung vor 3min</p>
-                                    </div>
-                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="9 18 15 12 9 6"/>
-                                    </svg>
-                                </div>
-                                <div class="machine-item">
-                                    <div class="machine-info">
-                                        <h4 class="machine-name">Zanobo 9</h4>
-                                        <p class="machine-status status-uncertain">Uncertain</p>
-                                        <p class="machine-time">Letzte Prüfung vor 12min</p>
-                                    </div>
-                                    <svg class="chevron-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="9 18 15 12 9 6"/>
-                                    </svg>
-                                </div>
-                                <button class="add-reference-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="5" x2="12" y2="19"/>
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
-                                    </svg>
-                                    Neue Referenz
-                                </button>
+                                <!-- Machine items will be added dynamically -->
+                                <p class="empty-state" id="machine-overview-empty">Keine Maschinen vorhanden</p>
                             </div>
+                            <button class="add-reference-btn" id="add-new-machine-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Neue Maschine
+                            </button>
                         </div>
 
-                        <!-- Historie (Advanced+) -->
-                        <div class="machine-selection-option" data-view-level="advanced">
+                        <!-- Historie (Diagnose-Verlauf) -->
+                        <div class="machine-selection-option" id="history-section">
                             <div class="option-divider">
                                 <span>Verlauf</span>
                             </div>
@@ -197,8 +178,9 @@
                                 </svg>
                                 <h5 class="option-title">Historie</h5>
                             </div>
-                            <div id="history" class="history-list">
-                                <p class="empty-state">Noch keine Messungen vorhanden</p>
+                            <div id="history-list" class="history-list">
+                                <!-- History items will be added dynamically -->
+                                <p class="empty-state" id="history-empty">Noch keine Messungen vorhanden</p>
                             </div>
                         </div>
                     </div>
