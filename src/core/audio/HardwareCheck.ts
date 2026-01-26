@@ -273,11 +273,16 @@ export class HardwareCheck {
 
       // Request video+audio with back camera (facingMode: "environment")
       // This forces iOS to use the rear microphone associated with the back camera
+      //
+      // iOS CONSTRAINT FIX:
+      // - iOS Safari does NOT support { exact: 'environment' } syntax - throws "Invalid constraint"
+      // - iOS Safari requires minimum resolution constraints (1x1 is rejected)
+      // - Use simple string 'environment' and realistic minimum resolution
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { exact: 'environment' }, // Back camera
-          width: { ideal: 1 }, // Minimal resolution (we don't need video)
-          height: { ideal: 1 },
+          facingMode: 'environment', // Simple string - iOS compatible
+          width: { ideal: 640 }, // Minimal but valid resolution for iOS
+          height: { ideal: 480 },
         },
         audio: {
           // CRITICAL: Disable all audio processing for raw machine sounds
