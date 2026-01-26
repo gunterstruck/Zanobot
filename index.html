@@ -212,7 +212,50 @@
                     </div>
                     <!-- Level 2 (YAMNet) Reference Content - rendered dynamically -->
                     <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-reference-container">
-                        <!-- Content rendered by Level2ReferencePhase -->
+                        <!-- Default content shown before machine selection -->
+                        <div class="level2-default-content" id="level2-reference-default">
+                            <div class="phase-intro">
+                                <div class="phase-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 6v6l4 2"/>
+                                    </svg>
+                                </div>
+                                <h4 class="phase-title">ML-Referenzaufnahme</h4>
+                                <p class="phase-description">
+                                    Erstellen Sie einen akustischen Fingerprint Ihrer Maschine im Normalzustand.
+                                    Die KI lernt das typische Geräuschmuster für spätere Vergleiche.
+                                </p>
+                            </div>
+                            <div class="phase-features">
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>10 Sekunden Aufnahme</span>
+                                </div>
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>YAMNet ML-Analyse</span>
+                                </div>
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>Automatische Positionierung per Kamera</span>
+                                </div>
+                            </div>
+                            <div class="phase-action-hint">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                <span>Bitte wählen Sie zuerst eine Maschine aus</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -241,7 +284,49 @@
                     </div>
                     <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
                     <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
-                        <!-- Content rendered by Level2DiagnosePhase -->
+                        <!-- Default content shown before machine selection -->
+                        <div class="level2-default-content" id="level2-diagnose-default">
+                            <div class="phase-intro">
+                                <div class="phase-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
+                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                    </svg>
+                                </div>
+                                <h4 class="phase-title">KI-Zustandsanalyse</h4>
+                                <p class="phase-description">
+                                    Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz.
+                                    Die KI erkennt Abweichungen und bewertet den Gesundheitszustand.
+                                </p>
+                            </div>
+                            <div class="phase-features">
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>Echtzeit-Analyse</span>
+                                </div>
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>Live-Wasserfall-Spektrogramm</span>
+                                </div>
+                                <div class="feature-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span>Ampel-Statusanzeige</span>
+                                </div>
+                            </div>
+                            <div class="phase-action-hint">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                <span>Bitte wählen Sie zuerst eine Maschine aus</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

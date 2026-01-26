@@ -3752,6 +3752,84 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   LEVEL 2 DEFAULT CONTENT
+   Shown before machine selection
+   =================================== */
+.level2-default-content {
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.level2-default-content .phase-intro {
+    margin-bottom: var(--spacing-lg);
+}
+
+.level2-default-content .phase-icon {
+    margin-bottom: var(--spacing-md);
+    opacity: 0.9;
+}
+
+.level2-default-content .phase-icon svg {
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3));
+}
+
+.level2-default-content .phase-title {
+    color: var(--text-primary);
+    font-size: var(--font-xl);
+    font-weight: 600;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.level2-default-content .phase-description {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.level2-default-content .phase-features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.level2-default-content .feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.level2-default-content .feature-item svg {
+    flex-shrink: 0;
+}
+
+.level2-default-content .phase-action-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: rgba(255, 183, 77, 0.1);
+    border: 1px solid rgba(255, 183, 77, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--status-warning);
+    font-size: var(--font-sm);
+}
+
+.level2-default-content .phase-action-hint svg {
+    flex-shrink: 0;
+    stroke: var(--status-warning);
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
