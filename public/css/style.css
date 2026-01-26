@@ -3062,6 +3062,369 @@ html[data-view-level="expert"] .debug-info[data-view-level="expert"] {
 }
 
 /* ===================================
+   LEVEL 2: GHOST OVERLAY (Visual Positioning)
+   =================================== */
+.ghost-overlay-container {
+    margin: var(--spacing-md) auto;
+    max-width: 300px;
+    text-align: center;
+}
+
+.ghost-overlay-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--glow-primary);
+}
+
+.ghost-overlay-wrapper video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.ghost-overlay-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 10;
+    mix-blend-mode: screen;
+}
+
+.ghost-hint {
+    margin-top: var(--spacing-sm);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ===================================
+   LEVEL 2: LIVE WATERFALL SPECTROGRAM
+   =================================== */
+.waterfall-container {
+    margin: var(--spacing-md) auto;
+    max-width: 400px;
+    text-align: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+}
+
+.waterfall-container h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+#level2-waterfall-canvas {
+    width: 100%;
+    height: 150px;
+    border-radius: var(--radius-sm);
+    background: #1a1a2e;
+}
+
+.waterfall-time-indicator {
+    margin-top: var(--spacing-xs);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.waterfall-time-indicator span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ===================================
+   LEVEL 2: TRAFFIC LIGHT DISPLAY
+   =================================== */
+.traffic-light-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin: var(--spacing-md) auto;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    max-width: 350px;
+    border: 1px solid var(--border-color);
+}
+
+.traffic-light {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 8px;
+    background: #1a1a1a;
+    border-radius: 20px;
+    border: 2px solid #333;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.traffic-light .light {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.traffic-light .light.red {
+    background: #4a1515;
+}
+
+.traffic-light .light.red.active {
+    background: #ef4444;
+    box-shadow: 0 0 20px #ef4444, 0 0 40px rgba(239, 68, 68, 0.5);
+}
+
+.traffic-light .light.yellow {
+    background: #4a3a15;
+}
+
+.traffic-light .light.yellow.active {
+    background: #f59e0b;
+    box-shadow: 0 0 20px #f59e0b, 0 0 40px rgba(245, 158, 11, 0.5);
+}
+
+.traffic-light .light.green {
+    background: #154a20;
+}
+
+.traffic-light .light.green.active {
+    background: #10b981;
+    box-shadow: 0 0 20px #10b981, 0 0 40px rgba(16, 185, 129, 0.5);
+}
+
+.traffic-light-info {
+    text-align: left;
+}
+
+.traffic-light-label {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.traffic-light-score {
+    font-size: 2rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+/* ===================================
+   LEVEL 2: PHASE STYLING
+   =================================== */
+.level2-diagnose-phase {
+    padding: var(--spacing-md);
+}
+
+.level2-diagnose-phase .phase-header {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.level2-diagnose-phase .phase-header h2 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.level2-diagnose-phase .phase-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.level2-diagnose-phase .machine-info {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.level2-diagnose-phase .machine-label {
+    color: var(--text-muted);
+}
+
+.level2-diagnose-phase .machine-name {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.level2-diagnose-phase .diagnosis-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+.level2-diagnose-phase .diagnosis-status .status-icon {
+    font-size: 1.5rem;
+}
+
+.level2-diagnose-phase .diagnosis-status .status-text {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.level2-diagnose-phase .diagnosis-status.status-recording {
+    border-left-color: var(--status-error);
+    animation: pulse-border 1s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-left-color: var(--status-error); }
+    50% { border-left-color: var(--primary-color); }
+}
+
+.level2-diagnose-phase .similarity-container {
+    margin: var(--spacing-md) auto;
+    max-width: 350px;
+}
+
+.level2-diagnose-phase .similarity-label {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.level2-diagnose-phase .similarity-meter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.level2-diagnose-phase .meter-bar {
+    flex: 1;
+    height: 20px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.level2-diagnose-phase .meter-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--status-healthy), var(--primary-color));
+    border-radius: 10px;
+    transition: width 0.5s ease-out;
+}
+
+.level2-diagnose-phase .meter-value {
+    min-width: 50px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+.level2-diagnose-phase .health-status {
+    margin: var(--spacing-md) auto;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    max-width: 350px;
+}
+
+.level2-diagnose-phase .health-status .health-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.level2-diagnose-phase .health-status .health-message {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.level2-diagnose-phase .spectrogram-container {
+    margin: var(--spacing-md) auto;
+    max-width: 600px;
+}
+
+.level2-diagnose-phase .spectrogram-container h4 {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.level2-diagnose-phase #spectrogram-canvas {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.level2-diagnose-phase .action-buttons {
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-md) 0;
+}
+
+.level2-diagnose-phase .result-details {
+    margin: var(--spacing-md) auto;
+    max-width: 350px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+
+.level2-diagnose-phase .result-details h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.level2-diagnose-phase .details-grid {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.level2-diagnose-phase .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.level2-diagnose-phase .detail-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.level2-diagnose-phase .detail-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.level2-diagnose-phase .backend-info {
+    text-align: center;
+    margin-top: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
