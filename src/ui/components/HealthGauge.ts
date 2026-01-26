@@ -212,11 +212,11 @@ export class HealthGauge {
 
   private getStatusLabel(score: number): string {
     if (score >= 75) {
-      return 'HEALTHY';
+      return 'UNAUFFÄLLIG';
     } else if (score >= 50) {
-      return 'UNCERTAIN';
+      return 'ABWEICHUNG';
     } else {
-      return 'FAULTY';
+      return 'AUFFÄLLIG';
     }
   }
 

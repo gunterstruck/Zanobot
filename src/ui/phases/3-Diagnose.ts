@@ -899,7 +899,7 @@ export class DiagnosePhase {
           <p class="live-hint">Telefon näher an die Maschine halten für optimales Signal</p>
           <div id="live-score-display" class="live-score-display is-active">
             <div class="live-score-ring"></div>
-            <p class="live-score-label">Health Score</p>
+            <p class="live-score-label">Übereinstimmung</p>
             <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
           </div>
           <p id="live-status" class="live-status">ANALYSIERE...</p>
