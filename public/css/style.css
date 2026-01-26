@@ -3108,6 +3108,31 @@ html[data-view-level="expert"] .debug-info[data-view-level="expert"] {
 }
 
 /* ===================================
+   LEVEL 2: CAMERA PREVIEW (Reference Recording)
+   =================================== */
+.camera-preview-container {
+    margin: var(--spacing-md) auto;
+    max-width: 300px;
+    text-align: center;
+}
+
+.camera-preview-container video {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--glow-primary);
+}
+
+.camera-hint {
+    margin-top: var(--spacing-sm);
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* ===================================
    LEVEL 2: LIVE WATERFALL SPECTROGRAM
    =================================== */
 .waterfall-container {

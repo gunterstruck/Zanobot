@@ -18,6 +18,7 @@ import type { Level2Reference } from '@core/ml/level2/types.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 import type { Machine } from '@data/types.js';
+import { getMachine, saveMachine } from '@data/db.js';
 
 /**
  * Recording state
@@ -39,6 +40,10 @@ export class Level2ReferencePhase {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private recordingDuration: number = 10000; // 10 seconds
+
+  // VISUAL POSITIONING: Camera stream for reference image
+  private cameraStream: MediaStream | null = null;
+  private capturedReferenceImage: Blob | null = null;
 
   // UI Elements
   private container: HTMLElement | null = null;
@@ -128,6 +133,12 @@ export class Level2ReferencePhase {
           <span class="timer-unit">Sekunden</span>
         </div>
 
+        <!-- VISUAL POSITIONING: Camera preview for reference image -->
+        <div class="camera-preview-container" id="level2-camera-container" style="display: none;">
+          <video id="level2-camera-preview" autoplay playsinline muted></video>
+          <p class="camera-hint">📷 Position für Referenzbild - halten Sie das Gerät ruhig</p>
+        </div>
+
         <div class="action-buttons">
           <button id="level2-start-btn" class="btn btn-primary btn-large">
             🎤 Referenz aufnehmen
@@ -195,6 +206,19 @@ export class Level2ReferencePhase {
         },
       });
 
+      // VISUAL POSITIONING: Request camera access for reference image (non-blocking)
+      try {
+        this.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }, // Prefer back camera
+          audio: false,
+        });
+        logger.info('📷 Camera access granted for reference image');
+        this.setupCameraPreview();
+      } catch (cameraError) {
+        logger.warn('⚠️ Camera access denied - continuing without reference image', cameraError);
+        this.cameraStream = null;
+      }
+
       // Start countdown (3 seconds)
       await this.countdown(3);
 
@@ -213,6 +237,9 @@ export class Level2ReferencePhase {
         // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
 
+        // Cleanup camera
+        this.cleanupCamera();
+
         // Process recording
         await this.processRecording();
       };
@@ -224,6 +251,12 @@ export class Level2ReferencePhase {
       this.mediaRecorder.start();
       this.updateStatus('🔴 Aufnahme läuft...', 'recording');
 
+      // VISUAL POSITIONING: Capture snapshot halfway through recording
+      const snapshotDelay = (this.recordingDuration / 2);
+      setTimeout(() => {
+        this.captureReferenceSnapshot();
+      }, snapshotDelay);
+
       // Stop after duration
       setTimeout(() => {
         if (this.mediaRecorder?.state === 'recording') {
@@ -233,6 +266,81 @@ export class Level2ReferencePhase {
     } catch (error) {
       this.handleError(error as Error);
     }
+  }
+
+  /**
+   * VISUAL POSITIONING: Setup camera preview
+   */
+  private setupCameraPreview(): void {
+    const cameraContainer = this.container?.querySelector('#level2-camera-container') as HTMLElement;
+    const videoElement = this.container?.querySelector('#level2-camera-preview') as HTMLVideoElement;
+
+    if (!cameraContainer || !videoElement || !this.cameraStream) return;
+
+    videoElement.srcObject = this.cameraStream;
+    cameraContainer.style.display = 'block';
+    logger.info('📷 Camera preview activated');
+  }
+
+  /**
+   * VISUAL POSITIONING: Capture reference snapshot from camera
+   */
+  private captureReferenceSnapshot(): void {
+    if (!this.cameraStream) {
+      logger.info('📷 No camera stream - skipping reference snapshot');
+      return;
+    }
+
+    const videoElement = this.container?.querySelector('#level2-camera-preview') as HTMLVideoElement;
+    if (!videoElement || videoElement.readyState < 2) {
+      logger.warn('⚠️ Video element not ready - skipping snapshot');
+      return;
+    }
+
+    try {
+      // Create canvas for snapshot
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(videoElement, 0, 0);
+
+      // Convert to blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            this.capturedReferenceImage = blob;
+            logger.info(`📸 Reference snapshot captured: ${blob.size} bytes (${canvas.width}x${canvas.height})`);
+          }
+        },
+        'image/jpeg',
+        0.85
+      );
+    } catch (error) {
+      logger.warn('⚠️ Failed to capture snapshot:', error);
+    }
+  }
+
+  /**
+   * VISUAL POSITIONING: Cleanup camera stream
+   */
+  private cleanupCamera(): void {
+    // Hide camera container
+    const cameraContainer = this.container?.querySelector('#level2-camera-container') as HTMLElement;
+    if (cameraContainer) {
+      cameraContainer.style.display = 'none';
+    }
+
+    // Stop camera stream
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach((track) => track.stop());
+      this.cameraStream = null;
+    }
+
+    logger.info('📷 Camera cleaned up');
   }
 
   /**
@@ -296,10 +404,13 @@ export class Level2ReferencePhase {
   /**
    * Handle successful reference creation
    */
-  private handleReferenceCreated(reference: Level2Reference): void {
+  private async handleReferenceCreated(reference: Level2Reference): Promise<void> {
     this.setState('complete');
     this.updateStatus('✅ Referenz erfolgreich erstellt!', 'success');
     this.hideProgress();
+
+    // VISUAL POSITIONING: Save reference image to machine
+    await this.saveReferenceImage();
 
     notify.success('Level 2 Referenz wurde gespeichert');
 
@@ -316,7 +427,38 @@ export class Level2ReferencePhase {
       machineId: reference.machineId,
       duration: reference.duration,
       embeddingSize: reference.embedding.length,
+      hasReferenceImage: !!this.capturedReferenceImage,
     });
+  }
+
+  /**
+   * VISUAL POSITIONING: Save reference image to machine
+   */
+  private async saveReferenceImage(): Promise<void> {
+    if (!this.capturedReferenceImage) {
+      logger.info('📷 No reference image to save');
+      return;
+    }
+
+    try {
+      // Get latest machine data
+      const machineToUpdate = await getMachine(this.machine.id);
+      if (!machineToUpdate) {
+        logger.warn('⚠️ Machine not found for image save');
+        return;
+      }
+
+      // Save reference image
+      machineToUpdate.referenceImage = this.capturedReferenceImage;
+      await saveMachine(machineToUpdate);
+
+      // Update local machine reference
+      this.machine = machineToUpdate;
+
+      logger.info(`📸 Reference image saved to machine (${this.capturedReferenceImage.size} bytes)`);
+    } catch (error) {
+      logger.error('❌ Failed to save reference image:', error);
+    }
   }
 
   /**
@@ -435,6 +577,11 @@ export class Level2ReferencePhase {
     if (this.mediaRecorder?.state === 'recording') {
       this.mediaRecorder.stop();
     }
+
+    // VISUAL POSITIONING: Cleanup camera
+    this.cleanupCamera();
+    this.capturedReferenceImage = null;
+
     this.detector.dispose();
     this.container = null;
     logger.info('🧹 Level2ReferencePhase destroyed');
