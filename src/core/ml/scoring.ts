@@ -727,13 +727,13 @@ function generateMulticlassHint(
   status: DiagnosisResult['status']
 ): string {
   if (status === 'uncertain') {
-    return `Unbekannte Anomalie erkannt (${score.toFixed(1)}%). Das Signal weicht vom Normalzustand ab, passt aber zu keinem trainierten Zustand. Weitere Inspektion empfohlen.`;
+    return `Signifikante Abweichung vom Referenzmuster (${score.toFixed(1)}%). Das Signal passt zu keinem trainierten Zustand. Inspektion empfohlen.`;
   }
 
   if (status === 'healthy') {
-    return `Maschine läuft im Normalzustand "${label}" (${score.toFixed(1)}%). Keine Anomalien erkannt.`;
+    return `Akustische Signatur entspricht Referenzzustand "${label}" (${score.toFixed(1)}%). Keine Auffälligkeiten.`;
   }
 
   // status === 'faulty'
-  return `Fehlerzustand erkannt: "${label}" (${score.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
+  return `Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "${label}" (${score.toFixed(1)}%). Inspektion empfohlen.`;
 }
