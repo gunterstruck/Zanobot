@@ -762,9 +762,9 @@ export class DiagnosePhase {
       let hint = classification.recommendation;
       if (effectiveDetectedState !== 'UNKNOWN') {
         if (finalStatus === 'healthy') {
-          hint = `Maschine läuft im Normalzustand "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Keine Anomalien erkannt.`;
+          hint = `Akustische Signatur entspricht Referenzzustand "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Keine Auffälligkeiten.`;
         } else if (finalStatus === 'faulty') {
-          hint = `Fehlerzustand erkannt: "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Sofortige Inspektion empfohlen.`;
+          hint = `Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Inspektion empfohlen.`;
         }
       }
 
