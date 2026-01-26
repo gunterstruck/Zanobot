@@ -48,6 +48,11 @@ export class Level2DiagnosePhase {
   // VISUAL POSITIONING: Camera stream for ghost overlay
   private cameraStream: MediaStream | null = null;
 
+  // CRITICAL FIX: Store audio stream reference for proper cleanup
+  // Without this, the microphone could stay locked if destroy() is called
+  // before MediaRecorder.onstop triggers (e.g., during quick navigation)
+  private audioStream: MediaStream | null = null;
+
   // LIVE WATERFALL: Audio context and analyser for real-time visualization
   private audioContext: AudioContext | null = null;
   private analyserNode: AnalyserNode | null = null;
@@ -279,7 +284,8 @@ export class Level2DiagnosePhase {
       }
 
       // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // CRITICAL FIX: Store stream as class property for proper cleanup in destroy()
+      this.audioStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
           echoCancellation: false,
@@ -307,7 +313,7 @@ export class Level2DiagnosePhase {
       this.analyserNode.fftSize = 256;
       this.analyserNode.smoothingTimeConstant = 0.7;
 
-      const source = this.audioContext.createMediaStreamSource(stream);
+      const source = this.audioContext.createMediaStreamSource(this.audioStream);
       source.connect(this.analyserNode);
 
       // Start waterfall visualization
@@ -315,7 +321,7 @@ export class Level2DiagnosePhase {
 
       // Start recording
       this.audioChunks = [];
-      this.mediaRecorder = new MediaRecorder(stream);
+      this.mediaRecorder = new MediaRecorder(this.audioStream);
 
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -324,7 +330,8 @@ export class Level2DiagnosePhase {
       };
 
       this.mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach((track) => track.stop());
+        // CRITICAL FIX: Use class property and null-check for safety
+        this.cleanupAudioStream();
         this.stopWaterfallVisualization();
         this.cleanupCameraStream();
         await this.processRecording();
@@ -375,6 +382,20 @@ export class Level2DiagnosePhase {
     // Show the container
     ghostContainer.style.display = 'block';
     logger.info('✅ Ghost overlay activated');
+  }
+
+  /**
+   * CRITICAL FIX: Cleanup audio stream to release microphone
+   * This ensures the microphone is released even if destroy() is called
+   * before MediaRecorder.onstop triggers (e.g., during quick navigation).
+   * Without this, phone calls could be blocked!
+   */
+  private cleanupAudioStream(): void {
+    if (this.audioStream) {
+      this.audioStream.getTracks().forEach(track => track.stop());
+      this.audioStream = null;
+      logger.debug('🎤 Audio stream released - microphone is now available for other apps');
+    }
   }
 
   /**
@@ -913,11 +934,20 @@ export class Level2DiagnosePhase {
 
   /**
    * Cleanup
+   *
+   * CRITICAL FIX: Always release audio stream to ensure microphone is available
+   * for other apps (e.g., phone calls). Previously, the stream was only stopped
+   * in MediaRecorder.onstop callback, which wouldn't be called if destroy()
+   * was invoked before recording started or completed.
    */
   destroy(): void {
     if (this.mediaRecorder?.state === 'recording') {
       this.mediaRecorder.stop();
     }
+
+    // CRITICAL FIX: Always cleanup audio stream to release microphone
+    // This ensures phone calls work even if MediaRecorder.onstop wasn't triggered
+    this.cleanupAudioStream();
 
     // Cleanup waterfall visualization
     this.stopWaterfallVisualization();
