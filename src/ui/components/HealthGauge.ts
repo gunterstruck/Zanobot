@@ -14,6 +14,16 @@ export class HealthGauge {
   private customStatus: string | undefined = undefined;
   private animationFrame: number | null = null;
 
+  // Theme-aware colors (read from CSS variables)
+  private colors = {
+    healthy: '#00E676',
+    warning: '#FFB74D',
+    error: '#FF5252',
+    text: '#FFFFFF',
+    textMuted: '#888888',
+    background: '#2a2a2a'
+  };
+
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) {
@@ -28,6 +38,45 @@ export class HealthGauge {
 
     this.ctx = ctx;
     this.setCanvasSize();
+    this.updateThemeColors();
+
+    // Listen for theme changes
+    this.observeThemeChanges();
+  }
+
+  /**
+   * Read theme colors from CSS variables for consistent theming
+   */
+  private updateThemeColors(): void {
+    const styles = getComputedStyle(document.documentElement);
+
+    this.colors = {
+      healthy: styles.getPropertyValue('--status-healthy').trim() || '#00E676',
+      warning: styles.getPropertyValue('--status-warning').trim() || '#FFB74D',
+      error: styles.getPropertyValue('--status-error').trim() || '#FF5252',
+      text: styles.getPropertyValue('--text-primary').trim() || '#FFFFFF',
+      textMuted: styles.getPropertyValue('--text-muted').trim() || '#888888',
+      background: styles.getPropertyValue('--bg-tertiary').trim() || '#2a2a2a'
+    };
+  }
+
+  /**
+   * Observe theme changes and update colors accordingly
+   */
+  private observeThemeChanges(): void {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          this.updateThemeColors();
+          this.render();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
   }
 
   private setCanvasSize(): void {
@@ -142,8 +191,8 @@ export class HealthGauge {
     // Clear canvas
     this.ctx.clearRect(0, 0, width, height);
 
-    // Draw background arc
-    this.drawArc(centerX, centerY, radius, 0, 100, '#2a2a2a', 8);
+    // Draw background arc (theme-aware)
+    this.drawArc(centerX, centerY, radius, 0, 100, this.colors.background, 8);
 
     // Draw score arc
     const color = this.getScoreColor(this.score);
@@ -181,16 +230,16 @@ export class HealthGauge {
   }
 
   private drawText(x: number, y: number, score: number): void {
-    // Draw score value
+    // Draw score value (theme-aware text color)
     this.ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
-    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillStyle = this.colors.text;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(Math.round(score).toString(), x, y - 10);
 
-    // Draw percentage symbol
+    // Draw percentage symbol (theme-aware muted color)
     this.ctx.font = '24px system-ui, -apple-system, sans-serif';
-    this.ctx.fillStyle = '#888888';
+    this.ctx.fillStyle = this.colors.textMuted;
     this.ctx.fillText('%', x, y + 30);
 
     // Draw status label (use custom status if provided, otherwise auto-calculate)
@@ -201,12 +250,13 @@ export class HealthGauge {
   }
 
   private getScoreColor(score: number): string {
+    // Use theme-aware status colors from CSS variables
     if (score >= 75) {
-      return '#4ade80'; // Green (healthy)
+      return this.colors.healthy;
     } else if (score >= 50) {
-      return '#fbbf24'; // Yellow (uncertain)
+      return this.colors.warning;
     } else {
-      return '#f87171'; // Red (faulty)
+      return this.colors.error;
     }
   }
 
