@@ -426,7 +426,11 @@ export class AudioVisualizer {
       .getPropertyValue('--viz-text')
       .trim();
 
-    this.ctx.font = '10px system-ui, sans-serif';
+    // Use theme-aware font family from CSS variables
+    const fontFamily = getComputedStyle(document.documentElement)
+      .getPropertyValue('--font-primary')
+      .trim() || 'system-ui, sans-serif';
+    this.ctx.font = `10px ${fontFamily}`;
     this.ctx.fillStyle = textColor || 'rgba(255, 255, 255, 0.4)';
     this.ctx.textAlign = 'center';
 
