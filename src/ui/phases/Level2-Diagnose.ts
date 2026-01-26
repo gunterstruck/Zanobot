@@ -20,6 +20,7 @@ import type { Level2AnalysisResult, HealthStatusResult } from '@core/ml/level2/i
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 import type { Machine } from '@data/types.js';
+import { getMachine } from '@data/db.js';
 
 /**
  * Diagnosis state
@@ -43,6 +44,18 @@ export class Level2DiagnosePhase {
   private audioChunks: Blob[] = [];
   private recordingDuration: number = 10000; // 10 seconds
   private lastResult: Level2AnalysisResult | null = null;
+
+  // VISUAL POSITIONING: Camera stream for ghost overlay
+  private cameraStream: MediaStream | null = null;
+
+  // LIVE WATERFALL: Audio context and analyser for real-time visualization
+  private audioContext: AudioContext | null = null;
+  private analyserNode: AnalyserNode | null = null;
+  private waterfallCanvas: HTMLCanvasElement | null = null;
+  private waterfallCtx: CanvasRenderingContext2D | null = null;
+  private waterfallAnimationId: number | null = null;
+  private waterfallData: number[][] = []; // Stores history of FFT data for waterfall effect
+  private waterfallStartTime: number = 0;
 
   // UI Elements
   private container: HTMLElement | null = null;
@@ -130,6 +143,24 @@ export class Level2DiagnosePhase {
           <div class="status-text">Initialisiere...</div>
         </div>
 
+        <!-- VISUAL POSITIONING: Ghost overlay container (hidden initially) -->
+        <div class="ghost-overlay-container" id="level2-ghost-container" style="display: none;">
+          <div class="ghost-overlay-wrapper">
+            <video id="level2-live-video" autoplay playsinline muted></video>
+            <img id="level2-ghost-image" class="ghost-overlay-image" alt="Reference position" />
+          </div>
+          <p class="ghost-hint">👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen</p>
+        </div>
+
+        <!-- LIVE WATERFALL: Real-time spectrogram during recording -->
+        <div class="waterfall-container" id="level2-waterfall-container" style="display: none;">
+          <h4>🌊 Live-Aufnahme</h4>
+          <canvas id="level2-waterfall-canvas" width="400" height="150"></canvas>
+          <div class="waterfall-time-indicator">
+            <span id="waterfall-elapsed">0</span>s / 10s
+          </div>
+        </div>
+
         <div class="similarity-container" id="level2-similarity" style="display: none;">
           <div class="similarity-label">Übereinstimmung mit Referenz</div>
           <div class="similarity-meter">
@@ -140,13 +171,26 @@ export class Level2DiagnosePhase {
           </div>
         </div>
 
+        <!-- TRAFFIC LIGHT: Enhanced health status display -->
+        <div class="traffic-light-status" id="level2-traffic-light" style="display: none;">
+          <div class="traffic-light">
+            <div class="light red" id="light-red"></div>
+            <div class="light yellow" id="light-yellow"></div>
+            <div class="light green" id="light-green"></div>
+          </div>
+          <div class="traffic-light-info">
+            <div class="traffic-light-label" id="traffic-light-label">-</div>
+            <div class="traffic-light-score" id="traffic-light-score">-</div>
+          </div>
+        </div>
+
         <div class="health-status" id="level2-health-status" style="display: none;">
           <div class="health-icon"></div>
           <div class="health-message"></div>
         </div>
 
         <div class="spectrogram-container" id="level2-spectrogram" style="display: none;">
-          <h4>Spektrogramm</h4>
+          <h4>📊 Spektrogramm (Analyse)</h4>
           <canvas id="spectrogram-canvas" width="600" height="200"></canvas>
         </div>
 
@@ -189,6 +233,12 @@ export class Level2DiagnosePhase {
     this.similarityMeter = this.container?.querySelector('#level2-similarity') || null;
     this.spectrogramCanvas = this.container?.querySelector('#spectrogram-canvas') || null;
 
+    // LIVE WATERFALL: Bind canvas
+    this.waterfallCanvas = this.container?.querySelector('#level2-waterfall-canvas') || null;
+    if (this.waterfallCanvas) {
+      this.waterfallCtx = this.waterfallCanvas.getContext('2d');
+    }
+
     // Show backend info
     const backendInfo = this.container?.querySelector('#level2-diag-backend-info');
     if (backendInfo && this.detector.isReady()) {
@@ -221,6 +271,12 @@ export class Level2DiagnosePhase {
       this.setState('recording');
       this.updateStatus('🎤 Aufnahme läuft...', 'recording');
 
+      // Refresh machine data for reference image
+      const latestMachine = await getMachine(this.machine.id);
+      if (latestMachine) {
+        this.machine = latestMachine;
+      }
+
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -230,6 +286,31 @@ export class Level2DiagnosePhase {
           autoGainControl: false,
         },
       });
+
+      // VISUAL POSITIONING: Request camera access (non-blocking)
+      try {
+        this.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false,
+        });
+        logger.info('📷 Camera access granted for ghost overlay');
+        this.setupGhostOverlay();
+      } catch (cameraError) {
+        logger.warn('⚠️ Camera access denied - continuing without ghost overlay');
+        this.cameraStream = null;
+      }
+
+      // LIVE WATERFALL: Setup audio context and analyser
+      this.audioContext = new AudioContext();
+      this.analyserNode = this.audioContext.createAnalyser();
+      this.analyserNode.fftSize = 256;
+      this.analyserNode.smoothingTimeConstant = 0.7;
+
+      const source = this.audioContext.createMediaStreamSource(stream);
+      source.connect(this.analyserNode);
+
+      // Start waterfall visualization
+      this.startWaterfallVisualization();
 
       // Start recording
       this.audioChunks = [];
@@ -243,6 +324,8 @@ export class Level2DiagnosePhase {
 
       this.mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
+        this.stopWaterfallVisualization();
+        this.cleanupCameraStream();
         await this.processRecording();
       };
 
@@ -260,6 +343,206 @@ export class Level2DiagnosePhase {
       }, this.recordingDuration);
     } catch (error) {
       this.handleError(error as Error);
+    }
+  }
+
+  /**
+   * VISUAL POSITIONING: Setup ghost overlay with reference image
+   */
+  private setupGhostOverlay(): void {
+    const ghostContainer = this.container?.querySelector('#level2-ghost-container') as HTMLElement;
+    const videoElement = this.container?.querySelector('#level2-live-video') as HTMLVideoElement;
+    const ghostImage = this.container?.querySelector('#level2-ghost-image') as HTMLImageElement;
+
+    if (!ghostContainer || !videoElement || !ghostImage) return;
+
+    // Attach camera stream to video
+    if (this.cameraStream) {
+      videoElement.srcObject = this.cameraStream;
+    }
+
+    // Load reference image if available
+    if (this.machine.referenceImage) {
+      const imageUrl = URL.createObjectURL(this.machine.referenceImage);
+      ghostImage.src = imageUrl;
+      ghostImage.onload = () => {
+        // Revoke URL after image loads to free memory
+        // Note: We create a new one each time, so this is safe
+      };
+    }
+
+    // Show the container
+    ghostContainer.style.display = 'block';
+    logger.info('✅ Ghost overlay activated');
+  }
+
+  /**
+   * Cleanup camera stream
+   */
+  private cleanupCameraStream(): void {
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach(track => track.stop());
+      this.cameraStream = null;
+    }
+
+    // Hide ghost container
+    const ghostContainer = this.container?.querySelector('#level2-ghost-container') as HTMLElement;
+    if (ghostContainer) {
+      ghostContainer.style.display = 'none';
+    }
+
+    // Revoke ghost image URL
+    const ghostImage = this.container?.querySelector('#level2-ghost-image') as HTMLImageElement;
+    if (ghostImage && ghostImage.src) {
+      URL.revokeObjectURL(ghostImage.src);
+      ghostImage.src = '';
+    }
+  }
+
+  /**
+   * LIVE WATERFALL: Start real-time spectrogram visualization
+   */
+  private startWaterfallVisualization(): void {
+    const container = this.container?.querySelector('#level2-waterfall-container') as HTMLElement;
+    if (container) {
+      container.style.display = 'block';
+    }
+
+    this.waterfallData = [];
+    this.waterfallStartTime = Date.now();
+
+    const render = () => {
+      if (!this.analyserNode || !this.waterfallCanvas || !this.waterfallCtx) {
+        return;
+      }
+
+      const bufferLength = this.analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      this.analyserNode.getByteFrequencyData(dataArray);
+
+      // Convert to normalized values and add to history
+      const normalized = Array.from(dataArray).map(v => v / 255);
+      this.waterfallData.push(normalized);
+
+      // Limit history to canvas width
+      const maxColumns = this.waterfallCanvas.width;
+      if (this.waterfallData.length > maxColumns) {
+        this.waterfallData.shift();
+      }
+
+      // Render waterfall
+      this.renderWaterfall();
+
+      // Update time indicator
+      const elapsed = Math.floor((Date.now() - this.waterfallStartTime) / 1000);
+      const elapsedElement = this.container?.querySelector('#waterfall-elapsed');
+      if (elapsedElement) {
+        elapsedElement.textContent = elapsed.toString();
+      }
+
+      this.waterfallAnimationId = requestAnimationFrame(render);
+    };
+
+    render();
+  }
+
+  /**
+   * Render waterfall spectrogram to canvas
+   */
+  private renderWaterfall(): void {
+    if (!this.waterfallCanvas || !this.waterfallCtx || this.waterfallData.length === 0) return;
+
+    const ctx = this.waterfallCtx;
+    const width = this.waterfallCanvas.width;
+    const height = this.waterfallCanvas.height;
+
+    // Clear canvas
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, width, height);
+
+    // Calculate column width (builds up from left to right)
+    const columnWidth = Math.max(1, Math.floor(width / (this.recordingDuration / 1000 * 30))); // ~30fps
+    const numColumns = this.waterfallData.length;
+
+    for (let col = 0; col < numColumns; col++) {
+      const column = this.waterfallData[col];
+      const x = col * columnWidth;
+
+      for (let row = 0; row < column.length; row++) {
+        const value = column[row];
+        const y = height - (row / column.length) * height;
+        const rowHeight = height / column.length;
+
+        // Color based on intensity (blue -> cyan -> green -> yellow -> red)
+        const color = this.getWaterfallColor(value);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y - rowHeight, columnWidth, rowHeight);
+      }
+    }
+
+    // Draw progress line
+    const progress = (Date.now() - this.waterfallStartTime) / this.recordingDuration;
+    const lineX = Math.min(progress * width, width - 2);
+    ctx.strokeStyle = '#00f3ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lineX, 0);
+    ctx.lineTo(lineX, height);
+    ctx.stroke();
+  }
+
+  /**
+   * Get color for waterfall visualization (Viridis-like)
+   */
+  private getWaterfallColor(value: number): string {
+    // Clamp value
+    const v = Math.max(0, Math.min(1, value));
+
+    // Enhanced color mapping for visibility
+    if (v < 0.2) {
+      // Dark blue/purple
+      const intensity = v / 0.2;
+      return `rgb(${Math.floor(20 + 20 * intensity)}, ${Math.floor(10 + 30 * intensity)}, ${Math.floor(60 + 40 * intensity)})`;
+    } else if (v < 0.4) {
+      // Blue to cyan
+      const intensity = (v - 0.2) / 0.2;
+      return `rgb(${Math.floor(40 * (1 - intensity))}, ${Math.floor(40 + 180 * intensity)}, ${Math.floor(100 + 155 * intensity)})`;
+    } else if (v < 0.6) {
+      // Cyan to green
+      const intensity = (v - 0.4) / 0.2;
+      return `rgb(${Math.floor(100 * intensity)}, ${Math.floor(220 - 20 * intensity)}, ${Math.floor(255 - 155 * intensity)})`;
+    } else if (v < 0.8) {
+      // Green to yellow
+      const intensity = (v - 0.6) / 0.2;
+      return `rgb(${Math.floor(100 + 155 * intensity)}, ${Math.floor(200 + 55 * intensity)}, ${Math.floor(100 - 100 * intensity)})`;
+    } else {
+      // Yellow to red
+      const intensity = (v - 0.8) / 0.2;
+      return `rgb(255, ${Math.floor(255 - 200 * intensity)}, ${Math.floor(intensity * 50)})`;
+    }
+  }
+
+  /**
+   * Stop waterfall visualization
+   */
+  private stopWaterfallVisualization(): void {
+    if (this.waterfallAnimationId) {
+      cancelAnimationFrame(this.waterfallAnimationId);
+      this.waterfallAnimationId = null;
+    }
+
+    // Close audio context
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    this.analyserNode = null;
+
+    // Hide waterfall container
+    const container = this.container?.querySelector('#level2-waterfall-container') as HTMLElement;
+    if (container) {
+      container.style.display = 'none';
     }
   }
 
@@ -312,6 +595,7 @@ export class Level2DiagnosePhase {
     // Update UI
     this.updateSimilarityMeter(result.percentage);
     this.updateHealthStatus(result.status);
+    this.updateTrafficLight(result.percentage, result.status); // TRAFFIC LIGHT
     this.renderSpectrogram(result.spectrogram);
     this.showResultDetails(result);
 
@@ -333,6 +617,60 @@ export class Level2DiagnosePhase {
       status: result.status.status,
       analysisTime: result.analysisTime,
     });
+  }
+
+  /**
+   * TRAFFIC LIGHT: Update visual status indicator
+   * Uses same colors as Level 1 for consistency:
+   * - Green (Healthy): ≥85% similarity
+   * - Yellow (Warning): 70-85% similarity
+   * - Red (Critical): <70% similarity
+   */
+  private updateTrafficLight(percentage: number, status: HealthStatusResult): void {
+    const trafficLight = this.container?.querySelector('#level2-traffic-light') as HTMLElement;
+    if (!trafficLight) return;
+
+    trafficLight.style.display = 'flex';
+
+    const redLight = this.container?.querySelector('#light-red') as HTMLElement;
+    const yellowLight = this.container?.querySelector('#light-yellow') as HTMLElement;
+    const greenLight = this.container?.querySelector('#light-green') as HTMLElement;
+    const label = this.container?.querySelector('#traffic-light-label') as HTMLElement;
+    const score = this.container?.querySelector('#traffic-light-score') as HTMLElement;
+
+    // Reset all lights
+    [redLight, yellowLight, greenLight].forEach(light => {
+      if (light) {
+        light.classList.remove('active');
+      }
+    });
+
+    // Activate appropriate light based on status
+    if (status.status === 'HEALTHY') {
+      greenLight?.classList.add('active');
+      if (label) {
+        label.textContent = 'GESUND';
+        label.style.color = '#10b981';
+      }
+    } else if (status.status === 'WARNING') {
+      yellowLight?.classList.add('active');
+      if (label) {
+        label.textContent = 'WARNUNG';
+        label.style.color = '#f59e0b';
+      }
+    } else {
+      redLight?.classList.add('active');
+      if (label) {
+        label.textContent = 'KRITISCH';
+        label.style.color = '#ef4444';
+      }
+    }
+
+    // Update score display
+    if (score) {
+      score.textContent = `${percentage.toFixed(1)}%`;
+      score.style.color = status.color;
+    }
   }
 
   /**
@@ -511,6 +849,13 @@ export class Level2DiagnosePhase {
     if (this.mediaRecorder?.state === 'recording') {
       this.mediaRecorder.stop();
     }
+
+    // Cleanup waterfall visualization
+    this.stopWaterfallVisualization();
+
+    // Cleanup camera stream
+    this.cleanupCameraStream();
+
     this.detector.dispose();
     this.container = null;
     logger.info('🧹 Level2DiagnosePhase destroyed');
