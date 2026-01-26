@@ -7,9 +7,9 @@
  * - Manual entry
  */
 
-import { saveMachine, getMachine, getAllMachines } from '@data/db.js';
+import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
-import type { Machine } from '@data/types.js';
+import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import {
@@ -107,6 +107,18 @@ export class IdentifyPhase {
 
     // Load and render machine history for quick select
     this.loadMachineHistory();
+
+    // Load and render machine overview (all machines with status)
+    this.loadMachineOverview();
+
+    // Load and render diagnosis history
+    this.loadDiagnosisHistory();
+
+    // "Neue Maschine" button handler
+    const addNewMachineBtn = document.getElementById('add-new-machine-btn');
+    if (addNewMachineBtn) {
+      addNewMachineBtn.addEventListener('click', () => this.handleAddNewMachine());
+    }
   }
 
   /**
@@ -1059,6 +1071,348 @@ export class IdentifyPhase {
     const quickSelectSection = document.getElementById('quick-select-section');
     if (quickSelectSection) {
       quickSelectSection.style.display = 'none';
+    }
+  }
+
+  /**
+   * ========================================
+   * MACHINE OVERVIEW
+   * ========================================
+   */
+
+  /**
+   * Load all machines and render the overview with status
+   */
+  private async loadMachineOverview(): Promise<void> {
+    try {
+      const machines = await getAllMachines();
+
+      // Sort by most recent activity (lastDiagnosisAt or createdAt)
+      machines.sort((a, b) => {
+        const aTime = a.lastDiagnosisAt || a.createdAt;
+        const bTime = b.lastDiagnosisAt || b.createdAt;
+        return bTime - aTime;
+      });
+
+      await this.renderMachineOverview(machines);
+    } catch (error) {
+      logger.error('Failed to load machine overview:', error);
+    }
+  }
+
+  /**
+   * Render machine overview list with status
+   */
+  private async renderMachineOverview(machines: Machine[]): Promise<void> {
+    const overviewContainer = document.getElementById('machine-overview');
+    const emptyState = document.getElementById('machine-overview-empty');
+
+    if (!overviewContainer) {
+      logger.warn('Machine overview container not found');
+      return;
+    }
+
+    // Clear existing items (except empty state)
+    const existingItems = overviewContainer.querySelectorAll('.machine-item');
+    existingItems.forEach((item) => item.remove());
+
+    // Show/hide empty state
+    if (emptyState) {
+      emptyState.style.display = machines.length === 0 ? 'block' : 'none';
+    }
+
+    // Render each machine
+    for (const machine of machines) {
+      const machineItem = await this.createMachineOverviewItem(machine);
+      // Insert before the empty state element
+      if (emptyState) {
+        overviewContainer.insertBefore(machineItem, emptyState);
+      } else {
+        overviewContainer.appendChild(machineItem);
+      }
+    }
+  }
+
+  /**
+   * Create a machine overview item element
+   */
+  private async createMachineOverviewItem(machine: Machine): Promise<HTMLElement> {
+    const machineItem = document.createElement('div');
+    machineItem.className = 'machine-item';
+    machineItem.dataset.machineId = machine.id;
+
+    // Get latest diagnosis for status
+    const latestDiagnosis = await getLatestDiagnosis(machine.id);
+
+    // Determine status and label
+    let statusClass = 'status-no-data';
+    let statusLabel = 'Keine Daten';
+    let timeLabel = 'Noch nicht geprüft';
+
+    if (latestDiagnosis) {
+      statusClass = `status-${latestDiagnosis.status}`;
+      statusLabel = this.getStatusLabel(latestDiagnosis.status);
+      timeLabel = `Letzte Prüfung ${this.formatRelativeTime(latestDiagnosis.timestamp)}`;
+    } else if (machine.referenceModels && machine.referenceModels.length > 0) {
+      // Has reference models but no diagnosis yet
+      statusLabel = 'Bereit';
+      statusClass = 'status-ready';
+      timeLabel = `${machine.referenceModels.length} Zustände trainiert`;
+    }
+
+    // Create machine info
+    const machineInfo = document.createElement('div');
+    machineInfo.className = 'machine-info';
+
+    const machineName = document.createElement('h4');
+    machineName.className = 'machine-name';
+    machineName.textContent = machine.name;
+
+    const machineStatus = document.createElement('p');
+    machineStatus.className = `machine-status ${statusClass}`;
+    machineStatus.textContent = statusLabel;
+
+    const machineTime = document.createElement('p');
+    machineTime.className = 'machine-time';
+    machineTime.textContent = timeLabel;
+
+    machineInfo.appendChild(machineName);
+    machineInfo.appendChild(machineStatus);
+    machineInfo.appendChild(machineTime);
+
+    // Create chevron icon
+    const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevron.setAttribute('class', 'chevron-right');
+    chevron.setAttribute('width', '24');
+    chevron.setAttribute('height', '24');
+    chevron.setAttribute('viewBox', '0 0 24 24');
+    chevron.setAttribute('fill', 'none');
+    chevron.setAttribute('stroke', 'currentColor');
+    chevron.setAttribute('stroke-width', '2');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '9 18 15 12 9 6');
+    chevron.appendChild(polyline);
+
+    // Assemble item
+    machineItem.appendChild(machineInfo);
+    machineItem.appendChild(chevron);
+
+    // Add click handler
+    machineItem.addEventListener('click', () => this.handleMachineSelect(machine));
+
+    return machineItem;
+  }
+
+  /**
+   * Handle machine selection from overview
+   */
+  private async handleMachineSelect(machine: Machine): Promise<void> {
+    logger.info(`Machine selected from overview: ${machine.name} (${machine.id})`);
+    this.showNotification(`Maschine geladen: ${machine.name}`);
+    this.onMachineSelected(machine);
+  }
+
+  /**
+   * ========================================
+   * DIAGNOSIS HISTORY
+   * ========================================
+   */
+
+  /**
+   * Load and render diagnosis history
+   */
+  private async loadDiagnosisHistory(): Promise<void> {
+    try {
+      // Get last 10 diagnoses across all machines
+      const diagnoses = await getAllDiagnoses(10);
+      await this.renderDiagnosisHistory(diagnoses);
+    } catch (error) {
+      logger.error('Failed to load diagnosis history:', error);
+    }
+  }
+
+  /**
+   * Render diagnosis history list
+   */
+  private async renderDiagnosisHistory(diagnoses: DiagnosisResult[]): Promise<void> {
+    const historyContainer = document.getElementById('history-list');
+    const emptyState = document.getElementById('history-empty');
+    const historySection = document.getElementById('history-section');
+
+    if (!historyContainer) {
+      logger.warn('History container not found');
+      return;
+    }
+
+    // Clear existing items (except empty state)
+    const existingItems = historyContainer.querySelectorAll('.history-item');
+    existingItems.forEach((item) => item.remove());
+
+    // Show/hide empty state and section
+    if (emptyState) {
+      emptyState.style.display = diagnoses.length === 0 ? 'block' : 'none';
+    }
+
+    // Hide entire section if no diagnoses
+    if (historySection) {
+      historySection.style.display = diagnoses.length === 0 ? 'none' : 'block';
+    }
+
+    // Get machine names for display
+    const machines = await getAllMachines();
+    const machineMap = new Map(machines.map((m) => [m.id, m]));
+
+    // Render each diagnosis
+    for (const diagnosis of diagnoses) {
+      const machine = machineMap.get(diagnosis.machineId);
+      const historyItem = this.createHistoryItem(diagnosis, machine);
+      // Insert before the empty state element
+      if (emptyState) {
+        historyContainer.insertBefore(historyItem, emptyState);
+      } else {
+        historyContainer.appendChild(historyItem);
+      }
+    }
+  }
+
+  /**
+   * Create a history item element
+   */
+  private createHistoryItem(diagnosis: DiagnosisResult, machine?: Machine): HTMLElement {
+    const historyItem = document.createElement('div');
+    historyItem.className = 'history-item';
+    historyItem.dataset.machineId = diagnosis.machineId;
+
+    // Create history info
+    const historyInfo = document.createElement('div');
+    historyInfo.className = 'history-info';
+
+    const machineName = document.createElement('div');
+    machineName.className = 'history-machine-name';
+    machineName.textContent = machine?.name || `Maschine ${diagnosis.machineId}`;
+
+    const historyDetails = document.createElement('div');
+    historyDetails.className = 'history-details';
+
+    // Status badge
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `history-status-badge status-${diagnosis.status}`;
+    statusBadge.textContent = this.getStatusLabel(diagnosis.status);
+
+    // Score
+    const scoreText = document.createElement('span');
+    scoreText.className = 'history-score';
+    scoreText.textContent = `${Math.round(diagnosis.healthScore)}%`;
+
+    // Time
+    const timeText = document.createElement('span');
+    timeText.className = 'history-time';
+    timeText.textContent = this.formatRelativeTime(diagnosis.timestamp);
+
+    historyDetails.appendChild(statusBadge);
+    historyDetails.appendChild(scoreText);
+    historyDetails.appendChild(timeText);
+
+    historyInfo.appendChild(machineName);
+    historyInfo.appendChild(historyDetails);
+
+    // Create chevron icon
+    const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevron.setAttribute('class', 'chevron-right');
+    chevron.setAttribute('width', '20');
+    chevron.setAttribute('height', '20');
+    chevron.setAttribute('viewBox', '0 0 24 24');
+    chevron.setAttribute('fill', 'none');
+    chevron.setAttribute('stroke', 'currentColor');
+    chevron.setAttribute('stroke-width', '2');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '9 18 15 12 9 6');
+    chevron.appendChild(polyline);
+
+    // Assemble item
+    historyItem.appendChild(historyInfo);
+    historyItem.appendChild(chevron);
+
+    // Add click handler - select the machine
+    if (machine) {
+      historyItem.addEventListener('click', () => this.handleMachineSelect(machine));
+    }
+
+    return historyItem;
+  }
+
+  /**
+   * ========================================
+   * HELPER FUNCTIONS
+   * ========================================
+   */
+
+  /**
+   * Format timestamp to relative time (German)
+   */
+  private formatRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+
+    if (seconds < 60) {
+      return 'gerade eben';
+    } else if (minutes < 60) {
+      return `vor ${minutes} Min.`;
+    } else if (hours < 24) {
+      return `vor ${hours} Std.`;
+    } else if (days < 7) {
+      return days === 1 ? 'vor 1 Tag' : `vor ${days} Tagen`;
+    } else {
+      return weeks === 1 ? 'vor 1 Woche' : `vor ${weeks} Wochen`;
+    }
+  }
+
+  /**
+   * Get German status label
+   */
+  private getStatusLabel(status: DiagnosisResult['status']): string {
+    switch (status) {
+      case 'healthy':
+        return 'Gesund';
+      case 'uncertain':
+        return 'Unsicher';
+      case 'faulty':
+        return 'Fehlerhaft';
+      default:
+        return 'Unbekannt';
+    }
+  }
+
+  /**
+   * Handle "Neue Maschine" button click
+   * Scrolls to the machine creation section and focuses the input
+   */
+  private handleAddNewMachine(): void {
+    const createSection = document.getElementById('create-machine-form');
+    const nameInput = document.getElementById('machine-name-input') as HTMLInputElement | null;
+
+    if (createSection) {
+      createSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Focus the input after scrolling
+      setTimeout(() => {
+        if (nameInput) {
+          nameInput.focus();
+        }
+      }, 500);
+    } else {
+      // Fallback: just focus the input
+      if (nameInput) {
+        nameInput.focus();
+      }
     }
   }
 
