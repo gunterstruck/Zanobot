@@ -19,8 +19,8 @@ import { MelSpectrogramGenerator } from '@core/audio/mel-spectrogram.js';
 import type { Level2AnalysisResult, HealthStatusResult } from '@core/ml/level2/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
-import type { Machine } from '@data/types.js';
-import { getMachine } from '@data/db.js';
+import type { Machine, DiagnosisResult } from '@data/types.js';
+import { getMachine, saveDiagnosis } from '@data/db.js';
 
 /**
  * Diagnosis state
@@ -260,7 +260,8 @@ export class Level2DiagnosePhase {
    * Start diagnosis recording
    */
   async startDiagnosis(): Promise<void> {
-    if (this.state !== 'idle') return;
+    // Allow restart from 'idle' or 'complete' state
+    if (this.state !== 'idle' && this.state !== 'complete') return;
 
     if (!this.detector.hasLoadedReference()) {
       notify.error('Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.');
@@ -588,7 +589,7 @@ export class Level2DiagnosePhase {
   /**
    * Handle analysis completion
    */
-  private handleAnalysisComplete(result: Level2AnalysisResult): void {
+  private async handleAnalysisComplete(result: Level2AnalysisResult): Promise<void> {
     this.lastResult = result;
     this.setState('complete');
 
@@ -610,6 +611,9 @@ export class Level2DiagnosePhase {
       notify.error(result.status.message);
     }
 
+    // Save diagnosis result to database
+    await this.saveDiagnosisResult(result);
+
     this.onComplete?.(result);
 
     logger.info('✅ Level 2 analysis complete:', {
@@ -617,6 +621,43 @@ export class Level2DiagnosePhase {
       status: result.status.status,
       analysisTime: result.analysisTime,
     });
+  }
+
+  /**
+   * Save diagnosis result to database
+   */
+  private async saveDiagnosisResult(result: Level2AnalysisResult): Promise<void> {
+    try {
+      // Map Level2 status to DiagnosisResult status
+      const statusMap: Record<string, 'healthy' | 'uncertain' | 'faulty'> = {
+        'HEALTHY': 'healthy',
+        'WARNING': 'uncertain',
+        'CRITICAL': 'faulty',
+      };
+
+      const diagnosis: DiagnosisResult = {
+        id: `diag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        machineId: this.machine.id,
+        timestamp: result.timestamp,
+        healthScore: result.percentage,
+        status: statusMap[result.status.status] || 'uncertain',
+        confidence: result.similarity * 100, // Convert 0-1 to 0-100
+        rawCosineSimilarity: result.similarity,
+        metadata: {
+          analysisMethod: 'YAMNet',
+          level: 2,
+          analysisTime: result.analysisTime,
+          statusMessage: result.status.message,
+        },
+      };
+
+      await saveDiagnosis(diagnosis);
+      logger.info('💾 Level 2 diagnosis saved to database');
+      notify.info('Diagnose gespeichert');
+    } catch (error) {
+      logger.error('❌ Failed to save diagnosis:', error);
+      notify.error('Diagnose konnte nicht gespeichert werden');
+    }
   }
 
   /**
