@@ -102,18 +102,18 @@ export function getClassificationDetails(score: number): {
       CONFIDENCE_PARAMS.healthyBase +
         (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier
     );
-    recommendation = 'Machine is operating normally. Continue regular monitoring.';
+    recommendation = 'Akustische Signatur entspricht der Referenz. Keine Auffälligkeiten.';
   } else if (status === 'uncertain') {
     confidence =
       CONFIDENCE_PARAMS.uncertainBase +
       (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
-    recommendation = 'Machine shows some deviation. Schedule inspection to verify condition.';
+    recommendation = 'Moderate Abweichung vom Referenzmuster. Überprüfung empfohlen.';
   } else {
     confidence = Math.max(
       20,
       HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6
     );
-    recommendation = 'Machine shows significant deviation. Immediate inspection recommended.';
+    recommendation = 'Signifikante Abweichung vom Referenzmuster erkannt. Inspektion empfohlen.';
   }
 
   return {
@@ -221,16 +221,16 @@ function generateAnalysisHints(
   const hints: string[] = [];
 
   if (status === 'healthy') {
-    hints.push('Machine operates within normal parameters.');
+    hints.push('Akustische Signatur entspricht der Referenz.');
     if (healthScore < 85) {
-      hints.push('Minor deviations detected. Consider monitoring more frequently.');
+      hints.push('Geringe Abweichungen erkannt. Häufigere Kontrolle empfohlen.');
     }
   } else if (status === 'uncertain') {
-    hints.push('Acoustic signature shows moderate deviation from reference.');
-    hints.push('Recommendation: Perform visual inspection or repeat measurement.');
+    hints.push('Moderate Abweichung von der Referenzsignatur erkannt.');
+    hints.push('Empfehlung: Visuelle Inspektion oder Wiederholungsmessung durchführen.');
   } else {
-    hints.push('Significant acoustic anomaly detected.');
-    hints.push('Immediate inspection recommended.');
+    hints.push('Signifikante Anomalie in der akustischen Signatur erkannt.');
+    hints.push('Sofortige Inspektion empfohlen.');
   }
 
   return {

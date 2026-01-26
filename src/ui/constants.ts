@@ -30,9 +30,9 @@ export const BUTTON_TEXT = {
  * Status text constants
  */
 export const STATUS_TEXT = {
-  HEALTHY: 'healthy',
-  UNCERTAIN: 'uncertain',
-  FAULTY: 'faulty',
+  HEALTHY: 'Unauffällig',
+  UNCERTAIN: 'Abweichung',
+  FAULTY: 'Auffällig',
   UNKNOWN: 'UNKNOWN',
 } as const;
 
