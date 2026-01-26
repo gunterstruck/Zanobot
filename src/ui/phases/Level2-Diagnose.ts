@@ -822,6 +822,34 @@ export class Level2DiagnosePhase {
   }
 
   /**
+   * Reload reference from storage
+   * Called when a new reference is created in Level2ReferencePhase
+   */
+  async reloadReference(): Promise<boolean> {
+    try {
+      this.setState('loading-reference');
+      this.updateStatus('🔄 Lade neue Referenz...', 'loading');
+
+      const hasReference = await this.detector.loadReferenceFromStorage(this.machine.id);
+
+      if (hasReference) {
+        this.setState('idle');
+        this.updateStatus('✅ Neue Referenz geladen. Bereit für Diagnose.', 'ready');
+        logger.info('✅ Level2DiagnosePhase: Reference reloaded successfully');
+        return true;
+      } else {
+        this.setState('no-reference');
+        this.updateStatus('⚠️ Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.', 'warning');
+        return false;
+      }
+    } catch (error) {
+      logger.error('❌ Error reloading reference:', error);
+      this.handleError(error as Error);
+      return false;
+    }
+  }
+
+  /**
    * Set completion callback
    */
   setOnComplete(callback: (result: Level2AnalysisResult) => void): void {

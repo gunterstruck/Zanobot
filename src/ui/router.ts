@@ -162,6 +162,15 @@ export class Router {
     this.level2ReferencePhase.render('level2-reference-container');
     this.level2DiagnosePhase.render('level2-diagnose-container');
 
+    // CRITICAL: Register callback to update diagnose phase when reference is created
+    // This ensures the diagnose phase reloads the reference after training
+    this.level2ReferencePhase.setOnComplete(async () => {
+      logger.info('🔄 Level 2 reference created, reloading in diagnose phase...');
+      if (this.level2DiagnosePhase) {
+        await this.level2DiagnosePhase.reloadReference();
+      }
+    });
+
     // Initialize ML models asynchronously
     try {
       await Promise.all([
