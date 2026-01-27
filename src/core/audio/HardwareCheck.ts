@@ -12,6 +12,7 @@
 
 import { logger } from '@utils/logger.js';
 import { isIOS } from '@utils/platform.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Audio Quality Report
@@ -92,7 +93,7 @@ export class HardwareCheck {
   public static analyzeCurrentDevice(label: string, sampleRate: number): AudioQualityReport {
     const report: AudioQualityReport = {
       status: 'good',
-      reason: 'Hardware geeignet für Maschinendiagnose',
+      reason: t('hardware.suitable'),
       deviceLabel: label,
       sampleRate,
       recommendations: [],
@@ -104,11 +105,11 @@ export class HardwareCheck {
 
     if (foundKeyword) {
       report.status = 'warning';
-      report.reason = 'Sprach-optimierte Hardware filtert Maschinengeräusche.';
+      report.reason = t('hardware.voiceOptimized');
       report.recommendations = [
-        'Verwenden Sie ein Studio-Mikrofon oder das eingebaute Geräte-Mikrofon',
-        'Headsets und Bluetooth-Geräte sind für Sprachanrufe optimiert',
-        'Maschinengeräusche könnten gefiltert oder unterdrückt werden',
+        t('hardware.useStudioMic'),
+        t('hardware.headsetsOptimized'),
+        t('hardware.mayFilter'),
       ];
 
       logger.warn(
@@ -120,11 +121,11 @@ export class HardwareCheck {
     // Check 2: Sample rate validation
     if (sampleRate < this.MIN_SAMPLE_RATE) {
       report.status = 'warning';
-      report.reason = `Sample Rate zu niedrig (${sampleRate} Hz < 44.1 kHz).`;
+      report.reason = t('hardware.sampleRateLow', { sampleRate });
       report.recommendations = [
-        `Aktuelle Sample Rate: ${sampleRate} Hz`,
-        `Empfohlen: ${this.MIN_SAMPLE_RATE} Hz oder höher`,
-        'Niedrige Sample Rates können hochfrequente Maschinensignale nicht erfassen',
+        t('hardware.currentSampleRate', { sampleRate }),
+        t('hardware.recommendedSampleRate', { minRate: this.MIN_SAMPLE_RATE }),
+        t('hardware.lowSampleRate'),
       ];
 
       logger.warn(
@@ -159,7 +160,7 @@ export class HardwareCheck {
         .filter((device) => device.kind === 'audioinput')
         .map((device) => ({
           deviceId: device.deviceId,
-          label: device.label || `Mikrofon ${device.deviceId.substring(0, 8)}`,
+          label: device.label || t('hardware.microphoneId', { id: device.deviceId.substring(0, 8) }),
           kind: device.kind,
           groupId: device.groupId,
         }));
@@ -168,7 +169,7 @@ export class HardwareCheck {
       return audioInputs;
     } catch (error) {
       logger.error('Failed to enumerate audio devices:', error);
-      throw new Error('Mikrofonzugriff verweigert oder nicht verfügbar');
+      throw new Error(t('hardware.microphoneDenied'));
     } finally {
       // CRITICAL: Always release the microphone stream, even on error
       // This ensures phone calls can still work if this method fails
@@ -380,7 +381,7 @@ export class HardwareCheck {
 
         if (iosStream) {
           // Success! Stop the stream (we'll get a new one when needed)
-          const label = iosStream.getAudioTracks()[0]?.label || 'iPhone Rückseiten-Mikrofon';
+          const label = iosStream.getAudioTracks()[0]?.label || t('hardware.iphoneBackMic');
           iosStream.getTracks().forEach((track) => track.stop());
 
           logger.info(`✅ iOS: Rear microphone available: "${label}"`);
@@ -388,7 +389,7 @@ export class HardwareCheck {
           // Return special marker deviceId - getRawAudioStream() will handle this
           return {
             deviceId: this.IOS_REAR_MIC_DEVICE_ID,
-            label: `${label} (optimiert für Diagnose)`,
+            label: t('hardware.optimizedForDiagnosis', { label }),
           };
         }
 

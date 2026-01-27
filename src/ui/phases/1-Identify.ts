@@ -12,6 +12,7 @@ import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
+import { t, getLanguage } from '../../i18n/index.js';
 import {
   HardwareCheck,
   type AudioQualityReport,
@@ -130,7 +131,7 @@ export class IdentifyPhase {
       await this.startScanner();
     } catch (error) {
       logger.error('Scan error:', error);
-      this.showScannerError('Fehler beim Starten des Scanners');
+      this.showScannerError(t('identify.errors.scannerStart'));
     }
   }
 
@@ -195,18 +196,18 @@ export class IdentifyPhase {
       // Check if it's a permission error
       if (errorName === 'NotAllowedError' || errorMessage.includes('Permission')) {
         this.showScannerError(
-          'Kamerazugriff wurde verweigert',
-          'Bitte erlauben Sie den Kamerazugriff in Ihren Browser-Einstellungen'
+          t('identify.errors.cameraAccessDenied'),
+          t('identify.errors.cameraAccessHint')
         );
       } else if (errorName === 'NotFoundError') {
         this.showScannerError(
-          'Keine Kamera gefunden',
-          'Bitte stellen Sie sicher, dass Ihr Gerät eine Kamera hat'
+          t('identify.errors.noCameraFound'),
+          t('identify.errors.noCameraHint')
         );
       } else {
         this.showScannerError(
-          'Scanner konnte nicht gestartet werden',
-          'Bitte versuchen Sie die manuelle Eingabe'
+          t('identify.errors.scannerStart'),
+          t('identify.errors.manualEntryLoad')
         );
       }
     }
@@ -233,8 +234,8 @@ export class IdentifyPhase {
         await this.processScannedCode(decodedText);
       } catch (error) {
         logger.error('Failed to process scanned code:', error);
-        notify.error('Fehler beim Verarbeiten des QR-Codes', error as Error, {
-          title: 'Scanfehler',
+        notify.error(t('identify.errors.qrProcessing'), error as Error, {
+          title: t('modals.scanError'),
           duration: 0,
         });
       } finally {
@@ -264,14 +265,14 @@ export class IdentifyPhase {
       const validation = this.validateMachineId(trimmedCode);
 
       if (!validation.valid) {
-        this.showError(validation.error || 'Ungültiger Code gescannt');
+        this.showError(validation.error || t('identify.errors.invalidCode'));
         return;
       }
 
       await this.handleMachineId(trimmedCode);
     } catch (error) {
       logger.error('Error processing scanned code:', error);
-      this.showError('Fehler beim Verarbeiten des Codes');
+      this.showError(t('identify.errors.codeProcessing'));
     }
   }
 
@@ -414,7 +415,7 @@ export class IdentifyPhase {
     ) as HTMLInputElement | null;
 
     if (!manualInput) {
-      this.showError('Manuelle Eingabe konnte nicht geladen werden');
+      this.showError(t('identify.errors.manualEntryLoad'));
       return;
     }
 
@@ -422,7 +423,7 @@ export class IdentifyPhase {
     const validation = this.validateMachineId(trimmedCode);
 
     if (!validation.valid) {
-      this.showError(validation.error || 'Ungültige Maschinen-ID');
+      this.showError(validation.error || t('identify.errors.invalidMachineId'));
       return;
     }
 
@@ -467,7 +468,7 @@ export class IdentifyPhase {
       const machine = await getMachine(id);
 
       if (machine) {
-        notify.success(`Maschine "${machine.name}" geladen`);
+        notify.success(t('identify.success.machineLoaded', { name: machine.name }));
         this.onMachineSelected(machine);
         return;
       }
@@ -481,11 +482,11 @@ export class IdentifyPhase {
       };
 
       await saveMachine(newMachine);
-      notify.success(`Neue Maschine "${autoName}" automatisch angelegt.`);
+      notify.success(t('identify.success.machineAutoCreated', { name: autoName }));
       this.onMachineSelected(newMachine);
     } catch (error) {
       logger.error('Error handling machine ID:', error);
-      notify.error('Fehler beim Laden der Maschine', error as Error);
+      notify.error(t('identify.errors.machineLoad'), error as Error);
     }
   }
 
@@ -506,18 +507,18 @@ export class IdentifyPhase {
 
       // Validate name
       if (!name) {
-        this.showError('Bitte geben Sie einen Maschinennamen ein');
+        this.showError(t('identify.errors.nameRequired'));
         return;
       }
 
       // Validate name is not just whitespace and has reasonable length
       if (!/\S/.test(name)) {
-        this.showError('Maschinenname darf nicht nur aus Leerzeichen bestehen');
+        this.showError(t('identify.errors.nameWhitespace'));
         return;
       }
 
       if (name.length > 100) {
-        this.showError('Maschinenname ist zu lang (maximal 100 Zeichen)');
+        this.showError(t('identify.errors.nameTooLong'));
         return;
       }
 
@@ -527,7 +528,7 @@ export class IdentifyPhase {
         // Validate provided ID
         const validation = this.validateMachineId(idInputValue);
         if (!validation.valid) {
-          this.showError(validation.error || 'Ungültige Maschinen-ID');
+          this.showError(validation.error || t('identify.errors.invalidMachineId'));
           return;
         }
         id = idInputValue;
@@ -539,7 +540,7 @@ export class IdentifyPhase {
       // Check if ID already exists
       const existing = await getMachine(id);
       if (existing) {
-        this.showError('Eine Maschine mit dieser ID existiert bereits');
+        this.showError(t('identify.errors.machineExists'));
         return;
       }
 
@@ -565,11 +566,11 @@ export class IdentifyPhase {
       nameInput.value = '';
       idInput.value = '';
 
-      this.showNotification(`Maschine erstellt: ${name}`);
+      this.showNotification(t('identify.success.machineCreated', { name }));
       this.onMachineSelected(machine);
     } catch (error) {
       logger.error('Create machine error:', error);
-      this.showError('Fehler beim Erstellen der Maschine');
+      this.showError(t('identify.errors.machineCreate'));
     }
   }
 
@@ -592,22 +593,22 @@ export class IdentifyPhase {
 
     // Check if empty after trimming
     if (!trimmedId) {
-      return { valid: false, error: 'Maschinen-ID darf nicht leer sein' };
+      return { valid: false, error: t('identify.errors.idEmpty') };
     }
 
     // Check minimum length (at least 1 character)
     if (trimmedId.length < 1) {
-      return { valid: false, error: 'Maschinen-ID ist zu kurz' };
+      return { valid: false, error: t('identify.errors.idTooShort') };
     }
 
     // Check maximum length (prevent excessive IDs)
     if (trimmedId.length > 100) {
-      return { valid: false, error: 'Maschinen-ID ist zu lang (maximal 100 Zeichen)' };
+      return { valid: false, error: t('identify.errors.idTooLong') };
     }
 
     // Check for only whitespace characters (extra safety)
     if (!/\S/.test(trimmedId)) {
-      return { valid: false, error: 'Maschinen-ID darf nicht nur aus Leerzeichen bestehen' };
+      return { valid: false, error: t('identify.errors.idWhitespace') };
     }
 
     return { valid: true };
@@ -666,7 +667,7 @@ export class IdentifyPhase {
         tempStream = await getRawAudioStream(this.selectedDeviceId);
 
         // Notify user of automatic optimization
-        notify.success(`Mikrofon automatisch auf "${bestMic.label}" optimiert für beste Diagnose`);
+        notify.success(t('identify.success.microphoneOptimized', { label: bestMic.label }));
       }
 
       // Step 3: Analyze the (potentially new) hardware
@@ -862,7 +863,7 @@ export class IdentifyPhase {
       };
     } catch (error) {
       logger.error('Failed to show microphone selection:', error);
-      this.showError('Fehler beim Laden der Mikrofone');
+      this.showError(t('identify.errors.microphoneLoad'));
     }
   }
 
@@ -902,10 +903,10 @@ export class IdentifyPhase {
       this.closeMicrophoneModal();
 
       // Notify user
-      notify.success(`Mikrofon gewechselt: ${device.label}`);
+      notify.success(t('identify.success.microphoneChanged', { label: device.label }));
     } catch (error) {
       logger.error('Failed to select microphone:', error);
-      this.showError('Fehler beim Wechseln des Mikrofons');
+      this.showError(t('identify.errors.microphoneSwitch'));
     }
   }
 
@@ -1056,11 +1057,11 @@ export class IdentifyPhase {
       });
       logger.debug('📞 Calling onMachineSelected() with quick-selected machine...');
 
-      this.showNotification(`Maschine geladen: ${machine.name}`);
+      this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
       this.onMachineSelected(machine);
     } catch (error) {
       logger.error('Failed to quick select machine:', error);
-      this.showError('Fehler beim Laden der Maschine');
+      this.showError(t('identify.errors.machineLoad'));
     }
   }
 
@@ -1146,8 +1147,8 @@ export class IdentifyPhase {
 
     // Determine status and label
     let statusClass = 'status-no-data';
-    let statusLabel = 'Keine Daten';
-    let timeLabel = 'Noch nicht geprüft';
+    let statusLabel = t('status.noData');
+    let timeLabel = t('status.notChecked');
 
     if (latestDiagnosis) {
       statusClass = `status-${latestDiagnosis.status}`;
@@ -1155,9 +1156,9 @@ export class IdentifyPhase {
       timeLabel = `Letzte Prüfung ${this.formatRelativeTime(latestDiagnosis.timestamp)}`;
     } else if (machine.referenceModels && machine.referenceModels.length > 0) {
       // Has reference models but no diagnosis yet
-      statusLabel = 'Bereit';
+      statusLabel = t('status.ready');
       statusClass = 'status-ready';
-      timeLabel = `${machine.referenceModels.length} Zustände trainiert`;
+      timeLabel = t('identify.statesTrained', { count: String(machine.referenceModels.length) });
     }
 
     // Create machine info
@@ -1209,7 +1210,7 @@ export class IdentifyPhase {
    */
   private async handleMachineSelect(machine: Machine): Promise<void> {
     logger.info(`Machine selected from overview: ${machine.name} (${machine.id})`);
-    this.showNotification(`Maschine geladen: ${machine.name}`);
+    this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
     this.onMachineSelected(machine);
   }
 
@@ -1363,31 +1364,31 @@ export class IdentifyPhase {
     const weeks = Math.floor(days / 7);
 
     if (seconds < 60) {
-      return 'gerade eben';
+      return t('identify.time.justNow');
     } else if (minutes < 60) {
-      return `vor ${minutes} Min.`;
+      return t('identify.time.minutesAgo', { minutes: String(minutes) });
     } else if (hours < 24) {
-      return `vor ${hours} Std.`;
+      return t('identify.time.hoursAgo', { hours: String(hours) });
     } else if (days < 7) {
-      return days === 1 ? 'vor 1 Tag' : `vor ${days} Tagen`;
+      return days === 1 ? t('identify.time.dayAgo') : t('identify.time.daysAgo', { days: String(days) });
     } else {
-      return weeks === 1 ? 'vor 1 Woche' : `vor ${weeks} Wochen`;
+      return weeks === 1 ? t('identify.time.weekAgo') : t('identify.time.weeksAgo', { weeks: String(weeks) });
     }
   }
 
   /**
-   * Get German status label
+   * Get localized status label
    */
   private getStatusLabel(status: DiagnosisResult['status']): string {
     switch (status) {
       case 'healthy':
-        return 'Gesund';
+        return t('status.healthy');
       case 'uncertain':
-        return 'Unsicher';
+        return t('status.uncertain');
       case 'faulty':
-        return 'Fehlerhaft';
+        return t('status.faulty');
       default:
-        return 'Unbekannt';
+        return t('status.unknown');
     }
   }
 

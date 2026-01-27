@@ -19,6 +19,7 @@ import {
 } from '@utils/visualizerSettings.js';
 import { ModeSelector, injectModeSelectorStyles } from '@ui/components/ModeSelector.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
+import { t } from '../../i18n/index.js';
 
 export class SettingsPhase {
   private modeSelector: ModeSelector | null = null;
@@ -170,11 +171,11 @@ export class SettingsPhase {
       logger.info(`✅ Database exported: ${filename}`);
       notify.success(
         `Datei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`,
-        { title: 'Datenbank exportiert' }
+        { title: t('modals.databaseExported') }
       );
     } catch (error) {
       logger.error('Export error:', error);
-      notify.error('Fehler beim Exportieren der Datenbank', error as Error);
+      notify.error(t('settings.exportError'), error as Error);
     }
   }
 
@@ -209,20 +210,11 @@ export class SettingsPhase {
           }
 
           // Ask for merge or replace
-          const merge = confirm(
-            `Datenbank importieren aus: ${file.name}\n\n` +
-              `Möchten Sie die Daten ZUSAMMENFÜHREN?\n\n` +
-              `JA = Zusammenführen mit bestehenden Daten\n` +
-              `NEIN = Alle bestehenden Daten ERSETZEN`
-          );
+          const merge = confirm(t('settings.import.confirmMerge', { filename: file.name }));
 
           // Confirm replace if not merging
           if (!merge) {
-            const confirmReplace = confirm(
-              `⚠️ ACHTUNG!\n\n` +
-                `Alle bestehenden Daten werden GELÖSCHT und durch die Import-Daten ersetzt!\n\n` +
-                `Möchten Sie fortfahren?`
-            );
+            const confirmReplace = confirm(t('settings.import.confirmReplace'));
 
             if (!confirmReplace) {
               return;
@@ -240,8 +232,8 @@ export class SettingsPhase {
           };
 
           notify.success(
-            `Maschinen: ${stats.machines}\nAufnahmen: ${stats.recordings}\nDiagnosen: ${stats.diagnoses}\n\nModus: ${merge ? 'Zusammengeführt' : 'Ersetzt'}`,
-            { title: 'Datenbank importiert' }
+            `Maschinen: ${stats.machines}\nAufnahmen: ${stats.recordings}\nDiagnosen: ${stats.diagnoses}\n\nModus: ${merge ? t('settings.import.modeMerged') : t('settings.import.modeReplaced')}`,
+            { title: t('modals.databaseImported') }
           );
 
           // Refresh stats display
@@ -250,7 +242,7 @@ export class SettingsPhase {
           logger.info('✅ Database import complete');
         } catch (error) {
           logger.error('Import error:', error);
-          notify.error('Fehler beim Importieren', error as Error, {
+          notify.error(t('settings.importError'), error as Error, {
             duration: 0,
           });
         }
@@ -267,24 +259,14 @@ export class SettingsPhase {
    * Handle clear all data
    */
   private async handleClearData(): Promise<void> {
-    const confirmed = confirm(
-      `⚠️ ACHTUNG!\n\n` +
-        `Alle Daten werden UNWIDERRUFLICH gelöscht:\n` +
-        `- Alle Maschinen\n` +
-        `- Alle Referenzmodelle\n` +
-        `- Alle Aufnahmen\n` +
-        `- Alle Diagnosen\n\n` +
-        `Möchten Sie fortfahren?`
-    );
+    const confirmed = confirm(t('settings.clear.confirmFirst'));
 
     if (!confirmed) {
       return;
     }
 
     // Double confirmation
-    const doubleConfirm = confirm(
-      `Sind Sie ABSOLUT SICHER?\n\n` + `Diese Aktion kann NICHT rückgängig gemacht werden!`
-    );
+    const doubleConfirm = confirm(t('settings.clear.confirmSecond'));
 
     if (!doubleConfirm) {
       return;
@@ -295,7 +277,7 @@ export class SettingsPhase {
 
       await clearAllData();
 
-      notify.success('Alle Daten wurden gelöscht', { title: 'Datenbank geleert' });
+      notify.success(t('settings.clear.success'), { title: t('modals.databaseCleared') });
 
       // Refresh stats display
       this.showStats();
@@ -303,7 +285,7 @@ export class SettingsPhase {
       logger.info('✅ All data cleared');
     } catch (error) {
       logger.error('Clear error:', error);
-      notify.error('Fehler beim Löschen der Daten', error as Error, {
+      notify.error(t('settings.clear.error'), error as Error, {
         duration: 0,
       });
     }

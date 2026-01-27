@@ -19,6 +19,7 @@ import {
   getViewLevel,
   type ViewLevel,
 } from '@utils/viewLevelSettings.js';
+import { initI18n, t, translateDOM } from './i18n/index.js';
 
 /**
  * Global type declarations for theme-bootstrap.js API
@@ -54,6 +55,10 @@ class ZanobotApp {
     initErrorBoundary({
       showDetails: import.meta.env.DEV || import.meta.env.MODE === 'development',
     });
+
+    // Initialize i18n FIRST (before any UI text is displayed)
+    const detectedLang = initI18n();
+    logger.info(`🌐 Language: ${detectedLang}`);
 
     logger.info('🤖 Zanobo AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');
@@ -156,12 +161,9 @@ class ZanobotApp {
       compatibility.missing.forEach(feature => logger.error(`   ${feature}`));
 
       notify.error(
-        'Ihr Browser ist nicht kompatibel mit Zanobo.\n\n' +
-        'Fehlende Features:\n' +
-        compatibility.missing.join('\n') +
-        '\n\nBitte verwenden Sie einen modernen Browser wie Chrome, Edge, Firefox oder Safari.',
+        t('app.browserNotSupported', { features: compatibility.missing.join('\n') }),
         new Error('Browser incompatible'),
-        { title: 'Browser nicht unterstützt', duration: 0 }
+        { title: t('app.browserNotSupportedTitle'), duration: 0 }
       );
 
       // Don't initialize app if incompatible
@@ -186,10 +188,10 @@ class ZanobotApp {
       logger.error('❌ Database initialization failed:', error);
       logger.warn('⚠️ Continuing without database - functionality will be limited');
       notify.error(
-        'Datenbank nicht verfügbar. Bitte erlauben Sie IndexedDB in Ihren Browser-Einstellungen oder deaktivieren Sie den strikten Privacy-Modus.',
+        t('settings.databaseNotAvailable'),
         error as Error,
         {
-          title: 'Datenbank-Fehler',
+          title: t('modals.databaseError'),
           duration: 0,
         }
       );
@@ -209,6 +211,9 @@ class ZanobotApp {
       this.setupViewLevelSelector();
       this.setupFooterLinks();
 
+      // Translate static DOM elements based on detected language
+      translateDOM();
+
       // Note: Service Worker is automatically registered by VitePWA plugin
       // See vite.config.ts and the auto-generated registerSW.js script
 
@@ -220,8 +225,8 @@ class ZanobotApp {
       }
     } catch (error) {
       logger.error('❌ UI initialization failed:', error);
-      notify.error('Benutzeroberfläche konnte nicht geladen werden', error as Error, {
-        title: 'Schwerwiegender Fehler',
+      notify.error(t('app.uiLoadFailed'), error as Error, {
+        title: t('app.fatalError'),
         duration: 0,
       });
     }

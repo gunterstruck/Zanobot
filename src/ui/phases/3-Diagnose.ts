@@ -37,6 +37,7 @@ import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
+import { t, getLanguage } from '../../i18n/index.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -134,7 +135,7 @@ export class DiagnosePhase {
    */
   private async startDiagnosis(): Promise<void> {
     if (this.isStarting || this.isProcessing || this.mediaStream) {
-      notify.warning('Eine Diagnose läuft bereits.');
+      notify.warning(t('diagnose.alreadyRunning'));
       return;
     }
 
@@ -144,7 +145,7 @@ export class DiagnosePhase {
       if (latestMachine) {
         this.machine = latestMachine;
       } else {
-        notify.error('Maschine nicht gefunden. Bitte neu auswählen.');
+        notify.error(t('identify.errors.machineNotFound'));
         return;
       }
 
@@ -163,7 +164,7 @@ export class DiagnosePhase {
 
       // Check if machine has reference models (multiclass)
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
-        notify.error('Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.');
+        notify.error(t('diagnose.noReferenceModel'));
         return;
       }
 
@@ -174,9 +175,9 @@ export class DiagnosePhase {
       if (!this.useAudioWorklet) {
         logger.error('❌ AudioWorklet not supported - Real-time diagnosis requires AudioWorklet');
         notify.error(
-          'Ihr Browser unterstützt keine Real-Time-Diagnose. Bitte verwenden Sie Chrome, Edge oder Safari.',
+          t('diagnose.browserNotCompatible'),
           new Error('AudioWorklet not supported'),
-          { title: 'Browser nicht kompatibel', duration: 0 }
+          { title: t('modals.browserIncompatible'), duration: 0 }
         );
         return;
       }
@@ -195,7 +196,7 @@ export class DiagnosePhase {
       // This prevents allocating AudioContext/MediaStream that must be immediately destroyed
       const expectedSampleRate = this.machine.referenceModels[0]?.sampleRate;
       if (!expectedSampleRate) {
-        notify.error('Kein Referenzmodell mit gültiger Sample Rate gefunden.');
+        notify.error(t('diagnose.noValidSampleRate'));
         this.isStarting = false;
         return;
       }
@@ -219,8 +220,8 @@ export class DiagnosePhase {
         logger.info('📷 Camera access granted for ghost overlay');
       } catch (cameraError) {
         logger.warn('⚠️ Camera access denied or not available - continuing without ghost overlay', cameraError);
-        notify.info('Kamera nicht verfügbar. Diagnose wird ohne Positionshilfe fortgesetzt.', {
-          title: 'Kamera optional',
+        notify.info(t('diagnose.cameraNotAvailable'), {
+          title: t('modals.cameraOptional'),
         });
         this.cameraStream = null;
       }
@@ -254,13 +255,10 @@ export class DiagnosePhase {
           `❌ Sample Rate Mismatch: Hardware=${this.actualSampleRate}Hz, ModelRates=[${rateList}]`
         );
         notify.error(
-          `Audio-Setup Fehler: Ihr Mikrofon läuft bei ${this.actualSampleRate}Hz, aber kein ` +
-            `Referenzmodell wurde bei dieser Sample Rate trainiert (Modelle: ${rateList}Hz). ` +
-            'Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder erstellen Sie ' +
-            'ein neues Referenzmodell mit der aktuellen Sample Rate.',
+          t('diagnose.sampleRateError', { actual: String(this.actualSampleRate), expected: rateList }),
           new Error('Sample Rate Mismatch'),
           {
-            title: 'Inkompatible Sample Rate',
+            title: t('modals.sampleRateMismatch'),
             duration: 0,
           }
         );
@@ -324,13 +322,13 @@ export class DiagnosePhase {
         },
         onSmartStartComplete: (rms) => {
           logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
-          this.updateSmartStartStatus('Diagnose läuft');
+          this.updateSmartStartStatus(t('diagnose.diagnosisRunning'));
           this.isProcessing = true; // Start processing incoming chunks
         },
         onSmartStartTimeout: () => {
           logger.warn('⏱️ Smart Start timeout - cleaning up resources');
-          notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', {
-            title: 'Kein Signal erkannt',
+          notify.warning(t('reference.recording.noSignal'), {
+            title: t('modals.noSignalDetected'),
           });
           // CRITICAL FIX: Call cleanup() to properly release all resources
           this.cleanup();
@@ -347,8 +345,8 @@ export class DiagnosePhase {
       logger.info('✅ Real-time diagnosis initialized!');
     } catch (error) {
       logger.error('Diagnosis error:', error);
-      notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
-        title: 'Zugriff verweigert',
+      notify.error(t('reference.recording.microphoneFailed'), error as Error, {
+        title: t('modals.accessDenied'),
         duration: 0,
       });
 
@@ -547,13 +545,10 @@ export class DiagnosePhase {
 
         // Show user-friendly error message
         notify.error(
-          'Audio-Setup Fehler: Die Sample Rate Ihres Mikrofons ' +
-            `(${this.actualSampleRate}Hz) stimmt nicht mit der Sample Rate des ` +
-            'trainierten Modells überein. Bitte verwenden Sie das gleiche Audio-Setup ' +
-            'wie beim Training oder erstellen Sie ein neues Referenzmodell.',
+          t('diagnose.sampleRateError', { actual: String(this.actualSampleRate), expected: '?' }),
           error,
           {
-            title: 'Inkompatible Sample Rate',
+            title: t('modals.sampleRateMismatch'),
             duration: 0,
           }
         );
@@ -762,9 +757,9 @@ export class DiagnosePhase {
       let hint = classification.recommendation;
       if (effectiveDetectedState !== 'UNKNOWN') {
         if (finalStatus === 'healthy') {
-          hint = `Akustische Signatur entspricht Referenzzustand "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Keine Auffälligkeiten.`;
+          hint = t('diagnose.analysis.healthyMatch', { state: effectiveDetectedState, score: finalScore.toFixed(1) });
         } else if (finalStatus === 'faulty') {
-          hint = `Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "${effectiveDetectedState}" (${finalScore.toFixed(1)}%). Inspektion empfohlen.`;
+          hint = t('diagnose.analysis.faultyMatch', { state: effectiveDetectedState, score: finalScore.toFixed(1) });
         }
       }
 
@@ -816,8 +811,8 @@ export class DiagnosePhase {
       logger.info('✅ Diagnosis saved successfully!');
     } catch (error) {
       logger.error('Save error:', error);
-      notify.error('Diagnose konnte nicht gespeichert werden', error as Error, {
-        title: 'Speicherfehler',
+      notify.error(t('diagnose.saveFailed'), error as Error, {
+        title: t('modals.saveError'),
         duration: 0,
       });
       this.hideRecordingModal();
@@ -863,9 +858,10 @@ export class DiagnosePhase {
     // CRITICAL FIX: Check within modal only to prevent conflicts with other UI elements
     if (modalBody && modal && !modal.querySelector('.live-display')) {
       // Get reference model info for display
+      const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
       const refModelInfo = this.activeModels.length > 0
         ? this.activeModels.map(m => {
-            const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
+            const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric',
@@ -874,19 +870,19 @@ export class DiagnosePhase {
             });
             return `${m.label} (${trainingDate})`;
           }).join(', ')
-        : 'Keine Modelle geladen';
+        : t('reference.noModelsYet');
 
       const liveDisplay = document.createElement('div');
       liveDisplay.className = 'live-display';
       liveDisplay.innerHTML = `
-        <div id="smart-start-status" class="smart-start-status">Initialisierung...</div>
+        <div id="smart-start-status" class="smart-start-status">${t('common.initializing')}</div>
         <div class="reference-model-info" style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">REFERENZMODELL(E):</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${t('diagnose.display.referenceModels')}</div>
           <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
-          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${this.activeModels.length} Zustand(e) trainiert</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
         </div>
         <div class="debug-info" data-view-level="expert" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
-          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">🔍 DEBUG VALUES:</div>
+          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">${t('diagnose.display.debugValues')}</div>
           <div id="debug-weight-magnitude" style="color: var(--text-primary);">weightMagnitude: --</div>
           <div id="debug-feature-magnitude" style="color: var(--text-primary);">featureMagnitude: --</div>
           <div id="debug-magnitude-factor" style="color: var(--text-primary);">magnitudeFactor: --</div>
@@ -896,13 +892,13 @@ export class DiagnosePhase {
           <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">RAW SCORE: --</div>
         </div>
         <div class="live-score-container">
-          <p class="live-hint">Telefon näher an die Maschine halten für optimales Signal</p>
+          <p class="live-hint">${t('diagnose.display.signalHint')}</p>
           <div id="live-score-display" class="live-score-display is-active">
             <div class="live-score-ring"></div>
-            <p class="live-score-label">Übereinstimmung</p>
+            <p class="live-score-label">${t('diagnose.display.match')}</p>
             <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
           </div>
-          <p id="live-status" class="live-status">ANALYSIERE...</p>
+          <p id="live-status" class="live-status">${t('status.analyzing')}</p>
         </div>
       `;
       modalBody.appendChild(liveDisplay);
@@ -966,7 +962,7 @@ export class DiagnosePhase {
         text-align: center;
         margin-top: 8px;
       `;
-      hint.textContent = '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen';
+      hint.textContent = t('diagnose.display.ghostHint');
 
       // Assemble elements
       ghostContainer.appendChild(video);
