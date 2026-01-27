@@ -281,6 +281,13 @@ export const de: TranslationDict = {
     stationary: 'Für kontinuierlich laufende Maschinen wie Ventilatoren, Pumpen, Kompressoren',
     cyclic: 'Für Maschinen mit wiederkehrenden Abläufen wie Verpackungsmaschinen, Montagelinien',
     referenceComparison: 'Referenzlauf-Vergleich',
+    featureFFT: 'Frequenzanalyse mit FFT',
+    featureGaussian: 'Gaussian Model für statistische Erkennung',
+    featureLocalProcessing: 'Schnelle lokale Verarbeitung',
+    featureNoML: 'Keine ML-Bibliothek erforderlich',
+    featureYAMNet: 'YAMNet Deep Learning Model',
+    featureMelSpectrogram: 'Mel-Spektrogramm Visualisierung',
+    featureWebGPU: 'WebGPU-beschleunigte Inferenz',
   },
 
   // ============================================================================
@@ -298,5 +305,279 @@ export const de: TranslationDict = {
     loading: 'Laden...',
     initializing: 'Initialisierung...',
     unknown: 'unbekannt',
+  },
+
+  // ============================================================================
+  // ROUTER / UI DESCRIPTIONS
+  // ============================================================================
+  router: {
+    statesTrained: '{{count}} Zustand{{plural}} trainiert (zuletzt: {{date}}) - Weitere hinzufügen',
+    referenceRequired: '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)',
+    liveAnalysis: 'Live-Analyse durchführen',
+    lastCheck: 'Letzte Prüfung {{time}}',
+  },
+
+  // ============================================================================
+  // VIEW LEVELS
+  // ============================================================================
+  viewLevels: {
+    basic: 'Einfache Ampel-Anzeige für Bediener',
+    advanced: 'Details für Vorarbeiter & Instandhalter',
+    expert: 'Volle technische Ansicht für Ingenieure',
+    basicLabel: 'Basis',
+    basicDesc: 'Einfach',
+    advancedLabel: 'Fortgeschritten',
+    advancedDesc: 'Details',
+    expertLabel: 'Experte',
+    expertDesc: 'Technisch',
+    viewModeTitle: 'Ansichtsmodus',
+    viewModeDescription: 'Passen Sie die Komplexität der Benutzeroberfläche an Ihre Bedürfnisse an.',
+  },
+
+  // ============================================================================
+  // NOTIFICATIONS
+  // ============================================================================
+  notifications: {
+    confirmRequired: 'Bestätigung erforderlich',
+  },
+
+  // ============================================================================
+  // ERROR BOUNDARY
+  // ============================================================================
+  errorBoundary: {
+    storageFull: 'Bitte löschen Sie alte Diagnosen oder Referenzaufnahmen.',
+    networkError: 'Bitte überprüfen Sie Ihre Internetverbindung.',
+    technicalDetails: 'Technische Details',
+    noStackTrace: 'Kein Stack Trace verfügbar',
+  },
+
+  // ============================================================================
+  // QUALITY CHECK
+  // ============================================================================
+  qualityCheck: {
+    noFeatures: 'Keine Features vorhanden',
+    noAudioData: 'Keine Audiodaten extrahiert (Frame Count 0)',
+    highVariance: 'Hohe Spektralvarianz - Signal instabil',
+    veryHighVariance: 'Sehr hohe Varianz - Bitte in ruhigerer Umgebung aufnehmen',
+    outliers: '{{count}} Ausreißer erkannt ({{ratio}}%) - Mögliche Störgeräusche',
+    weakSignal: 'Sehr schwaches/diffuses Signal - Möglicherweise nur Rauschen. Bitte näher an die Maschine gehen.',
+    weakTonal: 'Schwaches tonales Signal - Signal-Rausch-Verhältnis könnte zu niedrig sein.',
+    trainingSignalWeak: 'Signal zu schwach oder inkonsistent für Training. Bitte sicherstellen: Mikrofon nah an Maschine, Maschine läuft, kein reines Hintergrundrauschen. (Durchschnittliche Cosinus-Ähnlichkeit: {{value}})',
+    invalidSampleRate: 'Ungültige Sample Rate: {{rate}}Hz. Erwartet: 8000-192000Hz (typisch: 44100Hz oder 48000Hz)',
+  },
+
+  // ============================================================================
+  // LEVEL 2 REFERENCE
+  // ============================================================================
+  level2Reference: {
+    title: '🔄 Level 2: Referenzlauf (ML)',
+    fullDescription: 'Nehmen Sie einen Referenzlauf Ihrer Maschine im Normalzustand auf. Diese Aufnahme wird verwendet, um zukünftige Abweichungen zu erkennen.',
+    description: 'Diese Aufnahme wird verwendet, um zukünftige Abweichungen zu erkennen.',
+    readyForRecording: 'Bereit für Aufnahme',
+    machineLabel: 'Maschine:',
+    seconds: 'Sekunden',
+    cameraHint: '📷 Position für Referenzbild - halten Sie das Gerät ruhig',
+    recordButton: '🎤 Referenz aufnehmen',
+    tipsTitle: 'ℹ️ Hinweise für gute Aufnahmen:',
+    tipNormalState: 'Stellen Sie sicher, dass die Maschine im Normalzustand läuft',
+    tipMicPosition: 'Halten Sie das Mikrofon konstant in Position',
+    tipNoNoise: 'Vermeiden Sie Störgeräusche während der Aufnahme',
+    tipDuration: 'Die Aufnahme dauert 10 Sekunden',
+    notLoaded: 'nicht geladen',
+    initializingModel: 'Initialisiere ML-Modell...',
+    recordingStarting: '🎤 Aufnahme startet...',
+    countdownText: '⏱️ Aufnahme startet in {{seconds}}...',
+    recordingRunning: '🔴 Aufnahme läuft...',
+    processingRecording: '🔄 Verarbeite Aufnahme...',
+    referenceCreated: '✅ Referenz erfolgreich erstellt!',
+    referenceSaved: 'Level 2 Referenz wurde gespeichert',
+    referenceCreatedBtn: '✅ Referenz erstellt',
+    errorPrefix: '❌ Fehler:',
+  },
+
+  // ============================================================================
+  // LEVEL 2 DIAGNOSE
+  // ============================================================================
+  level2Diagnose: {
+    title: '🔍 Level 2: Maschine prüfen (ML)',
+    description: 'Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz.',
+    machineLabel: 'Maschine:',
+    initializing: 'Initialisiere...',
+    ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
+    liveRecording: '🌊 Live-Aufnahme',
+    similarityLabel: 'Übereinstimmung mit Referenz',
+    spectrogramTitle: '📊 Spektrogramm (Analyse)',
+    checkMachine: '🔍 Maschine prüfen',
+    recheckMachine: '🔍 Erneut prüfen',
+    analysisResult: '📊 Analyseergebnis',
+    similarityDetail: 'Ähnlichkeit:',
+    statusLabel: 'Status:',
+    analysisTime: 'Analysezeit:',
+    notLoaded: 'nicht geladen',
+    noReference: '⚠️ Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.',
+    noReferenceError: 'Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.',
+    recordingRunning: '🎤 Aufnahme läuft...',
+    recordingCountdown: '🔴 Aufnahme läuft... ({{seconds}}s)',
+    analyzingRecording: '🔄 Analysiere Aufnahme...',
+    analysisComplete: '✅ Analyse abgeschlossen: {{percentage}}%',
+    referenceLoaded: '✅ Referenz geladen. Bereit für Diagnose.',
+    newReferenceLoaded: '✅ Neue Referenz geladen. Bereit für Diagnose.',
+    loadingNewReference: '🔄 Lade neue Referenz...',
+    machineNormal: 'Maschine läuft normal',
+    calculatingSimilarity: 'Berechne Ähnlichkeit...',
+    initTensorflow: 'Initialisiere TensorFlow.js...',
+    loadingYamnet: 'Lade YAMNet Modell (6 MB)...',
+    extractingFeatures: 'Extrahiere Audio-Features...',
+    savingReference: 'Speichere Referenz...',
+    referenceCreatedProgress: 'Referenz erstellt',
+    generatingSpectrogram: 'Generiere Spektrogramm...',
+    warningDeviation: 'Leichte Abweichung erkannt - Beobachten empfohlen',
+    criticalDeviation: 'Signifikante Abweichung - Wartung dringend empfohlen!',
+    diagnosisSaved: 'Diagnose gespeichert',
+    diagnosisSaveFailed: 'Diagnose konnte nicht gespeichert werden',
+    healthyLabel: 'GESUND',
+    warningLabel: 'WARNUNG',
+    criticalLabel: 'KRITISCH',
+    errorPrefix: '❌ Fehler:',
+  },
+
+  // ============================================================================
+  // HEALTH GAUGE
+  // ============================================================================
+  healthGauge: {
+    normal: 'UNAUFFÄLLIG',
+    deviation: 'ABWEICHUNG',
+    abnormal: 'AUFFÄLLIG',
+  },
+
+  // ============================================================================
+  // MODE SELECTOR
+  // ============================================================================
+  modeSelector: {
+    title: 'Analysemodus',
+    description: 'Wählen Sie den passenden Modus für Ihre Maschine',
+    featuresOf: 'Funktionen von {{level}}:',
+    modeChanged: 'Modus geändert: {{name}}',
+    stationaryName: 'Level 1: Stationäre Geräusche (GMIA)',
+    stationaryFeature: 'Gaussian Model für statistische Erkennung',
+    cyclicName: 'Level 2: Zyklische Geräusche (ML)',
+  },
+
+  // ============================================================================
+  // AUDIO
+  // ============================================================================
+  audio: {
+    ready: 'Bereit',
+    stabilizing: 'Akustische Stabilisierung... {{seconds}}s',
+    waitingForSignal: 'Warte auf Signal...',
+    recordingRunning: 'Aufnahme läuft',
+  },
+
+  // ============================================================================
+  // SETTINGS UI (index.html)
+  // ============================================================================
+  settingsUI: {
+    title: 'Einstellungen',
+    appearance: 'Erscheinungsbild',
+    audioSettings: 'Audioeinstellungen',
+    audioHardware: 'Audio Hardware',
+    detectingMic: 'Erkenne Mikrofon...',
+    initHardwareCheck: 'Initialisiere Hardware-Check',
+    changeMicrophone: 'Anderes Mikrofon wählen',
+    confidenceThreshold: 'Vertrauensschwelle',
+    recordingDuration: 'Aufnahmedauer',
+    seconds: 'Sekunden',
+    frequencyAxis: 'Frequenzachse',
+    frequencyLogDesc: 'Logarithmisch (mehr Details im Bereich 20–500 Hz)',
+    amplitudeAxis: 'Y-Achse / Amplitude',
+    amplitudeLogDesc: 'Logarithmisch (dB) – betont leise Signale',
+    analysisMethod: 'Analysemethode',
+    analysisMethodDesc: 'Wählen Sie die passende Analysemethode für Ihre Maschine.',
+    level1Info: 'Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv',
+    level2Info: 'Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse',
+    dataManagement: 'Datenverwaltung',
+    exportDatabase: 'Datenbank exportieren',
+    importDatabase: 'Datenbank importieren',
+    statistics: 'Statistik:',
+    machines: 'Maschinen',
+    recordings: 'Aufnahmen',
+    diagnoses: 'Diagnosen',
+    deleteAllData: 'Alle Daten löschen',
+    quickAccessDesc: 'Schneller Zugriff auf kürzlich verwendete Maschinen',
+    noMachines: 'Keine Maschinen vorhanden',
+    or: 'oder',
+    selectMicrophone: 'Mikrofon auswählen',
+    microphoneAdvice: 'Wählen Sie das beste Mikrofon für die Maschinendiagnose. Vermeiden Sie Headsets und Bluetooth-Geräte, da diese für Sprache optimiert sind.',
+    manualInput: 'Manuell eingeben',
+    machineIdInput: 'Maschinen-ID eingeben',
+    continue: 'Weiter',
+    qrHint: 'QR-Code oder Barcode in den Rahmen halten',
+    codeRecognized: 'Code erkannt!',
+  },
+
+  // ============================================================================
+  // REVIEW MODAL
+  // ============================================================================
+  review: {
+    title: 'Aufnahme prüfen',
+    subtitle: 'Qualitätskontrolle',
+    listenTitle: 'Aufnahme anhören',
+    browserNoAudio: 'Ihr Browser unterstützt keine Audio-Wiedergabe.',
+    recordingInfo: '15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)',
+    positionImageTitle: 'Gespeichertes Positionsbild',
+    positionImageCheck: 'Prüfen Sie, ob das Bild die korrekte Position zeigt.',
+    qualityTitle: 'Qualitätsbewertung',
+    quality: 'Qualität',
+    issuesTitle: 'Erkannte Probleme:',
+    discardNew: 'Verwerfen / Neu',
+    saveAsReference: 'Als Referenz speichern',
+  },
+
+  // ============================================================================
+  // DIAGNOSIS RESULTS MODAL
+  // ============================================================================
+  diagnosisResults: {
+    title: 'Diagnoseergebnisse',
+  },
+
+  // ============================================================================
+  // THEME DESCRIPTIONS
+  // ============================================================================
+  themes: {
+    neonTitle: 'Neon Industrial',
+    neonDesc: 'Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.',
+    daylightTitle: 'Daylight',
+    daylightDesc: 'Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.',
+    brandTitle: 'Zanobo',
+    brandDesc: 'Original Zanobo Design. Ausgewogen & professionell.',
+  },
+
+  // ============================================================================
+  // LEVEL 2 DEFAULT CONTENT
+  // ============================================================================
+  level2Default: {
+    referenceTitle: 'ML-Referenzaufnahme',
+    referenceDescription: 'Erstellen Sie einen akustischen Fingerprint Ihrer Maschine im Normalzustand. Die KI lernt das typische Geräuschmuster für spätere Vergleiche.',
+    feature10sec: '10 Sekunden Aufnahme',
+    featureYamnet: 'YAMNet ML-Analyse',
+    featureCamera: 'Automatische Positionierung per Kamera',
+    selectMachineFirst: 'Bitte wählen Sie zuerst eine Maschine aus',
+    diagnoseTitle: 'KI-Zustandsanalyse',
+    diagnoseDescription: 'Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz. Die KI erkennt Abweichungen und bewertet den Gesundheitszustand.',
+    featureRealtime: 'Echtzeit-Analyse',
+    featureWaterfall: 'Live-Wasserfall-Spektrogramm',
+    featureTrafficLight: 'Ampel-Statusanzeige',
+    refSubDesc: '10-Sekunden Referenzaufnahme',
+    diagSubDesc: 'Live-Analyse durchführen',
+    analyzeBtn: 'Analysieren',
+  },
+
+  // ============================================================================
+  // FOOTER
+  // ============================================================================
+  footer: {
+    impressum: 'Impressum',
+    privacy: 'Datenschutz',
+    about: 'Über Zanobo',
   },
 };

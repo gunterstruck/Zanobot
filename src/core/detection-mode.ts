@@ -8,6 +8,7 @@
  */
 
 import type { DetectionMode } from './ml/level2/types.js';
+import { t } from '../i18n/index.js';
 
 /**
  * Detection result interface (unified for both modes)
@@ -82,31 +83,63 @@ export interface DetectionModeConfig {
 /**
  * Available detection modes with descriptions
  */
+export function getDetectionModes(): Record<DetectionMode, DetectionModeConfig> {
+  return {
+    STATIONARY: {
+      mode: 'STATIONARY',
+      name: t('modeSelector.stationaryName'),
+      description: t('detectionMode.stationary'),
+      icon: '📊',
+      features: [
+        t('detectionMode.featureFFT'),
+        t('detectionMode.featureGaussian'),
+        t('detectionMode.featureLocalProcessing'),
+        t('detectionMode.featureNoML'),
+      ],
+    },
+    CYCLIC: {
+      mode: 'CYCLIC',
+      name: t('modeSelector.cyclicName'),
+      description: t('detectionMode.cyclic'),
+      icon: '🔄',
+      features: [
+        t('detectionMode.featureYAMNet'),
+        t('detectionMode.referenceComparison'),
+        t('detectionMode.featureMelSpectrogram'),
+        t('detectionMode.featureWebGPU'),
+      ],
+    },
+  };
+}
+
 export const DETECTION_MODES: Record<DetectionMode, DetectionModeConfig> = {
   STATIONARY: {
     mode: 'STATIONARY',
-    name: 'Level 1: Stationäre Geräusche (GMIA)',
-    description: 'Für kontinuierlich laufende Maschinen wie Ventilatoren, Pumpen, Kompressoren',
+    get name() { return t('modeSelector.stationaryName'); },
+    get description() { return t('detectionMode.stationary'); },
     icon: '📊',
-    features: [
-      'Frequenzanalyse mit FFT',
-      'Gaussian Model für statistische Erkennung',
-      'Schnelle lokale Verarbeitung',
-      'Keine ML-Bibliothek erforderlich',
-    ],
+    get features() {
+      return [
+        t('detectionMode.featureFFT'),
+        t('detectionMode.featureGaussian'),
+        t('detectionMode.featureLocalProcessing'),
+        t('detectionMode.featureNoML'),
+      ];
+    },
   },
   CYCLIC: {
     mode: 'CYCLIC',
-    name: 'Level 2: Zyklische Geräusche (ML)',
-    description:
-      'Für Maschinen mit wiederkehrenden Abläufen wie Verpackungsmaschinen, Montagelinien',
+    get name() { return t('modeSelector.cyclicName'); },
+    get description() { return t('detectionMode.cyclic'); },
     icon: '🔄',
-    features: [
-      'YAMNet Deep Learning Model',
-      'Referenzlauf-Vergleich',
-      'Mel-Spektrogramm Visualisierung',
-      'WebGPU-beschleunigte Inferenz',
-    ],
+    get features() {
+      return [
+        t('detectionMode.featureYAMNet'),
+        t('detectionMode.referenceComparison'),
+        t('detectionMode.featureMelSpectrogram'),
+        t('detectionMode.featureWebGPU'),
+      ];
+    },
   },
 };
 

@@ -9,6 +9,8 @@
  * Follows the same pattern as visualizerSettings.ts
  */
 
+import { t } from '../i18n/index.js';
+
 export type ViewLevel = 'basic' | 'advanced' | 'expert';
 
 export const VIEW_LEVEL_EVENT = 'zanobot:view-level-change';
@@ -26,18 +28,18 @@ const validLevels: ViewLevel[] = ['basic', 'advanced', 'expert'];
  * Display names for each view level (German)
  */
 export const viewLevelDisplayNames: Record<ViewLevel, string> = {
-  basic: 'Basis',
-  advanced: 'Fortgeschritten',
-  expert: 'Experte',
+  basic: t('viewLevels.basicLabel'),
+  advanced: t('viewLevels.advancedLabel'),
+  expert: t('viewLevels.expertLabel'),
 };
 
 /**
  * Descriptions for each view level (German)
  */
 export const viewLevelDescriptions: Record<ViewLevel, string> = {
-  basic: 'Einfache Ampel-Anzeige für Bediener',
-  advanced: 'Details für Vorarbeiter & Instandhalter',
-  expert: 'Volle technische Ansicht für Ingenieure',
+  basic: t('viewLevels.basic'),
+  advanced: t('viewLevels.advanced'),
+  expert: t('viewLevels.expert'),
 };
 
 /**

@@ -6,6 +6,7 @@
  */
 
 import { logger } from '@utils/logger.js';
+import { t } from '../../i18n/index.js';
 
 export class HealthGauge {
   private canvas: HTMLCanvasElement;
@@ -262,11 +263,11 @@ export class HealthGauge {
 
   private getStatusLabel(score: number): string {
     if (score >= 75) {
-      return 'UNAUFFÄLLIG';
+      return t('healthGauge.normal');
     } else if (score >= 50) {
-      return 'ABWEICHUNG';
+      return t('healthGauge.deviation');
     } else {
-      return 'AUFFÄLLIG';
+      return t('healthGauge.abnormal');
     }
   }
 
