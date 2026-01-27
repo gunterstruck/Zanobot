@@ -257,6 +257,19 @@ export const fr: TranslationDict = {
     moderateDeviation: 'Déviation modérée par rapport au motif de référence. Révision recommandée.',
     significantDeviation: 'Déviation significative par rapport au motif de référence détectée. Inspection recommandée.',
     noMatch: 'Déviation significative par rapport au motif de référence ({{score}}%). Le signal ne correspond à aucun état entraîné. Inspection recommandée.',
+    hints: {
+      matchesReference: 'La signature acoustique correspond à la référence.',
+      minorDeviations: 'Déviations mineures dans la plage acceptable.',
+      moderateDeviation: 'Déviation modérée du motif de référence détectée.',
+      recommendInspection: 'Inspection recommandée.',
+      significantAnomaly: 'Anomalie significative détectée.',
+      immediateInspection: 'Inspection immédiate recommandée.',
+    },
+    multiclass: {
+      noMatch: 'Pas de correspondance avec les états entraînés ({{score}}%). Signal peu clair.',
+      healthy: 'État de base "{{label}}" détecté ({{score}}% correspondance). Machine fonctionne normalement.',
+      faulty: 'État "{{label}}" détecté ({{score}}% correspondance). Déviation de l\'état normal.',
+    },
   },
 
   // ============================================================================

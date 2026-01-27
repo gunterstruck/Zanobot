@@ -259,6 +259,19 @@ export const de: TranslationDict = {
     moderateDeviation: 'Moderate Abweichung vom Referenzmuster. Überprüfung empfohlen.',
     significantDeviation: 'Signifikante Abweichung vom Referenzmuster erkannt. Inspektion empfohlen.',
     noMatch: 'Signifikante Abweichung vom Referenzmuster ({{score}}%). Das Signal passt zu keinem trainierten Zustand. Inspektion empfohlen.',
+    hints: {
+      matchesReference: 'Akustische Signatur entspricht der Referenz.',
+      minorDeviations: 'Geringfügige Abweichungen im akzeptablen Bereich.',
+      moderateDeviation: 'Moderate Abweichung vom Referenzmuster erkannt.',
+      recommendInspection: 'Inspektion empfohlen.',
+      significantAnomaly: 'Signifikante Anomalie erkannt.',
+      immediateInspection: 'Sofortige Inspektion empfohlen.',
+    },
+    multiclass: {
+      noMatch: 'Kein Übereinstimmung mit trainierten Zuständen ({{score}}%). Signal unklar.',
+      healthy: 'Baseline-Zustand "{{label}}" erkannt ({{score}}% Übereinstimmung). Maschine arbeitet normal.',
+      faulty: 'Zustand "{{label}}" erkannt ({{score}}% Übereinstimmung). Abweichung vom Normalzustand.',
+    },
   },
 
   // ============================================================================
