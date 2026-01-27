@@ -257,6 +257,19 @@ export const en: TranslationDict = {
     moderateDeviation: 'Moderate deviation from reference pattern. Review recommended.',
     significantDeviation: 'Significant deviation from reference pattern detected. Inspection recommended.',
     noMatch: 'Significant deviation from reference pattern ({{score}}%). Signal does not match any trained state. Inspection recommended.',
+    hints: {
+      matchesReference: 'Acoustic signature matches reference.',
+      minorDeviations: 'Minor deviations within acceptable range.',
+      moderateDeviation: 'Moderate deviation from reference pattern detected.',
+      recommendInspection: 'Inspection recommended.',
+      significantAnomaly: 'Significant anomaly detected.',
+      immediateInspection: 'Immediate inspection recommended.',
+    },
+    multiclass: {
+      noMatch: 'No match with trained states ({{score}}%). Signal unclear.',
+      healthy: 'Baseline state "{{label}}" detected ({{score}}% match). Machine operating normally.',
+      faulty: 'State "{{label}}" detected ({{score}}% match). Deviation from normal state.',
+    },
   },
 
   // ============================================================================

@@ -257,6 +257,19 @@ export const zh: TranslationDict = {
     moderateDeviation: '与参考模式有中等偏差。建议检查。',
     significantDeviation: '检测到与参考模式有显著偏差。建议检查。',
     noMatch: '与参考模式有显著偏差（{{score}}%）。信号与任何训练状态都不匹配。建议检查。',
+    hints: {
+      matchesReference: '声学特征与参考匹配。',
+      minorDeviations: '轻微偏差在可接受范围内。',
+      moderateDeviation: '检测到与参考模式的中等偏差。',
+      recommendInspection: '建议检查。',
+      significantAnomaly: '检测到显著异常。',
+      immediateInspection: '建议立即检查。',
+    },
+    multiclass: {
+      noMatch: '与训练状态不匹配（{{score}}%）。信号不明确。',
+      healthy: '检测到基准状态"{{label}}"（{{score}}%匹配）。机器正常运行。',
+      faulty: '检测到状态"{{label}}"（{{score}}%匹配）。偏离正常状态。',
+    },
   },
 
   // ============================================================================

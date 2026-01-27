@@ -108,14 +108,14 @@ describe('Health Scoring', () => {
       const details = getClassificationDetails(60);
 
       expect(details.status).toBe('uncertain');
-      expect(details.recommendation).toContain('inspection');
+      expect(details.recommendation).toContain('Review recommended');
     });
 
     it('should provide faulty classification', () => {
       const details = getClassificationDetails(30);
 
       expect(details.status).toBe('faulty');
-      expect(details.recommendation).toContain('Immediate');
+      expect(details.recommendation).toContain('Inspection recommended');
     });
   });
 
