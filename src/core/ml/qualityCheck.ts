@@ -9,6 +9,7 @@
 
 import type { FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Quality assessment thresholds

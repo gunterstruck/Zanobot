@@ -7,6 +7,7 @@
 
 import { logger } from './logger.js';
 import { notify } from './notifications.js';
+import { t } from '../i18n/index.js';
 
 /**
  * Error boundary configuration
@@ -130,11 +131,11 @@ class ErrorBoundary {
       message = 'Hardware nicht gefunden';
       hint = 'Bitte stellen Sie sicher, dass Ihr Mikrofon/Kamera angeschlossen ist.';
     } else if (error.name === 'QuotaExceededError') {
-      message = 'Speicherplatz voll';
-      hint = 'Bitte löschen Sie alte Diagnosen oder Referenzaufnahmen.';
+      message = t('errorBoundary.storageFull');
+      hint = t('errorBoundary.storageFull');
     } else if (error.message.includes('Network')) {
-      message = 'Netzwerkfehler';
-      hint = 'Bitte überprüfen Sie Ihre Internetverbindung.';
+      message = t('errorBoundary.networkError');
+      hint = t('errorBoundary.networkError');
     } else if (error.message.includes('AudioContext')) {
       message = 'Audio-System-Fehler';
       hint = 'Bitte laden Sie die Seite neu. Falls das Problem weiterhin besteht, verwenden Sie einen aktuellen Browser.';
@@ -142,7 +143,7 @@ class ErrorBoundary {
 
     // Prepare error details for development mode
     const details = this.config.showDetails
-      ? `\n\nTechnische Details:\n${error.name}: ${error.message}\n${error.stack || 'Kein Stack Trace verfügbar'}`
+      ? `\n\n${t('errorBoundary.technicalDetails')}:\n${error.name}: ${error.message}\n${error.stack || t('errorBoundary.noStackTrace')}`
       : '';
 
     // Show notification with error

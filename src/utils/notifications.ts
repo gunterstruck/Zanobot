@@ -13,6 +13,7 @@
 
 import { logger } from './logger.js';
 import { toast } from '@ui/components/Toast.js';
+import { t } from '../i18n/index.js';
 
 /**
  * Notification types
@@ -87,7 +88,7 @@ class NotificationManager {
   /**
    * Confirm dialog (for important actions)
    */
-  public async confirm(message: string, title = 'Bestätigung erforderlich'): Promise<boolean> {
+  public async confirm(message: string, title = t('notifications.confirmRequired')): Promise<boolean> {
     // Browser guard: Check if window.confirm is available
     if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
       logger.warn('⚠️ Confirm dialog not available in non-browser context. Defaulting to false.');

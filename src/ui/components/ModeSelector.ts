@@ -13,6 +13,7 @@ import {
 import type { DetectionMode } from '@data/types.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Mode Selector Component
@@ -55,9 +56,9 @@ export class ModeSelector {
 
     return `
       <div class="mode-selector-component">
-        <h3 class="mode-selector-title">🎯 Analysemodus</h3>
+        <h3 class="mode-selector-title">🎯 ${t('modeSelector.title')}</h3>
         <p class="mode-selector-description">
-          Wählen Sie den passenden Modus für Ihre Maschine
+          ${t('modeSelector.description')}
         </p>
 
         <div class="mode-cards">
@@ -102,7 +103,7 @@ export class ModeSelector {
   private renderModeInfo(config: DetectionModeConfig): string {
     return `
       <div class="mode-features">
-        <h4>${config.icon} Funktionen von ${config.mode === 'STATIONARY' ? 'Level 1' : 'Level 2'}:</h4>
+        <h4>${config.icon} ${t('modeSelector.featuresOf', { level: config.mode === 'STATIONARY' ? 'Level 1' : 'Level 2' })}</h4>
         <ul>
           ${config.features.map((f) => `<li>✓ ${f}</li>`).join('')}
         </ul>
@@ -149,7 +150,7 @@ export class ModeSelector {
 
     // Show notification
     const config = DETECTION_MODES[mode];
-    notify.success(`Modus geändert: ${config.name}`);
+    notify.success(t('modeSelector.modeChanged', { name: config.name }));
 
     // Trigger callback
     this.onChange?.(mode);

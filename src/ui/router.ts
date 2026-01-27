@@ -22,6 +22,7 @@ import { getDetectionModeManager } from '@core/detection-mode.js';
 import type { DetectionMode } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { t } from '../i18n/index.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -323,10 +324,10 @@ export class Router {
                 hour: '2-digit',
                 minute: '2-digit',
               })
-            : 'unbekannt';
-          description.textContent = `${count} Zustand${count > 1 ? 'e' : ''} trainiert (zuletzt: ${latestDate}) - Weitere hinzufügen`;
+            : t('common.unknown');
+          description.textContent = t('router.statesTrained', { count: String(count), plural: count > 1 ? 'e' : '', date: latestDate });
         } else {
-          description.textContent = '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)';
+          description.textContent = t('router.referenceRequired');
         }
       }
     }
@@ -337,9 +338,9 @@ export class Router {
       const description = diagnoseSection.querySelector('.sub-description');
       if (description) {
         if (machine.referenceModels && machine.referenceModels.length > 0) {
-          description.textContent = 'Live-Analyse durchführen';
+          description.textContent = t('router.liveAnalysis');
         } else {
-          description.textContent = '⚠️ Bitte erst Referenz aufnehmen';
+          description.textContent = t('router.referenceRequired');
         }
       }
     }
