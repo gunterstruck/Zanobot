@@ -575,42 +575,53 @@
                         <!-- Database Management (Expert only) -->
                         <div class="setting-category" data-view-level="expert">
                             <h4 class="setting-category-title" data-i18n="settingsUI.dataManagement">Datenverwaltung</h4>
-                            <div class="setting-item">
-                                <button class="action-btn secondary-btn" id="export-data-btn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="7 10 12 15 17 10"/>
-                                        <line x1="12" y1="15" x2="12" y2="3"/>
-                                    </svg>
-                                    <span data-i18n="settingsUI.exportDatabase">Datenbank exportieren</span>
-                                </button>
-                            </div>
-                            <div class="setting-item">
-                                <button class="action-btn secondary-btn" id="import-data-btn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                    <span data-i18n="settingsUI.importDatabase">Datenbank importieren</span>
-                                </button>
-                            </div>
-                            <div class="setting-item">
-                                <p class="setting-stats">
-                                    <strong data-i18n="settingsUI.statistics">Statistik:</strong>
-                                    <span id="stats-machines">0</span> <span data-i18n="settingsUI.machines">Maschinen</span>,
-                                    <span id="stats-recordings">0</span> <span data-i18n="settingsUI.recordings">Aufnahmen</span>,
-                                    <span id="stats-diagnoses">0</span> <span data-i18n="settingsUI.diagnoses">Diagnosen</span>
-                                </p>
-                            </div>
-                            <div class="setting-item">
-                                <button class="action-btn secondary-btn" id="clear-data-btn" style="border-color: var(--status-error); color: var(--status-error);">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                    <span data-i18n="settingsUI.clearAllData">Alle Daten löschen</span>
-                                </button>
+                            <div class="data-management-card">
+                                <div class="data-management-actions">
+                                    <button class="action-btn secondary-btn" id="export-data-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        <span data-i18n="settingsUI.exportDatabase">Datenbank exportieren</span>
+                                    </button>
+                                    <button class="action-btn secondary-btn" id="import-data-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="17 8 12 3 7 8"/>
+                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                        </svg>
+                                        <span data-i18n="settingsUI.importDatabase">Datenbank importieren</span>
+                                    </button>
+                                </div>
+                                <div class="data-management-stats">
+                                    <div class="data-management-stats-header">
+                                        <strong class="data-management-stats-title" data-i18n="settingsUI.statistics">Statistik:</strong>
+                                    </div>
+                                    <div class="data-management-stat-grid">
+                                        <div class="data-management-stat">
+                                            <span class="data-management-stat-value" id="stats-machines">0</span>
+                                            <span class="data-management-stat-label" data-i18n="settingsUI.machines">Maschinen</span>
+                                        </div>
+                                        <div class="data-management-stat">
+                                            <span class="data-management-stat-value" id="stats-recordings">0</span>
+                                            <span class="data-management-stat-label" data-i18n="settingsUI.recordings">Aufnahmen</span>
+                                        </div>
+                                        <div class="data-management-stat">
+                                            <span class="data-management-stat-value" id="stats-diagnoses">0</span>
+                                            <span class="data-management-stat-label" data-i18n="settingsUI.diagnoses">Diagnosen</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="data-management-danger">
+                                    <button class="action-btn danger-btn" id="clear-data-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                        <span data-i18n="settingsUI.clearAllData">Alle Daten löschen</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

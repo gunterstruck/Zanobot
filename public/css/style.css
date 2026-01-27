@@ -720,6 +720,18 @@ body {
     border-color: var(--text-secondary);
 }
 
+/* Danger button variant */
+.action-btn.danger-btn {
+    border-color: var(--status-error);
+    color: var(--status-error);
+}
+
+.action-btn.danger-btn:hover {
+    background: var(--status-error);
+    color: var(--bg-primary);
+    border-color: var(--status-error);
+}
+
 /* Machine Selection Options */
 .machine-selection-option {
     background: rgba(17, 40, 64, 0.4);
@@ -2352,6 +2364,85 @@ select:focus-visible {
 .setting-stats strong {
     color: var(--text-primary);
     font-weight: 600;
+}
+
+/* Data Management */
+.data-management-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.data-management-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.data-management-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.data-management-stats-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.data-management-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.data-management-stat {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.2rem;
+}
+
+.data-management-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.data-management-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.data-management-danger {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+    .data-management-actions {
+        flex-direction: row;
+    }
+
+    .data-management-actions .action-btn {
+        flex: 1;
+    }
 }
 
 /* Responsive Theme Cards */
