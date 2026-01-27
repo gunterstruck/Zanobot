@@ -116,6 +116,11 @@ export const de: TranslationDict = {
       microphoneChanged: 'Mikrofon gewechselt: {{label}}',
     },
 
+    messages: {
+      codeRecognized: 'Code erkannt: {{code}}',
+      autoMachineName: 'Maschine {{id}}',
+    },
+
     time: {
       justNow: 'gerade eben',
       minutesAgo: 'vor {{minutes}} Min.',
@@ -205,6 +210,22 @@ export const de: TranslationDict = {
       signalHint: 'Telefon näher an die Maschine halten für optimales Signal',
       match: 'Übereinstimmung',
       ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
+    },
+
+    smartStart: {
+      stabilizing: '🎙️ {{message}}\n(Mikrofon pegelt ein, OS-Filter werden stabilisiert...)',
+      waiting: '🔍 {{message}}',
+    },
+
+    debug: {
+      weightMagnitude: 'weightMagnitude: {{value}}',
+      featureMagnitude: 'featureMagnitude: {{value}}',
+      magnitudeFactor: 'magnitudeFactor: {{value}}',
+      cosine: 'cosine: {{value}}',
+      adjustedCosine: 'adjustedCosine: {{value}}',
+      scalingConstant: 'scalingConstant: {{value}}',
+      rawScore: 'RAW SCORE: {{value}}%',
+      rawScorePlaceholder: 'RAW SCORE: --',
     },
 
     analysis: {

@@ -574,9 +574,9 @@ export class DiagnosePhase {
       let enhancedMessage = message;
 
       if (message.includes('Stabilisierung')) {
-        enhancedMessage = `🎙️ ${message}\n(Mikrofon pegelt ein, OS-Filter werden stabilisiert...)`;
+        enhancedMessage = t('diagnose.smartStart.stabilizing', { message });
       } else if (message.includes('Warte')) {
-        enhancedMessage = `🔍 ${message}`;
+        enhancedMessage = t('diagnose.smartStart.waiting', { message });
       }
 
       statusElement.textContent = enhancedMessage;
@@ -614,13 +614,33 @@ export class DiagnosePhase {
       }
     };
 
-    updateElement('debug-weight-magnitude', `weightMagnitude: ${v.weightMagnitude.toFixed(6)}`);
-    updateElement('debug-feature-magnitude', `featureMagnitude: ${v.featureMagnitude.toFixed(6)}`);
-    updateElement('debug-magnitude-factor', `magnitudeFactor: ${v.magnitudeFactor.toFixed(4)}`, v.magnitudeFactor < 0.5);
-    updateElement('debug-cosine', `cosine: ${v.cosine.toFixed(4)}`);
-    updateElement('debug-adjusted-cosine', `adjustedCosine: ${v.adjustedCosine.toFixed(4)}`);
-    updateElement('debug-scaling-constant', `scalingConstant: ${v.scalingConstant.toFixed(4)}`);
-    updateElement('debug-raw-score', `RAW SCORE: ${v.rawScore.toFixed(1)}%`, v.rawScore === 0);
+    updateElement(
+      'debug-weight-magnitude',
+      t('diagnose.debug.weightMagnitude', { value: v.weightMagnitude.toFixed(6) })
+    );
+    updateElement(
+      'debug-feature-magnitude',
+      t('diagnose.debug.featureMagnitude', { value: v.featureMagnitude.toFixed(6) })
+    );
+    updateElement(
+      'debug-magnitude-factor',
+      t('diagnose.debug.magnitudeFactor', { value: v.magnitudeFactor.toFixed(4) }),
+      v.magnitudeFactor < 0.5
+    );
+    updateElement('debug-cosine', t('diagnose.debug.cosine', { value: v.cosine.toFixed(4) }));
+    updateElement(
+      'debug-adjusted-cosine',
+      t('diagnose.debug.adjustedCosine', { value: v.adjustedCosine.toFixed(4) })
+    );
+    updateElement(
+      'debug-scaling-constant',
+      t('diagnose.debug.scalingConstant', { value: v.scalingConstant.toFixed(4) })
+    );
+    updateElement(
+      'debug-raw-score',
+      t('diagnose.debug.rawScore', { value: v.rawScore.toFixed(1) }),
+      v.rawScore === 0
+    );
   }
 
   /**
@@ -883,13 +903,13 @@ export class DiagnosePhase {
         </div>
         <div class="debug-info" data-view-level="expert" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
           <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">${t('diagnose.display.debugValues')}</div>
-          <div id="debug-weight-magnitude" style="color: var(--text-primary);">weightMagnitude: --</div>
-          <div id="debug-feature-magnitude" style="color: var(--text-primary);">featureMagnitude: --</div>
-          <div id="debug-magnitude-factor" style="color: var(--text-primary);">magnitudeFactor: --</div>
-          <div id="debug-cosine" style="color: var(--text-primary);">cosine: --</div>
-          <div id="debug-adjusted-cosine" style="color: var(--text-primary);">adjustedCosine: --</div>
-          <div id="debug-scaling-constant" style="color: var(--text-primary);">scalingConstant: --</div>
-          <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">RAW SCORE: --</div>
+          <div id="debug-weight-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
+          <div id="debug-feature-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
+          <div id="debug-magnitude-factor" style="color: var(--text-primary);">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
+          <div id="debug-cosine" style="color: var(--text-primary);">${t('diagnose.debug.cosine', { value: '--' })}</div>
+          <div id="debug-adjusted-cosine" style="color: var(--text-primary);">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
+          <div id="debug-scaling-constant" style="color: var(--text-primary);">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
+          <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
         </div>
         <div class="live-score-container">
           <p class="live-hint">${t('diagnose.display.signalHint')}</p>

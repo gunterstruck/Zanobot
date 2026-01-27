@@ -351,7 +351,7 @@ export class IdentifyPhase {
       scannerContainer.style.display = 'none';
     }
     if (successMessage) {
-      successMessage.textContent = `Code erkannt: ${code}`;
+      successMessage.textContent = t('identify.messages.codeRecognized', { code });
     }
   }
 
@@ -473,7 +473,7 @@ export class IdentifyPhase {
         return;
       }
 
-      const autoName = `Maschine ${id}`;
+      const autoName = t('identify.messages.autoMachineName', { id });
       const newMachine: Machine = {
         id,
         name: autoName,
