@@ -114,6 +114,11 @@ export const fr: TranslationDict = {
       microphoneChanged: 'Microphone changé : {{label}}',
     },
 
+    messages: {
+      codeRecognized: 'Code reconnu : {{code}}',
+      autoMachineName: 'Machine {{id}}',
+    },
+
     time: {
       justNow: 'à l\'instant',
       minutesAgo: 'il y a {{minutes}} min.',
@@ -205,6 +210,22 @@ export const fr: TranslationDict = {
       ghostHint: '👻 Déplacez le téléphone jusqu\'à ce que l\'image en direct et l\'image de référence correspondent',
     },
 
+    smartStart: {
+      stabilizing: '🎙️ {{message}}\n(Calibration du microphone, stabilisation des filtres système...)',
+      waiting: '🔍 {{message}}',
+    },
+
+    debug: {
+      weightMagnitude: 'weightMagnitude: {{value}}',
+      featureMagnitude: 'featureMagnitude: {{value}}',
+      magnitudeFactor: 'magnitudeFactor: {{value}}',
+      cosine: 'cosine: {{value}}',
+      adjustedCosine: 'adjustedCosine: {{value}}',
+      scalingConstant: 'scalingConstant: {{value}}',
+      rawScore: 'RAW SCORE: {{value}}%',
+      rawScorePlaceholder: 'RAW SCORE: --',
+    },
+
     analysis: {
       healthyMatch: 'La signature acoustique correspond à l\'état de référence "{{state}}" ({{score}}%). Aucune anomalie.',
       faultyMatch: 'Anomalie détectée : La signature correspond au motif entraîné "{{state}}" ({{score}}%). Inspection recommandée.',
@@ -225,6 +246,7 @@ export const fr: TranslationDict = {
       success: 'Machines : {{machines}}\nEnregistrements : {{recordings}}\nDiagnostics : {{diagnoses}}\n\nMode : {{mode}}',
       modeMerged: 'Fusionné',
       modeReplaced: 'Remplacé',
+      setupError: 'Erreur lors de la préparation de l\'importation',
     },
 
     clear: {

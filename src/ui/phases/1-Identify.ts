@@ -1291,7 +1291,8 @@ export class IdentifyPhase {
 
     const machineName = document.createElement('div');
     machineName.className = 'history-machine-name';
-    machineName.textContent = machine?.name || `Maschine ${diagnosis.machineId}`;
+    machineName.textContent =
+      machine?.name || t('identify.messages.autoMachineName', { id: diagnosis.machineId });
 
     const historyDetails = document.createElement('div');
     historyDetails.className = 'history-details';

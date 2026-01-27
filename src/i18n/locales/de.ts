@@ -248,6 +248,7 @@ export const de: TranslationDict = {
       success: 'Maschinen: {{machines}}\nAufnahmen: {{recordings}}\nDiagnosen: {{diagnoses}}\n\nModus: {{mode}}',
       modeMerged: 'Zusammengeführt',
       modeReplaced: 'Ersetzt',
+      setupError: 'Fehler beim Vorbereiten des Imports',
     },
 
     clear: {

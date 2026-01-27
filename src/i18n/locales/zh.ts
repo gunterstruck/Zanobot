@@ -114,6 +114,11 @@ export const zh: TranslationDict = {
       microphoneChanged: '麦克风已切换：{{label}}',
     },
 
+    messages: {
+      codeRecognized: '已识别代码：{{code}}',
+      autoMachineName: '机器 {{id}}',
+    },
+
     time: {
       justNow: '刚刚',
       minutesAgo: '{{minutes}}分钟前',
@@ -205,6 +210,22 @@ export const zh: TranslationDict = {
       ghostHint: '👻 移动手机直到实时图像与参考图像对齐',
     },
 
+    smartStart: {
+      stabilizing: '🎙️ {{message}}\n(麦克风调平中，系统滤波器稳定中...)',
+      waiting: '🔍 {{message}}',
+    },
+
+    debug: {
+      weightMagnitude: 'weightMagnitude: {{value}}',
+      featureMagnitude: 'featureMagnitude: {{value}}',
+      magnitudeFactor: 'magnitudeFactor: {{value}}',
+      cosine: 'cosine: {{value}}',
+      adjustedCosine: 'adjustedCosine: {{value}}',
+      scalingConstant: 'scalingConstant: {{value}}',
+      rawScore: 'RAW SCORE: {{value}}%',
+      rawScorePlaceholder: 'RAW SCORE: --',
+    },
+
     analysis: {
       healthyMatch: '声学特征与参考状态"{{state}}"匹配（{{score}}%）。无异常。',
       faultyMatch: '检测到异常：特征与训练模式"{{state}}"匹配（{{score}}%）。建议检查。',
@@ -225,6 +246,7 @@ export const zh: TranslationDict = {
       success: '机器：{{machines}}\n录制：{{recordings}}\n诊断：{{diagnoses}}\n\n模式：{{mode}}',
       modeMerged: '已合并',
       modeReplaced: '已替换',
+      setupError: '准备导入时出错',
     },
 
     clear: {

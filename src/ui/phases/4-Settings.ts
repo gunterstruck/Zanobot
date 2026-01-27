@@ -261,7 +261,7 @@ export class SettingsPhase {
       input.click();
     } catch (error) {
       logger.error('Import setup error:', error);
-      notify.error('Fehler beim Vorbereiten des Imports', error as Error);
+      notify.error(t('settings.import.setupError'), error as Error);
     }
   }
 
