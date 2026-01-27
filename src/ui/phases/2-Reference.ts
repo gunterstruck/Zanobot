@@ -21,6 +21,7 @@ import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT } from '@ui/constants.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
+import { t, getLanguage } from '../../i18n/index.js';
 
 export class ReferencePhase {
   private machine: Machine;
@@ -94,7 +95,7 @@ export class ReferencePhase {
    */
   private async startRecording(): Promise<void> {
     if (this.isRecordingStarting || this.isRecordingActive || this.mediaStream) {
-      notify.warning('Eine Aufnahme läuft bereits.');
+      notify.warning(t('reference.recording.alreadyRunning'));
       return;
     }
 
@@ -125,17 +126,17 @@ export class ReferencePhase {
           '⚠️ Camera access denied or not available - continuing without reference image',
           cameraError
         );
-        notify.info('Kamera nicht verfügbar. Aufnahme wird ohne Positionsbild fortgesetzt.', {
-          title: 'Kamera optional',
+        notify.info(t('reference.recording.cameraNotAvailable'), {
+          title: t('modals.cameraOptional'),
         });
         this.cameraStream = null;
       }
 
       if (typeof MediaRecorder === 'undefined') {
         notify.error(
-          'Ihr Browser unterstützt keine Audioaufnahme. Bitte verwenden Sie einen aktuellen Browser.',
+          t('reference.recording.browserNotCompatible'),
           new Error('MediaRecorder not supported'),
-          { title: 'Browser nicht kompatibel', duration: 0 }
+          { title: t('modals.browserIncompatible'), duration: 0 }
         );
         this.cleanup();
         return;
@@ -183,14 +184,14 @@ export class ReferencePhase {
           onSmartStartComplete: (rms) => {
             logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
             this.smartStartWasUsed = true; // Mark that Smart Start completed successfully
-            this.updateStatusMessage('Aufnahme läuft');
+            this.updateStatusMessage(t('reference.recording.recording'));
             this.actuallyStartRecording();
           },
           onSmartStartTimeout: () => {
             logger.warn('⏱️ Smart Start timeout - cleaning up resources');
             this.smartStartWasUsed = false; // Ensure flag is false since Smart Start failed
-            notify.warning('Bitte näher an die Maschine gehen und erneut versuchen.', {
-              title: 'Kein Signal erkannt',
+            notify.warning(t('reference.recording.noSignal'), {
+              title: t('modals.noSignalDetected'),
             });
             // CRITICAL FIX: Call cleanup() to properly release all resources
             // (AudioWorklet, MediaStream, Modal, Timer, etc.)
@@ -207,13 +208,13 @@ export class ReferencePhase {
       } else {
         // Fallback: Start recording immediately without Smart Start
         logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
-        this.updateStatusMessage('Aufnahme läuft');
+        this.updateStatusMessage(t('reference.recording.recording'));
         setTimeout(() => this.actuallyStartRecording(), 500);
       }
     } catch (error) {
       logger.error('Recording error:', error);
-      notify.error('Mikrofonzugriff fehlgeschlagen', error as Error, {
-        title: 'Zugriff verweigert',
+      notify.error(t('reference.recording.microphoneFailed'), error as Error, {
+        title: t('modals.accessDenied'),
         duration: 0,
       });
 
@@ -520,16 +521,13 @@ export class ReferencePhase {
 
       if (trainingSamples <= 0) {
         throw new Error(
-          `Aufnahme zu kurz: ${audioBuffer.duration.toFixed(2)}s Gesamtdauer ist kürzer als die ${this.warmUpDuration}s Warmup-Phase. ` +
-            `Mindestdauer: ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s`
+          t('reference.errors.recordingTooShort', { duration: audioBuffer.duration.toFixed(2), warmup: this.warmUpDuration, minDuration: (this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1) })
         );
       }
 
       if (trainingSamples < minTrainingSamples) {
         throw new Error(
-          `Trainings-Daten zu kurz: ${(trainingSamples / sampleRate).toFixed(2)}s (nach Warmup-Phase). ` +
-            `Minimum erforderlich: ${MIN_TRAINING_DURATION}s. ` +
-            `Bitte mindestens ${(this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1)}s aufnehmen.`
+          t('reference.errors.trainingDataTooShort', { duration: (trainingSamples / sampleRate).toFixed(2), minDuration: MIN_TRAINING_DURATION, totalMinDuration: (this.warmUpDuration + MIN_TRAINING_DURATION).toFixed(1) })
         );
       }
 
@@ -599,8 +597,8 @@ export class ReferencePhase {
       this.showReviewModal();
     } catch (error) {
       logger.error('Processing error:', error);
-      notify.error('Aufnahme konnte nicht verarbeitet werden', error as Error, {
-        title: 'Verarbeitungsfehler',
+      notify.error(t('reference.recording.processingFailed'), error as Error, {
+        title: t('modals.processingError'),
         duration: 0,
       });
 
@@ -629,10 +627,9 @@ export class ReferencePhase {
     const filename = `${this.machine.id}_REF_${timestamp}.${extension}`;
 
     const shouldDownload = confirm(
-      `✅ Referenzmodell erfolgreich trainiert!\n\n` +
-        `Maschine: ${this.machine.name}\n\n` +
-        `Möchten Sie die Referenz-Audiodatei herunterladen?\n` +
-        `(Empfohlen für Backup)`
+      t('reference.success.modelTrained', { name: this.machine.name }) +
+        '\n\n' +
+        t('reference.success.downloadPrompt')
     );
 
     if (shouldDownload && this.recordedBlob) {
@@ -645,8 +642,8 @@ export class ReferencePhase {
    */
   private exportReferenceAudio(filename: string): void {
     if (!this.recordedBlob) {
-      notify.warning('Bitte zuerst eine Referenzaufnahme erstellen.', {
-        title: 'Keine Audiodatei verfügbar',
+      notify.warning(t('reference.errors.noAudioFile'), {
+        title: t('reference.errors.noAudioFile'),
       });
       return;
     }
@@ -664,8 +661,8 @@ export class ReferencePhase {
       logger.info(`📥 Reference audio exported: ${filename}`);
     } catch (error) {
       logger.error('Export error:', error);
-      notify.error('Export fehlgeschlagen', error as Error, {
-        title: 'Exportfehler',
+      notify.error(t('reference.errors.exportFailed'), error as Error, {
+        title: t('reference.errors.exportFailed'),
       });
     }
   }
@@ -681,12 +678,12 @@ export class ReferencePhase {
 
     // Also update modal title if needed
     const modalTitle = document.querySelector('#recording-modal .modal-header h3');
-    if (modalTitle && message.includes('Kalibrierung')) {
-      modalTitle.textContent = 'Referenzaufnahme - Kalibrierung';
-    } else if (modalTitle && message.includes('Warte')) {
-      modalTitle.textContent = 'Referenzaufnahme - Warte auf Signal';
-    } else if (modalTitle && message.includes('Aufnahme')) {
-      modalTitle.textContent = 'Referenzaufnahme - Läuft';
+    if (modalTitle && message.includes(t('reference.recording.stabilizing').split('...')[0])) {
+      modalTitle.textContent = `${t('modals.referenceRecording')} - ${t('reference.recording.stabilizing')}`;
+    } else if (modalTitle && message.includes(t('reference.recording.waitingForSignal').split(' ')[0])) {
+      modalTitle.textContent = `${t('modals.referenceRecording')} - ${t('reference.recording.waitingForSignal')}`;
+    } else if (modalTitle && message.includes(t('reference.recording.recording').split(' ')[0])) {
+      modalTitle.textContent = `${t('modals.referenceRecording')} - ${t('reference.recording.recording')}`;
     }
   }
 
@@ -716,7 +713,7 @@ export class ReferencePhase {
         existingModels.length > 0
           ? existingModels
               .map((m) => {
-                const trainingDate = new Date(m.trainingDate).toLocaleString('de-DE', {
+                const trainingDate = new Date(m.trainingDate).toLocaleString(getLanguage(), {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -726,16 +723,16 @@ export class ReferencePhase {
                 return `${m.label} (${trainingDate})`;
               })
               .join(', ')
-          : 'Noch keine Referenzmodelle vorhanden';
+          : t('reference.noModelsYet');
 
       const infoDiv = document.createElement('div');
       infoDiv.className = 'existing-models-info';
       infoDiv.style.cssText =
         'background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;';
       infoDiv.innerHTML = `
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">VORHANDENE MODELLE:</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${t('reference.existingModels')}</div>
         <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${existingModelsInfo}</div>
-        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${existingModels.length} Zustand(e) bereits trainiert</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${t('reference.statesTrainedCount', { count: existingModels.length })}</div>
       `;
       const visualizerContainer = modalBody.querySelector('#visualizer-container');
       if (visualizerContainer) {
@@ -747,7 +744,7 @@ export class ReferencePhase {
       const statusDiv = document.createElement('div');
       statusDiv.id = 'recording-status';
       statusDiv.className = 'recording-status';
-      statusDiv.textContent = 'Initialisierung...';
+      statusDiv.textContent = t('common.initializing');
       infoDiv.insertAdjacentElement('afterend', statusDiv);
     }
 
@@ -800,7 +797,7 @@ export class ReferencePhase {
         text-align: center;
         margin-top: 8px;
       `;
-      hint.textContent = '📷 Positionsbild wird automatisch aufgenommen';
+      hint.textContent = t('reference.recording.positionImage');
 
       videoContainer.appendChild(video);
       modalBody.insertBefore(videoContainer, modalBody.firstChild);
@@ -886,7 +883,7 @@ export class ReferencePhase {
         // Phase 1: Stabilisierung (0-5s) - only shown when Smart Start was NOT used
         if (statusElement) {
           const remaining = warmupPhase - elapsed + 1;
-          statusElement.textContent = `Stabilisierung... ${remaining}s`;
+          statusElement.textContent = `${t('reference.recording.stabilizing')} ${remaining}s`;
         }
         if (timerElement) {
           timerElement.textContent = '--:--';
@@ -897,7 +894,7 @@ export class ReferencePhase {
         const recordingTotal = this.smartStartWasUsed ? 10 : this.recordingDuration - warmupPhase;
 
         if (statusElement) {
-          statusElement.textContent = `Aufnahme läuft...`;
+          statusElement.textContent = `${t('reference.recording.recording')}...`;
         }
         if (timerElement) {
           const minutes = Math.floor(recordingElapsed / 60);
@@ -1041,21 +1038,21 @@ export class ReferencePhase {
       switch (qualityResult.rating) {
         case 'GOOD':
           ratingElement.classList.add('good');
-          ratingElement.textContent = '✓ Signal stabil';
+          ratingElement.textContent = t('reference.quality.signalStable');
           iconElement.classList.add('good');
           iconElement.innerHTML = '✓';
           break;
 
         case 'OK':
           ratingElement.classList.add('ok');
-          ratingElement.textContent = '⚠ Leichte Unruhe';
+          ratingElement.textContent = t('reference.quality.slightUnrest');
           iconElement.classList.add('ok');
           iconElement.innerHTML = '⚠';
           break;
 
         case 'BAD':
           ratingElement.classList.add('bad');
-          ratingElement.textContent = '✗ Warnung: Signal instabil!';
+          ratingElement.textContent = t('reference.quality.signalUnstable');
           iconElement.classList.add('bad');
           iconElement.innerHTML = '✗';
           break;
@@ -1103,7 +1100,7 @@ export class ReferencePhase {
     this.capturedReferenceImage = null; // VISUAL POSITIONING: Clear reference image
 
     // Show info message
-    notify.info('Sie können eine neue Referenzaufnahme starten.', { title: 'Aufnahme verworfen' });
+    notify.info(t('reference.success.canStartNew'), { title: t('modals.recordingDiscarded') });
   }
 
   /**
@@ -1120,8 +1117,8 @@ export class ReferencePhase {
     // Validate machine data
     if (!this.machine || !this.machine.id) {
       logger.error('Cannot save: machine data is invalid or missing');
-      notify.error('Maschinendaten fehlen', new Error('Machine ID missing'), {
-        title: 'Fehler',
+      notify.error(t('reference.errors.machineDataMissing'), new Error('Machine ID missing'), {
+        title: t('modals.error'),
         duration: 0,
       });
       return;
@@ -1136,10 +1133,7 @@ export class ReferencePhase {
     if (this.currentQualityResult.rating === 'BAD' && this.currentQualityResult.score < 30) {
       logger.error('Recording quality too low for training - blocking save');
       notify.error(
-        'Aufnahme zu schlecht für Training. Bitte in ruhiger Umgebung mit ' +
-          'deutlichem Maschinensignal erneut aufnehmen.\n\n' +
-          'Probleme:\n' +
-          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        t('reference.errors.qualityTooLow', { issues: this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n') }),
         new Error('Quality too low'),
         { duration: 0 }
       );
@@ -1157,17 +1151,13 @@ export class ReferencePhase {
     if (isNoiseDetected) {
       logger.error('Brown noise or weak signal detected - blocking save');
       notify.error(
-        'Signal zu schwach oder diffus (möglicherweise nur Rauschen).\n\n' +
-          `Signal-Stärke (RMS): ${magnitude.toFixed(4)} (Minimum: 0.03)\n` +
-          `Qualität: ${this.currentQualityResult.score}%\n\n` +
-          'Bitte sicherstellen:\n' +
-          '• Mikrofon ist nah genug an der Maschine (10-30cm)\n' +
-          '• Maschine läuft mit ausreichend Lautstärke\n' +
-          '• Kein reines Hintergrundrauschen wird aufgenommen\n\n' +
-          'Probleme:\n' +
-          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        t('reference.errors.signalTooWeak', {
+          magnitude: magnitude.toFixed(4),
+          quality: this.currentQualityResult.score,
+          issues: this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        }),
         new Error('Signal too weak or noisy'),
-        { duration: 0, title: 'Ungeeignetes Signal' }
+        { duration: 0, title: t('modals.unsuitableSignal') }
       );
       return;
     }
@@ -1176,12 +1166,9 @@ export class ReferencePhase {
     // This runs ONLY if not blocked by magnitude check above
     if (this.currentQualityResult.rating === 'BAD') {
       const confirmed = confirm(
-        '⚠️ WARNUNG: Schlechte Aufnahmequalität\n\n' +
-          'Die Qualität dieser Aufnahme ist schlecht. Das Training könnte unzuverlässig sein.\n\n' +
-          'Probleme:\n' +
-          this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n') +
-          '\n\n' +
-          'Möchten Sie trotzdem speichern?'
+        t('reference.errors.badQualityWarning', {
+          issues: this.currentQualityResult.issues.map((issue) => `• ${issue}`).join('\n'),
+        })
       );
 
       if (!confirmed) {
@@ -1208,16 +1195,13 @@ export class ReferencePhase {
       } else {
         // Additional recordings: Ask user for label and type
         const userLabel = prompt(
-          'Geben Sie einen Namen für diesen Maschinenzustand ein:\n\n' +
-            'Beispiele:\n' +
-            '• Normale Betriebszustände: "Leerlauf", "Volllast", "Teillast"\n' +
-            '• Fehler: "Unwucht simuliert", "Lagerschaden", "Lüfterfehler"',
+          t('reference.labels.prompt'),
           ''
         );
 
         if (!userLabel || userLabel.trim() === '') {
           logger.info('User cancelled - no label provided');
-          notify.warning('Bitte einen Namen eingeben', { title: 'Abgebrochen' });
+          notify.warning(t('reference.labels.pleaseEnterName'), { title: t('modals.cancelled') });
           return;
         }
 
@@ -1225,11 +1209,7 @@ export class ReferencePhase {
 
         // Ask user for type: Is this a normal state or a fault?
         const isHealthy = confirm(
-          `Zustand: "${label}"\n\n` +
-            'Ist dies ein NORMALER Betriebszustand?\n\n' +
-            '🟢 OK (Ja) → Normaler Zustand (z.B. "Leerlauf", "Volllast")\n' +
-            '🔴 Abbrechen (Nein) → Bekannter Fehler (z.B. "Unwucht", "Lagerschaden")\n\n' +
-            'Hinweis: Diese Wahl bestimmt, ob eine Diagnose als "gesund" oder "fehlerhaft" angezeigt wird.'
+          t('reference.labels.confirmType', { label })
         );
 
         type = isHealthy ? 'healthy' : 'faulty';
@@ -1319,19 +1299,12 @@ export class ReferencePhase {
           `❌ Baseline score too low: ${baselineScore.toFixed(1)}% (minimum: ${MIN_BASELINE_SCORE}%)`
         );
         notify.error(
-          `Referenzaufnahme zu undeutlich oder verrauscht.\n\n` +
-            `Selbsterkennungs-Score: ${baselineScore.toFixed(1)}%\n` +
-            `Minimum erforderlich: ${MIN_BASELINE_SCORE}%\n\n` +
-            `Mögliche Ursachen:\n` +
-            `• Signal zu schwach oder instabil\n` +
-            `• Zu viel Hintergrundgeräusch\n` +
-            `• Maschine läuft nicht konstant\n\n` +
-            `Bitte Aufnahme unter besseren Bedingungen wiederholen:\n` +
-            `• Mikrofon näher an der Maschine (10-30cm)\n` +
-            `• Ruhige Umgebung\n` +
-            `• Maschine läuft stabil während gesamter Aufnahme`,
+          t('reference.errors.baselineScoreTooLow', {
+            baselineScore: baselineScore.toFixed(1),
+            minScore: MIN_BASELINE_SCORE,
+          }),
           new Error('Baseline score too low'),
-          { title: 'Referenzaufnahme ungeeignet', duration: 0 }
+          { title: t('modals.referenceUnsuitable'), duration: 0 }
         );
         return;
       }
@@ -1392,8 +1365,8 @@ export class ReferencePhase {
       this.currentTrainingData = null;
     } catch (error) {
       logger.error('Save error:', error);
-      notify.error('Speichern fehlgeschlagen', error as Error, {
-        title: 'Fehler beim Speichern',
+      notify.error(t('reference.errors.saveFailed'), error as Error, {
+        title: t('modals.saveError'),
         duration: 0,
       });
     }
@@ -1428,7 +1401,7 @@ export class ReferencePhase {
 
     // Title
     const title = document.createElement('h3');
-    title.textContent = 'Trainierte Zustände';
+    title.textContent = t('reference.trainedStates');
     statusContainer.appendChild(title);
 
     // List of trained states
@@ -1446,14 +1419,14 @@ export class ReferencePhase {
         li.className = 'state-item';
 
         const dateStr = model.trainingDate
-          ? new Date(model.trainingDate).toLocaleString('de-DE', {
+          ? new Date(model.trainingDate).toLocaleString(getLanguage(), {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
             })
-          : 'unbekannt';
+          : t('common.unknown');
 
         // Use textContent instead of innerHTML to prevent XSS attacks
         const labelSpan = document.createElement('span');
@@ -1477,7 +1450,7 @@ export class ReferencePhase {
     const trainAnotherBtn = document.createElement('button');
     trainAnotherBtn.id = 'train-another-btn';
     trainAnotherBtn.className = 'btn btn-secondary';
-    trainAnotherBtn.textContent = 'Weiteren Zustand trainieren';
+    trainAnotherBtn.textContent = t('buttons.trainAnother');
     trainAnotherBtn.onclick = () => this.startRecording();
     statusContainer.appendChild(trainAnotherBtn);
 
@@ -1503,7 +1476,7 @@ export class ReferencePhase {
           const instruction = document.createElement('p');
           instruction.id = 'reference-instruction';
           instruction.className = 'modal-instruction';
-          instruction.textContent = 'Halten Sie das Mikrofon 10–30 cm vor die Maschine.';
+          instruction.textContent = t('reference.recording.instruction');
           header.appendChild(instruction);
         }
 

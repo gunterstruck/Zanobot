@@ -1,8 +1,11 @@
 /**
  * ZANOBOT - UI CONSTANTS
  *
- * Centralized UI text constants to avoid magic strings and improve maintainability.
+ * Centralized UI text constants using i18n for multi-language support.
+ * These are now getters that return translated strings dynamically.
  */
+
+import { t } from '../i18n/index.js';
 
 /**
  * Button text constants
@@ -10,37 +13,37 @@
  */
 export const BUTTON_TEXT = {
   // Recording modal buttons
-  STOP_REFERENCE: 'Stop',
-  STOP_DIAGNOSE: 'Stop & Save',
+  get STOP_REFERENCE() { return t('buttons.stop'); },
+  get STOP_DIAGNOSE() { return t('buttons.stopAndSave'); },
 
   // Phase buttons
-  SCAN: 'Scannen',
-  CREATE_MACHINE: 'Erstellen',
-  RECORD: 'Aufnehmen',
-  DIAGNOSE: 'Diagnose starten',
+  get SCAN() { return t('buttons.scan'); },
+  get CREATE_MACHINE() { return t('buttons.create'); },
+  get RECORD() { return t('buttons.record'); },
+  get DIAGNOSE() { return t('buttons.startDiagnosis'); },
 
   // Modal actions
-  CLOSE: 'Schließen',
-  CANCEL: 'Abbrechen',
-  SAVE: 'Speichern',
-  DISCARD: 'Verwerfen',
-} as const;
+  get CLOSE() { return t('buttons.close'); },
+  get CANCEL() { return t('buttons.cancel'); },
+  get SAVE() { return t('buttons.save'); },
+  get DISCARD() { return t('buttons.discard'); },
+};
 
 /**
  * Status text constants
  */
 export const STATUS_TEXT = {
-  HEALTHY: 'Unauffällig',
-  UNCERTAIN: 'Abweichung',
-  FAULTY: 'Auffällig',
-  UNKNOWN: 'UNKNOWN',
-} as const;
+  get HEALTHY() { return t('status.healthy'); },
+  get UNCERTAIN() { return t('status.uncertain'); },
+  get FAULTY() { return t('status.faulty'); },
+  get UNKNOWN() { return t('status.unknown'); },
+};
 
 /**
  * Modal title constants
  */
 export const MODAL_TITLE = {
-  RECORDING_REFERENCE: 'Referenzaufnahme',
-  RECORDING_DIAGNOSE: 'Live Diagnosis - Find Sweet Spot',
-  SCANNER: 'QR/Barcode Scanner',
-} as const;
+  get RECORDING_REFERENCE() { return t('modals.referenceRecording'); },
+  get RECORDING_DIAGNOSE() { return t('modals.liveDiagnosis'); },
+  get SCANNER() { return t('modals.qrScanner'); },
+};

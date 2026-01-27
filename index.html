@@ -50,7 +50,7 @@
                             <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
                             <path d="M16.24 7.76l-8.48 8.48M7.76 7.76l8.48 8.48" stroke-width="1"/>
                         </svg>
-                        <h3 class="container-title">Maschine auswählen</h3>
+                        <h3 class="container-title" data-i18n="identify.selectMachine">Maschine auswählen</h3>
                     </div>
                     <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"/>
@@ -71,16 +71,16 @@
                                     <rect x="5" y="15" width="4" height="4"/>
                                     <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
                                 </svg>
-                                <h5 class="option-title">QR-Code scannen</h5>
+                                <h5 class="option-title" data-i18n="identify.scanQrCode">QR-Code scannen</h5>
                             </div>
-                            <p class="option-description">Identifiziere Maschine via QR-Code</p>
+                            <p class="option-description" data-i18n="identify.scanQrDescription">Identifiziere Maschine via QR-Code</p>
                             <button class="action-btn secondary-btn" id="scan-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <!-- Professional Camera/Scan Icon -->
                                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                                     <circle cx="12" cy="13" r="4"/>
                                 </svg>
-                                Scannen
+                                <span data-i18n="buttons.scan">Scannen</span>
                             </button>
                         </div>
 
@@ -96,15 +96,15 @@
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
-                                <h5 class="option-title">Manuell anlegen</h5>
+                                <h5 class="option-title" data-i18n="identify.manualEntry">Manuell anlegen</h5>
                             </div>
-                            <p class="option-description">Neue Maschine mit Namen erstellen</p>
+                            <p class="option-description" data-i18n="identify.manualEntryDescription">Neue Maschine mit Namen erstellen</p>
                             <div class="input-group">
-                                <label for="machine-name-input">Maschinenname</label>
+                                <label for="machine-name-input" data-i18n="identify.machineName">Maschinenname</label>
                                 <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
                             </div>
                             <div class="input-group" data-view-level="advanced">
-                                <label for="machine-id-input">Maschinen-ID (optional)</label>
+                                <label for="machine-id-input" data-i18n="identify.machineId">Maschinen-ID (optional)</label>
                                 <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
                             </div>
                             <button class="action-btn" id="create-machine-btn">
@@ -114,14 +114,14 @@
                                     <polyline points="17 21 17 13 7 13 7 21"/>
                                     <polyline points="7 3 7 8 15 8"/>
                                 </svg>
-                                Speichern
+                                <span data-i18n="buttons.save">Speichern</span>
                             </button>
                         </div>
 
                         <!-- Quick Select: Recently Used Machines -->
                         <div id="quick-select-section" class="machine-selection-option" style="display: none;">
                             <div class="option-divider">
-                                <span>Schnellwahl</span>
+                                <span data-i18n="identify.quickAccess">Schnellwahl</span>
                             </div>
                             <div class="option-header">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -129,7 +129,7 @@
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 16 14"/>
                                 </svg>
-                                <h5 class="option-title">Zuletzt verwendet</h5>
+                                <h5 class="option-title" data-i18n="identify.recentlyUsed">Zuletzt verwendet</h5>
                             </div>
                             <p class="option-description">Schneller Zugriff auf kürzlich verwendete Maschinen</p>
                             <div id="quick-select-list" class="quick-select-list">
@@ -140,7 +140,7 @@
                         <!-- Maschinenübersicht -->
                         <div class="machine-selection-option" id="machine-overview-section">
                             <div class="option-divider">
-                                <span>Übersicht</span>
+                                <span data-i18n="identify.overview">Übersicht</span>
                             </div>
                             <div class="option-header">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,7 +150,7 @@
                                     <rect x="3" y="14" width="7" height="7"/>
                                     <rect x="14" y="14" width="7" height="7"/>
                                 </svg>
-                                <h5 class="option-title">Maschinenübersicht</h5>
+                                <h5 class="option-title" data-i18n="identify.machineOverview">Maschinenübersicht</h5>
                             </div>
                             <div id="machine-overview" class="machine-list">
                                 <!-- Machine items will be added dynamically -->
@@ -161,14 +161,14 @@
                                     <line x1="12" y1="5" x2="12" y2="19"/>
                                     <line x1="5" y1="12" x2="19" y2="12"/>
                                 </svg>
-                                Neue Maschine
+                                <span data-i18n="buttons.newMachine">Neue Maschine</span>
                             </button>
                         </div>
 
                         <!-- Historie (Diagnose-Verlauf) -->
                         <div class="machine-selection-option" id="history-section">
                             <div class="option-divider">
-                                <span>Verlauf</span>
+                                <span data-i18n="identify.history">Verlauf</span>
                             </div>
                             <div class="option-header">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -176,11 +176,11 @@
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 16 14"/>
                                 </svg>
-                                <h5 class="option-title">Historie</h5>
+                                <h5 class="option-title" data-i18n="identify.history">Historie</h5>
                             </div>
                             <div id="history-list" class="history-list">
                                 <!-- History items will be added dynamically -->
-                                <p class="empty-state" id="history-empty">Noch keine Messungen vorhanden</p>
+                                <p class="empty-state" id="history-empty" data-i18n="identify.noMeasurements">Noch keine Messungen vorhanden</p>
                             </div>
                         </div>
                     </div>
@@ -198,7 +198,7 @@
                             <line x1="12" y1="19" x2="12" y2="22"/>
                             <line x1="8" y1="22" x2="16" y2="22"/>
                         </svg>
-                        <h3 class="container-title">Referenz aufnehmen</h3>
+                        <h3 class="container-title" data-i18n="reference.recordReference">Referenz aufnehmen</h3>
                     </div>
                     <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"/>
@@ -208,7 +208,7 @@
                     <!-- Level 1 (GMIA) Reference Content -->
                     <div class="container-content level1-content" data-detection-mode="STATIONARY">
                         <p class="sub-description">10-Sekunden Referenzaufnahme</p>
-                        <button class="action-btn" id="record-btn">Aufnehmen</button>
+                        <button class="action-btn" id="record-btn" data-i18n="buttons.record">Aufnehmen</button>
                     </div>
                     <!-- Level 2 (YAMNet) Reference Content - rendered dynamically -->
                     <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-reference-container">
@@ -270,7 +270,7 @@
                             <path d="M10 7v5a4 4 0 0 0 8 0v-2"/>
                             <circle cx="18" cy="12" r="2"/>
                         </svg>
-                        <h3 class="container-title">Diagnose starten</h3>
+                        <h3 class="container-title" data-i18n="buttons.startDiagnosis">Diagnose starten</h3>
                     </div>
                     <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"/>
@@ -636,7 +636,7 @@
     <div id="recording-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Referenz aufnehmen</h3>
+                <h3 data-i18n="reference.recordReference">Referenz aufnehmen</h3>
                 <p class="modal-subtitle" id="machine-id">MACHINE 002</p>
             </div>
             <div class="modal-body">
@@ -745,7 +745,7 @@
     <div id="scanner-modal" class="modal" style="display: none;">
         <div class="modal-content scanner-modal-content">
             <div class="modal-header">
-                <h3>Maschine scannen</h3>
+                <h3 data-i18n="modals.qrScanner">Maschine scannen</h3>
                 <button class="close-modal-btn" id="close-scanner-modal">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -775,8 +775,8 @@
                         <line x1="12" y1="8" x2="12" y2="12"/>
                         <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
-                    <p id="scanner-error-message">Kamerazugriff wurde verweigert</p>
-                    <p class="scanner-error-hint">Bitte erlauben Sie den Kamerazugriff in Ihren Browser-Einstellungen</p>
+                    <p id="scanner-error-message" data-i18n="identify.errors.cameraAccessDenied">Kamerazugriff wurde verweigert</p>
+                    <p class="scanner-error-hint" data-i18n="identify.errors.cameraAccessHint">Bitte erlauben Sie den Kamerazugriff in Ihren Browser-Einstellungen</p>
                 </div>
 
                 <!-- Success Message -->
@@ -822,7 +822,7 @@
                 />
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-secondary" id="manual-input-cancel">Abbrechen</button>
+                <button class="modal-btn btn-secondary" id="manual-input-cancel" data-i18n="buttons.cancel">Abbrechen</button>
                 <button class="modal-btn btn-primary" id="manual-input-confirm">Weiter</button>
             </div>
         </div>
@@ -962,7 +962,7 @@
                 </p>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-primary" id="close-impressum-btn">Schließen</button>
+                <button class="modal-btn btn-primary" id="close-impressum-btn" data-i18n="buttons.close">Schließen</button>
             </div>
         </div>
     </div>
@@ -1068,7 +1068,7 @@
                 </p>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-primary" id="close-datenschutz-btn">Schließen</button>
+                <button class="modal-btn btn-primary" id="close-datenschutz-btn" data-i18n="buttons.close">Schließen</button>
             </div>
         </div>
     </div>
@@ -1165,7 +1165,7 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-primary" id="close-about-btn">Schließen</button>
+                <button class="modal-btn btn-primary" id="close-about-btn" data-i18n="buttons.close">Schließen</button>
             </div>
         </div>
     </div>

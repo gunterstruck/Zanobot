@@ -16,6 +16,7 @@ import type { GMIAModel, DiagnosisResult, FeatureVector } from '@data/types.js';
 import { inferGMIA } from './gmia.js';
 import { vectorMagnitude } from './mathUtils.js';
 import { logger } from '@utils/logger.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Thresholds for health status classification
@@ -102,18 +103,18 @@ export function getClassificationDetails(score: number): {
       CONFIDENCE_PARAMS.healthyBase +
         (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier
     );
-    recommendation = 'Akustische Signatur entspricht der Referenz. Keine Auffälligkeiten.';
+    recommendation = t('scoring.matchesReference');
   } else if (status === 'uncertain') {
     confidence =
       CONFIDENCE_PARAMS.uncertainBase +
       (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
-    recommendation = 'Moderate Abweichung vom Referenzmuster. Überprüfung empfohlen.';
+    recommendation = t('scoring.moderateDeviation');
   } else {
     confidence = Math.max(
       20,
       HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6
     );
-    recommendation = 'Signifikante Abweichung vom Referenzmuster erkannt. Inspektion empfohlen.';
+    recommendation = t('scoring.significantDeviation');
   }
 
   return {
@@ -221,16 +222,16 @@ function generateAnalysisHints(
   const hints: string[] = [];
 
   if (status === 'healthy') {
-    hints.push('Akustische Signatur entspricht der Referenz.');
+    hints.push(t('scoring.hints.matchesReference'));
     if (healthScore < 85) {
-      hints.push('Geringe Abweichungen erkannt. Häufigere Kontrolle empfohlen.');
+      hints.push(t('scoring.hints.minorDeviations'));
     }
   } else if (status === 'uncertain') {
-    hints.push('Moderate Abweichung von der Referenzsignatur erkannt.');
-    hints.push('Empfehlung: Visuelle Inspektion oder Wiederholungsmessung durchführen.');
+    hints.push(t('scoring.hints.moderateDeviation'));
+    hints.push(t('scoring.hints.recommendInspection'));
   } else {
-    hints.push('Signifikante Anomalie in der akustischen Signatur erkannt.');
-    hints.push('Sofortige Inspektion empfohlen.');
+    hints.push(t('scoring.hints.significantAnomaly'));
+    hints.push(t('scoring.hints.immediateInspection'));
   }
 
   return {
@@ -727,13 +728,13 @@ function generateMulticlassHint(
   status: DiagnosisResult['status']
 ): string {
   if (status === 'uncertain') {
-    return `Signifikante Abweichung vom Referenzmuster (${score.toFixed(1)}%). Das Signal passt zu keinem trainierten Zustand. Inspektion empfohlen.`;
+    return t('scoring.multiclass.noMatch', { score: score.toFixed(1) });
   }
 
   if (status === 'healthy') {
-    return `Akustische Signatur entspricht Referenzzustand "${label}" (${score.toFixed(1)}%). Keine Auffälligkeiten.`;
+    return t('scoring.multiclass.healthy', { label, score: score.toFixed(1) });
   }
 
   // status === 'faulty'
-  return `Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "${label}" (${score.toFixed(1)}%). Inspektion empfohlen.`;
+  return t('scoring.multiclass.faulty', { label, score: score.toFixed(1) });
 }
