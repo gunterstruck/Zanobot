@@ -170,7 +170,12 @@ export class SettingsPhase {
 
       logger.info(`✅ Database exported: ${filename}`);
       notify.success(
-        `Datei: ${filename}\n\nMaschinen: ${data.machines.length}\nAufnahmen: ${data.recordings.length}\nDiagnosen: ${data.diagnoses.length}`,
+        t('settings.export.success', {
+          filename,
+          machines: data.machines.length,
+          recordings: data.recordings.length,
+          diagnoses: data.diagnoses.length,
+        }),
         { title: t('modals.databaseExported') }
       );
     } catch (error) {
@@ -232,7 +237,12 @@ export class SettingsPhase {
           };
 
           notify.success(
-            `Maschinen: ${stats.machines}\nAufnahmen: ${stats.recordings}\nDiagnosen: ${stats.diagnoses}\n\nModus: ${merge ? t('settings.import.modeMerged') : t('settings.import.modeReplaced')}`,
+            t('settings.import.success', {
+              machines: stats.machines,
+              recordings: stats.recordings,
+              diagnoses: stats.diagnoses,
+              mode: merge ? t('settings.import.modeMerged') : t('settings.import.modeReplaced'),
+            }),
             { title: t('modals.databaseImported') }
           );
 
