@@ -114,6 +114,11 @@ export const en: TranslationDict = {
       microphoneChanged: 'Microphone changed: {{label}}',
     },
 
+    messages: {
+      codeRecognized: 'Code recognized: {{code}}',
+      autoMachineName: 'Machine {{id}}',
+    },
+
     time: {
       justNow: 'just now',
       minutesAgo: '{{minutes}} min. ago',
@@ -205,6 +210,22 @@ export const en: TranslationDict = {
       ghostHint: '👻 Move the phone until live image and reference image align',
     },
 
+    smartStart: {
+      stabilizing: '🎙️ {{message}}\n(Microphone leveling, OS filters stabilizing...)',
+      waiting: '🔍 {{message}}',
+    },
+
+    debug: {
+      weightMagnitude: 'weightMagnitude: {{value}}',
+      featureMagnitude: 'featureMagnitude: {{value}}',
+      magnitudeFactor: 'magnitudeFactor: {{value}}',
+      cosine: 'cosine: {{value}}',
+      adjustedCosine: 'adjustedCosine: {{value}}',
+      scalingConstant: 'scalingConstant: {{value}}',
+      rawScore: 'RAW SCORE: {{value}}%',
+      rawScorePlaceholder: 'RAW SCORE: --',
+    },
+
     analysis: {
       healthyMatch: 'Acoustic signature matches reference state "{{state}}" ({{score}}%). No abnormalities.',
       faultyMatch: 'Abnormality detected: Signature matches trained pattern "{{state}}" ({{score}}%). Inspection recommended.',
@@ -225,6 +246,7 @@ export const en: TranslationDict = {
       success: 'Machines: {{machines}}\nRecordings: {{recordings}}\nDiagnoses: {{diagnoses}}\n\nMode: {{mode}}',
       modeMerged: 'Merged',
       modeReplaced: 'Replaced',
+      setupError: 'Error preparing import',
     },
 
     clear: {

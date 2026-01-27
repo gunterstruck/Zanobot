@@ -114,6 +114,11 @@ export const es: TranslationDict = {
       microphoneChanged: 'Micrófono cambiado: {{label}}',
     },
 
+    messages: {
+      codeRecognized: 'Código reconocido: {{code}}',
+      autoMachineName: 'Máquina {{id}}',
+    },
+
     time: {
       justNow: 'ahora mismo',
       minutesAgo: 'hace {{minutes}} min.',
@@ -205,6 +210,22 @@ export const es: TranslationDict = {
       ghostHint: '👻 Mueva el teléfono hasta que la imagen en vivo y la imagen de referencia coincidan',
     },
 
+    smartStart: {
+      stabilizing: '🎙️ {{message}}\n(Ajustando micrófono, estabilizando filtros del sistema...)',
+      waiting: '🔍 {{message}}',
+    },
+
+    debug: {
+      weightMagnitude: 'weightMagnitude: {{value}}',
+      featureMagnitude: 'featureMagnitude: {{value}}',
+      magnitudeFactor: 'magnitudeFactor: {{value}}',
+      cosine: 'cosine: {{value}}',
+      adjustedCosine: 'adjustedCosine: {{value}}',
+      scalingConstant: 'scalingConstant: {{value}}',
+      rawScore: 'RAW SCORE: {{value}}%',
+      rawScorePlaceholder: 'RAW SCORE: --',
+    },
+
     analysis: {
       healthyMatch: 'La firma acústica coincide con el estado de referencia "{{state}}" ({{score}}%). Sin anomalías.',
       faultyMatch: 'Anomalía detectada: La firma coincide con el patrón entrenado "{{state}}" ({{score}}%). Se recomienda inspección.',
@@ -225,6 +246,7 @@ export const es: TranslationDict = {
       success: 'Máquinas: {{machines}}\nGrabaciones: {{recordings}}\nDiagnósticos: {{diagnoses}}\n\nModo: {{mode}}',
       modeMerged: 'Fusionado',
       modeReplaced: 'Reemplazado',
+      setupError: 'Error al preparar la importación',
     },
 
     clear: {
