@@ -1,10 +1,13 @@
 import { getAppSetting, saveAppSetting } from '@data/db.js';
+import { getLanguage } from '../i18n/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 
 const HERO_BANNER_SETTING_KEY = 'hero_banner';
 const VALID_BANNER_WIDTH = 1024;
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
+const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
+const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
 export class BannerManager {
   private heroImage: HTMLImageElement | null;
@@ -107,6 +110,7 @@ export class BannerManager {
     try {
       const stored = await getAppSetting<Blob>(HERO_BANNER_SETTING_KEY);
       if (!stored?.value) {
+        this.applyDefaultBanner();
         return;
       }
 
@@ -114,6 +118,31 @@ export class BannerManager {
       this.setHeroImage(objectUrl);
     } catch (error) {
       logger.warn('⚠️ Failed to restore hero banner from storage', error);
+      this.applyDefaultBanner();
     }
+  }
+
+  private applyDefaultBanner(): void {
+    if (!this.heroImage) {
+      return;
+    }
+
+    const language = getLanguage();
+    const isMobile = this.isMobileDevice();
+    const defaultPath = language === 'zh' && isMobile
+      ? CHINESE_MOBILE_BANNER_PATH
+      : DEFAULT_BANNER_PATH;
+
+    this.setHeroImage(defaultPath);
+  }
+
+  private isMobileDevice(): boolean {
+    const userAgentData = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData;
+
+    if (userAgentData?.mobile) {
+      return true;
+    }
+
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
 }
