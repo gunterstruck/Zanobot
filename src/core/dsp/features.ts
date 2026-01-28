@@ -136,6 +136,34 @@ export function extractFeaturesFromChunk(
   samples: Float32Array,
   config: DSPConfig = DEFAULT_DSP_CONFIG
 ): FeatureVector {
+  if (
+    !config.sampleRate ||
+    !isFinite(config.sampleRate) ||
+    config.sampleRate <= 0 ||
+    config.sampleRate > 192000
+  ) {
+    throw new Error(
+      `Ungültige Sample Rate: ${config.sampleRate}Hz. ` +
+      `Erwartet: 8000-192000Hz (typisch: 44100Hz oder 48000Hz)`
+    );
+  }
+
+  const [minFreq, maxFreq] = config.frequencyRange;
+  if (!isFinite(minFreq) || !isFinite(maxFreq) || minFreq < 0 || maxFreq <= minFreq) {
+    throw new Error(
+      `Invalid frequency range: [${minFreq}, ${maxFreq}]Hz. ` +
+      `Min must be >= 0, Max must be > Min, both must be finite.`
+    );
+  }
+
+  const nyquistFreq = config.sampleRate / 2;
+  if (maxFreq > nyquistFreq) {
+    throw new Error(
+      `Frequency range max (${maxFreq}Hz) exceeds Nyquist frequency (${nyquistFreq}Hz) ` +
+      `for sample rate ${config.sampleRate}Hz`
+    );
+  }
+
   const chunk: AudioChunk = {
     samples,
     startTime: 0,
