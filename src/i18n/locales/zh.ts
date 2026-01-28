@@ -446,7 +446,7 @@ export const zh: TranslationDict = {
     criticalDeviation: '显著偏差 - 紧急建议维护！',
     diagnosisSaved: '诊断已保存',
     diagnosisSaveFailed: '无法保存诊断',
-    healthyLabel: '健康',
+    healthyLabel: '正常',
     warningLabel: '警告',
     criticalLabel: '严重',
     errorPrefix: '❌ 错误：',

@@ -480,7 +480,7 @@ export const de: TranslationDict = {
     criticalDeviation: 'Signifikante Abweichung - Wartung dringend empfohlen!',
     diagnosisSaved: 'Diagnose gespeichert',
     diagnosisSaveFailed: 'Diagnose konnte nicht gespeichert werden',
-    healthyLabel: 'GESUND',
+    healthyLabel: 'UNAUFFÄLLIG',
     warningLabel: 'WARNUNG',
     criticalLabel: 'KRITISCH',
     errorPrefix: '❌ Fehler:',

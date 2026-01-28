@@ -446,7 +446,7 @@ export const es: TranslationDict = {
     criticalDeviation: 'Desviación significativa - ¡mantenimiento urgentemente recomendado!',
     diagnosisSaved: 'Diagnóstico guardado',
     diagnosisSaveFailed: 'No se pudo guardar el diagnóstico',
-    healthyLabel: 'SALUDABLE',
+    healthyLabel: 'NORMAL',
     warningLabel: 'ADVERTENCIA',
     criticalLabel: 'CRÍTICO',
     errorPrefix: '❌ Error:',

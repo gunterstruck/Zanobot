@@ -460,7 +460,7 @@ export const en: TranslationDict = {
     criticalDeviation: 'Significant deviation - maintenance urgently recommended!',
     diagnosisSaved: 'Diagnosis saved',
     diagnosisSaveFailed: 'Diagnosis could not be saved',
-    healthyLabel: 'HEALTHY',
+    healthyLabel: 'NORMAL',
     warningLabel: 'WARNING',
     criticalLabel: 'CRITICAL',
     errorPrefix: '❌ Error:',
