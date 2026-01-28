@@ -649,6 +649,12 @@ export class Level2DiagnosePhase {
    */
   private async saveDiagnosisResult(result: Level2AnalysisResult): Promise<void> {
     try {
+      const latestMachine = await getMachine(this.machine.id);
+      if (!latestMachine) {
+        throw new Error(`Machine not found: ${this.machine.id}`);
+      }
+      this.machine = latestMachine;
+
       // Map Level2 status to DiagnosisResult status
       const statusMap: Record<string, 'healthy' | 'uncertain' | 'faulty'> = {
         'HEALTHY': 'healthy',
