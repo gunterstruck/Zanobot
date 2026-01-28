@@ -11,6 +11,12 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import type { Machine, Recording, DiagnosisResult, GMIAModel } from './types.js';
 import { logger } from '@utils/logger.js';
 
+export interface AppSetting<T = unknown> {
+  key: string;
+  value: T;
+  updatedAt: number;
+}
+
 /**
  * Database schema definition
  */
@@ -41,10 +47,14 @@ interface ZanobotDB extends DBSchema {
       'by-status': DiagnosisResult['status'];
     };
   };
+  app_settings: {
+    key: string;
+    value: AppSetting;
+  };
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 5; // Incremented for Visual Positioning Assistant (referenceImage field)
+const DB_VERSION = 6; // Incremented for Hero Banner app settings
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -175,12 +185,42 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
         logger.info('   ✅ Added optional referenceImage field to Machine schema');
         logger.info('   ℹ️ Existing machines will work without changes (non-breaking)');
       }
+
+      // Migration from v5 to v6: App settings store for hero banner
+      if (!db.objectStoreNames.contains('app_settings')) {
+        db.createObjectStore('app_settings', { keyPath: 'key' });
+      }
+
+      if (oldVersion < 6) {
+        logger.info('🔄 Migrating database from v5 to v6 (App settings store)');
+        logger.info('   ✅ Added app_settings store for UI assets');
+      }
     },
   });
 
   logger.info('✅ Database initialized');
 
   return dbInstance;
+}
+
+// ============================================================================
+// APP SETTINGS OPERATIONS
+// ============================================================================
+
+export async function saveAppSetting<T>(key: string, value: T): Promise<void> {
+  const db = await initDB();
+  const setting: AppSetting<T> = {
+    key,
+    value,
+    updatedAt: Date.now(),
+  };
+  await db.put('app_settings', setting);
+  logger.info(`💾 App setting saved: ${key}`);
+}
+
+export async function getAppSetting<T>(key: string): Promise<AppSetting<T> | undefined> {
+  const db = await initDB();
+  return await db.get('app_settings', key) as AppSetting<T> | undefined;
 }
 
 // ============================================================================
@@ -471,6 +511,7 @@ export async function clearAllData(): Promise<void> {
   await db.clear('machines');
   await db.clear('recordings');
   await db.clear('diagnoses');
+  await db.clear('app_settings');
 
   logger.info('🗑️ All data cleared');
 }
