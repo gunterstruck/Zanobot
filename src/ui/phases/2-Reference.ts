@@ -12,7 +12,6 @@
 import { extractFeatures, DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
 import { trainGMIA } from '@core/ml/gmia.js';
 import { assessRecordingQuality } from '@core/ml/qualityCheck.js';
-import { updateMachineModel } from '@data/db.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { getRawAudioStream, getSmartStartStatusMessage } from '@core/audio/audioHelper.js';
 import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
@@ -1318,27 +1317,37 @@ export class ReferencePhase {
       model.label = label;
       model.type = type;
 
-      // Save model to database
-      await updateMachineModel(this.machine.id, model);
+      // Save model + reference image in a single update to avoid overwriting changes.
+      const { getMachine, saveMachine } = await import('@data/db.js');
+      const machineToUpdate = await getMachine(this.machine.id);
+      if (!machineToUpdate) {
+        throw new Error(`Machine not found for update: ${this.machine.id}`);
+      }
 
-      logger.info(`✅ Reference model "${label}" trained and saved!`);
+      if (!machineToUpdate.referenceModels) {
+        logger.warn(
+          `⚠️ Machine ${this.machine.id} has no referenceModels array - initializing empty array`
+        );
+        machineToUpdate.referenceModels = [];
+      }
+
+      machineToUpdate.referenceModels.push(model);
 
       // VISUAL POSITIONING: Save reference image to machine (if captured)
       if (this.capturedReferenceImage) {
-        const { getMachine, saveMachine } = await import('@data/db.js');
-        const machineToUpdate = await getMachine(this.machine.id);
-        if (machineToUpdate) {
-          machineToUpdate.referenceImage = this.capturedReferenceImage;
-          await saveMachine(machineToUpdate);
-          logger.info(
-            `📸 Reference image saved to machine (${this.capturedReferenceImage.size} bytes)`
-          );
-        }
+        machineToUpdate.referenceImage = this.capturedReferenceImage;
+        logger.info(
+          `📸 Reference image prepared for save (${this.capturedReferenceImage.size} bytes)`
+        );
       }
 
-      // Reload machine to get updated referenceModels array
-      const { getMachine } = await import('@data/db.js');
-      const updatedMachine = await getMachine(this.machine.id);
+      await saveMachine(machineToUpdate);
+
+      logger.info(
+        `✅ Reference model "${label}" trained and saved${this.capturedReferenceImage ? ' with image' : ''}!`
+      );
+
+      const updatedMachine = machineToUpdate;
       if (updatedMachine) {
         this.machine = updatedMachine;
 
