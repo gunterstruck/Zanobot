@@ -685,16 +685,25 @@ export class DiagnosePhase {
 
     const statusElement = document.getElementById('live-status');
     if (statusElement) {
+      const normalizedStatus = status.toLowerCase();
+      const localizedStatus = normalizedStatus === 'healthy'
+        ? t('status.healthy')
+        : normalizedStatus === 'uncertain'
+          ? t('status.uncertain')
+          : normalizedStatus === 'faulty'
+            ? t('status.faulty')
+            : status;
+
       // UX FIX: Only show detected state if score meets confident match threshold
       // Below threshold the match is uncertain, showing the label would be confusing
       const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
 
       if (shouldShowState) {
-        statusElement.textContent = `${status} | ${detectedState}`;
+        statusElement.textContent = `${localizedStatus} | ${detectedState}`;
       } else {
-        statusElement.textContent = status;
+        statusElement.textContent = localizedStatus;
       }
-      statusElement.className = `live-status status-${status.toLowerCase()}`;
+      statusElement.className = `live-status status-${normalizedStatus}`;
     }
   }
 
