@@ -33,6 +33,10 @@ export class AudioWorkletManager {
   private workletNode: AudioWorkletNode | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
   private config: AudioWorkletConfig;
+  private isInitialized = false;
+  private initResolve: (() => void) | null = null;
+  private initReject: ((reason?: Error) => void) | null = null;
+  private initPromise: Promise<void> | null = null;
 
   // Ring buffer for reading audio data (synced with worklet)
   private ringBuffer: Float32Array;
@@ -50,6 +54,12 @@ export class AudioWorkletManager {
     this.audioContext = audioContext;
 
     try {
+      this.isInitialized = false;
+      this.initPromise = new Promise<void>((resolve, reject) => {
+        this.initResolve = resolve;
+        this.initReject = reject;
+      });
+
       // Load AudioWorklet processor using document location for correct path resolution
       // CRITICAL FIX: Use window.location.href as base (not origin) to handle subpath deployments correctly
       // This ensures the worklet is loaded from the same directory as the HTML document
@@ -87,8 +97,12 @@ export class AudioWorkletManager {
         warmUpDuration: this.config.warmUpDuration || 5000, // Default to 5s if not specified
       });
 
+      await this.waitUntilReady();
       logger.info('✅ AudioWorklet initialized');
     } catch (error) {
+      this.initReject?.(error as Error);
+      this.initReject = null;
+      this.initResolve = null;
       logger.error('❌ AudioWorklet initialization failed:', error);
       throw new Error('Failed to initialize AudioWorklet. Browser may not support it.');
     }
@@ -121,6 +135,12 @@ export class AudioWorkletManager {
           );
           this.ringBuffer = new Float32Array(message.bufferSize);
           this.currentWritePos = 0;
+        }
+        this.isInitialized = true;
+        if (this.initResolve) {
+          this.initResolve();
+          this.initResolve = null;
+          this.initReject = null;
         }
         break;
 
@@ -256,6 +276,12 @@ export class AudioWorkletManager {
     // This is a simplified version.
     // In production, you'd use SharedArrayBuffer or transfer via messages.
 
+    if (chunkSize > this.ringBuffer.length) {
+      throw new Error(
+        `Chunk size (${chunkSize}) exceeds ring buffer length (${this.ringBuffer.length}).`
+      );
+    }
+
     const chunk = new Float32Array(chunkSize);
 
     // Read backwards from current write position
@@ -291,6 +317,40 @@ export class AudioWorkletManager {
     this.audioContext = null;
     this.ringBuffer.fill(0);
     this.currentWritePos = 0;
+    this.isInitialized = false;
+    this.initResolve = null;
+    this.initReject = null;
+    this.initPromise = null;
+  }
+
+  /**
+   * Check if the AudioWorklet has completed initialization.
+   */
+  isReady(): boolean {
+    return this.isInitialized;
+  }
+
+  /**
+   * Wait until the AudioWorklet signals initialization complete.
+   */
+  private async waitUntilReady(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    if (!this.initPromise) {
+      throw new Error('AudioWorklet initialization was not started.');
+    }
+
+    const timeoutMs = 2000;
+    await Promise.race([
+      this.initPromise,
+      new Promise<void>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('AudioWorklet init-complete timeout.'));
+        }, timeoutMs);
+      }),
+    ]);
   }
 
   /**
