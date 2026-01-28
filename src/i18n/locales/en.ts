@@ -15,12 +15,15 @@ export const en: TranslationDict = {
     create: 'Create',
     record: 'Record',
     startDiagnosis: 'Start Diagnosis',
+    analyze: 'Analyze',
     close: 'Close',
     cancel: 'Cancel',
     save: 'Save',
     discard: 'Discard',
     trainAnother: 'Train Another State',
     newMachine: 'New Machine',
+    stopRecording: 'Stop Recording',
+    saveReference: 'Save Reference',
   },
 
   // ============================================================================
@@ -78,6 +81,7 @@ export const en: TranslationDict = {
     machineOverview: 'Machine Overview',
     history: 'History',
     noMeasurements: 'No measurements yet',
+    noMachines: 'No machines available',
     statesTrained: '{{count}} states trained',
 
     errors: {
@@ -135,11 +139,15 @@ export const en: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Record Reference',
+    tenSecondRecording: '10-second reference recording',
     noReferenceModel: 'No reference model available',
     trainedStates: 'Trained States',
     noModelsYet: 'No reference models available yet',
     existingModels: 'EXISTING MODELS:',
     statesTrainedCount: '{{count}} state(s) already trained',
+    recordingStatusHighQuality: 'High audio quality detected',
+    fingerprintQualityLabel: 'Fingerprint Quality:',
+    fingerprintQualityConfident: 'CONFIDENT',
 
     recording: {
       alreadyRunning: 'A recording is already in progress.',
@@ -198,6 +206,7 @@ export const en: TranslationDict = {
     cameraNotAvailable: 'Camera not available. Diagnosis will continue without position guide.',
     diagnosisRunning: 'Diagnosis running',
     saveFailed: 'Diagnosis could not be saved',
+    liveAnalysis: 'Run live analysis',
 
     sampleRateError: 'Audio setup error: Your microphone runs at {{actual}}Hz, but no reference model was trained at this sample rate (Models: {{expected}}Hz). Please use the same audio setup as during training or create a new reference model with the current sample rate.',
 
@@ -334,6 +343,7 @@ export const en: TranslationDict = {
     success: 'Success',
     yes: 'Yes',
     no: 'No',
+    or: 'or',
     ok: 'OK',
     loading: 'Loading...',
     initializing: 'Initializing...',
@@ -541,6 +551,15 @@ export const en: TranslationDict = {
 
   diagnosisResults: {
     title: 'Diagnosis Results',
+    fingerprintLabel: 'Fingerprint',
+    confidenceScoreLabel: 'Confidence score',
+    varianceTitle: 'Variance',
+    frequencyAnomalyLabel: 'Frequency anomaly',
+    analysisHintDefault: 'Hint: Slightly increased signal around 20 kHz',
+    referenceQualityTitle: 'Reference Quality',
+    referenceQualityStatusGood: 'GOOD',
+    referenceQualityDescription: 'Reference recording meets recommended conditions',
+    viewHistory: 'View History',
   },
 
   themes: {

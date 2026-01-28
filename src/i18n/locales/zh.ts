@@ -15,12 +15,15 @@ export const zh: TranslationDict = {
     create: '创建',
     record: '录制',
     startDiagnosis: '开始诊断',
+    analyze: '分析',
     close: '关闭',
     cancel: '取消',
     save: '保存',
     discard: '丢弃',
     trainAnother: '训练另一个状态',
     newMachine: '新建机器',
+    stopRecording: '停止录制',
+    saveReference: '保存参考',
   },
 
   // ============================================================================
@@ -78,6 +81,7 @@ export const zh: TranslationDict = {
     machineOverview: '机器概览',
     history: '历史记录',
     noMeasurements: '暂无测量数据',
+    noMachines: '暂无可用机器',
     statesTrained: '{{count}} 个状态已训练',
 
     errors: {
@@ -135,11 +139,15 @@ export const zh: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: '录制参考',
+    tenSecondRecording: '10秒参考录制',
     noReferenceModel: '无可用的参考模型',
     trainedStates: '已训练状态',
     noModelsYet: '尚无参考模型',
     existingModels: '现有模型：',
     statesTrainedCount: '{{count}} 个状态已训练',
+    recordingStatusHighQuality: '检测到高音频质量',
+    fingerprintQualityLabel: '指纹质量：',
+    fingerprintQualityConfident: '可信',
 
     recording: {
       alreadyRunning: '录制已在进行中。',
@@ -198,6 +206,7 @@ export const zh: TranslationDict = {
     cameraNotAvailable: '摄像头不可用。诊断将在无位置指南的情况下继续。',
     diagnosisRunning: '诊断运行中',
     saveFailed: '无法保存诊断',
+    liveAnalysis: '执行实时分析',
 
     sampleRateError: '音频设置错误：您的麦克风运行在{{actual}}Hz，但没有参考模型是在此采样率下训练的（模型：{{expected}}Hz）。请使用与训练时相同的音频设置，或使用当前采样率创建新的参考模型。',
 
@@ -334,6 +343,7 @@ export const zh: TranslationDict = {
     success: '成功',
     yes: '是',
     no: '否',
+    or: '或',
     ok: '确定',
     loading: '加载中...',
     initializing: '初始化中...',
@@ -485,7 +495,18 @@ export const zh: TranslationDict = {
     issuesTitle: '检测到的问题：', discardNew: '丢弃/重新',
     saveAsReference: '保存为参考',
   },
-  diagnosisResults: { title: '诊断结果' },
+  diagnosisResults: {
+    title: '诊断结果',
+    fingerprintLabel: '指纹',
+    confidenceScoreLabel: '置信度分数',
+    varianceTitle: '方差',
+    frequencyAnomalyLabel: '频率异常',
+    analysisHintDefault: '提示：约 20 kHz 附近信号略有升高',
+    referenceQualityTitle: '参考质量',
+    referenceQualityStatusGood: '良好',
+    referenceQualityDescription: '参考录制符合推荐条件',
+    viewHistory: '查看历史',
+  },
   themes: {
     neonTitle: 'Neon Industrial',
     neonDescription: '高对比霓虹配色，适合弱光环境。强调色引导关键操作。',
