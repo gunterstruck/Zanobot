@@ -15,12 +15,15 @@ export const fr: TranslationDict = {
     create: 'Créer',
     record: 'Enregistrer',
     startDiagnosis: 'Démarrer le diagnostic',
+    analyze: 'Analyser',
     close: 'Fermer',
     cancel: 'Annuler',
     save: 'Sauvegarder',
     discard: 'Rejeter',
     trainAnother: 'Entraîner un autre état',
     newMachine: 'Nouvelle machine',
+    stopRecording: 'Arrêter l\'enregistrement',
+    saveReference: 'Enregistrer la référence',
   },
 
   // ============================================================================
@@ -78,6 +81,7 @@ export const fr: TranslationDict = {
     machineOverview: 'Aperçu des machines',
     history: 'Historique',
     noMeasurements: 'Aucune mesure disponible',
+    noMachines: 'Aucune machine disponible',
     statesTrained: '{{count}} états entraînés',
 
     errors: {
@@ -135,11 +139,15 @@ export const fr: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Enregistrer la référence',
+    tenSecondRecording: 'Enregistrement de référence de 10 secondes',
     noReferenceModel: 'Aucun modèle de référence disponible',
     trainedStates: 'États entraînés',
     noModelsYet: 'Aucun modèle de référence disponible',
     existingModels: 'MODÈLES EXISTANTS :',
     statesTrainedCount: '{{count}} état(s) déjà entraîné(s)',
+    recordingStatusHighQuality: 'Haute qualité audio détectée',
+    fingerprintQualityLabel: 'Qualité de l\'empreinte :',
+    fingerprintQualityConfident: 'SÛR',
 
     recording: {
       alreadyRunning: 'Un enregistrement est déjà en cours.',
@@ -198,6 +206,7 @@ export const fr: TranslationDict = {
     cameraNotAvailable: 'Caméra non disponible. Le diagnostic continuera sans guide de position.',
     diagnosisRunning: 'Diagnostic en cours',
     saveFailed: 'Le diagnostic n\'a pas pu être sauvegardé',
+    liveAnalysis: 'Effectuer une analyse en direct',
 
     sampleRateError: 'Erreur de configuration audio : Votre microphone fonctionne à {{actual}}Hz, mais aucun modèle de référence n\'a été entraîné à cette fréquence d\'échantillonnage (Modèles : {{expected}}Hz). Veuillez utiliser la même configuration audio que lors de l\'entraînement ou créer un nouveau modèle de référence avec la fréquence d\'échantillonnage actuelle.',
 
@@ -334,6 +343,7 @@ export const fr: TranslationDict = {
     success: 'Succès',
     yes: 'Oui',
     no: 'Non',
+    or: 'ou',
     ok: 'OK',
     loading: 'Chargement...',
     initializing: 'Initialisation...',
@@ -485,7 +495,18 @@ export const fr: TranslationDict = {
     issuesTitle: 'Problèmes détectés :', discardNew: 'Rejeter / Nouveau',
     saveAsReference: 'Sauvegarder comme référence',
   },
-  diagnosisResults: { title: 'Résultats du diagnostic' },
+  diagnosisResults: {
+    title: 'Résultats du diagnostic',
+    fingerprintLabel: 'Empreinte',
+    confidenceScoreLabel: 'Score de confiance',
+    varianceTitle: 'Variance',
+    frequencyAnomalyLabel: 'Anomalie de fréquence',
+    analysisHintDefault: 'Astuce : signal légèrement accru autour de 20 kHz',
+    referenceQualityTitle: 'Qualité de référence',
+    referenceQualityStatusGood: 'BON',
+    referenceQualityDescription: 'L\'enregistrement de référence respecte les conditions recommandées',
+    viewHistory: 'Voir l\'historique',
+  },
   themes: {
     neonTitle: 'Neon Industrial',
     neonDescription: 'Palette néon très contrastée pour environnements sombres. Les accents guident l’attention vers les actions clés.',

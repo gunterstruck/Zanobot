@@ -15,12 +15,15 @@ export const es: TranslationDict = {
     create: 'Crear',
     record: 'Grabar',
     startDiagnosis: 'Iniciar diagnóstico',
+    analyze: 'Analizar',
     close: 'Cerrar',
     cancel: 'Cancelar',
     save: 'Guardar',
     discard: 'Descartar',
     trainAnother: 'Entrenar otro estado',
     newMachine: 'Nueva máquina',
+    stopRecording: 'Detener grabación',
+    saveReference: 'Guardar referencia',
   },
 
   // ============================================================================
@@ -78,6 +81,7 @@ export const es: TranslationDict = {
     machineOverview: 'Vista general de máquinas',
     history: 'Historial',
     noMeasurements: 'Sin mediciones todavía',
+    noMachines: 'No hay máquinas disponibles',
     statesTrained: '{{count}} estados entrenados',
 
     errors: {
@@ -135,11 +139,15 @@ export const es: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Grabar referencia',
+    tenSecondRecording: 'Grabación de referencia de 10 segundos',
     noReferenceModel: 'No hay modelo de referencia disponible',
     trainedStates: 'Estados entrenados',
     noModelsYet: 'Aún no hay modelos de referencia disponibles',
     existingModels: 'MODELOS EXISTENTES:',
     statesTrainedCount: '{{count}} estado(s) ya entrenado(s)',
+    recordingStatusHighQuality: 'Alta calidad de audio detectada',
+    fingerprintQualityLabel: 'Calidad de huella:',
+    fingerprintQualityConfident: 'SEGURO',
 
     recording: {
       alreadyRunning: 'Ya hay una grabación en progreso.',
@@ -198,6 +206,7 @@ export const es: TranslationDict = {
     cameraNotAvailable: 'Cámara no disponible. El diagnóstico continuará sin guía de posición.',
     diagnosisRunning: 'Diagnóstico en ejecución',
     saveFailed: 'No se pudo guardar el diagnóstico',
+    liveAnalysis: 'Realizar análisis en vivo',
 
     sampleRateError: 'Error de configuración de audio: Su micrófono funciona a {{actual}}Hz, pero ningún modelo de referencia fue entrenado a esta frecuencia de muestreo (Modelos: {{expected}}Hz). Por favor use la misma configuración de audio que durante el entrenamiento o cree un nuevo modelo de referencia con la frecuencia de muestreo actual.',
 
@@ -334,6 +343,7 @@ export const es: TranslationDict = {
     success: 'Éxito',
     yes: 'Sí',
     no: 'No',
+    or: 'o',
     ok: 'OK',
     loading: 'Cargando...',
     initializing: 'Inicializando...',
@@ -485,7 +495,18 @@ export const es: TranslationDict = {
     issuesTitle: 'Problemas detectados:', discardNew: 'Descartar / Nuevo',
     saveAsReference: 'Guardar como referencia',
   },
-  diagnosisResults: { title: 'Resultados del diagnóstico' },
+  diagnosisResults: {
+    title: 'Resultados del diagnóstico',
+    fingerprintLabel: 'Huella',
+    confidenceScoreLabel: 'Puntuación de confianza',
+    varianceTitle: 'Varianza',
+    frequencyAnomalyLabel: 'Anomalía de frecuencia',
+    analysisHintDefault: 'Consejo: señal ligeramente elevada alrededor de 20 kHz',
+    referenceQualityTitle: 'Calidad de referencia',
+    referenceQualityStatusGood: 'BUENA',
+    referenceQualityDescription: 'La grabación de referencia cumple las condiciones recomendadas',
+    viewHistory: 'Ver historial',
+  },
   themes: {
     neonTitle: 'Neon Industrial',
     neonDescription: 'Paleta neón de alto contraste para entornos con poca luz. Los acentos guían a las acciones clave.',

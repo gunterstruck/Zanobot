@@ -660,18 +660,18 @@
             <div class="modal-body">
                 <canvas id="waveform-canvas" width="300" height="150"></canvas>
                 <canvas id="health-gauge-canvas" width="300" height="300" style="display: none;"></canvas>
-                <p class="recording-status" id="recording-status">High audio quality detected</p>
+                <p class="recording-status" id="recording-status" data-i18n="reference.recordingStatusHighQuality">High audio quality detected</p>
                 <p class="recording-timer" id="recording-timer">00:00</p>
                 <div class="fingerprint-quality">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
                     </svg>
-                    <span>Fingerprint Quality: <strong id="fingerprint-quality">CONFIDENT</strong></span>
+                    <span><span data-i18n="reference.fingerprintQualityLabel">Fingerprint Quality:</span> <strong id="fingerprint-quality" data-i18n="reference.fingerprintQualityConfident">CONFIDENT</strong></span>
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-secondary" id="stop-recording-btn">Stop Recording</button>
-                <button class="modal-btn btn-primary" id="save-reference-btn" style="display: none;">Save Reference</button>
+                <button class="modal-btn btn-secondary" id="stop-recording-btn" data-i18n="buttons.stopRecording">Stop Recording</button>
+                <button class="modal-btn btn-primary" id="save-reference-btn" style="display: none;" data-i18n="buttons.saveReference">Save Reference</button>
             </div>
         </div>
     </div>
@@ -699,7 +699,7 @@
                         <source id="review-audio-source" type="audio/webm">
                         Ihr Browser unterstützt keine Audio-Wiedergabe.
                     </audio>
-                    <p class="review-info">15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)</p>
+                    <p class="review-info" data-i18n="review.recordingInfo">15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)</p>
                 </div>
 
                 <div class="review-reference-image" id="review-reference-image-container" style="display: none;">
@@ -707,7 +707,7 @@
                     <div class="review-image-frame">
                         <img id="review-reference-image" alt="Gespeichertes Positionsbild der Maschine">
                     </div>
-                    <p class="review-info">Prüfen Sie, ob das Bild die korrekte Position zeigt.</p>
+                    <p class="review-info" data-i18n="review.positionImageCheck">Prüfen Sie, ob das Bild die korrekte Position zeigt.</p>
                 </div>
 
                 <!-- Quality Assessment -->
@@ -881,25 +881,25 @@
                         <span id="machine-barcode">1GB4-636A0-Ba1</span>
                     </div>
                     <div class="result-fingerprint">
-                        <h4>Fingerprint</h4>
+                        <h4 data-i18n="diagnosisResults.fingerprintLabel">Fingerprint</h4>
                         <p class="result-status status-healthy" id="result-status">UNAUFFÄLLIG</p>
-                        <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% Confidence score</p>
+                        <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% <span data-i18n="diagnosisResults.confidenceScoreLabel">Confidence score</span></p>
                     </div>
                     <div class="result-analysis" data-view-level="expert">
-                        <h4>Variance</h4>
-                        <p class="analysis-label">Frequency anomaly</p>
+                        <h4 data-i18n="diagnosisResults.varianceTitle">Variance</h4>
+                        <p class="analysis-label" data-i18n="diagnosisResults.frequencyAnomalyLabel">Frequency anomaly</p>
                         <canvas id="analysis-canvas" width="300" height="100"></canvas>
-                        <p class="analysis-hint" id="analysis-hint">Hint: Slightly increased signal around 20 kHz</p>
+                        <p class="analysis-hint" id="analysis-hint" data-i18n="diagnosisResults.analysisHintDefault">Hint: Slightly increased signal around 20 kHz</p>
                     </div>
                     <div class="result-quality" data-view-level="advanced">
-                        <h4>Reference Quality</h4>
-                        <p class="quality-status status-good">GOOD</p>
-                        <p class="quality-description">Reference recording meets recommended conditions</p>
+                        <h4 data-i18n="diagnosisResults.referenceQualityTitle">Reference Quality</h4>
+                        <p class="quality-status status-good" data-i18n="diagnosisResults.referenceQualityStatusGood">GOOD</p>
+                        <p class="quality-description" data-i18n="diagnosisResults.referenceQualityDescription">Reference recording meets recommended conditions</p>
                     </div>
                 </div>
             </div>
             <div class="modal-actions shell-footer">
-                <button class="modal-btn btn-secondary" id="view-history-btn">View History</button>
+                <button class="modal-btn btn-secondary" id="view-history-btn" data-i18n="diagnosisResults.viewHistory">View History</button>
             </div>
         </div>
     </div>

@@ -17,12 +17,15 @@ export const de: TranslationDict = {
     create: 'Erstellen',
     record: 'Aufnehmen',
     startDiagnosis: 'Diagnose starten',
+    analyze: 'Analysieren',
     close: 'Schließen',
     cancel: 'Abbrechen',
     save: 'Speichern',
     discard: 'Verwerfen',
     trainAnother: 'Weiteren Zustand trainieren',
     newMachine: 'Neue Maschine',
+    stopRecording: 'Aufnahme stoppen',
+    saveReference: 'Referenz speichern',
   },
 
   // ============================================================================
@@ -80,6 +83,7 @@ export const de: TranslationDict = {
     machineOverview: 'Maschinenübersicht',
     history: 'Verlauf',
     noMeasurements: 'Noch keine Messungen vorhanden',
+    noMachines: 'Keine Maschinen vorhanden',
     statesTrained: '{{count}} Zustände trainiert',
 
     errors: {
@@ -137,11 +141,15 @@ export const de: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Referenz aufnehmen',
+    tenSecondRecording: '10-Sekunden Referenzaufnahme',
     noReferenceModel: 'Kein Referenzmodell vorhanden',
     trainedStates: 'Trainierte Zustände',
     noModelsYet: 'Noch keine Referenzmodelle vorhanden',
     existingModels: 'VORHANDENE MODELLE:',
     statesTrainedCount: '{{count}} Zustand(e) bereits trainiert',
+    recordingStatusHighQuality: 'Hohe Audioqualität erkannt',
+    fingerprintQualityLabel: 'Fingerprint-Qualität:',
+    fingerprintQualityConfident: 'SICHER',
 
     recording: {
       alreadyRunning: 'Eine Aufnahme läuft bereits.',
@@ -200,6 +208,7 @@ export const de: TranslationDict = {
     cameraNotAvailable: 'Kamera nicht verfügbar. Diagnose wird ohne Positionshilfe fortgesetzt.',
     diagnosisRunning: 'Diagnose läuft',
     saveFailed: 'Diagnose konnte nicht gespeichert werden',
+    liveAnalysis: 'Live-Analyse durchführen',
 
     sampleRateError: 'Audio-Setup Fehler: Ihr Mikrofon läuft bei {{actual}}Hz, aber kein Referenzmodell wurde bei dieser Sample Rate trainiert (Modelle: {{expected}}Hz). Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
 
@@ -336,6 +345,7 @@ export const de: TranslationDict = {
     success: 'Erfolg',
     yes: 'Ja',
     no: 'Nein',
+    or: 'oder',
     ok: 'OK',
     loading: 'Laden...',
     initializing: 'Initialisierung...',
@@ -579,6 +589,15 @@ export const de: TranslationDict = {
   // ============================================================================
   diagnosisResults: {
     title: 'Diagnoseergebnisse',
+    fingerprintLabel: 'Fingerprint',
+    confidenceScoreLabel: 'Vertrauensscore',
+    varianceTitle: 'Varianz',
+    frequencyAnomalyLabel: 'Frequenzabweichung',
+    analysisHintDefault: 'Hinweis: Leicht erhöhtes Signal um 20 kHz',
+    referenceQualityTitle: 'Referenzqualität',
+    referenceQualityStatusGood: 'GUT',
+    referenceQualityDescription: 'Referenzaufnahme erfüllt empfohlene Bedingungen',
+    viewHistory: 'Verlauf anzeigen',
   },
 
   // ============================================================================
