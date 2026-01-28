@@ -482,6 +482,7 @@ export class IdentifyPhase {
       };
 
       await saveMachine(newMachine);
+      await this.refreshMachineLists();
       notify.success(t('identify.success.machineAutoCreated', { name: autoName }));
       this.onMachineSelected(newMachine);
     } catch (error) {
@@ -553,6 +554,7 @@ export class IdentifyPhase {
       };
 
       await saveMachine(machine);
+      await this.refreshMachineLists();
 
       // DEBUG LOGGING: Show created machine
       logger.debug('✅ Machine Created:', {
@@ -572,6 +574,13 @@ export class IdentifyPhase {
       logger.error('Create machine error:', error);
       this.showError(t('identify.errors.machineCreate'));
     }
+  }
+
+  /**
+   * Refresh machine lists (overview + quick select) after updates.
+   */
+  private async refreshMachineLists(): Promise<void> {
+    await Promise.all([this.loadMachineOverview(), this.loadMachineHistory()]);
   }
 
   /**
