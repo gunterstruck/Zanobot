@@ -188,6 +188,7 @@ export const en: TranslationDict = {
     },
 
     labels: {
+      baseline: 'Reference',
       prompt: 'Enter a name for this machine state:\n\nExamples:\n• Normal operating states: "Idle", "Full Load", "Partial Load"\n• Faults: "Imbalance simulated", "Bearing damage", "Fan error"',
       confirmType: 'State: "{{label}}"\n\nIs this a NORMAL operating state?\n\n🟢 OK (Yes) → Normal state (e.g., "Idle", "Full Load")\n🔴 Cancel (No) → Known fault (e.g., "Imbalance", "Bearing damage")\n\nNote: This choice determines whether a diagnosis is shown as "healthy" or "faulty".',
       enterName: 'Please enter a name',
@@ -460,7 +461,7 @@ export const en: TranslationDict = {
     criticalDeviation: 'Significant deviation - maintenance urgently recommended!',
     diagnosisSaved: 'Diagnosis saved',
     diagnosisSaveFailed: 'Diagnosis could not be saved',
-    healthyLabel: 'HEALTHY',
+    healthyLabel: 'NORMAL',
     warningLabel: 'WARNING',
     criticalLabel: 'CRITICAL',
     errorPrefix: '❌ Error:',

@@ -190,6 +190,7 @@ export const de: TranslationDict = {
     },
 
     labels: {
+      baseline: 'Referenz',
       prompt: 'Geben Sie einen Namen für diesen Maschinenzustand ein:\n\nBeispiele:\n• Normale Betriebszustände: "Leerlauf", "Volllast", "Teillast"\n• Fehler: "Unwucht simuliert", "Lagerschaden", "Lüfterfehler"',
       confirmType: 'Zustand: "{{label}}"\n\nIst dies ein NORMALER Betriebszustand?\n\n🟢 OK (Ja) → Normaler Zustand (z.B. "Leerlauf", "Volllast")\n🔴 Abbrechen (Nein) → Bekannter Fehler (z.B. "Unwucht", "Lagerschaden")\n\nHinweis: Diese Wahl bestimmt, ob eine Diagnose als "gesund" oder "fehlerhaft" angezeigt wird.',
       enterName: 'Bitte einen Namen eingeben',
@@ -480,7 +481,7 @@ export const de: TranslationDict = {
     criticalDeviation: 'Signifikante Abweichung - Wartung dringend empfohlen!',
     diagnosisSaved: 'Diagnose gespeichert',
     diagnosisSaveFailed: 'Diagnose konnte nicht gespeichert werden',
-    healthyLabel: 'GESUND',
+    healthyLabel: 'UNAUFFÄLLIG',
     warningLabel: 'WARNUNG',
     criticalLabel: 'KRITISCH',
     errorPrefix: '❌ Fehler:',

@@ -188,6 +188,7 @@ export const zh: TranslationDict = {
     },
 
     labels: {
+      baseline: '参考',
       prompt: '为此机器状态输入名称：\n\n示例：\n• 正常运行状态："空转"、"满载"、"部分负载"\n• 故障："模拟不平衡"、"轴承损坏"、"风扇故障"',
       confirmType: '状态："{{label}}"\n\n这是正常运行状态吗？\n\n🟢 确定（是）→ 正常状态（如"空转"、"满载"）\n🔴 取消（否）→ 已知故障（如"不平衡"、"轴承损坏"）\n\n注意：此选择决定诊断显示为"健康"还是"故障"。',
       enterName: '请输入名称',
@@ -446,7 +447,7 @@ export const zh: TranslationDict = {
     criticalDeviation: '显著偏差 - 紧急建议维护！',
     diagnosisSaved: '诊断已保存',
     diagnosisSaveFailed: '无法保存诊断',
-    healthyLabel: '健康',
+    healthyLabel: '正常',
     warningLabel: '警告',
     criticalLabel: '严重',
     errorPrefix: '❌ 错误：',

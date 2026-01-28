@@ -19,6 +19,7 @@ import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 import type { Machine } from '@data/types.js';
 import { getMachine, saveMachine } from '@data/db.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Recording state
@@ -401,7 +402,7 @@ export class Level2ReferencePhase {
       audioContext.close();
 
       // Create reference
-      await this.detector.createReference(audioBuffer, this.machine.id, 'Baseline');
+      await this.detector.createReference(audioBuffer, this.machine.id, t('reference.labels.baseline'));
     } catch (error) {
       this.handleError(error as Error);
     }
