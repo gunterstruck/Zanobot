@@ -10,6 +10,7 @@
 
 import { initDB, getDBStats } from '@data/db.js';
 import { Router } from '@ui/router.js';
+import { BannerManager } from '@ui/BannerManager.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 import { initErrorBoundary } from '@utils/errorBoundary.js';
@@ -213,6 +214,10 @@ class ZanobotApp {
 
       // Translate static DOM elements based on detected language
       translateDOM();
+
+      if (dbAvailable) {
+        new BannerManager();
+      }
 
       // Note: Service Worker is automatically registered by VitePWA plugin
       // See vite.config.ts and the auto-generated registerSW.js script
