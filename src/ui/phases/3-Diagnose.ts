@@ -761,6 +761,12 @@ export class DiagnosePhase {
         throw new Error('Machine data is invalid or missing');
       }
 
+      const latestMachine = await getMachine(this.machine.id);
+      if (!latestMachine) {
+        throw new Error(`Machine not found: ${this.machine.id}`);
+      }
+      this.machine = latestMachine;
+
       if (!this.machine.referenceModels || this.machine.referenceModels.length === 0) {
         throw new Error('No reference models available');
       }

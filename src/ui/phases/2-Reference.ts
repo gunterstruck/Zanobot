@@ -1123,6 +1123,18 @@ export class ReferencePhase {
       return;
     }
 
+    const { getMachine, saveMachine } = await import('@data/db.js');
+    const machineToUpdate = await getMachine(this.machine.id);
+    if (!machineToUpdate) {
+      logger.error(`Cannot save: machine not found (${this.machine.id})`);
+      notify.error(t('reference.errors.machineDataMissing'), new Error('Machine not found'), {
+        title: t('modals.error'),
+        duration: 0,
+      });
+      return;
+    }
+    this.machine = machineToUpdate;
+
     if (!this.currentTrainingData || !this.currentQualityResult) {
       logger.error('Cannot save: missing training data or quality result');
       return;
@@ -1318,12 +1330,6 @@ export class ReferencePhase {
       model.type = type;
 
       // Save model + reference image in a single update to avoid overwriting changes.
-      const { getMachine, saveMachine } = await import('@data/db.js');
-      const machineToUpdate = await getMachine(this.machine.id);
-      if (!machineToUpdate) {
-        throw new Error(`Machine not found for update: ${this.machine.id}`);
-      }
-
       if (!machineToUpdate.referenceModels) {
         logger.warn(
           `⚠️ Machine ${this.machine.id} has no referenceModels array - initializing empty array`

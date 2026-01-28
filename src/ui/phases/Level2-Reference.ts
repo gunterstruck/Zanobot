@@ -385,6 +385,12 @@ export class Level2ReferencePhase {
     this.showProgress();
 
     try {
+      const latestMachine = await getMachine(this.machine.id);
+      if (!latestMachine) {
+        throw new Error(`Machine not found: ${this.machine.id}`);
+      }
+      this.machine = latestMachine;
+
       // Convert chunks to AudioBuffer
       const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
       const arrayBuffer = await audioBlob.arrayBuffer();
