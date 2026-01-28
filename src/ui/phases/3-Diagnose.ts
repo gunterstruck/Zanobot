@@ -697,9 +697,10 @@ export class DiagnosePhase {
       // UX FIX: Only show detected state if score meets confident match threshold
       // Below threshold the match is uncertain, showing the label would be confusing
       const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
+      const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
 
       if (shouldShowState) {
-        statusElement.textContent = `${localizedStatus} | ${detectedState}`;
+        statusElement.textContent = `${localizedStatus} | ${displayState}`;
       } else {
         statusElement.textContent = localizedStatus;
       }

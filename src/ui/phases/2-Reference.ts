@@ -1199,10 +1199,10 @@ export class ReferencePhase {
 
       // CRITICAL FIX: Check if referenceModels exists before accessing length
       if (!existingModels || existingModels.length === 0) {
-        // First recording: Always "Baseline" (healthy state)
-        label = 'Baseline';
+        // First recording: Always baseline (healthy state)
+        label = t('reference.labels.baseline');
         type = 'healthy';
-        logger.info('First recording - using label: "Baseline", type: "healthy"');
+        logger.info(`First recording - using label: "${label}", type: "healthy"`);
       } else {
         // Additional recordings: Ask user for label and type
         const userLabel = prompt(
