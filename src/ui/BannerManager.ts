@@ -137,7 +137,9 @@ export class BannerManager {
   }
 
   private isMobileDevice(): boolean {
-    if (navigator.userAgentData?.mobile) {
+    const userAgentData = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData;
+
+    if (userAgentData?.mobile) {
       return true;
     }
 
