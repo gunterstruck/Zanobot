@@ -12,7 +12,7 @@ import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
-import { t, getLanguage } from '../../i18n/index.js';
+import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
   type AudioQualityReport,
@@ -20,16 +20,39 @@ import {
 } from '@core/audio/HardwareCheck.js';
 import { getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 
+type NDEFRecordInit = {
+  recordType: 'url';
+  data: string;
+};
+
+type NDEFMessageInit = {
+  records: NDEFRecordInit[];
+};
+
+type NDEFWriterConstructor = new () => {
+  write: (message: NDEFMessageInit) => Promise<void>;
+};
+
 export class IdentifyPhase {
   private onMachineSelected: (machine: Machine) => void;
   private html5QrCode: Html5Qrcode | null = null;
   private scannerModal: HTMLElement | null = null;
   private isScanning: boolean = false;
+  private currentMachine: Machine | null = null;
 
   // Hardware Intelligence
   private currentAudioStream: MediaStream | null = null;
   private selectedDeviceId: string | undefined = undefined;
   private audioQualityReport: AudioQualityReport | null = null;
+
+  // NFC Writer UI
+  private nfcModal: HTMLElement | null = null;
+  private nfcStatus: HTMLElement | null = null;
+  private nfcWriteBtn: HTMLButtonElement | null = null;
+  private nfcGenericOption: HTMLInputElement | null = null;
+  private nfcSpecificOption: HTMLInputElement | null = null;
+  private nfcSpecificDetail: HTMLElement | null = null;
+  private deepLinkOverlay: HTMLElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -120,6 +143,12 @@ export class IdentifyPhase {
     if (addNewMachineBtn) {
       addNewMachineBtn.addEventListener('click', () => this.handleAddNewMachine());
     }
+
+    // NFC Writer integration
+    this.initNfcWriter();
+
+    // Deep link handling
+    void this.handleDeepLink();
   }
 
   /**
@@ -469,6 +498,7 @@ export class IdentifyPhase {
 
       if (machine) {
         notify.success(t('identify.success.machineLoaded', { name: machine.name }));
+        this.setCurrentMachine(machine);
         this.onMachineSelected(machine);
         return;
       }
@@ -484,6 +514,7 @@ export class IdentifyPhase {
       await saveMachine(newMachine);
       await this.refreshMachineLists();
       notify.success(t('identify.success.machineAutoCreated', { name: autoName }));
+      this.setCurrentMachine(newMachine);
       this.onMachineSelected(newMachine);
     } catch (error) {
       logger.error('Error handling machine ID:', error);
@@ -569,6 +600,7 @@ export class IdentifyPhase {
       idInput.value = '';
 
       this.showNotification(t('identify.success.machineCreated', { name }));
+      this.setCurrentMachine(machine);
       this.onMachineSelected(machine);
     } catch (error) {
       logger.error('Create machine error:', error);
@@ -635,6 +667,225 @@ export class IdentifyPhase {
    */
   private showError(message: string): void {
     notify.error(message);
+  }
+
+  /**
+   * Track currently selected machine for NFC writer context.
+   */
+  private setCurrentMachine(machine: Machine): void {
+    this.currentMachine = machine;
+    this.updateNfcSpecificOption();
+  }
+
+  /**
+   * Deep link handling for magic URLs.
+   */
+  private async handleDeepLink(): Promise<void> {
+    const params = new URLSearchParams(window.location.search);
+    const machineId = params.get('machineId');
+
+    if (!machineId) {
+      return;
+    }
+
+    const validation = this.validateMachineId(machineId);
+    if (!validation.valid) {
+      this.showError(validation.error || t('identify.errors.invalidMachineId'));
+      return;
+    }
+
+    this.showDeepLinkOverlay(true);
+    try {
+      await this.handleMachineId(machineId);
+      params.delete('machineId');
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, document.title, newUrl);
+    } catch (error) {
+      logger.error('Failed to handle deep link:', error);
+      this.showError(t('identify.errors.machineLoad'));
+    } finally {
+      this.showDeepLinkOverlay(false);
+    }
+  }
+
+  private showDeepLinkOverlay(show: boolean): void {
+    if (!this.deepLinkOverlay) {
+      this.deepLinkOverlay = document.getElementById('deep-link-overlay');
+    }
+    if (this.deepLinkOverlay) {
+      this.deepLinkOverlay.style.display = show ? 'flex' : 'none';
+    }
+  }
+
+  /**
+   * NFC Writer setup and flow.
+   */
+  private initNfcWriter(): void {
+    const openBtn = document.getElementById('open-nfc-writer-btn') as HTMLButtonElement | null;
+    const settingsBtn = document.getElementById('settings-nfc-writer-btn') as HTMLButtonElement | null;
+    const availabilityHint = document.getElementById('nfc-availability-hint');
+    const settingsAvailabilityHint = document.getElementById('settings-nfc-availability-hint');
+
+    this.nfcModal = document.getElementById('nfc-writer-modal');
+    this.nfcStatus = document.getElementById('nfc-status');
+    this.nfcWriteBtn = document.getElementById('nfc-write-btn') as HTMLButtonElement | null;
+    this.nfcGenericOption = document.getElementById('nfc-option-generic') as HTMLInputElement | null;
+    this.nfcSpecificOption = document.getElementById('nfc-option-specific') as HTMLInputElement | null;
+    this.nfcSpecificDetail = document.getElementById('nfc-option-specific-detail');
+
+    const closeBtn = document.getElementById('close-nfc-writer-modal');
+    const cancelBtn = document.getElementById('nfc-cancel-btn');
+
+    const supportsNfc = this.isNfcWriteSupported();
+
+    if (openBtn) {
+      openBtn.disabled = !supportsNfc;
+      openBtn.addEventListener('click', () => this.openNfcModal());
+    }
+    if (settingsBtn) {
+      settingsBtn.disabled = !supportsNfc;
+      settingsBtn.addEventListener('click', () => this.openNfcModal());
+    }
+
+    if (availabilityHint) {
+      availabilityHint.style.display = supportsNfc ? 'none' : 'block';
+    }
+    if (settingsAvailabilityHint) {
+      settingsAvailabilityHint.style.display = supportsNfc ? 'none' : 'block';
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeNfcModal());
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.closeNfcModal());
+    }
+    if (this.nfcModal) {
+      this.nfcModal.addEventListener('click', (event) => {
+        if (event.target === this.nfcModal) {
+          this.closeNfcModal();
+        }
+      });
+    }
+    if (this.nfcWriteBtn) {
+      this.nfcWriteBtn.addEventListener('click', () => {
+        void this.handleNfcWrite();
+      });
+    }
+
+    this.updateNfcSpecificOption();
+  }
+
+  private isNfcWriteSupported(): boolean {
+    return typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+  }
+
+  private openNfcModal(): void {
+    if (!this.nfcModal) {
+      return;
+    }
+    this.updateNfcSpecificOption();
+    this.setNfcStatus('');
+    this.nfcModal.style.display = 'flex';
+  }
+
+  private closeNfcModal(): void {
+    if (this.nfcModal) {
+      this.nfcModal.style.display = 'none';
+    }
+  }
+
+  private updateNfcSpecificOption(): void {
+    if (!this.nfcSpecificOption || !this.nfcSpecificDetail) {
+      return;
+    }
+
+    if (this.currentMachine) {
+      this.nfcSpecificOption.disabled = false;
+      this.nfcSpecificDetail.textContent = t('nfc.optionSpecificDetail', {
+        name: this.currentMachine.name,
+        id: this.currentMachine.id,
+      });
+    } else {
+      this.nfcSpecificOption.disabled = true;
+      if (this.nfcGenericOption) {
+        this.nfcGenericOption.checked = true;
+      }
+      this.nfcSpecificDetail.textContent = t('nfc.optionSpecificUnavailable');
+    }
+  }
+
+  private setNfcStatus(message: string, status?: 'success' | 'error'): void {
+    if (!this.nfcStatus) {
+      return;
+    }
+    this.nfcStatus.textContent = message;
+    this.nfcStatus.classList.remove('status-success', 'status-error');
+    if (status === 'success') {
+      this.nfcStatus.classList.add('status-success');
+    }
+    if (status === 'error') {
+      this.nfcStatus.classList.add('status-error');
+    }
+  }
+
+  private getBaseAppUrl(): string {
+    return new URL('/', window.location.origin).toString();
+  }
+
+  private async handleNfcWrite(): Promise<void> {
+    if (!this.nfcWriteBtn) {
+      return;
+    }
+
+    if (!this.isNfcWriteSupported()) {
+      this.setNfcStatus(t('nfc.unsupported'), 'error');
+      return;
+    }
+
+    const writerConstructor = (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter;
+    if (!writerConstructor) {
+      this.setNfcStatus(t('nfc.unsupported'), 'error');
+      return;
+    }
+
+    const selectedOption = this.nfcSpecificOption?.checked ? 'specific' : 'generic';
+    if (selectedOption === 'specific' && !this.currentMachine) {
+      this.setNfcStatus(t('nfc.optionSpecificUnavailable'), 'error');
+      return;
+    }
+
+    const baseUrl = this.getBaseAppUrl();
+    const url = selectedOption === 'specific' && this.currentMachine
+      ? `${baseUrl}?machineId=${encodeURIComponent(this.currentMachine.id)}`
+      : baseUrl;
+
+    this.nfcWriteBtn.disabled = true;
+    this.setNfcStatus(t('nfc.statusWriting'));
+
+    try {
+      const writer = new writerConstructor();
+      await writer.write({
+        records: [
+          {
+            recordType: 'url',
+            data: url,
+          },
+        ],
+      });
+      this.setNfcStatus(t('nfc.statusSuccess'), 'success');
+    } catch (error) {
+      const isError = error instanceof Error;
+      const errorName = isError ? error.name : '';
+      if (errorName === 'AbortError') {
+        this.setNfcStatus(t('nfc.statusCancelled'), 'error');
+      } else {
+        this.setNfcStatus(t('nfc.statusError'), 'error');
+      }
+      logger.error('NFC write failed:', error);
+    } finally {
+      this.nfcWriteBtn.disabled = false;
+    }
   }
 
   /**
@@ -1067,6 +1318,7 @@ export class IdentifyPhase {
       logger.debug('📞 Calling onMachineSelected() with quick-selected machine...');
 
       this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
+      this.setCurrentMachine(machine);
       this.onMachineSelected(machine);
     } catch (error) {
       logger.error('Failed to quick select machine:', error);
@@ -1220,6 +1472,7 @@ export class IdentifyPhase {
   private async handleMachineSelect(machine: Machine): Promise<void> {
     logger.info(`Machine selected from overview: ${machine.name} (${machine.id})`);
     this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
+    this.setCurrentMachine(machine);
     this.onMachineSelected(machine);
   }
 

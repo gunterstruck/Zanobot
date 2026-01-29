@@ -121,6 +121,7 @@ export const fr: TranslationDict = {
     messages: {
       codeRecognized: 'Code reconnu : {{code}}',
       autoMachineName: 'Machine {{id}}',
+      loadingMachine: 'Chargement de la machine...',
     },
 
     time: {
@@ -464,7 +465,7 @@ export const fr: TranslationDict = {
   },
   audio: { ready: 'Prêt', stabilizing: 'Stabilisation acoustique... {{seconds}}s', waitingForSignal: 'En attente du signal...', recordingRunning: 'Enregistrement en cours' },
   settingsUI: {
-    title: 'Paramètres', appearance: 'Apparence',
+    title: 'Paramètres', nfcWriterTitle: 'Tags NFC', nfcWriterDescription: 'Écrivez des tags NFC pour l’accès à l’app ou une machine sélectionnée.', appearance: 'Apparence',
     audioSettings: 'Paramètres audio', audioHardware: 'Matériel audio',
     detectingMic: 'Détection du microphone...', initHardwareCheck: 'Initialisation du test matériel',
     changeMicrophone: 'Changer de microphone', confidenceThreshold: 'Seuil de confiance',
@@ -484,6 +485,25 @@ export const fr: TranslationDict = {
     microphoneAdvice: 'Sélectionnez le meilleur microphone pour le diagnostic machine. Évitez les casques et appareils Bluetooth car ils sont optimisés pour la parole.',
     manualInput: 'Saisir manuellement', machineIdInput: 'Entrer l\'ID de la machine', continue: 'Continuer',
     qrHint: 'Placez le code QR ou le code-barres dans le cadre', codeRecognized: 'Code reconnu !',
+  },
+  nfc: {
+    title: 'Écrire un tag NFC',
+    description: 'Choisissez les informations à écrire sur le tag NFC.',
+    openWriter: 'Écrire un tag NFC',
+    writeButton: 'Écrire maintenant',
+    optionGeneric: 'Lien de l’app (générique)',
+    optionGenericDetail: 'Ouvre l’app sans ID de machine.',
+    optionSpecific: 'Lien de machine',
+    optionSpecificDetailDefault: 'Ouvre l’app pour la machine actuellement sélectionnée.',
+    optionSpecificDetail: 'Ouvre l’app pour "{{name}}" (ID : {{id}}).',
+    optionSpecificUnavailable: 'Sélectionnez d’abord une machine pour écrire un lien spécifique.',
+    hint: 'Placez le tag NFC à l’arrière de votre appareil.',
+    unavailableHint: 'L’écriture NFC est disponible uniquement sur Chrome Android.',
+    statusWriting: 'Écriture du tag NFC...',
+    statusSuccess: 'Tag NFC écrit avec succès.',
+    statusCancelled: 'Écriture annulée.',
+    statusError: 'Impossible d’écrire le tag NFC.',
+    unsupported: 'L’écriture NFC n’est pas prise en charge sur cet appareil.',
   },
   review: {
     title: 'Vérifier l\'enregistrement', subtitle: 'Contrôle qualité',

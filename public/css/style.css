@@ -1689,6 +1689,130 @@ body {
 }
 
 /* ===================================
+   NFC WRITER
+   =================================== */
+.nfc-writer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.nfc-availability-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.nfc-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+}
+
+.nfc-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.nfc-option input {
+    margin-top: 0.2rem;
+    accent-color: var(--primary-color);
+}
+
+.nfc-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.nfc-option-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nfc-option-detail {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.nfc-option input:disabled + .nfc-option-text {
+    opacity: 0.6;
+}
+
+.nfc-status {
+    min-height: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.nfc-status.status-success {
+    color: var(--status-healthy);
+}
+
+.nfc-status.status-error {
+    color: var(--status-error);
+}
+
+.nfc-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ===================================
+   DEEP LINK OVERLAY
+   =================================== */
+.deep-link-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+}
+
+.deep-link-card {
+    background: var(--bg-modal);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+    text-align: center;
+}
+
+.deep-link-spinner {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--primary-color);
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================
    ACCENT BUTTONS (Record & Stop)
    Per UX-Spec: Orange accent for critical actions
    =================================== */

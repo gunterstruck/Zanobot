@@ -121,6 +121,7 @@ export const zh: TranslationDict = {
     messages: {
       codeRecognized: '已识别代码：{{code}}',
       autoMachineName: '机器 {{id}}',
+      loadingMachine: '正在加载机器...',
     },
 
     time: {
@@ -464,7 +465,7 @@ export const zh: TranslationDict = {
   },
   audio: { ready: '就绪', stabilizing: '声学稳定中... {{seconds}}秒', waitingForSignal: '等待信号...', recordingRunning: '录制中' },
   settingsUI: {
-    title: '设置', appearance: '外观',
+    title: '设置', nfcWriterTitle: 'NFC 标签', nfcWriterDescription: '为应用入口或选定机器写入 NFC 标签。', appearance: '外观',
     audioSettings: '音频设置', audioHardware: '音频硬件',
     detectingMic: '正在检测麦克风...', initHardwareCheck: '初始化硬件检查',
     changeMicrophone: '更换麦克风', confidenceThreshold: '置信度阈值',
@@ -484,6 +485,25 @@ export const zh: TranslationDict = {
     microphoneAdvice: '选择最佳麦克风进行机器诊断。避免使用耳机和蓝牙设备，因为它们针对语音进行了优化。',
     manualInput: '手动输入', machineIdInput: '输入机器ID', continue: '继续',
     qrHint: '将二维码或条形码放入框内', codeRecognized: '识别成功！',
+  },
+  nfc: {
+    title: '写入 NFC 标签',
+    description: '选择要写入 NFC 标签的信息。',
+    openWriter: '写入 NFC 标签',
+    writeButton: '立即写入',
+    optionGeneric: '应用链接（通用）',
+    optionGenericDetail: '打开应用但不包含机器 ID。',
+    optionSpecific: '机器链接',
+    optionSpecificDetailDefault: '打开当前选择的机器。',
+    optionSpecificDetail: '打开 "{{name}}"（ID：{{id}}）。',
+    optionSpecificUnavailable: '请先选择一台机器以写入专用链接。',
+    hint: '将 NFC 标签贴近设备背面。',
+    unavailableHint: '仅在 Android 的 Chrome 中支持 NFC 写入。',
+    statusWriting: '正在写入 NFC 标签...',
+    statusSuccess: 'NFC 标签写入成功。',
+    statusCancelled: '写入已取消。',
+    statusError: '无法写入 NFC 标签。',
+    unsupported: '此设备不支持 NFC 写入。',
   },
   review: {
     title: '检查录制', subtitle: '质量控制',
