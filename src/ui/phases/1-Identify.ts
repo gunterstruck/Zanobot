@@ -29,7 +29,7 @@ type NDEFMessageInit = {
   records: NDEFRecordInit[];
 };
 
-type NDEFWriterConstructor = new () => {
+type NDEFReaderConstructor = new () => {
   write: (message: NDEFMessageInit) => Promise<void>;
 };
 
@@ -781,8 +781,8 @@ export class IdentifyPhase {
       return { supported: false, message: t('nfc.requiresSecureContext') };
     }
 
-    const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
-    if (!hasWriter) {
+    const hasReader = typeof (window as typeof window & { NDEFReader?: NDEFReaderConstructor }).NDEFReader !== 'undefined';
+    if (!hasReader) {
       return { supported: false, message: t('nfc.unsupportedBrowser') };
     }
 
@@ -835,13 +835,13 @@ export class IdentifyPhase {
     }
 
     const hasSecureContext = window.isSecureContext;
-    const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+    const hasReader = typeof (window as typeof window & { NDEFReader?: NDEFReaderConstructor }).NDEFReader !== 'undefined';
     const yes = t('common.yes');
     const no = t('common.no');
 
     this.nfcSupportDetails.textContent = t('nfc.supportDetails', {
       secureContext: hasSecureContext ? yes : no,
-      ndefWriter: hasWriter ? yes : no,
+      ndefReader: hasReader ? yes : no,
     });
   }
 
@@ -874,8 +874,8 @@ export class IdentifyPhase {
       return;
     }
 
-    const writerConstructor = (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter;
-    if (!writerConstructor) {
+    const readerConstructor = (window as typeof window & { NDEFReader?: NDEFReaderConstructor }).NDEFReader;
+    if (!readerConstructor) {
       this.setNfcStatus(t('nfc.unsupported'), 'error');
       return;
     }
@@ -895,8 +895,8 @@ export class IdentifyPhase {
     this.setNfcStatus(t('nfc.statusWriting'));
 
     try {
-      const writer = new writerConstructor();
-      await writer.write({
+      const reader = new readerConstructor();
+      await reader.write({
         records: [
           {
             recordType: 'url',
