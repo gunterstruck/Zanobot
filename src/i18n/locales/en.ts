@@ -559,6 +559,8 @@ export const en: TranslationDict = {
     statusCancelled: 'Write cancelled.',
     statusError: 'Could not write NFC tag.',
     unsupported: 'NFC writing is not supported on this device.',
+    requiresSecureContext: 'NFC writing requires a secure (HTTPS) connection.',
+    unsupportedBrowser: 'NFC writing requires Chrome on Android.',
   },
 
   review: {

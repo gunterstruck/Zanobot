@@ -504,6 +504,8 @@ export const fr: TranslationDict = {
     statusCancelled: 'Écriture annulée.',
     statusError: 'Impossible d’écrire le tag NFC.',
     unsupported: 'L’écriture NFC n’est pas prise en charge sur cet appareil.',
+    requiresSecureContext: 'L’écriture NFC nécessite une connexion sécurisée (HTTPS).',
+    unsupportedBrowser: 'L’écriture NFC nécessite Chrome sur Android.',
   },
   review: {
     title: 'Vérifier l\'enregistrement', subtitle: 'Contrôle qualité',

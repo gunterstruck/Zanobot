@@ -504,6 +504,8 @@ export const zh: TranslationDict = {
     statusCancelled: '写入已取消。',
     statusError: '无法写入 NFC 标签。',
     unsupported: '此设备不支持 NFC 写入。',
+    requiresSecureContext: 'NFC 写入需要安全（HTTPS）连接。',
+    unsupportedBrowser: 'NFC 写入需要 Android 上的 Chrome。',
   },
   review: {
     title: '检查录制', subtitle: '质量控制',
