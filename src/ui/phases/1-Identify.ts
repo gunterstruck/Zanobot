@@ -54,6 +54,9 @@ export class IdentifyPhase {
   private nfcSpecificDetail: HTMLElement | null = null;
   private nfcSupportDetails: HTMLElement | null = null;
   private deepLinkOverlay: HTMLElement | null = null;
+  private nfcDiagnosisModal: HTMLElement | null = null;
+  private nfcDiagnosisConfirmBtn: HTMLButtonElement | null = null;
+  private nfcDiagnosisCancelBtn: HTMLButtonElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -147,6 +150,9 @@ export class IdentifyPhase {
 
     // NFC Writer integration
     this.initNfcWriter();
+
+    // NFC diagnosis prompt modal
+    this.initNfcDiagnosisPrompt();
 
     // Deep link handling
     void this.handleDeepLink();
@@ -493,7 +499,7 @@ export class IdentifyPhase {
   /**
    * Handle machine selection or auto-create if missing
    */
-  private async handleMachineId(id: string): Promise<void> {
+  private async handleMachineId(id: string): Promise<boolean> {
     try {
       const machine = await getMachine(id);
 
@@ -501,7 +507,7 @@ export class IdentifyPhase {
         notify.success(t('identify.success.machineLoaded', { name: machine.name }));
         this.setCurrentMachine(machine);
         this.onMachineSelected(machine);
-        return;
+        return true;
       }
 
       const autoName = t('identify.messages.autoMachineName', { id });
@@ -517,9 +523,11 @@ export class IdentifyPhase {
       notify.success(t('identify.success.machineAutoCreated', { name: autoName }));
       this.setCurrentMachine(newMachine);
       this.onMachineSelected(newMachine);
+      return true;
     } catch (error) {
       logger.error('Error handling machine ID:', error);
       notify.error(t('identify.errors.machineLoad'), error as Error);
+      return false;
     }
   }
 
@@ -696,8 +704,9 @@ export class IdentifyPhase {
     }
 
     this.showDeepLinkOverlay(true);
+    let machineHandled = false;
     try {
-      await this.handleMachineId(machineId);
+      machineHandled = await this.handleMachineId(machineId);
       params.delete('machineId');
       const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
       window.history.replaceState({}, document.title, newUrl);
@@ -706,6 +715,10 @@ export class IdentifyPhase {
       this.showError(t('identify.errors.machineLoad'));
     } finally {
       this.showDeepLinkOverlay(false);
+    }
+
+    if (machineHandled) {
+      this.openNfcDiagnosisPrompt();
     }
   }
 
@@ -716,6 +729,81 @@ export class IdentifyPhase {
     if (this.deepLinkOverlay) {
       this.deepLinkOverlay.style.display = show ? 'flex' : 'none';
     }
+  }
+
+  private initNfcDiagnosisPrompt(): void {
+    this.nfcDiagnosisModal = document.getElementById('nfc-diagnosis-modal');
+    this.nfcDiagnosisConfirmBtn = document.getElementById('nfc-diagnosis-confirm-btn') as HTMLButtonElement | null;
+    this.nfcDiagnosisCancelBtn = document.getElementById('nfc-diagnosis-cancel-btn') as HTMLButtonElement | null;
+    const closeBtn = document.getElementById('close-nfc-diagnosis-modal');
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeNfcDiagnosisPrompt());
+    }
+    if (this.nfcDiagnosisCancelBtn) {
+      this.nfcDiagnosisCancelBtn.addEventListener('click', () => this.closeNfcDiagnosisPrompt());
+    }
+    if (this.nfcDiagnosisConfirmBtn) {
+      this.nfcDiagnosisConfirmBtn.addEventListener('click', () => {
+        this.closeNfcDiagnosisPrompt();
+        this.startDiagnosisFromNfc();
+      });
+    }
+    if (this.nfcDiagnosisModal) {
+      this.nfcDiagnosisModal.addEventListener('click', (event) => {
+        if (event.target === this.nfcDiagnosisModal) {
+          this.closeNfcDiagnosisPrompt();
+        }
+      });
+    }
+  }
+
+  private openNfcDiagnosisPrompt(): void {
+    if (!this.nfcDiagnosisModal) {
+      return;
+    }
+    this.nfcDiagnosisModal.style.display = 'flex';
+  }
+
+  private closeNfcDiagnosisPrompt(): void {
+    if (this.nfcDiagnosisModal) {
+      this.nfcDiagnosisModal.style.display = 'none';
+    }
+  }
+
+  private startDiagnosisFromNfc(): void {
+    const content = document.getElementById('run-diagnosis-content');
+    const header = document.querySelector('.section-header[data-target="run-diagnosis-content"]') as HTMLElement | null;
+    if (content && header && window.getComputedStyle(content).display === 'none') {
+      header.click();
+    }
+
+    const mode = document.body.getAttribute('data-detection-mode');
+    const level2Button = document.getElementById('level2-diag-btn') as HTMLButtonElement | null;
+    const level1Button = document.getElementById('diagnose-btn') as HTMLButtonElement | null;
+    const startButton = mode === 'CYCLIC' ? level2Button : level1Button;
+
+    if (!startButton) {
+      return;
+    }
+
+    if (!startButton.disabled) {
+      startButton.click();
+      return;
+    }
+
+    const waitForEnableTimeout = 4000;
+    const startTime = Date.now();
+    const intervalId = window.setInterval(() => {
+      if (!startButton.disabled) {
+        startButton.click();
+        window.clearInterval(intervalId);
+        return;
+      }
+      if (Date.now() - startTime >= waitForEnableTimeout) {
+        window.clearInterval(intervalId);
+      }
+    }, 250);
   }
 
   /**

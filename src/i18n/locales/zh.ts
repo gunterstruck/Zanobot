@@ -62,6 +62,8 @@ export const zh: TranslationDict = {
     databaseExported: '数据库已导出',
     databaseImported: '数据库已导入',
     databaseCleared: '数据库已清空',
+    nfcDiagnosisTitle: '开始诊断？',
+    nfcDiagnosisPrompt: '检测到机器。现在开始诊断吗？',
   },
 
   // ============================================================================

@@ -899,6 +899,28 @@
         </div>
     </div>
 
+    <!-- NFC Diagnosis Prompt Modal -->
+    <div id="nfc-diagnosis-modal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="nfc-diagnosis-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="nfc-diagnosis-title" data-i18n="modals.nfcDiagnosisTitle">Diagnose starten?</h3>
+                <button class="close-modal-btn" id="close-nfc-diagnosis-modal" aria-label="Dialog schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description" data-i18n="modals.nfcDiagnosisPrompt">Maschine erkannt. Diagnose jetzt starten?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="nfc-diagnosis-cancel-btn" data-i18n="common.no">Nein</button>
+                <button class="modal-btn btn-primary" id="nfc-diagnosis-confirm-btn" data-i18n="common.yes">Ja</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Manual Machine ID Modal -->
     <div id="manual-input-modal" class="modal" style="display: none;">
         <div class="modal-content">
