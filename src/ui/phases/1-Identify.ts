@@ -836,16 +836,12 @@ export class IdentifyPhase {
 
     const hasSecureContext = window.isSecureContext;
     const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
-    const policy = document.permissionsPolicy?.allowsFeature?.('nfc');
     const yes = t('common.yes');
     const no = t('common.no');
-    const unknown = t('common.unknown');
-    const policyLabel = policy === undefined ? unknown : policy ? yes : no;
 
     this.nfcSupportDetails.textContent = t('nfc.supportDetails', {
       secureContext: hasSecureContext ? yes : no,
       ndefWriter: hasWriter ? yes : no,
-      policy: policyLabel,
     });
   }
 

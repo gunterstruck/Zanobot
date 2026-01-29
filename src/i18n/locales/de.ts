@@ -576,7 +576,7 @@ export const de: TranslationDict = {
   nfc: {
     title: 'NFC-Tag beschreiben',
     description: 'Wählen Sie aus, welche Information auf den NFC-Tag geschrieben wird.',
-    supportDetails: 'Sicherer Kontext: {{secureContext}} · NDEFWriter verfügbar: {{ndefWriter}} · NFC-Policy erlaubt: {{policy}}',
+    supportDetails: 'Sicherer Kontext: {{secureContext}} · NDEFWriter verfügbar: {{ndefWriter}}',
     openWriter: 'NFC-Tag beschreiben',
     writeButton: 'Jetzt schreiben',
     optionGeneric: 'App-Link (generisch)',
