@@ -736,14 +736,12 @@ export class IdentifyPhase {
     const closeBtn = document.getElementById('close-nfc-writer-modal');
     const cancelBtn = document.getElementById('nfc-cancel-btn');
 
-    const supportsNfc = this.isNfcWriteSupported();
+    const { supported: supportsNfc } = this.getNfcSupportStatus();
 
     if (openBtn) {
-      openBtn.disabled = !supportsNfc;
       openBtn.addEventListener('click', () => this.openNfcModal());
     }
     if (settingsBtn) {
-      settingsBtn.disabled = !supportsNfc;
       settingsBtn.addEventListener('click', () => this.openNfcModal());
     }
 
@@ -776,16 +774,40 @@ export class IdentifyPhase {
     this.updateNfcSpecificOption();
   }
 
-  private isNfcWriteSupported(): boolean {
-    return typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+  private getNfcSupportStatus(): { supported: boolean; message?: string } {
+    if (!window.isSecureContext) {
+      return { supported: false, message: t('nfc.requiresSecureContext') };
+    }
+
+    const userAgent = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(userAgent);
+    const isChrome = /Chrome/i.test(userAgent) && !/EdgA|OPR|SamsungBrowser|Brave|Vivaldi|DuckDuckGo|UCBrowser|MiuiBrowser/i.test(userAgent);
+
+    if (!isAndroid) {
+      return { supported: false, message: t('nfc.requiresAndroid') };
+    }
+
+    const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+    if (!hasWriter) {
+      return {
+        supported: false,
+        message: isChrome ? t('nfc.webNfcUnavailable') : t('nfc.requiresChromeAndroid'),
+      };
+    }
+
+    return { supported: true };
   }
 
   private openNfcModal(): void {
     if (!this.nfcModal) {
       return;
     }
+    const { supported: supportsNfc, message } = this.getNfcSupportStatus();
     this.updateNfcSpecificOption();
-    this.setNfcStatus('');
+    if (this.nfcWriteBtn) {
+      this.nfcWriteBtn.disabled = !supportsNfc;
+    }
+    this.setNfcStatus(supportsNfc ? '' : message || t('nfc.unsupported'), supportsNfc ? undefined : 'error');
     this.nfcModal.style.display = 'flex';
   }
 
@@ -838,8 +860,9 @@ export class IdentifyPhase {
       return;
     }
 
-    if (!this.isNfcWriteSupported()) {
-      this.setNfcStatus(t('nfc.unsupported'), 'error');
+    const { supported: supportsNfc, message } = this.getNfcSupportStatus();
+    if (!supportsNfc) {
+      this.setNfcStatus(message || t('nfc.unsupported'), 'error');
       return;
     }
 

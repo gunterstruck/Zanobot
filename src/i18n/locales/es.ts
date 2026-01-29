@@ -504,6 +504,11 @@ export const es: TranslationDict = {
     statusCancelled: 'Escritura cancelada.',
     statusError: 'No se pudo escribir la etiqueta NFC.',
     unsupported: 'La escritura NFC no es compatible con este dispositivo.',
+    requiresSecureContext: 'La escritura NFC requiere una conexión segura (HTTPS).',
+    unsupportedBrowser: 'La escritura NFC requiere Chrome en Android.',
+    requiresAndroid: 'La escritura NFC solo está disponible en dispositivos Android.',
+    requiresChromeAndroid: 'La escritura NFC requiere Chrome en Android.',
+    webNfcUnavailable: 'Web NFC no está disponible en esta versión de Chrome.',
   },
   review: {
     title: 'Revisar grabación', subtitle: 'Control de calidad',

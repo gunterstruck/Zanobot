@@ -559,6 +559,11 @@ export const en: TranslationDict = {
     statusCancelled: 'Write cancelled.',
     statusError: 'Could not write NFC tag.',
     unsupported: 'NFC writing is not supported on this device.',
+    requiresSecureContext: 'NFC writing requires a secure (HTTPS) connection.',
+    unsupportedBrowser: 'NFC writing requires Chrome on Android.',
+    requiresAndroid: 'NFC writing is only available on Android devices.',
+    requiresChromeAndroid: 'NFC writing requires Chrome on Android.',
+    webNfcUnavailable: 'Web NFC is not available in this Chrome build.',
   },
 
   review: {
