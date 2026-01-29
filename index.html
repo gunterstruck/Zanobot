@@ -123,6 +123,19 @@
                                 </svg>
                                 <span data-i18n="buttons.save">Speichern</span>
                             </button>
+                            <div class="nfc-writer-actions">
+                                <button class="action-btn secondary-btn" id="open-nfc-writer-btn" type="button">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2v8m0 4v8"/>
+                                        <path d="M5 9h14v6H5z"/>
+                                        <path d="M7 9V7a5 5 0 0 1 10 0v2"/>
+                                    </svg>
+                                    <span data-i18n="nfc.openWriter">NFC-Tag beschreiben</span>
+                                </button>
+                                <p class="setting-description nfc-availability-hint" id="nfc-availability-hint" data-i18n="nfc.unavailableHint" style="display: none;">
+                                    NFC-Schreiben ist nur in Chrome auf Android verfügbar.
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Quick Select: Recently Used Machines -->
@@ -398,6 +411,25 @@
                             </div>
 
                             <!-- Divider -->
+                            <div class="settings-divider"></div>
+
+                            <!-- NFC Writer Section -->
+                            <div class="setting-category">
+                                <h4 class="setting-category-title" data-i18n="settingsUI.nfcWriterTitle">NFC-Tags</h4>
+                                <p class="setting-category-description" data-i18n="settingsUI.nfcWriterDescription">Schreiben Sie NFC-Tags für den App-Zugang oder eine ausgewählte Maschine.</p>
+                                <button class="action-btn secondary-btn" id="settings-nfc-writer-btn" type="button">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2v8m0 4v8"/>
+                                        <path d="M5 9h14v6H5z"/>
+                                        <path d="M7 9V7a5 5 0 0 1 10 0v2"/>
+                                    </svg>
+                                    <span data-i18n="nfc.openWriter">NFC-Tag beschreiben</span>
+                                </button>
+                                <p class="setting-description nfc-availability-hint" id="settings-nfc-availability-hint" data-i18n="nfc.unavailableHint" style="display: none;">
+                                    NFC-Schreiben ist nur in Chrome auf Android verfügbar.
+                                </p>
+                            </div>
+
                             <div class="settings-divider"></div>
 
                             <!-- Theme Selection Section -->
@@ -759,6 +791,14 @@
         </div>
     </div>
 
+    <!-- Deep Link Loading Overlay -->
+    <div id="deep-link-overlay" class="deep-link-overlay" style="display: none;">
+        <div class="deep-link-card">
+            <div class="deep-link-spinner" aria-hidden="true"></div>
+            <p data-i18n="identify.messages.loadingMachine">Maschine wird geladen...</p>
+        </div>
+    </div>
+
     <!-- Modal for QR/Barcode Scanner -->
     <div id="scanner-modal" class="modal" style="display: none;">
         <div class="modal-content scanner-modal-content">
@@ -814,6 +854,46 @@
                     </svg>
                     Manuell eingeben
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for NFC Writer -->
+    <div id="nfc-writer-modal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="nfc-writer-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="nfc-writer-title" data-i18n="nfc.title">NFC-Tag beschreiben</h3>
+                <button class="close-modal-btn" id="close-nfc-writer-modal" aria-label="NFC-Dialog schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description" data-i18n="nfc.description">Wählen Sie aus, welche Information auf den NFC-Tag geschrieben wird.</p>
+                <div class="nfc-option-group">
+                    <label class="nfc-option">
+                        <input type="radio" name="nfc-write-option" id="nfc-option-generic" value="generic" checked>
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="nfc.optionGeneric">App-Link (generisch)</span>
+                            <span class="nfc-option-detail" data-i18n="nfc.optionGenericDetail">Öffnet die App ohne Maschinen-ID.</span>
+                        </span>
+                    </label>
+                    <label class="nfc-option">
+                        <input type="radio" name="nfc-write-option" id="nfc-option-specific" value="specific">
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="nfc.optionSpecific">Maschinen-Link</span>
+                            <span class="nfc-option-detail" id="nfc-option-specific-detail" data-i18n="nfc.optionSpecificDetailDefault">Öffnet die App mit der aktuell ausgewählten Maschine.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="nfc-status" id="nfc-status" role="status"></div>
+                <p class="nfc-hint" data-i18n="nfc.hint">Halten Sie den NFC-Tag an die Rückseite Ihres Geräts.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="nfc-cancel-btn" data-i18n="buttons.cancel">Abbrechen</button>
+                <button class="modal-btn btn-primary" id="nfc-write-btn" data-i18n="nfc.writeButton">Jetzt schreiben</button>
             </div>
         </div>
     </div>

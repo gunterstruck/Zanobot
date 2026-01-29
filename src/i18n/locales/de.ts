@@ -123,6 +123,7 @@ export const de: TranslationDict = {
     messages: {
       codeRecognized: 'Code erkannt: {{code}}',
       autoMachineName: 'Maschine {{id}}',
+      loadingMachine: 'Maschine wird geladen...',
     },
 
     time: {
@@ -524,6 +525,8 @@ export const de: TranslationDict = {
   // ============================================================================
   settingsUI: {
     title: 'Einstellungen',
+    nfcWriterTitle: 'NFC-Tags',
+    nfcWriterDescription: 'Schreiben Sie NFC-Tags für den App-Zugang oder eine ausgewählte Maschine.',
     appearance: 'Erscheinungsbild',
     audioSettings: 'Audioeinstellungen',
     audioHardware: 'Audio Hardware',
@@ -565,6 +568,29 @@ export const de: TranslationDict = {
     continue: 'Weiter',
     qrHint: 'QR-Code oder Barcode in den Rahmen halten',
     codeRecognized: 'Code erkannt!',
+  },
+
+  // ============================================================================
+  // NFC WRITER
+  // ============================================================================
+  nfc: {
+    title: 'NFC-Tag beschreiben',
+    description: 'Wählen Sie aus, welche Information auf den NFC-Tag geschrieben wird.',
+    openWriter: 'NFC-Tag beschreiben',
+    writeButton: 'Jetzt schreiben',
+    optionGeneric: 'App-Link (generisch)',
+    optionGenericDetail: 'Öffnet die App ohne Maschinen-ID.',
+    optionSpecific: 'Maschinen-Link',
+    optionSpecificDetailDefault: 'Öffnet die App mit der aktuell ausgewählten Maschine.',
+    optionSpecificDetail: 'Öffnet die App für "{{name}}" (ID: {{id}}).',
+    optionSpecificUnavailable: 'Wählen Sie zuerst eine Maschine aus, um einen spezifischen Link zu schreiben.',
+    hint: 'Halten Sie den NFC-Tag an die Rückseite Ihres Geräts.',
+    unavailableHint: 'NFC-Schreiben ist nur in Chrome auf Android verfügbar.',
+    statusWriting: 'Schreibe NFC-Tag...',
+    statusSuccess: 'NFC-Tag erfolgreich beschrieben.',
+    statusCancelled: 'Schreibvorgang abgebrochen.',
+    statusError: 'NFC-Tag konnte nicht beschrieben werden.',
+    unsupported: 'NFC-Schreiben wird auf diesem Gerät nicht unterstützt.',
   },
 
   // ============================================================================

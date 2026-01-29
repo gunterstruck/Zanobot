@@ -121,6 +121,7 @@ export const en: TranslationDict = {
     messages: {
       codeRecognized: 'Code recognized: {{code}}',
       autoMachineName: 'Machine {{id}}',
+      loadingMachine: 'Loading machine...',
     },
 
     time: {
@@ -492,6 +493,8 @@ export const en: TranslationDict = {
 
   settingsUI: {
     title: 'Settings',
+    nfcWriterTitle: 'NFC tags',
+    nfcWriterDescription: 'Write NFC tags for app access or a selected machine.',
     appearance: 'Appearance',
     audioSettings: 'Audio Settings',
     audioHardware: 'Audio Hardware',
@@ -533,6 +536,29 @@ export const en: TranslationDict = {
     continue: 'Continue',
     qrHint: 'Hold QR code or barcode in the frame',
     codeRecognized: 'Code recognized!',
+  },
+
+  // ============================================================================
+  // NFC WRITER
+  // ============================================================================
+  nfc: {
+    title: 'Write NFC tag',
+    description: 'Choose what information should be written to the NFC tag.',
+    openWriter: 'Write NFC tag',
+    writeButton: 'Write now',
+    optionGeneric: 'App link (generic)',
+    optionGenericDetail: 'Opens the app without a machine ID.',
+    optionSpecific: 'Machine link',
+    optionSpecificDetailDefault: 'Opens the app for the currently selected machine.',
+    optionSpecificDetail: 'Opens the app for "{{name}}" (ID: {{id}}).',
+    optionSpecificUnavailable: 'Select a machine first to write a specific link.',
+    hint: 'Hold the NFC tag to the back of your device.',
+    unavailableHint: 'NFC writing is only available in Chrome on Android.',
+    statusWriting: 'Writing NFC tag...',
+    statusSuccess: 'NFC tag written successfully.',
+    statusCancelled: 'Write cancelled.',
+    statusError: 'Could not write NFC tag.',
+    unsupported: 'NFC writing is not supported on this device.',
   },
 
   review: {
