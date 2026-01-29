@@ -739,11 +739,9 @@ export class IdentifyPhase {
     const supportsNfc = this.isNfcWriteSupported();
 
     if (openBtn) {
-      openBtn.disabled = !supportsNfc;
       openBtn.addEventListener('click', () => this.openNfcModal());
     }
     if (settingsBtn) {
-      settingsBtn.disabled = !supportsNfc;
       settingsBtn.addEventListener('click', () => this.openNfcModal());
     }
 
@@ -784,8 +782,12 @@ export class IdentifyPhase {
     if (!this.nfcModal) {
       return;
     }
+    const supportsNfc = this.isNfcWriteSupported();
     this.updateNfcSpecificOption();
-    this.setNfcStatus('');
+    if (this.nfcWriteBtn) {
+      this.nfcWriteBtn.disabled = !supportsNfc;
+    }
+    this.setNfcStatus(supportsNfc ? '' : t('nfc.unsupported'), supportsNfc ? undefined : 'error');
     this.nfcModal.style.display = 'flex';
   }
 
