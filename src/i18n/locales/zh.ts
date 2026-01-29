@@ -489,6 +489,7 @@ export const zh: TranslationDict = {
   nfc: {
     title: '写入 NFC 标签',
     description: '选择要写入 NFC 标签的信息。',
+    supportDetails: '安全上下文：{{secureContext}} · NDEFWriter 可用：{{ndefWriter}} · NFC 策略允许：{{policy}}',
     openWriter: '写入 NFC 标签',
     writeButton: '立即写入',
     optionGeneric: '应用链接（通用）',

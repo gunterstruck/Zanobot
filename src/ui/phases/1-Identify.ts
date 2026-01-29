@@ -52,6 +52,7 @@ export class IdentifyPhase {
   private nfcGenericOption: HTMLInputElement | null = null;
   private nfcSpecificOption: HTMLInputElement | null = null;
   private nfcSpecificDetail: HTMLElement | null = null;
+  private nfcSupportDetails: HTMLElement | null = null;
   private deepLinkOverlay: HTMLElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
@@ -732,6 +733,7 @@ export class IdentifyPhase {
     this.nfcGenericOption = document.getElementById('nfc-option-generic') as HTMLInputElement | null;
     this.nfcSpecificOption = document.getElementById('nfc-option-specific') as HTMLInputElement | null;
     this.nfcSpecificDetail = document.getElementById('nfc-option-specific-detail');
+    this.nfcSupportDetails = document.getElementById('nfc-support-details');
 
     const closeBtn = document.getElementById('close-nfc-writer-modal');
     const cancelBtn = document.getElementById('nfc-cancel-btn');
@@ -793,6 +795,7 @@ export class IdentifyPhase {
     }
     const { supported: supportsNfc, message } = this.getNfcSupportStatus();
     this.updateNfcSpecificOption();
+    this.updateNfcSupportDetails();
     if (this.nfcWriteBtn) {
       this.nfcWriteBtn.disabled = !supportsNfc;
     }
@@ -824,6 +827,26 @@ export class IdentifyPhase {
       }
       this.nfcSpecificDetail.textContent = t('nfc.optionSpecificUnavailable');
     }
+  }
+
+  private updateNfcSupportDetails(): void {
+    if (!this.nfcSupportDetails) {
+      return;
+    }
+
+    const hasSecureContext = window.isSecureContext;
+    const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+    const policy = document.permissionsPolicy?.allowsFeature?.('nfc');
+    const yes = t('common.yes');
+    const no = t('common.no');
+    const unknown = t('common.unknown');
+    const policyLabel = policy === undefined ? unknown : policy ? yes : no;
+
+    this.nfcSupportDetails.textContent = t('nfc.supportDetails', {
+      secureContext: hasSecureContext ? yes : no,
+      ndefWriter: hasWriter ? yes : no,
+      policy: policyLabel,
+    });
   }
 
   private setNfcStatus(message: string, status?: 'success' | 'error'): void {
