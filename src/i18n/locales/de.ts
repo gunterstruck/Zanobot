@@ -591,6 +591,8 @@ export const de: TranslationDict = {
     statusCancelled: 'Schreibvorgang abgebrochen.',
     statusError: 'NFC-Tag konnte nicht beschrieben werden.',
     unsupported: 'NFC-Schreiben wird auf diesem Gerät nicht unterstützt.',
+    requiresSecureContext: 'NFC-Schreiben erfordert eine sichere (HTTPS) Verbindung.',
+    unsupportedBrowser: 'NFC-Schreiben erfordert Chrome auf Android.',
   },
 
   // ============================================================================

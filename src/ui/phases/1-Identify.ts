@@ -736,7 +736,7 @@ export class IdentifyPhase {
     const closeBtn = document.getElementById('close-nfc-writer-modal');
     const cancelBtn = document.getElementById('nfc-cancel-btn');
 
-    const supportsNfc = this.isNfcWriteSupported();
+    const { supported: supportsNfc } = this.getNfcSupportStatus();
 
     if (openBtn) {
       openBtn.addEventListener('click', () => this.openNfcModal());
@@ -774,20 +774,29 @@ export class IdentifyPhase {
     this.updateNfcSpecificOption();
   }
 
-  private isNfcWriteSupported(): boolean {
-    return typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+  private getNfcSupportStatus(): { supported: boolean; message?: string } {
+    if (!window.isSecureContext) {
+      return { supported: false, message: t('nfc.requiresSecureContext') };
+    }
+
+    const hasWriter = typeof (window as typeof window & { NDEFWriter?: NDEFWriterConstructor }).NDEFWriter !== 'undefined';
+    if (!hasWriter) {
+      return { supported: false, message: t('nfc.unsupportedBrowser') };
+    }
+
+    return { supported: true };
   }
 
   private openNfcModal(): void {
     if (!this.nfcModal) {
       return;
     }
-    const supportsNfc = this.isNfcWriteSupported();
+    const { supported: supportsNfc, message } = this.getNfcSupportStatus();
     this.updateNfcSpecificOption();
     if (this.nfcWriteBtn) {
       this.nfcWriteBtn.disabled = !supportsNfc;
     }
-    this.setNfcStatus(supportsNfc ? '' : t('nfc.unsupported'), supportsNfc ? undefined : 'error');
+    this.setNfcStatus(supportsNfc ? '' : message || t('nfc.unsupported'), supportsNfc ? undefined : 'error');
     this.nfcModal.style.display = 'flex';
   }
 
@@ -840,8 +849,9 @@ export class IdentifyPhase {
       return;
     }
 
-    if (!this.isNfcWriteSupported()) {
-      this.setNfcStatus(t('nfc.unsupported'), 'error');
+    const { supported: supportsNfc, message } = this.getNfcSupportStatus();
+    if (!supportsNfc) {
+      this.setNfcStatus(message || t('nfc.unsupported'), 'error');
       return;
     }
 
