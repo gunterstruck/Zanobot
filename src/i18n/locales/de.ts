@@ -64,6 +64,8 @@ export const de: TranslationDict = {
     databaseExported: 'Datenbank exportiert',
     databaseImported: 'Datenbank importiert',
     databaseCleared: 'Datenbank geleert',
+    nfcDiagnosisTitle: 'Diagnose starten?',
+    nfcDiagnosisPrompt: 'Maschine erkannt. Diagnose jetzt starten?',
   },
 
   // ============================================================================

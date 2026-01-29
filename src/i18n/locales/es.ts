@@ -62,6 +62,8 @@ export const es: TranslationDict = {
     databaseExported: 'Base de datos exportada',
     databaseImported: 'Base de datos importada',
     databaseCleared: 'Base de datos borrada',
+    nfcDiagnosisTitle: '¿Iniciar diagnóstico?',
+    nfcDiagnosisPrompt: 'Máquina detectada. ¿Iniciar el diagnóstico ahora?',
   },
 
   // ============================================================================
