@@ -121,6 +121,11 @@ export const en: TranslationDict = {
       microphoneChanged: 'Microphone changed: {{label}}',
     },
 
+    warnings: {
+      preferredMicrophoneUnavailable:
+        'Preferred microphone is no longer available. Using the default microphone.',
+    },
+
     messages: {
       codeRecognized: 'Code recognized: {{code}}',
       autoMachineName: 'Machine {{id}}',

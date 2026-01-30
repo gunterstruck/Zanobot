@@ -121,6 +121,10 @@ export const zh: TranslationDict = {
       microphoneChanged: '麦克风已切换：{{label}}',
     },
 
+    warnings: {
+      preferredMicrophoneUnavailable: '首选麦克风已不可用，将使用默认麦克风。',
+    },
+
     messages: {
       codeRecognized: '已识别代码：{{code}}',
       autoMachineName: '机器 {{id}}',

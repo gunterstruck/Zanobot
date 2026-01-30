@@ -44,6 +44,16 @@ export const AUDIO_CONSTRAINTS = {
 };
 
 /**
+ * Get live microphone devices (no caching, no persistence).
+ *
+ * Returns only the current audioinput devices reported by the browser.
+ */
+export async function getMicrophones(): Promise<MediaDeviceInfo[]> {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter((device) => device.kind === 'audioinput');
+}
+
+/**
  * Build audio constraints with optional device ID
  *
  * IMPORTANT: Uses explicit boolean `false` for all audio processing flags
