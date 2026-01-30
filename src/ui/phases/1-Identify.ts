@@ -18,7 +18,7 @@ import {
   type AudioQualityReport,
   type AudioDeviceInfo,
 } from '@core/audio/HardwareCheck.js';
-import { getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
+import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 
 type NDEFRecordInit = {
   recordType: 'url';
@@ -1132,13 +1132,32 @@ export class IdentifyPhase {
    */
   private async showMicrophoneSelection(): Promise<void> {
     try {
-      const devices = await HardwareCheck.getAvailableDevices();
+      const liveDevices = await getMicrophones();
+      const devices: AudioDeviceInfo[] = liveDevices.map((device) => ({
+        deviceId: device.deviceId,
+        label: device.label || t('hardware.microphoneId', { id: device.deviceId.substring(0, 8) }),
+        kind: device.kind,
+        groupId: device.groupId,
+      }));
 
       // Get or create modal
       const modal = document.getElementById('microphone-selection-modal');
       if (!modal) {
         logger.error('Microphone selection modal not found in DOM');
         return;
+      }
+
+      const hasSelectedDevice =
+        !!this.selectedDeviceId &&
+        (this.selectedDeviceId === HardwareCheck.IOS_REAR_MIC_DEVICE_ID ||
+          devices.some((device) => device.deviceId === this.selectedDeviceId));
+
+      if (this.selectedDeviceId && !hasSelectedDevice) {
+        logger.warn(
+          `🎤 Selected microphone "${this.selectedDeviceId}" not found in live device list.`
+        );
+        notify.warning(t('identify.warnings.preferredMicrophoneUnavailable'));
+        this.selectedDeviceId = undefined;
       }
 
       // Populate device list
