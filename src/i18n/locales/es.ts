@@ -60,6 +60,7 @@ export const es: TranslationDict = {
     noSignalDetected: 'No se detectó señal',
     scanError: 'Error de escaneo',
     databaseExported: 'Base de datos exportada',
+    databaseShared: 'Base de datos compartida',
     databaseImported: 'Base de datos importada',
     databaseCleared: 'Base de datos borrada',
     nfcDiagnosisTitle: '¿Iniciar diagnóstico?',
@@ -252,6 +253,7 @@ export const es: TranslationDict = {
     databaseNotAvailable: 'Base de datos no disponible. Por favor permita IndexedDB en la configuración de su navegador o desactive el modo de privacidad estricto.',
     exportError: 'Error al exportar la base de datos',
     importError: 'Error al importar',
+    shareError: 'Error al compartir la base de datos',
 
     import: {
       confirmMerge: 'Importar base de datos desde: {{filename}}\n\n¿Desea FUSIONAR los datos?\n\nSÍ = Fusionar con datos existentes\nNO = REEMPLAZAR todos los datos existentes',
@@ -271,6 +273,13 @@ export const es: TranslationDict = {
 
     export: {
       success: 'Archivo: {{filename}}\n\nMáquinas: {{machines}}\nGrabaciones: {{recordings}}\nDiagnósticos: {{diagnoses}}',
+    },
+
+    share: {
+      title: 'Copia de seguridad de la base de datos de Zanobot',
+      text: 'Copia de seguridad de la base de datos: {{filename}}',
+      success: 'Copia compartida: {{filename}}',
+      fallback: 'No se puede compartir. Se descargó {{filename}} en su lugar.',
     },
   },
 
@@ -477,7 +486,7 @@ export const es: TranslationDict = {
     analysisMethod: 'Método de análisis', analysisMethodDesc: 'Seleccione el método de análisis apropiado para su máquina.',
     level1Info: 'Nivel 1: Configuración de frecuencia y amplitud activa arriba',
     level2Info: 'Nivel 2: Grabación de 10 segundos, análisis ML YAMNet',
-    dataManagement: 'Gestión de datos', exportDatabase: 'Exportar base de datos',
+    dataManagement: 'Gestión de datos', exportDatabase: 'Exportar base de datos', shareDatabase: 'Enviar base de datos',
     importDatabase: 'Importar base de datos', statistics: 'Estadísticas:',
     machines: 'Máquinas', recordings: 'Grabaciones', diagnoses: 'Diagnósticos',
     clearAllData: 'Eliminar todos los datos', deleteAllData: 'Eliminar todos los datos',

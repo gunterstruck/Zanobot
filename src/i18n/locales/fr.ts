@@ -60,6 +60,7 @@ export const fr: TranslationDict = {
     noSignalDetected: 'Aucun signal détecté',
     scanError: 'Erreur de scan',
     databaseExported: 'Base de données exportée',
+    databaseShared: 'Base de données partagée',
     databaseImported: 'Base de données importée',
     databaseCleared: 'Base de données effacée',
     nfcDiagnosisTitle: 'Démarrer le diagnostic ?',
@@ -252,6 +253,7 @@ export const fr: TranslationDict = {
     databaseNotAvailable: 'Base de données non disponible. Veuillez autoriser IndexedDB dans les paramètres de votre navigateur ou désactiver le mode de confidentialité strict.',
     exportError: 'Erreur lors de l\'exportation de la base de données',
     importError: 'Erreur lors de l\'importation',
+    shareError: 'Erreur lors du partage de la base de données',
 
     import: {
       confirmMerge: 'Importer la base de données depuis : {{filename}}\n\nVoulez-vous FUSIONNER les données ?\n\nOUI = Fusionner avec les données existantes\nNON = REMPLACER toutes les données existantes',
@@ -271,6 +273,13 @@ export const fr: TranslationDict = {
 
     export: {
       success: 'Fichier : {{filename}}\n\nMachines : {{machines}}\nEnregistrements : {{recordings}}\nDiagnostics : {{diagnoses}}',
+    },
+
+    share: {
+      title: 'Sauvegarde de la base de données Zanobot',
+      text: 'Sauvegarde de la base de données : {{filename}}',
+      success: 'Sauvegarde partagée : {{filename}}',
+      fallback: 'Partage indisponible. {{filename}} a été téléchargé à la place.',
     },
   },
 
@@ -477,7 +486,7 @@ export const fr: TranslationDict = {
     analysisMethod: 'Méthode d\'analyse', analysisMethodDesc: 'Sélectionnez la méthode d\'analyse appropriée pour votre machine.',
     level1Info: 'Niveau 1 : Paramètres de fréquence et d\'amplitude actifs ci-dessus',
     level2Info: 'Niveau 2 : Enregistrement de 10 secondes, analyse ML YAMNet',
-    dataManagement: 'Gestion des données', exportDatabase: 'Exporter la base de données',
+    dataManagement: 'Gestion des données', exportDatabase: 'Exporter la base de données', shareDatabase: 'Envoyer la base de données',
     importDatabase: 'Importer la base de données', statistics: 'Statistiques :',
     machines: 'Machines', recordings: 'Enregistrements', diagnoses: 'Diagnostics',
     clearAllData: 'Supprimer toutes les données', deleteAllData: 'Supprimer toutes les données',

@@ -60,6 +60,7 @@ export const zh: TranslationDict = {
     noSignalDetected: '未检测到信号',
     scanError: '扫描错误',
     databaseExported: '数据库已导出',
+    databaseShared: '数据库已分享',
     databaseImported: '数据库已导入',
     databaseCleared: '数据库已清空',
     nfcDiagnosisTitle: '开始诊断？',
@@ -252,6 +253,7 @@ export const zh: TranslationDict = {
     databaseNotAvailable: '数据库不可用。请在浏览器设置中允许IndexedDB或禁用严格隐私模式。',
     exportError: '导出数据库时出错',
     importError: '导入时出错',
+    shareError: '分享数据库时出错',
 
     import: {
       confirmMerge: '从以下位置导入数据库：{{filename}}\n\n您想合并数据吗？\n\n是 = 与现有数据合并\n否 = 替换所有现有数据',
@@ -271,6 +273,13 @@ export const zh: TranslationDict = {
 
     export: {
       success: '文件：{{filename}}\n\n机器：{{machines}}\n录制：{{recordings}}\n诊断：{{diagnoses}}',
+    },
+
+    share: {
+      title: 'Zanobot 数据库备份',
+      text: '数据库备份：{{filename}}',
+      success: '备份已分享：{{filename}}',
+      fallback: '无法分享，已改为下载 {{filename}}。',
     },
   },
 
@@ -477,7 +486,7 @@ export const zh: TranslationDict = {
     analysisMethod: '分析方法', analysisMethodDesc: '为您的机器选择合适的分析方法。',
     level1Info: '级别1：上方频率和振幅设置已激活',
     level2Info: '级别2：10秒录制，YAMNet ML分析',
-    dataManagement: '数据管理', exportDatabase: '导出数据库',
+    dataManagement: '数据管理', exportDatabase: '导出数据库', shareDatabase: '发送数据库',
     importDatabase: '导入数据库', statistics: '统计：',
     machines: '机器', recordings: '录制', diagnoses: '诊断',
     clearAllData: '删除所有数据', deleteAllData: '删除所有数据',

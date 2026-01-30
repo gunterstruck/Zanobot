@@ -60,6 +60,7 @@ export const en: TranslationDict = {
     noSignalDetected: 'No Signal Detected',
     scanError: 'Scan Error',
     databaseExported: 'Database Exported',
+    databaseShared: 'Database Shared',
     databaseImported: 'Database Imported',
     databaseCleared: 'Database Cleared',
     nfcDiagnosisTitle: 'Start diagnosis?',
@@ -252,6 +253,7 @@ export const en: TranslationDict = {
     databaseNotAvailable: 'Database not available. Please allow IndexedDB in your browser settings or disable strict privacy mode.',
     exportError: 'Error exporting database',
     importError: 'Error importing',
+    shareError: 'Error sharing database',
 
     import: {
       confirmMerge: 'Import database from: {{filename}}\n\nWould you like to MERGE the data?\n\nYES = Merge with existing data\nNO = REPLACE all existing data',
@@ -271,6 +273,13 @@ export const en: TranslationDict = {
 
     export: {
       success: 'File: {{filename}}\n\nMachines: {{machines}}\nRecordings: {{recordings}}\nDiagnoses: {{diagnoses}}',
+    },
+
+    share: {
+      title: 'Zanobot database backup',
+      text: 'Database backup: {{filename}}',
+      success: 'Backup shared: {{filename}}',
+      fallback: 'Sharing not available. Downloaded {{filename}} instead.',
     },
   },
 
@@ -521,6 +530,7 @@ export const en: TranslationDict = {
     level2Info: 'Level 2: 10-second recording, YAMNet ML analysis',
     dataManagement: 'Data Management',
     exportDatabase: 'Export database',
+    shareDatabase: 'Send database file',
     importDatabase: 'Import database',
     statistics: 'Statistics:',
     machines: 'Machines',
