@@ -308,11 +308,21 @@ body {
 }
 
 .hero-image {
-    width: 100%;
+    width: auto;
     height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
     object-fit: contain;
     object-position: center;
     display: block;
+}
+
+@media (max-width: 768px) {
+    .hero-image {
+        width: auto;
+        height: auto;
+        margin: 0 auto;
+    }
 }
 
 /* ===================================
@@ -1967,6 +1977,22 @@ select:focus-visible {
     display: block;
     width: 100%;
     height: auto;
+}
+
+@media (max-width: 600px) {
+    .review-image-frame {
+        height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .review-image-frame img {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
 }
 
 .review-section-title {
