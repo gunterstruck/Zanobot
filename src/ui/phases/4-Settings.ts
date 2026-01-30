@@ -43,6 +43,12 @@ export class SettingsPhase {
       importBtn.addEventListener('click', () => this.handleImportData());
     }
 
+    // Share database button
+    const shareBtn = document.getElementById('share-data-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => this.handleShareData());
+    }
+
     // Clear all data button
     const clearBtn = document.getElementById('clear-data-btn');
     if (clearBtn) {
@@ -147,26 +153,9 @@ export class SettingsPhase {
     try {
       logger.info('📦 Exporting database...');
 
-      // Get all data
-      const data = await exportData();
+      const { data, filename, blob } = await this.buildExportPayload();
 
-      // Create JSON blob
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-
-      // Create filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const filename = `zanobot-backup-${timestamp}.json`;
-
-      // Trigger download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      this.triggerDownload(blob, filename);
 
       logger.info(`✅ Database exported: ${filename}`);
       notify.success(
@@ -181,6 +170,39 @@ export class SettingsPhase {
     } catch (error) {
       logger.error('Export error:', error);
       notify.error(t('settings.exportError'), error as Error);
+    }
+  }
+
+  /**
+   * Handle database share (send as file)
+   */
+  private async handleShareData(): Promise<void> {
+    try {
+      logger.info('📤 Sharing database export...');
+
+      const { data, filename, file, blob } = await this.buildExportPayload();
+      const shareData: ShareData = {
+        files: [file],
+        title: t('settings.share.title'),
+        text: t('settings.share.text', { filename }),
+      };
+
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        logger.info(`✅ Database shared: ${filename}`);
+        notify.success(t('settings.share.success', { filename }), {
+          title: t('modals.databaseShared'),
+        });
+        return;
+      }
+
+      this.triggerDownload(blob, filename);
+      notify.info(t('settings.share.fallback', { filename }), {
+        title: t('modals.databaseExported'),
+      });
+    } catch (error) {
+      logger.error('Share error:', error);
+      notify.error(t('settings.share.error'), error as Error);
     }
   }
 
@@ -329,6 +351,38 @@ export class SettingsPhase {
     } catch (error) {
       logger.error('Stats error:', error);
     }
+  }
+
+  private async buildExportPayload(): Promise<{
+    data: Awaited<ReturnType<typeof exportData>>;
+    filename: string;
+    blob: Blob;
+    file: File;
+  }> {
+    // Get all data
+    const data = await exportData();
+
+    // Create JSON blob
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Create filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `zanobot-backup-${timestamp}.json`;
+    const file = new File([blob], filename, { type: 'application/json' });
+
+    return { data, filename, blob, file };
+  }
+
+  private triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   /**

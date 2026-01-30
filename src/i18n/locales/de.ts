@@ -62,6 +62,7 @@ export const de: TranslationDict = {
     noSignalDetected: 'Kein Signal erkannt',
     scanError: 'Scanfehler',
     databaseExported: 'Datenbank exportiert',
+    databaseShared: 'Datenbank versendet',
     databaseImported: 'Datenbank importiert',
     databaseCleared: 'Datenbank geleert',
     nfcDiagnosisTitle: 'Diagnose starten?',
@@ -254,6 +255,7 @@ export const de: TranslationDict = {
     databaseNotAvailable: 'Datenbank nicht verfügbar. Bitte erlauben Sie IndexedDB in Ihren Browser-Einstellungen oder deaktivieren Sie den strikten Privacy-Modus.',
     exportError: 'Fehler beim Exportieren der Datenbank',
     importError: 'Fehler beim Importieren',
+    shareError: 'Fehler beim Versenden der Datenbank',
 
     import: {
       confirmMerge: 'Datenbank importieren aus: {{filename}}\n\nMöchten Sie die Daten ZUSAMMENFÜHREN?\n\nJA = Zusammenführen mit bestehenden Daten\nNEIN = Alle bestehenden Daten ERSETZEN',
@@ -273,6 +275,13 @@ export const de: TranslationDict = {
 
     export: {
       success: 'Datei: {{filename}}\n\nMaschinen: {{machines}}\nAufnahmen: {{recordings}}\nDiagnosen: {{diagnoses}}',
+    },
+
+    share: {
+      title: 'Zanobot Datenbank-Backup',
+      text: 'Datenbank-Backup: {{filename}}',
+      success: 'Backup versendet: {{filename}}',
+      fallback: 'Teilen nicht verfügbar. {{filename}} wurde stattdessen heruntergeladen.',
     },
   },
 
@@ -553,6 +562,7 @@ export const de: TranslationDict = {
     level2Info: 'Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse',
     dataManagement: 'Datenverwaltung',
     exportDatabase: 'Datenbank exportieren',
+    shareDatabase: 'Datenbank versenden',
     importDatabase: 'Datenbank importieren',
     statistics: 'Statistik:',
     machines: 'Maschinen',
