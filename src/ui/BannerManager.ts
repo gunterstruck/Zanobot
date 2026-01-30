@@ -4,7 +4,7 @@ import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 
 const HERO_BANNER_SETTING_KEY = 'hero_banner';
-const VALID_BANNER_WIDTHS = new Set([1024, 1034]);
+const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
 const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
@@ -50,7 +50,7 @@ export class BannerManager {
     }
 
     if (file.type !== 'image/png') {
-      notify.error('Format muss 1024x400/500 oder 1034x400/500 PNG sein.');
+      notify.error('Format muss 1024x400/500 PNG sein.');
       input.value = '';
       return;
     }
@@ -64,7 +64,7 @@ export class BannerManager {
 
       if (!isValidSize) {
         URL.revokeObjectURL(objectUrl);
-        notify.error('Format muss 1024x400/500 oder 1034x400/500 PNG sein.');
+        notify.error('Format muss 1024x400/500 PNG sein.');
         input.value = '';
         return;
       }
@@ -84,7 +84,7 @@ export class BannerManager {
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      notify.error('Format muss 1024x400/500 oder 1034x400/500 PNG sein.');
+      notify.error('Format muss 1024x400/500 PNG sein.');
       input.value = '';
     };
 
