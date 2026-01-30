@@ -4,18 +4,20 @@ import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 
 const HERO_BANNER_SETTING_KEY = 'hero_banner';
-const VALID_BANNER_WIDTH = 1024;
+const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
 const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
 export class BannerManager {
+  private heroHeader: HTMLElement | null;
   private heroImage: HTMLImageElement | null;
   private uploadButton: HTMLButtonElement | null;
   private uploadInput: HTMLInputElement | null;
   private currentObjectUrl: string | null = null;
 
   constructor() {
+    this.heroHeader = document.querySelector('.hero-header');
     this.heroImage = document.querySelector('.hero-header img');
     this.uploadButton = document.querySelector('#hero-banner-upload-btn');
     this.uploadInput = document.querySelector('#hero-banner-upload-input');
@@ -48,7 +50,7 @@ export class BannerManager {
     }
 
     if (file.type !== 'image/png') {
-      notify.error('Format muss 1024x500 oder 1024x400 PNG sein.');
+      notify.error('Format muss 1024x400/500 PNG sein.');
       input.value = '';
       return;
     }
@@ -58,11 +60,11 @@ export class BannerManager {
 
     img.onload = async () => {
       const isValidSize =
-        img.width === VALID_BANNER_WIDTH && VALID_BANNER_HEIGHTS.has(img.height);
+        VALID_BANNER_WIDTHS.has(img.width) && VALID_BANNER_HEIGHTS.has(img.height);
 
       if (!isValidSize) {
         URL.revokeObjectURL(objectUrl);
-        notify.error('Format muss 1024x500 oder 1024x400 PNG sein.');
+        notify.error('Format muss 1024x400/500 PNG sein.');
         input.value = '';
         return;
       }
@@ -82,7 +84,7 @@ export class BannerManager {
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      notify.error('Format muss 1024x500 oder 1024x400 PNG sein.');
+      notify.error('Format muss 1024x400/500 PNG sein.');
       input.value = '';
     };
 
@@ -98,8 +100,15 @@ export class BannerManager {
       URL.revokeObjectURL(this.currentObjectUrl);
     }
 
+    this.heroImage.onload = () => {
+      this.updateHeroHeight();
+    };
     this.heroImage.src = objectUrl;
     this.currentObjectUrl = objectUrl;
+
+    if (this.heroImage.complete) {
+      this.updateHeroHeight();
+    }
   }
 
   private async restoreBannerFromStorage(): Promise<void> {
@@ -134,6 +143,20 @@ export class BannerManager {
       : DEFAULT_BANNER_PATH;
 
     this.setHeroImage(defaultPath);
+  }
+
+  private updateHeroHeight(): void {
+    if (!this.heroImage || !this.heroHeader) {
+      return;
+    }
+
+    const height = this.heroImage.naturalHeight || this.heroImage.height;
+
+    if (height) {
+      this.heroHeader.style.setProperty('--hero-banner-height', `${height}px`);
+    } else {
+      this.heroHeader.style.removeProperty('--hero-banner-height');
+    }
   }
 
   private isMobileDevice(): boolean {
