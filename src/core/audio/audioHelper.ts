@@ -50,7 +50,38 @@ export const AUDIO_CONSTRAINTS = {
  */
 export async function getMicrophones(): Promise<MediaDeviceInfo[]> {
   const devices = await navigator.mediaDevices.enumerateDevices();
-  return devices.filter((device) => device.kind === 'audioinput');
+  const audioInputs = devices.filter((device) => device.kind === 'audioinput');
+
+  if (audioInputs.length <= 1) {
+    return audioInputs;
+  }
+
+  const specialDeviceIds = new Set(['default', 'communications']);
+  const normalizeLabel = (label: string): string => label.trim().toLowerCase();
+  const keyFor = (device: MediaDeviceInfo): string => {
+    const normalizedLabel = normalizeLabel(device.label || '');
+    return `${device.groupId || 'no-group'}::${normalizedLabel || device.deviceId}`;
+  };
+
+  const hasNonSpecial = new Set<string>();
+  audioInputs.forEach((device) => {
+    if (!specialDeviceIds.has(device.deviceId)) {
+      hasNonSpecial.add(keyFor(device));
+    }
+  });
+
+  const seen = new Set<string>();
+  return audioInputs.filter((device) => {
+    const key = keyFor(device);
+    if (specialDeviceIds.has(device.deviceId) && hasNonSpecial.has(key)) {
+      return false;
+    }
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
@@ -174,6 +205,16 @@ export async function getRawAudioStream(deviceId?: string): Promise<MediaStream>
     // ============================================
     // STANDARD PATH: Normal device selection
     // ============================================
+    if (deviceId) {
+      const availableDevices = await getMicrophones();
+      const deviceExists = availableDevices.some((device) => device.deviceId === deviceId);
+
+      if (!deviceExists) {
+        logger.warn(`🎤 Requested microphone "${deviceId}" not found, using default instead.`);
+        deviceId = undefined;
+      }
+    }
+
     // Build constraints with optional device ID
     const constraints = buildAudioConstraints(deviceId);
 
