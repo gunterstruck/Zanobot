@@ -398,6 +398,14 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
+@media (max-width: 768px) {
+    .hero-header {
+        height: var(--hero-banner-height, 400px);
+        min-height: var(--hero-banner-height, 400px);
+        max-height: var(--hero-banner-height, 400px);
+    }
+}
+
 .hero-image {
     width: 100%;
     height: 100%;
@@ -1949,8 +1957,9 @@ body {
     /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
     .hero-header {
         flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
-        height: clamp(90px, 18vh, 140px) !important;
-        min-height: 90px !important;
+        height: var(--hero-banner-height, 400px) !important;
+        min-height: var(--hero-banner-height, 400px) !important;
+        max-height: var(--hero-banner-height, 400px) !important;
         margin-bottom: 0 !important;
     }
     /* Logo sichtbar halten, aber klein */

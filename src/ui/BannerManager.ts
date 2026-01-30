@@ -10,12 +10,14 @@ const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
 export class BannerManager {
+  private heroHeader: HTMLElement | null;
   private heroImage: HTMLImageElement | null;
   private uploadButton: HTMLButtonElement | null;
   private uploadInput: HTMLInputElement | null;
   private currentObjectUrl: string | null = null;
 
   constructor() {
+    this.heroHeader = document.querySelector('.hero-header');
     this.heroImage = document.querySelector('.hero-header img');
     this.uploadButton = document.querySelector('#hero-banner-upload-btn');
     this.uploadInput = document.querySelector('#hero-banner-upload-input');
@@ -98,8 +100,15 @@ export class BannerManager {
       URL.revokeObjectURL(this.currentObjectUrl);
     }
 
+    this.heroImage.onload = () => {
+      this.updateHeroHeight();
+    };
     this.heroImage.src = objectUrl;
     this.currentObjectUrl = objectUrl;
+
+    if (this.heroImage.complete) {
+      this.updateHeroHeight();
+    }
   }
 
   private async restoreBannerFromStorage(): Promise<void> {
@@ -134,6 +143,20 @@ export class BannerManager {
       : DEFAULT_BANNER_PATH;
 
     this.setHeroImage(defaultPath);
+  }
+
+  private updateHeroHeight(): void {
+    if (!this.heroImage || !this.heroHeader) {
+      return;
+    }
+
+    const height = this.heroImage.naturalHeight || this.heroImage.height;
+
+    if (height) {
+      this.heroHeader.style.setProperty('--hero-banner-height', `${height}px`);
+    } else {
+      this.heroHeader.style.removeProperty('--hero-banner-height');
+    }
   }
 
   private isMobileDevice(): boolean {
