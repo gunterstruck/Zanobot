@@ -557,8 +557,15 @@ interface SerializedRecording extends Omit<Recording, 'audioBuffer'> {
 /**
  * Serialized Machine for JSON export
  */
-interface SerializedMachine extends Omit<Machine, 'referenceModels'> {
+interface SerializedBlob {
+  _serialized: true;
+  type: string;
+  data: string;
+}
+
+interface SerializedMachine extends Omit<Machine, 'referenceModels' | 'referenceImage'> {
   referenceModels: Array<Omit<GMIAModel, 'weightVector'> & { weightVector: number[] }>;
+  referenceImage?: SerializedBlob;
 }
 
 /**
@@ -586,6 +593,49 @@ function serializeAudioBuffer(audioBuffer: AudioBuffer): SerializedAudioBuffer {
   };
 }
 
+function encodeBase64(binary: string): string {
+  if (typeof btoa === 'function') {
+    return btoa(binary);
+  }
+
+  return Buffer.from(binary, 'binary').toString('base64');
+}
+
+function decodeBase64(base64: string): string {
+  if (typeof atob === 'function') {
+    return atob(base64);
+  }
+
+  return Buffer.from(base64, 'base64').toString('binary');
+}
+
+async function serializeBlob(blob: Blob): Promise<SerializedBlob> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  return {
+    _serialized: true,
+    type: blob.type,
+    data: encodeBase64(binary),
+  };
+}
+
+function deserializeBlob(serialized: SerializedBlob): Blob {
+  const binary = decodeBase64(serialized.data);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new Blob([bytes], { type: serialized.type });
+}
+
 /**
  * Export all data (for backup)
  *
@@ -599,13 +649,18 @@ export async function exportData(): Promise<{
   const db = await initDB();
 
   const machines = await db.getAll('machines');
-  const serializedMachines: SerializedMachine[] = machines.map((machine) => ({
-    ...machine,
-    referenceModels: (machine.referenceModels || []).map((model) => ({
-      ...model,
-      weightVector: Array.from(model.weightVector),
-    })),
-  }));
+  const serializedMachines: SerializedMachine[] = await Promise.all(
+    machines.map(async (machine) => ({
+      ...machine,
+      referenceImage: machine.referenceImage
+        ? await serializeBlob(machine.referenceImage)
+        : undefined,
+      referenceModels: (machine.referenceModels || []).map((model) => ({
+        ...model,
+        weightVector: Array.from(model.weightVector),
+      })),
+    }))
+  );
   const recordings = await db.getAll('recordings');
   const diagnoses = await db.getAll('diagnoses');
 
@@ -699,6 +754,20 @@ function isSerializedAudioBuffer(obj: unknown): obj is SerializedAudioBuffer {
   );
 }
 
+function isSerializedBlob(obj: unknown): obj is SerializedBlob {
+  return (
+    obj !== null &&
+    obj !== undefined &&
+    typeof obj === 'object' &&
+    '_serialized' in obj &&
+    obj._serialized === true &&
+    'type' in obj &&
+    typeof obj.type === 'string' &&
+    'data' in obj &&
+    typeof obj.data === 'string'
+  );
+}
+
 /**
  * Import data (restore from backup)
  *
@@ -707,7 +776,7 @@ function isSerializedAudioBuffer(obj: unknown): obj is SerializedAudioBuffer {
  */
 export async function importData(
   data: {
-    machines?: Machine[];
+    machines?: Array<Machine | SerializedMachine>;
     recordings?: (Recording | SerializedRecording)[];
     diagnoses?: DiagnosisResult[];
   },
@@ -724,8 +793,18 @@ export async function importData(
   // Import machines
   if (data.machines) {
     for (const machine of data.machines) {
+      const referenceImage = machine.referenceImage;
+      let normalizedReferenceImage: Blob | undefined;
+
+      if (referenceImage instanceof Blob) {
+        normalizedReferenceImage = referenceImage;
+      } else if (isSerializedBlob(referenceImage)) {
+        normalizedReferenceImage = deserializeBlob(referenceImage);
+      }
+
       const normalizedMachine: Machine = {
         ...machine,
+        referenceImage: normalizedReferenceImage,
         referenceModels: (machine.referenceModels || []).map((model) => ({
           ...model,
           weightVector:
