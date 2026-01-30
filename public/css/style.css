@@ -410,13 +410,19 @@ body {
         height: 100%;
         margin: 0;
     }
+
+    .hero-image {
+        width: auto;
+        height: auto;
+        margin: 0 auto;
+    }
 }
 
 .hero-image {
-    width: 100%;
+    width: auto;
     height: 100%;
-    max-width: none;
-    margin: 0;
+    max-width: 100%;
+    margin: 0 auto;
     object-fit: contain;
     object-position: center;
     display: block;
@@ -1965,17 +1971,17 @@ body {
     /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
     .hero-header {
         flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
-        height: 18vh !important;
-        min-height: 18vh !important;
-        max-height: 18vh !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         margin-bottom: 0 !important;
     }
     /* Logo sichtbar halten, aber klein */
     .hero-header img {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
         object-fit: contain !important;
         object-position: center !important;
         display: block !important;
