@@ -83,6 +83,8 @@ export interface QualityResult {
     stability: number; // Signal stability metric
     outlierCount: number; // Number of outlier frames detected
     signalMagnitude?: number; // L2 norm of mean feature vector (used for brown noise detection)
+    frameSimilarity?: number; // Median cosine similarity to median frame
+    signalSnr?: number; // Peak-to-median ratio of mean spectrum
   };
 }
 
