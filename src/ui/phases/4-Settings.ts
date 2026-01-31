@@ -271,6 +271,10 @@ export class SettingsPhase {
           // Refresh stats display
           this.showStats();
 
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+
           logger.info('✅ Database import complete');
         } catch (error) {
           logger.error('Import error:', error);
@@ -313,6 +317,10 @@ export class SettingsPhase {
 
       // Refresh stats display
       this.showStats();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
 
       logger.info('✅ All data cleared');
     } catch (error) {
