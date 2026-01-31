@@ -108,11 +108,6 @@ export class ReferencePhase {
     const existingModels = this.machine.referenceModels || [];
     const modeSummary = getFeatureModeSummary(existingModels);
     if (modeSummary) {
-      if (modeSummary.hasMixedDetails) {
-        notify.warning(t('settingsUI.deviceInvariantMixedModels'), {
-          title: t('settingsUI.deviceInvariantMismatchTitle'),
-        });
-      }
       const currentConfig = getDeviceInvariantConfig();
       if (!isFeatureModeMatch(currentConfig, modeSummary.details)) {
         const shouldApply = await notify.confirm(

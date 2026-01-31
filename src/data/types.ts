@@ -63,7 +63,6 @@ export interface Recording {
  */
 export interface FeatureVector {
   features: Float64Array; // Relative features (sum = 1 in baseline mode)
-  normalizedFeatures?: Float64Array; // Optional normalized features (sum = 1) for quality checks
   absoluteFeatures: Float64Array; // Absolute energy values
   bins: number; // Number of frequency bins
   frequencyRange: [number, number]; // [min, max] Hz

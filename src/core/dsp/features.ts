@@ -256,13 +256,11 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
       ? applyDeviceInvariantTransform(binnedEnergy, deviceInvariantConfig)
       : binnedEnergy;
 
-  const normalizedFeatures = normalizeFeatures(binnedEnergy);
-
   // Step 8: Calculate relative features (sum = 1) for baseline mode
   const relativeFeatures =
     deviceInvariantConfig?.mode === 'deviceInvariant'
       ? transformedFeatures
-      : normalizedFeatures;
+      : normalizeFeatures(transformedFeatures);
 
   return {
     features: relativeFeatures,

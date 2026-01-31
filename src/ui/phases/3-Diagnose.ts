@@ -177,11 +177,6 @@ export class DiagnosePhase {
 
       const modeSummary = getFeatureModeSummary(this.machine.referenceModels);
       if (modeSummary) {
-        if (modeSummary.hasMixedDetails) {
-          notify.warning(t('settingsUI.deviceInvariantMixedModels'), {
-            title: t('settingsUI.deviceInvariantMismatchTitle'),
-          });
-        }
         const currentConfig = getDeviceInvariantConfig();
         if (!isFeatureModeMatch(currentConfig, modeSummary.details)) {
           const shouldApply = await notify.confirm(
@@ -1125,9 +1120,7 @@ export class DiagnosePhase {
     if (resultFeatureMode) {
       const summary = getFeatureModeSummary(this.activeModels.length > 0 ? this.activeModels : this.machine.referenceModels);
       if (summary) {
-        resultFeatureMode.textContent = summary.hasMixedDetails
-          ? t('diagnosisResults.featureModeMixed')
-          : formatFeatureModeDetails(summary.details, t);
+        resultFeatureMode.textContent = formatFeatureModeDetails(summary.details, t);
       }
     }
 

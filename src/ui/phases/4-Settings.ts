@@ -369,12 +369,7 @@ export class SettingsPhase {
             .filter(Boolean);
           const modeSummary = getFeatureModeSummary(importedModels as never[]);
           const currentConfig = getDeviceInvariantConfig();
-          if (modeSummary?.hasMixedDetails) {
-            notify.warning(t('settingsUI.deviceInvariantMixedModels'), {
-              title: t('settingsUI.deviceInvariantMismatchTitle'),
-              duration: 0,
-            });
-          } else if (modeSummary && !isFeatureModeMatch(currentConfig, modeSummary.details)) {
+          if (modeSummary && !isFeatureModeMatch(currentConfig, modeSummary.details)) {
             setDeviceInvariantMismatch(modeSummary.details, 'import');
             notify.warning(
               t('settingsUI.deviceInvariantMismatchNotice', {
