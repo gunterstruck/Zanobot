@@ -490,6 +490,7 @@ export const es: TranslationDict = {
     amplitudeAxis: 'Eje Y / Amplitud', amplitudeAxisDesc: 'Logarítmico (dB) – enfatiza señales débiles', amplitudeLogDesc: 'Logarítmico (dB) – enfatiza señales débiles',
     deviceInvariantToggle: 'Modo invariante al dispositivo',
     deviceInvariantHelp: 'Ayuda a comparar distintos teléfonos/micrófonos (efectos lineales). Puede ayudar poco con supresión de ruido agresiva.',
+    deviceInvariantAdvanced: 'Ajustes avanzados',
     deviceInvariantMethod: 'Método',
     deviceInvariantMethodDct: 'DCT-Lifter Whitening',
     deviceInvariantMethodSmooth: 'Smooth Subtract',
