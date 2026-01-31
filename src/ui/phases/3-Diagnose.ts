@@ -34,6 +34,13 @@ import {
 } from '@core/audio/audioHelper.js';
 import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
+import { applyDeviceInvariantDetails, getDeviceInvariantConfig } from '@utils/deviceInvariantSettings.js';
+import {
+  formatFeatureModeDetails,
+  getFeatureModeDetailsFromConfig,
+  getFeatureModeSummary,
+  isFeatureModeMatch,
+} from '@utils/featureMode.js';
 import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
@@ -168,6 +175,27 @@ export class DiagnosePhase {
         return;
       }
 
+      const modeSummary = getFeatureModeSummary(this.machine.referenceModels);
+      if (modeSummary) {
+        const currentConfig = getDeviceInvariantConfig();
+        if (!isFeatureModeMatch(currentConfig, modeSummary.details)) {
+          const shouldApply = await notify.confirm(
+            t('settingsUI.deviceInvariantMismatchPrompt', {
+              dbMode: formatFeatureModeDetails(modeSummary.details, t),
+              appMode: formatFeatureModeDetails(getFeatureModeDetailsFromConfig(currentConfig), t),
+            }),
+            t('settingsUI.deviceInvariantMismatchTitle')
+          );
+
+          if (!shouldApply) {
+            this.isStarting = false;
+            return;
+          }
+
+          applyDeviceInvariantDetails(modeSummary.details);
+        }
+      }
+
       logger.info('🔴 Starting REAL-TIME diagnosis with Smart Start...');
 
       // Check AudioWorklet support - CRITICAL for real-time processing
@@ -283,6 +311,7 @@ export class DiagnosePhase {
         ...DEFAULT_DSP_CONFIG,
         sampleRate: this.actualSampleRate,
         frequencyRange: [0, this.actualSampleRate / 2], // Update Nyquist frequency
+        deviceInvariant: getDeviceInvariantConfig(),
       };
 
       logger.debug(
@@ -1085,6 +1114,14 @@ export class DiagnosePhase {
     const resultConfidence = document.getElementById('result-confidence');
     if (resultConfidence) {
       resultConfidence.textContent = diagnosis.confidence.toFixed(1);
+    }
+
+    const resultFeatureMode = document.getElementById('result-feature-mode');
+    if (resultFeatureMode) {
+      const summary = getFeatureModeSummary(this.activeModels.length > 0 ? this.activeModels : this.machine.referenceModels);
+      if (summary) {
+        resultFeatureMode.textContent = formatFeatureModeDetails(summary.details, t);
+      }
     }
 
     // Update analysis hint

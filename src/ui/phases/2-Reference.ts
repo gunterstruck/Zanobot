@@ -16,6 +16,13 @@ import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { getRawAudioStream, getSmartStartStatusMessage } from '@core/audio/audioHelper.js';
 import { AudioWorkletManager, isAudioWorkletSupported } from '@core/audio/audioWorkletHelper.js';
 import { notify } from '@utils/notifications.js';
+import { applyDeviceInvariantDetails, getDeviceInvariantConfig } from '@utils/deviceInvariantSettings.js';
+import {
+  formatFeatureModeDetails,
+  getFeatureModeDetailsFromConfig,
+  getFeatureModeSummary,
+  isFeatureModeMatch,
+} from '@utils/featureMode.js';
 import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT } from '@ui/constants.js';
@@ -96,6 +103,27 @@ export class ReferencePhase {
     if (this.isRecordingStarting || this.isRecordingActive || this.mediaStream) {
       notify.warning(t('reference.recording.alreadyRunning'));
       return;
+    }
+
+    const existingModels = this.machine.referenceModels || [];
+    const modeSummary = getFeatureModeSummary(existingModels);
+    if (modeSummary) {
+      const currentConfig = getDeviceInvariantConfig();
+      if (!isFeatureModeMatch(currentConfig, modeSummary.details)) {
+        const shouldApply = await notify.confirm(
+          t('settingsUI.deviceInvariantMismatchPrompt', {
+            dbMode: formatFeatureModeDetails(modeSummary.details, t),
+            appMode: formatFeatureModeDetails(getFeatureModeDetailsFromConfig(currentConfig), t),
+          }),
+          t('settingsUI.deviceInvariantMismatchTitle')
+        );
+
+        if (!shouldApply) {
+          return;
+        }
+
+        applyDeviceInvariantDetails(modeSummary.details);
+      }
     }
 
     this.isRecordingStarting = true;
@@ -555,6 +583,7 @@ export class ReferencePhase {
         ...DEFAULT_DSP_CONFIG,
         sampleRate: actualSampleRate,
         frequencyRange: [0, actualSampleRate / 2] as [number, number], // Update Nyquist frequency
+        deviceInvariant: getDeviceInvariantConfig(),
       };
 
       logger.debug(
