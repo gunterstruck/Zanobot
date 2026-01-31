@@ -69,8 +69,10 @@ export function assessRecordingQuality(features: FeatureVector[]): QualityResult
   }
 
   // Extract feature matrices for analysis
-  const featureMatrix = features.map((f) => Array.from(f.features)); // Normalized features (sum = 1)
-  const absoluteFeatureMatrix = features.map((f) => Array.from(f.absoluteFeatures)); // Absolute features (preserve amplitude)
+  const featureMatrix: number[][] = features.map((f) =>
+    Array.from(f.normalizedFeatures ?? f.features)
+  ); // Normalized features (sum = 1)
+  const absoluteFeatureMatrix: number[][] = features.map((f) => Array.from(f.absoluteFeatures)); // Absolute features (preserve amplitude)
   const numFrames = featureMatrix.length;
   const numBins = featureMatrix[0]?.length || 0;
 

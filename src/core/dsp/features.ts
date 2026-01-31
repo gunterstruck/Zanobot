@@ -264,6 +264,7 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
 
   return {
     features: relativeFeatures,
+    normalizedFeatures: relativeFeatures,
     absoluteFeatures: binnedEnergy,
     bins: config.frequencyBins,
     frequencyRange: [0, config.sampleRate / 2],
