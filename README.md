@@ -44,6 +44,62 @@ Zanobo ist **kein medizinisches Gerät** und **kein technisches Diagnosesystem**
 
 Die Ergebnisse dienen ausschließlich der **musterbasierten Visualisierung** von Ähnlichkeiten und Abweichungen.
 
+## 📊 Robustheit über Geräte hinweg (Praxis-Test)
+
+Zanobot wurde bewusst darauf ausgelegt, auch auf unterschiedlichen Smartphones zuverlässig zu funktionieren, ohne spezielle Gerätekalibrierung oder Machine-Learning-Training.
+
+Getestetes Szenario
+
+Referenzaufnahme auf Gerät A
+
+Export der Datenbank
+
+Import auf:
+
+ein anderes Samsung-Smartphone
+
+ein iOS-Gerät
+
+Testobjekt: 50 Hz Frequenzumrichter mit Elektromotor
+
+Ergebnisse
+
+Same-Device Vergleich: ca. 95–97 %
+
+Cross-Device Vergleich: ca. 93–94 %
+
+Der Verlust von lediglich 1–3 Prozentpunkten beim Gerätewechsel ist in der Audioanalyse üblich und praktisch unkritisch.
+In vergleichbaren Bereichen (z. B. Speaker Recognition, Acoustic Monitoring) gelten >90 % ohne Domain-Adaptation bereits als sehr stabil.
+
+Warum das funktioniert
+
+Die eingesetzte GMIA-Methode (Generalized Mutual Interdependence Analysis) extrahiert den gemeinsamen, stabilen Anteil mehrerer Zeitfenster:
+
+Mikrofon- und Geräteunterschiede sind meist:
+
+glatt
+
+relativ konstant
+
+nicht kohärent über alle Frequenzbänder
+
+Maschinengeräusche (insbesondere tonale/harmonische Systeme) sind:
+
+strukturiert
+
+zeitlich stabil
+
+reproduzierbar
+
+Dadurch unterdrückt GMIA einen Großteil gerätebedingter Effekte ohne explizite Device-Adaptation.
+
+Designentscheidung
+
+Zanobot ist bewusst als relatives Vergleichsinstrument konzipiert, nicht als kalibriertes Messgerät.
+Entscheidend sind Veränderungen und Abweichungen, nicht absolute Prozentwerte.
+
+Kleine gerätebedingte Unterschiede sind normal und werden in der Praxis durch geeignete Schwellen berücksichtigt.
+
 ## Schnellstart
 
 ```bash
