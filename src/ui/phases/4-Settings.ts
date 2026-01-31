@@ -165,6 +165,9 @@ export class SettingsPhase {
 
   private initDeviceInvariantSettings(): void {
     const toggle = document.getElementById('device-invariant-toggle') as HTMLInputElement | null;
+    const advancedToggle = document.getElementById(
+      'device-invariant-advanced-toggle'
+    ) as HTMLButtonElement | null;
     const details = document.getElementById('device-invariant-details') as HTMLElement | null;
     const methodSelect = document.getElementById('device-invariant-method') as HTMLSelectElement | null;
     const strengthSelect = document.getElementById('device-invariant-strength') as HTMLSelectElement | null;
@@ -177,10 +180,27 @@ export class SettingsPhase {
       return;
     }
 
-    const applyVisibility = (enabled: boolean) => {
+    let isExpanded = false;
+    const setExpanded = (expanded: boolean) => {
+      isExpanded = expanded;
       if (details) {
-        details.style.display = enabled ? 'block' : 'none';
+        details.style.display = expanded ? 'block' : 'none';
       }
+      if (advancedToggle) {
+        advancedToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        advancedToggle.classList.toggle('is-expanded', expanded);
+      }
+    };
+
+    const applyVisibility = (enabled: boolean) => {
+      if (advancedToggle) {
+        advancedToggle.disabled = !enabled;
+      }
+      if (!enabled) {
+        setExpanded(false);
+        return;
+      }
+      setExpanded(true);
     };
 
     const syncUI = () => {
@@ -206,6 +226,15 @@ export class SettingsPhase {
       toggle.addEventListener('change', () => {
         const updated = setDeviceInvariantSettings({ enabled: toggle.checked });
         applyVisibility(updated.enabled);
+      });
+    }
+
+    if (advancedToggle) {
+      advancedToggle.addEventListener('click', () => {
+        if (!toggle?.checked) {
+          return;
+        }
+        setExpanded(!isExpanded);
       });
     }
 

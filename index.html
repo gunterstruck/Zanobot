@@ -575,20 +575,26 @@
                                 </div>
                             </div>
                             <div class="setting-item device-invariant-setting" data-view-level="advanced" data-detection-mode="STATIONARY">
-                                <label for="device-invariant-toggle" data-i18n="settingsUI.deviceInvariantToggle">Device-Invariant Mode</label>
-                                <div class="setting-toggle">
+                                <div class="device-invariant-header">
                                     <input type="checkbox" id="device-invariant-toggle">
-                                    <p class="setting-description" data-i18n="settingsUI.deviceInvariantHelp">Hilft beim Vergleich zwischen unterschiedlichen Handys/Mikrofonen (lineare Effekte). Kann bei aggressiver Noise-Suppression begrenzt helfen.</p>
+                                    <label for="device-invariant-toggle" data-i18n="settingsUI.deviceInvariantToggle">Device-Invariant Mode</label>
                                 </div>
+                                <p class="setting-description device-invariant-help" data-i18n="settingsUI.deviceInvariantHelp">Hilft beim Vergleich zwischen unterschiedlichen Handys/Mikrofonen (lineare Effekte). Kann bei aggressiver Noise-Suppression begrenzt helfen.</p>
+                                <button class="device-invariant-advanced-toggle" id="device-invariant-advanced-toggle" type="button" aria-expanded="false">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                    <span data-i18n="settingsUI.deviceInvariantAdvanced">Erweiterte Einstellungen</span>
+                                </button>
                                 <div class="device-invariant-details" id="device-invariant-details" style="display: none;">
-                                    <div class="setting-subitem">
+                                    <div class="device-invariant-row">
                                         <label for="device-invariant-method" data-i18n="settingsUI.deviceInvariantMethod">Method</label>
                                         <select id="device-invariant-method">
                                             <option value="dctLifter" data-i18n="settingsUI.deviceInvariantMethodDct">DCT-Lifter Whitening</option>
                                             <option value="smoothSubtract" data-i18n="settingsUI.deviceInvariantMethodSmooth">Smooth Subtract</option>
                                         </select>
                                     </div>
-                                    <div class="setting-subitem">
+                                    <div class="device-invariant-row">
                                         <label for="device-invariant-strength" data-i18n="settingsUI.deviceInvariantStrength">Strength</label>
                                         <select id="device-invariant-strength">
                                             <option value="low" data-i18n="settingsUI.deviceInvariantStrengthLow">Low</option>
@@ -596,13 +602,11 @@
                                             <option value="high" data-i18n="settingsUI.deviceInvariantStrengthHigh">High</option>
                                         </select>
                                     </div>
-                                    <div class="setting-subitem">
+                                    <div class="device-invariant-row device-invariant-row-tight">
                                         <label for="device-invariant-znorm" data-i18n="settingsUI.deviceInvariantZNorm">Z-Normalize</label>
-                                        <div class="setting-toggle">
-                                            <input type="checkbox" id="device-invariant-znorm">
-                                            <p class="setting-description" data-i18n="settingsUI.deviceInvariantZNormDesc">Normalize über Frequenz-Bins (mittlere Lautstärke entfernen).</p>
-                                        </div>
+                                        <input type="checkbox" id="device-invariant-znorm">
                                     </div>
+                                    <p class="setting-description device-invariant-znorm-desc" data-i18n="settingsUI.deviceInvariantZNormDesc">Normalize über Frequenz-Bins (mittlere Lautstärke entfernen).</p>
                                     <p class="setting-description device-invariant-ab-hint" data-i18n="settingsUI.deviceInvariantABHint">Für A/B-Test: Referenz aufnehmen → DB exportieren → anderes Gerät importieren → Live-Test; dann Mode umschalten und wiederholen.</p>
                                 </div>
                             </div>

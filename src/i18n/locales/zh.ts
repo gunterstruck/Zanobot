@@ -489,6 +489,7 @@ export const zh: TranslationDict = {
     amplitudeAxis: 'Y轴/振幅', amplitudeAxisDesc: '对数（dB）- 强调微弱信号', amplitudeLogDesc: '对数（dB）- 强调微弱信号',
     deviceInvariantToggle: '设备无关模式',
     deviceInvariantHelp: '帮助比较不同手机/麦克风（线性效应）。对强噪声抑制的帮助有限。',
+    deviceInvariantAdvanced: '高级设置',
     deviceInvariantMethod: '方法',
     deviceInvariantMethodDct: 'DCT-Lifter Whitening',
     deviceInvariantMethodSmooth: 'Smooth Subtract',

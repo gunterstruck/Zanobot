@@ -531,6 +531,7 @@ export const en: TranslationDict = {
     amplitudeLogDesc: 'Logarithmic (dB) - emphasizes quiet signals',
     deviceInvariantToggle: 'Device-Invariant Mode',
     deviceInvariantHelp: 'Helps compare different phones/microphones (linear effects). Limited help against aggressive noise suppression.',
+    deviceInvariantAdvanced: 'Advanced settings',
     deviceInvariantMethod: 'Method',
     deviceInvariantMethodDct: 'DCT-Lifter Whitening',
     deviceInvariantMethodSmooth: 'Smooth Subtract',
