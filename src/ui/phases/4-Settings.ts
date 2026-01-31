@@ -17,6 +17,22 @@ import {
   getVisualizerSettings,
   setVisualizerSettings,
 } from '@utils/visualizerSettings.js';
+import {
+  applyDeviceInvariantDetails,
+  clearDeviceInvariantMismatch,
+  getDeviceInvariantConfig,
+  getDeviceInvariantMismatch,
+  getDeviceInvariantSettings,
+  setDeviceInvariantMismatch,
+  setDeviceInvariantSettings,
+  type DeviceInvariantStrength,
+} from '@utils/deviceInvariantSettings.js';
+import {
+  formatFeatureModeDetails,
+  getFeatureModeDetailsFromConfig,
+  getFeatureModeSummary,
+  isFeatureModeMatch,
+} from '@utils/featureMode.js';
 import { ModeSelector, injectModeSelectorStyles } from '@ui/components/ModeSelector.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
 import { t } from '../../i18n/index.js';
@@ -62,6 +78,7 @@ export class SettingsPhase {
     }
 
     this.initVisualizerScaleSettings();
+    this.initDeviceInvariantSettings();
 
     // Initialize mode selector for analysis method selection
     this.initModeSelector();
@@ -71,7 +88,7 @@ export class SettingsPhase {
   }
 
   /**
-   * Initialize the Mode Selector component for GIMA/YAMNet toggle
+   * Initialize the Mode Selector component for GMIA/YAMNet toggle
    */
   private initModeSelector(): void {
     // Inject styles
@@ -141,6 +158,105 @@ export class SettingsPhase {
       ampToggle.addEventListener('change', () => {
         setVisualizerSettings({
           amplitudeScale: ampToggle.checked ? 'log' : 'linear',
+        });
+      });
+    }
+  }
+
+  private initDeviceInvariantSettings(): void {
+    const toggle = document.getElementById('device-invariant-toggle') as HTMLInputElement | null;
+    const details = document.getElementById('device-invariant-details') as HTMLElement | null;
+    const methodSelect = document.getElementById('device-invariant-method') as HTMLSelectElement | null;
+    const strengthSelect = document.getElementById('device-invariant-strength') as HTMLSelectElement | null;
+    const zNormToggle = document.getElementById('device-invariant-znorm') as HTMLInputElement | null;
+    const warningCard = document.getElementById('device-invariant-db-warning') as HTMLElement | null;
+    const warningText = document.getElementById('device-invariant-db-warning-text');
+    const applyButton = document.getElementById('device-invariant-apply-db');
+
+    if (!toggle && !details && !methodSelect && !strengthSelect && !zNormToggle) {
+      return;
+    }
+
+    const applyVisibility = (enabled: boolean) => {
+      if (details) {
+        details.style.display = enabled ? 'block' : 'none';
+      }
+    };
+
+    const syncUI = () => {
+      const settings = getDeviceInvariantSettings();
+      if (toggle) {
+        toggle.checked = settings.enabled;
+      }
+      if (methodSelect) {
+        methodSelect.value = settings.method;
+      }
+      if (strengthSelect) {
+        strengthSelect.value = settings.strength;
+      }
+      if (zNormToggle) {
+        zNormToggle.checked = settings.zNorm;
+      }
+      applyVisibility(settings.enabled);
+    };
+
+    syncUI();
+
+    if (toggle) {
+      toggle.addEventListener('change', () => {
+        const updated = setDeviceInvariantSettings({ enabled: toggle.checked });
+        applyVisibility(updated.enabled);
+      });
+    }
+
+    if (methodSelect) {
+      methodSelect.addEventListener('change', () => {
+        setDeviceInvariantSettings({
+          method: methodSelect.value as 'dctLifter' | 'smoothSubtract',
+        });
+      });
+    }
+
+    if (strengthSelect) {
+      strengthSelect.addEventListener('change', () => {
+        setDeviceInvariantSettings({ strength: strengthSelect.value as DeviceInvariantStrength });
+      });
+    }
+
+    if (zNormToggle) {
+      zNormToggle.addEventListener('change', () => {
+        setDeviceInvariantSettings({ zNorm: zNormToggle.checked });
+      });
+    }
+
+    const mismatch = getDeviceInvariantMismatch();
+    if (warningCard) {
+      if (mismatch) {
+        warningCard.style.display = 'block';
+        if (warningText) {
+          warningText.textContent = t('settingsUI.deviceInvariantMismatchDescription', {
+            dbMode: formatFeatureModeDetails(mismatch.details, t),
+            appMode: formatFeatureModeDetails(
+              getFeatureModeDetailsFromConfig(getDeviceInvariantConfig()),
+              t
+            ),
+          });
+        }
+      } else {
+        warningCard.style.display = 'none';
+      }
+    }
+
+    if (applyButton && mismatch) {
+      applyButton.addEventListener('click', () => {
+        applyDeviceInvariantDetails(mismatch.details);
+        clearDeviceInvariantMismatch();
+        syncUI();
+        if (warningCard) {
+          warningCard.style.display = 'none';
+        }
+        notify.success(t('settingsUI.deviceInvariantApplied'), {
+          title: t('settingsUI.deviceInvariantMismatchTitle'),
         });
       });
     }
@@ -246,6 +362,24 @@ export class SettingsPhase {
             if (!confirmReplace) {
               return;
             }
+          }
+
+          const importedModels = (data.machines || [])
+            .flatMap((machine: { referenceModels?: unknown[] }) => machine.referenceModels || [])
+            .filter(Boolean);
+          const modeSummary = getFeatureModeSummary(importedModels as never[]);
+          const currentConfig = getDeviceInvariantConfig();
+          if (modeSummary && !isFeatureModeMatch(currentConfig, modeSummary.details)) {
+            setDeviceInvariantMismatch(modeSummary.details, 'import');
+            notify.warning(
+              t('settingsUI.deviceInvariantMismatchNotice', {
+                mode: formatFeatureModeDetails(modeSummary.details, t),
+              }),
+              {
+                title: t('settingsUI.deviceInvariantMismatchTitle'),
+                duration: 0,
+              }
+            );
           }
 
           // Import data

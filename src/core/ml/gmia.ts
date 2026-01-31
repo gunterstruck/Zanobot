@@ -146,6 +146,14 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
   // Example: 50 samples * 0.330s window = 16.5s
   const actualDuration = trainingData.config.windowSize * numSamples;
 
+  const deviceInvariantConfig = trainingData.config.deviceInvariant;
+  const featureMode = deviceInvariantConfig?.mode ?? 'baseline';
+  const featureModeDetails = {
+    method: deviceInvariantConfig?.method ?? 'dctLifter',
+    lifterK: deviceInvariantConfig?.lifterK ?? 6,
+    zNorm: deviceInvariantConfig?.zNorm ?? true,
+  };
+
   return {
     machineId,
     label: '', // Will be set by caller (Phase 2: "Baseline" for first, user-provided for others)
@@ -161,6 +169,8 @@ export function trainGMIA(trainingData: TrainingData, machineId: string): GMIAMo
       meanCosineSimilarity: meanCosine,
       targetScore: 0.9, // Target 90% health score for reference data
       weightMagnitude, // Store magnitude for later validation
+      featureMode,
+      featureModeDetails,
     },
   };
 }

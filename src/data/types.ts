@@ -36,6 +36,12 @@ export interface GMIAModel {
     meanCosineSimilarity: number; // μ for C calculation
     targetScore: number; // Target score (e.g., 0.9)
     weightMagnitude?: number; // L2 norm of weight vector (for signal quality validation)
+    featureMode?: FeatureMode; // "baseline" or "deviceInvariant"
+    featureModeDetails?: {
+      method: DeviceInvariantMethod;
+      lifterK: number;
+      zNorm: boolean;
+    };
   };
 }
 
@@ -56,7 +62,7 @@ export interface Recording {
  * Feature Vector - Energy Spectral Densities
  */
 export interface FeatureVector {
-  features: Float64Array; // Relative features (sum = 1)
+  features: Float64Array; // Relative features (sum = 1 in baseline mode)
   absoluteFeatures: Float64Array; // Absolute energy values
   bins: number; // Number of frequency bins
   frequencyRange: [number, number]; // [min, max] Hz
@@ -107,6 +113,18 @@ export interface DSPConfig {
   fftSize: number; // Calculated from windowSize
   frequencyBins: number; // Default: 512
   frequencyRange: [number, number]; // [0, 22050] Hz (Nyquist)
+  deviceInvariant?: DeviceInvariantConfig;
+}
+
+export type FeatureMode = 'baseline' | 'deviceInvariant';
+
+export type DeviceInvariantMethod = 'dctLifter' | 'smoothSubtract';
+
+export interface DeviceInvariantConfig {
+  mode: FeatureMode;
+  method: DeviceInvariantMethod;
+  lifterK: number;
+  zNorm: boolean;
 }
 
 /**
