@@ -1305,9 +1305,11 @@ body {
     margin-top: var(--spacing-sm);
     padding-top: var(--spacing-sm);
     border-top: 1px dashed rgba(0, 212, 255, 0.2);
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-sm);
+    max-width: 100%;
+    min-width: 0;
 }
 
 .device-invariant-details .setting-subitem {
@@ -1315,15 +1317,45 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.12);
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.device-invariant-setting .setting-toggle {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--spacing-sm);
+    align-items: start;
 }
 
 .device-invariant-ab-hint {
     margin-top: var(--spacing-xs);
+    grid-column: 1 / -1;
 }
 
 .device-invariant-warning {
     border: 1px solid rgba(255, 136, 0, 0.35);
     background: rgba(255, 136, 0, 0.08);
+}
+
+@media (max-width: 480px) {
+    .device-invariant-details {
+        grid-template-columns: 1fr;
+        width: 100%;
+        gap: var(--spacing-sm);
+    }
+
+    .device-invariant-details .setting-subitem {
+        width: 100%;
+    }
+
+    .device-invariant-details select,
+    .device-invariant-details input[type="checkbox"] {
+        max-width: 100%;
+    }
 }
 
 .setting-warning-header {
