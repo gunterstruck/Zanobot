@@ -574,6 +574,45 @@
                                     <p class="setting-description" data-i18n="settingsUI.amplitudeAxisDesc">Logarithmisch (dB) – betont leise Signale</p>
                                 </div>
                             </div>
+                            <div class="setting-item device-invariant-setting" data-view-level="advanced" data-detection-mode="STATIONARY">
+                                <label for="device-invariant-toggle" data-i18n="settingsUI.deviceInvariantToggle">Device-Invariant Mode</label>
+                                <div class="setting-toggle">
+                                    <input type="checkbox" id="device-invariant-toggle">
+                                    <p class="setting-description" data-i18n="settingsUI.deviceInvariantHelp">Hilft beim Vergleich zwischen unterschiedlichen Handys/Mikrofonen (lineare Effekte). Kann bei aggressiver Noise-Suppression begrenzt helfen.</p>
+                                </div>
+                                <div class="device-invariant-details" id="device-invariant-details" style="display: none;">
+                                    <div class="setting-subitem">
+                                        <label for="device-invariant-method" data-i18n="settingsUI.deviceInvariantMethod">Method</label>
+                                        <select id="device-invariant-method">
+                                            <option value="dctLifter" data-i18n="settingsUI.deviceInvariantMethodDct">DCT-Lifter Whitening</option>
+                                            <option value="smoothSubtract" data-i18n="settingsUI.deviceInvariantMethodSmooth">Smooth Subtract</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-subitem">
+                                        <label for="device-invariant-strength" data-i18n="settingsUI.deviceInvariantStrength">Strength</label>
+                                        <select id="device-invariant-strength">
+                                            <option value="low" data-i18n="settingsUI.deviceInvariantStrengthLow">Low</option>
+                                            <option value="medium" data-i18n="settingsUI.deviceInvariantStrengthMedium">Medium</option>
+                                            <option value="high" data-i18n="settingsUI.deviceInvariantStrengthHigh">High</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-subitem">
+                                        <label for="device-invariant-znorm" data-i18n="settingsUI.deviceInvariantZNorm">Z-Normalize</label>
+                                        <div class="setting-toggle">
+                                            <input type="checkbox" id="device-invariant-znorm">
+                                            <p class="setting-description" data-i18n="settingsUI.deviceInvariantZNormDesc">Normalize über Frequenz-Bins (mittlere Lautstärke entfernen).</p>
+                                        </div>
+                                    </div>
+                                    <p class="setting-description device-invariant-ab-hint" data-i18n="settingsUI.deviceInvariantABHint">Für A/B-Test: Referenz aufnehmen → DB exportieren → anderes Gerät importieren → Live-Test; dann Mode umschalten und wiederholen.</p>
+                                </div>
+                            </div>
+                            <div class="setting-item device-invariant-warning" id="device-invariant-db-warning" data-view-level="advanced" data-detection-mode="STATIONARY" style="display: none;">
+                                <div class="setting-warning-header" data-i18n="settingsUI.deviceInvariantMismatchTitle">Feature mode mismatch</div>
+                                <p class="setting-description" id="device-invariant-db-warning-text">...</p>
+                                <button class="action-btn secondary-btn" id="device-invariant-apply-db" type="button">
+                                    <span data-i18n="settingsUI.deviceInvariantApplyFromDb">Einstellungen aus Datenbank übernehmen</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Divider -->
@@ -997,6 +1036,10 @@
                         <h4 data-i18n="diagnosisResults.fingerprintLabel">Fingerprint</h4>
                         <p class="result-status status-healthy" id="result-status">UNAUFFÄLLIG</p>
                         <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% <span data-i18n="diagnosisResults.confidenceScoreLabel">Confidence score</span></p>
+                        <div class="result-feature-mode" data-view-level="advanced">
+                            <span class="result-feature-mode-label" data-i18n="diagnosisResults.featureModeLabel">Feature Mode</span>
+                            <span id="result-feature-mode">Baseline</span>
+                        </div>
                     </div>
                     <div class="result-analysis" data-view-level="expert">
                         <h4 data-i18n="diagnosisResults.varianceTitle">Variance</h4>
