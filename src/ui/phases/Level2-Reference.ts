@@ -17,6 +17,7 @@ import { Level2Detector } from '@core/ml/level2/index.js';
 import type { Level2Reference } from '@core/ml/level2/types.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+import { stopMediaStream } from '@utils/streamHelper.js';
 import type { Machine } from '@data/types.js';
 import { getMachine, saveMachine } from '@data/db.js';
 import { t } from '../../i18n/index.js';
@@ -236,7 +237,7 @@ export class Level2ReferencePhase {
 
       this.mediaRecorder.onstop = async () => {
         // Stop all tracks
-        stream.getTracks().forEach((track) => track.stop());
+        stopMediaStream(stream);
 
         // Cleanup camera
         this.cleanupCamera();
@@ -336,10 +337,8 @@ export class Level2ReferencePhase {
     }
 
     // Stop camera stream
-    if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach((track) => track.stop());
-      this.cameraStream = null;
-    }
+    stopMediaStream(this.cameraStream);
+    this.cameraStream = null;
 
     logger.info('📷 Camera cleaned up');
   }
