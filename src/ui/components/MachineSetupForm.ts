@@ -219,11 +219,13 @@ export class MachineSetupForm {
 
   /**
    * Update NFC link display
+   * Includes referenceDbUrl in the link for auto-creation on new devices
    */
   private updateNfcLink(): void {
     if (!this.machine || !this.nfcLinkDisplay) return;
 
-    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id);
+    // Include referenceDbUrl in NFC link for auto-creation on new devices
+    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id, this.machine.referenceDbUrl);
     const urlDisplay = document.getElementById('nfc-link-url');
 
     if (urlDisplay) {
@@ -501,11 +503,13 @@ export class MachineSetupForm {
 
   /**
    * Copy NFC link to clipboard
+   * Includes referenceDbUrl for auto-creation on new devices
    */
   private async copyNfcLink(): Promise<void> {
     if (!this.machine) return;
 
-    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id);
+    // Include referenceDbUrl in NFC link for auto-creation on new devices
+    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id, this.machine.referenceDbUrl);
 
     try {
       await navigator.clipboard.writeText(fullUrl);

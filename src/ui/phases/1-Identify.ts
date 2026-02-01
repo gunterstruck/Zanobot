@@ -1123,10 +1123,11 @@ export class IdentifyPhase {
       return;
     }
 
-    // Use hash-based URL for NFC: #/m/<machine_id>
+    // Use hash-based URL for NFC: #/m/<machine_id>?ref=<encoded_url>
+    // Include referenceDbUrl for auto-creation on new devices
     const baseUrl = this.getBaseAppUrl();
     const url = selectedOption === 'specific' && this.currentMachine
-      ? HashRouter.getFullMachineUrl(this.currentMachine.id)
+      ? HashRouter.getFullMachineUrl(this.currentMachine.id, this.currentMachine.referenceDbUrl)
       : baseUrl;
 
     this.nfcWriteBtn.disabled = true;
