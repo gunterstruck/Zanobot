@@ -1245,7 +1245,28 @@ export class ReferencePhase {
           return;
         }
 
-        label = userLabel.trim();
+        // CRITICAL FIX: Validate and sanitize user input to prevent issues
+        // - Limit length to prevent UI overflow
+        // - Remove control characters and excessive whitespace
+        // - Validate against empty result after sanitization
+        const MAX_LABEL_LENGTH = 50;
+        let sanitizedLabel = userLabel
+          .trim()
+          .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+          .replace(/\s+/g, ' '); // Normalize whitespace
+
+        if (sanitizedLabel.length > MAX_LABEL_LENGTH) {
+          sanitizedLabel = sanitizedLabel.substring(0, MAX_LABEL_LENGTH);
+          logger.warn(`Label truncated to ${MAX_LABEL_LENGTH} characters`);
+        }
+
+        if (sanitizedLabel === '') {
+          logger.info('User input empty after sanitization');
+          notify.warning(t('reference.labels.pleaseEnterName'), { title: t('modals.cancelled') });
+          return;
+        }
+
+        label = sanitizedLabel;
 
         // Ask user for type: Is this a normal state or a fault?
         const isHealthy = confirm(

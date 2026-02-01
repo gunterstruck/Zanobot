@@ -38,6 +38,10 @@ export function matrixMultiply(A: Float64Array[], B: Float64Array[]): Float64Arr
       for (let k = 0; k < n; k++) {
         sum += A[i][k] * B[k][j];
       }
+      // CRITICAL FIX: Validate each cell to prevent NaN propagation
+      if (!isFinite(sum)) {
+        throw new Error(`Matrix multiplication produced NaN/Infinity at position [${i}][${j}]`);
+      }
       C[i][j] = sum;
     }
   }
@@ -199,6 +203,7 @@ export function onesVector(n: number): Float64Array {
  * @param a - Vector a
  * @param b - Vector b
  * @returns Dot product
+ * @throws Error if vectors contain NaN or have mismatched dimensions
  */
 export function dotProduct(a: Float64Array, b: Float64Array): number {
   if (a.length !== b.length) {
@@ -210,6 +215,12 @@ export function dotProduct(a: Float64Array, b: Float64Array): number {
     sum += a[i] * b[i];
   }
 
+  // CRITICAL FIX: Validate result to prevent NaN propagation
+  // NaN can occur if input vectors contain NaN or Infinity values
+  if (!isFinite(sum)) {
+    throw new Error('Dot product produced NaN or Infinity - check input vectors for invalid values');
+  }
+
   return sum;
 }
 
@@ -217,14 +228,22 @@ export function dotProduct(a: Float64Array, b: Float64Array): number {
  * Vector magnitude (L2 norm)
  *
  * @param v - Input vector
- * @returns Magnitude
+ * @returns Magnitude (always >= 0)
+ * @throws Error if vector contains NaN values
  */
 export function vectorMagnitude(v: Float64Array): number {
   let sum = 0;
   for (let i = 0; i < v.length; i++) {
     sum += v[i] * v[i];
   }
-  return Math.sqrt(sum);
+  const magnitude = Math.sqrt(sum);
+
+  // CRITICAL FIX: Validate result to prevent NaN propagation
+  if (!isFinite(magnitude)) {
+    throw new Error('Vector magnitude produced NaN/Infinity - check input vector for invalid values');
+  }
+
+  return magnitude;
 }
 
 /**
@@ -328,6 +347,10 @@ export function matrixVectorMultiply(A: Float64Array[], x: Float64Array): Float6
     let sum = 0;
     for (let j = 0; j < n; j++) {
       sum += A[i][j] * x[j];
+    }
+    // CRITICAL FIX: Validate each element to prevent NaN propagation
+    if (!isFinite(sum)) {
+      throw new Error(`Matrix-vector multiplication produced NaN/Infinity at position [${i}]`);
     }
     y[i] = sum;
   }
