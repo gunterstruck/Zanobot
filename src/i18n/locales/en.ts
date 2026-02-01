@@ -227,6 +227,7 @@ export const en: TranslationDict = {
       signalHint: 'Move phone closer to machine for optimal signal',
       match: 'Match',
       ghostHint: '👻 Move the phone until live image and reference image align',
+      noCameraAvailable: 'No position image available',
     },
 
     smartStart: {

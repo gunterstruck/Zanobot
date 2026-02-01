@@ -1842,6 +1842,11 @@ body {
    Minimalist, industrial, trust-building
    =================================== */
 
+/* ===================================
+   LIVE DIAGNOSIS - 20/60/20 LAYOUT
+   Header: max 20%, Middle: 60%, Footer: max 20%
+   =================================== */
+
 /* Full-screen inspection modal */
 .inspection-modal .modal-content {
     max-width: var(--content-max-width);
@@ -1862,13 +1867,19 @@ body {
     }
 }
 
-/* Fixed header banner */
+/* Fixed header banner - max 20% of viewport */
 .inspection-header {
     flex: 0 0 auto;
-    padding: var(--spacing-lg) var(--spacing-md);
+    max-height: 20vh;
+    min-height: 80px;
+    padding: var(--spacing-md) var(--spacing-md);
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--divider-color);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .inspection-question {
@@ -1894,32 +1905,37 @@ body {
     letter-spacing: 0.05em;
 }
 
-/* Scrollable middle content */
+/* Middle content area - takes remaining 60% (flex grows) */
 .inspection-content {
-    flex: 1;
+    flex: 1 1 60vh;
+    min-height: 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-lg);
-    gap: var(--spacing-lg);
-    min-height: 0;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
 }
 
-/* Main percentage display */
+/* Main percentage display - scales to fit available space */
 .inspection-score-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 280px;
+    /* Responsive sizing: min 180px, preferred 50% of container width, max 280px */
+    width: clamp(180px, 50vw, 280px);
+    height: clamp(180px, 50vw, 280px);
+    /* Also respect available height */
+    max-width: min(280px, 80%);
+    max-height: min(280px, 45vh);
     aspect-ratio: 1;
     border-radius: 50%;
     position: relative;
     transition: background-color 0.5s ease, box-shadow 0.5s ease;
     text-align: center;
+    flex-shrink: 0;
 }
 
 /* Center score absolutely for perfect alignment with pulse animation */
@@ -2099,13 +2115,18 @@ body {
     display: none;
 }
 
-/* Fixed footer with single STOP button */
+/* Fixed footer with single STOP button - max 20% of viewport */
 .inspection-footer {
     flex: 0 0 auto;
-    padding: var(--spacing-lg) var(--spacing-md);
-    padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
+    max-height: 20vh;
+    min-height: 70px;
+    padding: var(--spacing-md) var(--spacing-md);
+    padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
     background: var(--bg-secondary);
     border-top: 1px solid var(--divider-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .inspection-stop-btn {
@@ -2161,6 +2182,197 @@ body {
 @keyframes score-blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
+}
+
+/* ===================================
+   ADVANCED/EXPERT DIAGNOSIS VIEW
+   Same 20/60/20 layout with structured middle section
+   =================================== */
+
+/* Transform recording-modal into diagnosis layout for advanced/expert */
+.diagnosis-active #recording-modal .modal-content {
+    max-width: var(--content-max-width);
+    max-height: 100%;
+    height: 100dvh;
+    width: 100%;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+/* Header for advanced/expert view - max 20% */
+.diagnosis-active #recording-modal .modal-header {
+    flex: 0 0 auto;
+    max-height: 20vh;
+    min-height: 60px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.diagnosis-active #recording-modal .modal-header h3 {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    margin-bottom: 0.125rem;
+}
+
+.diagnosis-active #recording-modal .modal-subtitle {
+    font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+/* Middle content for advanced/expert - structured into thirds */
+.diagnosis-active #recording-modal .modal-body {
+    flex: 1 1 60vh;
+    min-height: 0;
+    overflow: hidden; /* Default: no scroll for advanced */
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+}
+
+/* Expert view: enable scrolling in middle section */
+[data-view-level="expert"] .diagnosis-active #recording-modal .modal-body {
+    overflow-y: auto;
+}
+
+/* Footer for advanced/expert view - max 20% */
+.diagnosis-active #recording-modal .modal-actions {
+    flex: 0 0 auto;
+    max-height: 20vh;
+    min-height: 60px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === ADVANCED VIEW: Middle Section Structure === */
+/* Top third: Camera with ghost overlay */
+.diagnosis-middle-camera {
+    flex: 0 0 auto;
+    max-height: 30%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.diagnosis-middle-camera .ghost-overlay-container {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.diagnosis-middle-camera .ghost-overlay-wrapper {
+    aspect-ratio: 4/3;
+}
+
+/* Middle third: Spectrum diagram */
+.diagnosis-middle-spectrum {
+    flex: 1 1 auto;
+    min-height: 100px;
+    max-height: 35%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.diagnosis-middle-spectrum #waveform-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 80px;
+    max-height: 120px;
+    margin: 0;
+}
+
+/* Bottom third: Score with animation */
+.diagnosis-middle-score {
+    flex: 0 0 auto;
+    max-height: 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xs) 0;
+}
+
+.diagnosis-middle-score .live-score-display {
+    width: clamp(100px, 25vw, 140px);
+    height: clamp(100px, 25vw, 140px);
+}
+
+.diagnosis-middle-score .live-score {
+    font-size: clamp(2rem, 8vw, 2.5rem);
+}
+
+.diagnosis-middle-score .live-status {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    margin-top: var(--spacing-xs);
+}
+
+/* === EXPERT VIEW: Additional elements below score === */
+.diagnosis-expert-details {
+    display: none;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--divider-color);
+    margin-top: var(--spacing-sm);
+}
+
+[data-view-level="expert"] .diagnosis-expert-details {
+    display: flex;
+}
+
+/* Smart start status - compact */
+.diagnosis-active #smart-start-status {
+    font-size: 0.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    text-align: center;
+}
+
+/* Reference model info - compact */
+.diagnosis-active .reference-model-info {
+    font-size: 0.7rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin: 0;
+}
+
+/* Debug info - compact for expert */
+.diagnosis-active .debug-info {
+    font-size: 0.65rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin: 0;
+}
+
+/* Hide elements that should only show in specific views */
+.diagnosis-active .fingerprint-quality,
+.diagnosis-active .recording-timer {
+    display: none;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-height: 600px) {
+    .diagnosis-middle-camera .ghost-overlay-container {
+        max-width: 150px;
+    }
+
+    .diagnosis-middle-spectrum #waveform-canvas {
+        max-height: 80px;
+    }
+
+    .diagnosis-middle-score .live-score-display {
+        width: 90px;
+        height: 90px;
+    }
+
+    .diagnosis-middle-score .live-score {
+        font-size: 1.75rem;
+    }
 }
 
 /* ===================================
