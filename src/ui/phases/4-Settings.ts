@@ -360,12 +360,19 @@ export class SettingsPhase {
           // NotAllowedError: User gesture expired or file sharing not supported
           // TypeError: Files not supported on this browser
           logger.warn(`Share API failed (${errorName}): ${errorMessage}, falling back to download`);
+
+          // Fallback to download with error info
+          this.triggerDownload(blob, filename);
+          notify.info(`${t('settings.share.fallback', { filename })}\n\n[Debug: ${errorName}: ${errorMessage}]`, {
+            title: t('modals.databaseExported'),
+          });
+          return;
         }
       }
 
-      // Fallback to download
+      // navigator.share not available at all
       this.triggerDownload(blob, filename);
-      notify.info(t('settings.share.fallback', { filename }), {
+      notify.info(`${t('settings.share.fallback', { filename })}\n\n[Debug: navigator.share not available]`, {
         title: t('modals.databaseExported'),
       });
     } catch (error) {
