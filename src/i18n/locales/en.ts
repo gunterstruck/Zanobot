@@ -713,6 +713,7 @@ export const en: TranslationDict = {
 
     // Download errors
     errorMachineNotFound: 'Machine not set up. Please contact the service technician.',
+    errorInvalidReferenceUrl: 'The reference link in the NFC tag is invalid.',
     errorNoReferenceUrl: 'No reference data configured. Please contact the service technician.',
     errorDownloadFailed: 'Download failed. Please check your internet connection.',
     errorInvalidFormat: 'The reference data has an invalid format.',

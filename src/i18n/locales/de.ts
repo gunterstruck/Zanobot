@@ -762,6 +762,7 @@ export const de: TranslationDict = {
 
     // Download errors
     errorMachineNotFound: 'Maschine nicht eingerichtet. Bitte wenden Sie sich an den Servicetechniker.',
+    errorInvalidReferenceUrl: 'Der Referenz-Link im NFC-Tag ist ungültig.',
     errorNoReferenceUrl: 'Keine Referenzdaten hinterlegt. Bitte wenden Sie sich an den Servicetechniker.',
     errorDownloadFailed: 'Download fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung.',
     errorInvalidFormat: 'Die Referenzdaten haben ein ungültiges Format.',
