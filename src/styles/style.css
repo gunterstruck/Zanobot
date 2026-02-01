@@ -3906,11 +3906,11 @@ html[data-view-level="expert"] [data-view-level="expert"] {
     display: revert !important;
 }
 
-/* Fix for flex/grid containers with data-view-level */
+/* Fix for block containers with data-view-level */
 html[data-view-level="advanced"] .setting-item[data-view-level="advanced"],
 html[data-view-level="expert"] .setting-item[data-view-level="advanced"],
 html[data-view-level="expert"] .setting-item[data-view-level="expert"] {
-    display: flex !important;
+    display: block !important;
 }
 
 html[data-view-level="advanced"] .setting-category[data-view-level="advanced"],
