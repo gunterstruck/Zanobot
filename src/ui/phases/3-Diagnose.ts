@@ -329,10 +329,18 @@ export class DiagnosePhase {
       // Determine view mode based on current view level setting
       // basic → simplified inspection view (new modal)
       // advanced/expert → original complex view (recording-modal)
-      const currentViewLevel = getViewLevel();
-      this.useSimplifiedView = currentViewLevel === 'basic';
+      // EXCEPTION: NFC-initiated diagnosis always uses simplified view
+      const isNfcDiagnosis = document.body.getAttribute('data-nfc-diagnosis') === 'true';
+      if (isNfcDiagnosis) {
+        // Clear flag after reading to prevent affecting future diagnoses
+        document.body.removeAttribute('data-nfc-diagnosis');
+      }
 
-      logger.info(`📊 View level: ${currentViewLevel} → ${this.useSimplifiedView ? 'simplified' : 'advanced'} view`);
+      const currentViewLevel = getViewLevel();
+      // Force basic view for NFC-initiated diagnosis, otherwise use user's setting
+      this.useSimplifiedView = isNfcDiagnosis || currentViewLevel === 'basic';
+
+      logger.info(`📊 View level: ${currentViewLevel} → ${this.useSimplifiedView ? 'simplified' : 'advanced'} view${isNfcDiagnosis ? ' (NFC forced)' : ''}`);
 
       // Initialize visualizer for advanced/expert view
       if (!this.useSimplifiedView && this.audioContext && this.mediaStream) {
