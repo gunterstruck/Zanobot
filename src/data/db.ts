@@ -224,15 +224,118 @@ export async function getAppSetting<T>(key: string): Promise<AppSetting<T> | und
 }
 
 // ============================================================================
+// STORAGE QUOTA MANAGEMENT
+// ============================================================================
+
+/**
+ * Check available storage quota before write operations.
+ *
+ * Uses the StorageManager API to estimate remaining space.
+ * Provides early warning before operations that might exceed quota.
+ *
+ * @param estimatedSizeBytes - Estimated size of data to write in bytes
+ * @throws Error if estimated size exceeds available quota (with 10% safety margin)
+ */
+export async function checkStorageQuota(estimatedSizeBytes: number): Promise<void> {
+  // Check if StorageManager API is available
+  if (!navigator.storage || !navigator.storage.estimate) {
+    logger.debug('StorageManager API not available - skipping quota check');
+    return;
+  }
+
+  try {
+    const estimate = await navigator.storage.estimate();
+    const used = estimate.usage || 0;
+    const quota = estimate.quota || 0;
+    const available = quota - used;
+
+    // Log current storage status
+    const usedMB = (used / 1024 / 1024).toFixed(2);
+    const quotaMB = (quota / 1024 / 1024).toFixed(2);
+    const availableMB = (available / 1024 / 1024).toFixed(2);
+    logger.debug(`📊 Storage: ${usedMB}MB used / ${quotaMB}MB quota (${availableMB}MB available)`);
+
+    // Apply 10% safety margin to prevent edge cases
+    const safetyMargin = 0.1;
+    const requiredSpace = estimatedSizeBytes * (1 + safetyMargin);
+
+    if (requiredSpace > available) {
+      const requiredMB = (estimatedSizeBytes / 1024 / 1024).toFixed(2);
+      throw new Error(
+        `Insufficient storage: Need ${requiredMB}MB but only ${availableMB}MB available. ` +
+        `Please free up space by deleting old recordings or machines.`
+      );
+    }
+  } catch (error) {
+    // If quota check fails, log warning but don't block the operation
+    // This allows the app to work even if StorageManager has issues
+    if (error instanceof Error && error.message.includes('Insufficient storage')) {
+      throw error; // Re-throw quota exceeded errors
+    }
+    logger.warn('⚠️ Storage quota check failed:', error);
+  }
+}
+
+/**
+ * Get current storage usage statistics
+ *
+ * @returns Storage usage info or undefined if not available
+ */
+export async function getStorageUsage(): Promise<{
+  usedBytes: number;
+  quotaBytes: number;
+  availableBytes: number;
+  percentUsed: number;
+} | undefined> {
+  if (!navigator.storage || !navigator.storage.estimate) {
+    return undefined;
+  }
+
+  try {
+    const estimate = await navigator.storage.estimate();
+    const used = estimate.usage || 0;
+    const quota = estimate.quota || 0;
+    const available = quota - used;
+    const percentUsed = quota > 0 ? (used / quota) * 100 : 0;
+
+    return {
+      usedBytes: used,
+      quotaBytes: quota,
+      availableBytes: available,
+      percentUsed: Math.round(percentUsed * 10) / 10,
+    };
+  } catch (error) {
+    logger.warn('⚠️ Could not get storage usage:', error);
+    return undefined;
+  }
+}
+
+// ============================================================================
 // MACHINE OPERATIONS
 // ============================================================================
 
 /**
  * Save or update a machine
  *
+ * Includes quota check for machines with large reference images.
+ *
  * @param machine - Machine object
+ * @throws Error if storage quota would be exceeded
  */
 export async function saveMachine(machine: Machine): Promise<void> {
+  // Estimate size: base machine data + reference image (if present)
+  let estimatedSize = 10000; // Base overhead for machine metadata (~10KB)
+  if (machine.referenceImage) {
+    estimatedSize += machine.referenceImage.size;
+  }
+  if (machine.referenceModels) {
+    // Each model is roughly 1KB + weight vector size
+    estimatedSize += machine.referenceModels.length * 5000;
+  }
+
+  // Check quota before write
+  await checkStorageQuota(estimatedSize);
+
   const db = await initDB();
   await db.put('machines', machine);
   logger.info(`💾 Machine saved: ${machine.id}`);
@@ -324,9 +427,20 @@ export async function updateMachineModel(machineId: string, model: GMIAModel): P
  * AudioBuffer is not structure-cloneable and will cause DataCloneError if stored directly.
  * We serialize it to a plain object that IndexedDB can handle.
  *
+ * Includes quota check for large audio recordings.
+ *
  * @param recording - Recording object
+ * @throws Error if storage quota would be exceeded
  */
 export async function saveRecording(recording: Recording): Promise<void> {
+  // Estimate size: AudioBuffer data is the main contributor
+  // Each sample is 4 bytes (Float32), multiply by channels and length
+  const audioBuffer = recording.audioBuffer;
+  const estimatedSize = audioBuffer.numberOfChannels * audioBuffer.length * 4 + 10000;
+
+  // Check quota before write
+  await checkStorageQuota(estimatedSize);
+
   const db = await initDB();
 
   // Serialize AudioBuffer for IndexedDB storage
