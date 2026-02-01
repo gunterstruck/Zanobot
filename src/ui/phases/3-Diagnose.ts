@@ -1092,13 +1092,17 @@ export class DiagnosePhase {
 
   /**
    * Show the advanced/expert recording modal with technical details
-   * (Original complex view for advanced/expert users)
+   * Structured layout: Camera (top) → Spectrum (middle) → Score (bottom)
+   * Expert view adds scrollable details below score
    */
   private showAdvancedRecordingModal(): void {
     const modal = document.getElementById('recording-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-    }
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+
+    // Add diagnosis-active class to body for CSS targeting
+    document.body.classList.add('diagnosis-active');
 
     // Update machine name in modal subtitle
     const machineIdElement = document.getElementById('machine-id');
@@ -1120,109 +1124,143 @@ export class DiagnosePhase {
       modalTitle.textContent = MODAL_TITLE.RECORDING_DIAGNOSE;
     }
 
-    // Show health gauge canvas, hide waveform for diagnosis
+    // Get modal body and rebuild with structured layout
+    const modalBody = document.querySelector('#recording-modal .modal-body') as HTMLElement;
+    if (!modalBody || modal.querySelector('.diagnosis-structured-content')) return;
+
+    // Hide original elements that we'll reorganize
     const waveformCanvas = document.getElementById('waveform-canvas');
     const gaugeCanvas = document.getElementById('health-gauge-canvas');
-    if (waveformCanvas) waveformCanvas.style.display = 'block';
-    if (gaugeCanvas) gaugeCanvas.style.display = 'block';
+    const recordingStatus = modalBody.querySelector('.recording-status') as HTMLElement;
+    const recordingTimer = modalBody.querySelector('.recording-timer') as HTMLElement;
+    const fingerprintQuality = modalBody.querySelector('.fingerprint-quality') as HTMLElement;
 
-    // Add Smart Start status and live score display
-    const modalBody = document.querySelector('#recording-modal .modal-body');
-    if (modalBody && modal && !modal.querySelector('.live-display')) {
-      // Get reference model info for display
-      const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
-      const refModelInfo = this.activeModels.length > 0
-        ? this.activeModels.map(m => {
-            const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            return `${m.label} (${trainingDate})`;
-          }).join(', ')
-        : t('reference.noModelsYet');
+    if (waveformCanvas) waveformCanvas.style.display = 'none';
+    if (gaugeCanvas) gaugeCanvas.style.display = 'none';
+    if (recordingStatus) recordingStatus.style.display = 'none';
+    if (recordingTimer) recordingTimer.style.display = 'none';
+    if (fingerprintQuality) fingerprintQuality.style.display = 'none';
 
-      const liveDisplay = document.createElement('div');
-      liveDisplay.className = 'live-display';
-      liveDisplay.innerHTML = `
-        <div id="smart-start-status" class="smart-start-status">${t('common.initializing')}</div>
-        <div class="reference-model-info" style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${t('diagnose.display.referenceModels')}</div>
-          <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
-          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
-        </div>
-        <div class="debug-info" data-view-level="expert" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
-          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">${t('diagnose.display.debugValues')}</div>
-          <div id="debug-weight-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
-          <div id="debug-feature-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
-          <div id="debug-magnitude-factor" style="color: var(--text-primary);">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
-          <div id="debug-cosine" style="color: var(--text-primary);">${t('diagnose.debug.cosine', { value: '--' })}</div>
-          <div id="debug-adjusted-cosine" style="color: var(--text-primary);">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
-          <div id="debug-scaling-constant" style="color: var(--text-primary);">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
-          <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
-        </div>
-        <div class="live-score-container">
-          <p class="live-hint">${t('diagnose.display.signalHint')}</p>
-          <div id="live-score-display" class="live-score-display is-active">
-            <div class="live-score-ring"></div>
-            <p class="live-score-label">${t('diagnose.display.match')}</p>
-            <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
-          </div>
-          <p id="live-status" class="live-status">${t('status.analyzing')}</p>
-        </div>
-      `;
-      modalBody.appendChild(liveDisplay);
-    }
+    // Build structured content container
+    const structuredContent = document.createElement('div');
+    structuredContent.className = 'diagnosis-structured-content';
+    structuredContent.style.cssText = 'display: flex; flex-direction: column; height: 100%; gap: var(--spacing-sm);';
 
-    // VISUAL POSITIONING: Add ghost overlay if camera and reference image are available
-    if (this.cameraStream && this.machine.referenceImage && modalBody) {
+    // === TOP SECTION: Camera with Ghost Overlay ===
+    const cameraSection = document.createElement('div');
+    cameraSection.className = 'diagnosis-middle-camera';
+
+    if (this.cameraStream && this.machine.referenceImage) {
       const ghostContainer = document.createElement('div');
       ghostContainer.id = 'ghost-overlay-container';
       ghostContainer.className = 'ghost-overlay-container';
-      ghostContainer.style.cssText = `
-        position: relative;
-        width: 100%;
-        max-width: 300px;
-        margin: 12px auto;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 2px solid var(--primary-color);
-      `;
+
+      const ghostWrapper = document.createElement('div');
+      ghostWrapper.className = 'ghost-overlay-wrapper';
 
       const video = document.createElement('video');
       video.id = 'diagnosis-video';
       video.autoplay = true;
       video.playsInline = true;
       video.muted = true;
-      video.style.cssText = `width: 100%; height: auto; display: block;`;
       video.srcObject = this.cameraStream;
 
       const ghostImage = document.createElement('img');
       ghostImage.id = 'ghost-overlay-image';
       ghostImage.className = 'ghost-overlay-image';
-      ghostImage.style.cssText = `
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        object-fit: cover; opacity: 0.5; pointer-events: none; z-index: 10;
-      `;
       const imageUrl = URL.createObjectURL(this.machine.referenceImage);
       ghostImage.src = imageUrl;
 
+      ghostWrapper.appendChild(video);
+      ghostWrapper.appendChild(ghostImage);
+      ghostContainer.appendChild(ghostWrapper);
+
       const hint = document.createElement('p');
       hint.className = 'ghost-overlay-hint';
-      hint.style.cssText = `font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 8px;`;
       hint.textContent = t('diagnose.display.ghostHint');
+      ghostContainer.appendChild(hint);
 
-      ghostContainer.appendChild(video);
-      ghostContainer.appendChild(ghostImage);
-      modalBody.insertBefore(ghostContainer, modalBody.firstChild);
-      modalBody.insertBefore(hint, ghostContainer.nextSibling);
-
+      cameraSection.appendChild(ghostContainer);
       logger.info('✅ Ghost overlay added to diagnosis modal');
+    } else {
+      // Show placeholder when no camera available
+      cameraSection.innerHTML = `
+        <div style="text-align: center; padding: var(--spacing-sm); color: var(--text-muted); font-size: 0.75rem;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5; margin-bottom: 4px;">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <div>${t('diagnose.display.noCameraAvailable') || 'Position Guide nicht verfügbar'}</div>
+        </div>
+      `;
     }
+    structuredContent.appendChild(cameraSection);
 
-    logger.info('✅ Advanced recording modal shown');
+    // === MIDDLE SECTION: Spectrum Diagram ===
+    const spectrumSection = document.createElement('div');
+    spectrumSection.className = 'diagnosis-middle-spectrum';
+
+    // Move waveform canvas into spectrum section
+    if (waveformCanvas) {
+      waveformCanvas.style.display = 'block';
+      spectrumSection.appendChild(waveformCanvas);
+    }
+    structuredContent.appendChild(spectrumSection);
+
+    // === BOTTOM SECTION: Score with Animation ===
+    const scoreSection = document.createElement('div');
+    scoreSection.className = 'diagnosis-middle-score';
+    scoreSection.innerHTML = `
+      <div id="smart-start-status" class="smart-start-status">${t('common.initializing')}</div>
+      <div id="live-score-display" class="live-score-display is-active">
+        <div class="live-score-ring"></div>
+        <p class="live-score-label">${t('diagnose.display.match')}</p>
+        <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
+      </div>
+      <p id="live-status" class="live-status">${t('status.analyzing')}</p>
+    `;
+    structuredContent.appendChild(scoreSection);
+
+    // === EXPERT DETAILS: Additional info below score (scrollable in expert mode) ===
+    const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
+    const refModelInfo = this.activeModels.length > 0
+      ? this.activeModels.map(m => {
+          const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          return `${m.label} (${trainingDate})`;
+        }).join(', ')
+      : t('reference.noModelsYet');
+
+    const expertDetails = document.createElement('div');
+    expertDetails.className = 'diagnosis-expert-details';
+    expertDetails.innerHTML = `
+      <div class="reference-model-info">
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
+        <div style="font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
+        <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
+      </div>
+      <div class="debug-info" data-view-level="expert">
+        <div style="color: var(--text-muted); margin-bottom: 2px; font-weight: 600; font-size: 0.65rem;">${t('diagnose.display.debugValues')}</div>
+        <div id="debug-weight-magnitude">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
+        <div id="debug-feature-magnitude">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
+        <div id="debug-magnitude-factor">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
+        <div id="debug-cosine">${t('diagnose.debug.cosine', { value: '--' })}</div>
+        <div id="debug-adjusted-cosine">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
+        <div id="debug-scaling-constant">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
+        <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
+      </div>
+    `;
+    structuredContent.appendChild(expertDetails);
+
+    // Add structured content to modal body
+    modalBody.appendChild(structuredContent);
+
+    logger.info('✅ Advanced recording modal shown with structured layout');
   }
 
   /**
@@ -1272,13 +1310,36 @@ export class DiagnosePhase {
     if (recordingModal) {
       recordingModal.style.display = 'none';
 
-      // Clean up live display elements
+      // Remove diagnosis-active class from body
+      document.body.classList.remove('diagnosis-active');
+
+      // Clean up structured content (new layout)
+      const structuredContent = recordingModal.querySelector('.diagnosis-structured-content');
+      if (structuredContent) {
+        // Clean up ghost overlay image URL
+        const ghostImage = structuredContent.querySelector('#ghost-overlay-image') as HTMLImageElement | null;
+        if (ghostImage && ghostImage.src) {
+          URL.revokeObjectURL(ghostImage.src);
+        }
+
+        // Move waveform canvas back to modal body before removing structured content
+        const waveformCanvas = structuredContent.querySelector('#waveform-canvas');
+        const modalBody = recordingModal.querySelector('.modal-body');
+        if (waveformCanvas && modalBody) {
+          modalBody.insertBefore(waveformCanvas, modalBody.firstChild);
+          (waveformCanvas as HTMLElement).style.display = 'none';
+        }
+
+        structuredContent.remove();
+      }
+
+      // Clean up legacy live display elements (backwards compatibility)
       const liveDisplay = recordingModal.querySelector('.live-display');
       if (liveDisplay) {
         liveDisplay.remove();
       }
 
-      // Clean up ghost overlay elements
+      // Clean up legacy ghost overlay elements
       const ghostContainer = recordingModal.querySelector('#ghost-overlay-container');
       if (ghostContainer) {
         const ghostImage = ghostContainer.querySelector('#ghost-overlay-image') as HTMLImageElement | null;
@@ -1291,6 +1352,14 @@ export class DiagnosePhase {
       if (ghostHint) {
         ghostHint.remove();
       }
+
+      // Reset original elements visibility
+      const recordingStatus = recordingModal.querySelector('.recording-status') as HTMLElement;
+      const recordingTimer = recordingModal.querySelector('.recording-timer') as HTMLElement;
+      const fingerprintQuality = recordingModal.querySelector('.fingerprint-quality') as HTMLElement;
+      if (recordingStatus) recordingStatus.style.display = '';
+      if (recordingTimer) recordingTimer.style.display = '';
+      if (fingerprintQuality) fingerprintQuality.style.display = '';
     }
 
     logger.debug('🧹 Modals hidden and reset');

@@ -229,6 +229,7 @@ export const de: TranslationDict = {
       signalHint: 'Telefon näher an die Maschine halten für optimales Signal',
       match: 'Übereinstimmung',
       ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
+      noCameraAvailable: 'Kein Positionsbild verfügbar',
     },
 
     smartStart: {
