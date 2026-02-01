@@ -783,6 +783,27 @@ export const de: TranslationDict = {
     loadingTitle: 'Referenz wird geladen',
     loadingSubtitle: 'Bitte warten...',
     testingBlocked: 'Testen ist erst nach dem Laden der Referenzdaten möglich.',
+
+    // Versioned reference database
+    versionInfo: 'Version {{version}}',
+    versionLoaded: 'Referenzdatei geladen (Version {{version}})',
+    versionUpToDate: 'Lokale Datenbank ist aktuell (v{{version}})',
+    versionUpdateAvailable: 'Update verfügbar: v{{local}} → v{{remote}}',
+    versionUpdating: 'Aktualisiere Referenzdatenbank...',
+    versionUpdated: 'Referenzdatenbank aktualisiert auf v{{version}}',
+    versionSkipped: 'Kein Update erforderlich (lokal: v{{local}}, remote: v{{remote}})',
+
+    // Export
+    exportTitle: 'Referenzdatenbank exportieren',
+    exportSuccess: 'Referenzdatenbank exportiert: {{filename}}',
+    exportFailed: 'Export fehlgeschlagen',
+    shareTitle: 'Referenzdatenbank teilen',
+    shareSuccess: 'Referenzdatenbank geteilt',
+    shareFailed: 'Teilen fehlgeschlagen',
+
+    // Local references
+    localReferencesPreserved: 'Lokale Referenzen wurden beibehalten',
+    localReferencesCount: '{{count}} lokale Referenzen',
   },
 
   // ============================================================================

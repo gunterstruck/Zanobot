@@ -11,9 +11,9 @@
  */
 
 import { t } from '../../i18n/index.js';
-import { ReferenceDbService } from '@data/ReferenceDbService.js';
-import { saveMachine, getMachine } from '@data/db.js';
-import type { Machine } from '@data/types.js';
+import { ReferenceDbService, type FetchValidateResult } from '@data/ReferenceDbService.js';
+import { saveMachine, getMachine, saveReferenceDatabase } from '@data/db.js';
+import type { Machine, ReferenceDatabase } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { HashRouter } from '../HashRouter.js';
 
@@ -39,6 +39,11 @@ export class MachineSetupForm {
   private nfcLinkDisplay: HTMLElement | null = null;
   private copyLinkBtn: HTMLButtonElement | null = null;
   private errorDisplay: HTMLElement | null = null;
+  private statusDisplay: HTMLElement | null = null;
+  private versionDisplay: HTMLElement | null = null;
+
+  // State
+  private isValidating: boolean = false;
 
   constructor(containerId: string) {
     this.containerId = containerId;
@@ -100,6 +105,15 @@ export class MachineSetupForm {
             />
             <p class="form-hint">${t('machineSetup.referenceDbUrlHint')}</p>
             <p class="form-error" id="url-error"></p>
+            <!-- Validation status display -->
+            <div class="form-status" id="validation-status" style="display: none;">
+              <span class="status-text"></span>
+              <span class="status-spinner"></span>
+            </div>
+            <!-- Version info display -->
+            <div class="form-version-info" id="version-info" style="display: none;">
+              <span class="version-badge"></span>
+            </div>
           </div>
 
           <!-- Location (Optional) -->
@@ -167,13 +181,18 @@ export class MachineSetupForm {
     this.nfcLinkDisplay = document.getElementById('nfc-link-section');
     this.copyLinkBtn = document.getElementById('copy-link-btn') as HTMLButtonElement;
     this.errorDisplay = document.getElementById('url-error');
+    this.statusDisplay = document.getElementById('validation-status');
+    this.versionDisplay = document.getElementById('version-info');
 
     // Form submission
     this.form?.addEventListener('submit', (e) => this.handleSubmit(e));
 
     // Real-time URL validation
     this.referenceDbUrlInput?.addEventListener('blur', () => this.validateUrl());
-    this.referenceDbUrlInput?.addEventListener('input', () => this.clearError());
+    this.referenceDbUrlInput?.addEventListener('input', () => {
+      this.clearError();
+      this.clearVersionInfo();
+    });
 
     // Copy link button
     this.copyLinkBtn?.addEventListener('click', () => this.copyNfcLink());
@@ -279,6 +298,7 @@ export class MachineSetupForm {
 
   /**
    * Handle form submission
+   * Downloads, validates, and saves the reference database before saving the machine
    */
   private async handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
@@ -288,23 +308,93 @@ export class MachineSetupForm {
       return;
     }
 
-    // Validate URL
+    // Prevent double submission
+    if (this.isValidating) {
+      return;
+    }
+
+    // Validate URL format first
     if (!this.validateUrl()) {
       return;
     }
 
-    // Disable submit button during save
+    const url = this.referenceDbUrlInput?.value.trim() || '';
+
+    // Check if URL has changed
+    const urlChanged = url !== this.machine.referenceDbUrl;
+
+    // Disable submit button and show loading
+    this.isValidating = true;
     if (this.submitBtn) {
       this.submitBtn.disabled = true;
     }
 
     try {
-      // Update machine with form values
-      this.machine.referenceDbUrl = this.referenceDbUrlInput?.value.trim() || undefined;
+      // If URL changed or no reference DB loaded yet, validate and download
+      if (urlChanged || !this.machine.referenceDbLoaded) {
+        this.showStatus(t('machineSetup.statusDownloading'), true);
+
+        // Fetch and validate the reference database
+        const result = await ReferenceDbService.fetchAndValidate(url);
+
+        if (!result.success) {
+          this.showError(this.getDownloadErrorMessage(result.error || 'unknown'));
+          this.hideStatus();
+          return;
+        }
+
+        this.showStatus(t('machineSetup.statusValidating'), true);
+
+        // Check that we have valid data
+        if (!result.rawData) {
+          this.showError(t('machineSetup.errorInvalidFormat'));
+          this.hideStatus();
+          return;
+        }
+
+        this.showStatus(t('machineSetup.statusSaving'), true);
+
+        // Save reference database locally
+        const refDb: ReferenceDatabase = {
+          machineId: this.machine.id,
+          version: result.dbMeta?.db_version || '1.0.0',
+          downloadedAt: Date.now(),
+          sourceUrl: url,
+          dbMeta: result.dbMeta,
+          data: {
+            referenceModels: result.rawData.models.length > 0
+              ? result.rawData.models
+              : result.rawData.referenceModels,
+            machineName: result.rawData.machineName,
+            location: result.rawData.location,
+            notes: result.rawData.notes,
+            config: result.rawData.config,
+          },
+        };
+
+        await saveReferenceDatabase(refDb);
+
+        // Update machine with form values and reference info
+        this.machine.referenceDbUrl = url;
+        this.machine.referenceDbVersion = refDb.version;
+        this.machine.referenceDbLoaded = true;
+
+        // Show version info
+        this.showVersionInfo(refDb.version, result.modelsCount || 0, result.dbMeta?.description);
+
+        this.showStatus(t('machineSetup.statusComplete'), false);
+
+        logger.info(`✅ Reference DB v${refDb.version} validated and saved for machine ${this.machine.id}`);
+      } else {
+        // URL hasn't changed, just update other fields
+        this.machine.referenceDbUrl = url;
+      }
+
+      // Update location and notes
       this.machine.location = this.locationInput?.value.trim() || undefined;
       this.machine.notes = this.notesInput?.value.trim() || undefined;
 
-      // Save to database
+      // Save machine to database
       await saveMachine(this.machine);
 
       // Update NFC link display
@@ -313,14 +403,99 @@ export class MachineSetupForm {
       // Notify callback
       this.onSubmit?.(this.machine);
 
+      // Hide status after success
+      setTimeout(() => this.hideStatus(), 2000);
+
       logger.info(`✅ Machine ${this.machine.id} setup saved`);
     } catch (error) {
       logger.error('Failed to save machine setup:', error);
       this.showError(t('common.error'));
+      this.hideStatus();
     } finally {
+      this.isValidating = false;
       if (this.submitBtn) {
         this.submitBtn.disabled = false;
       }
+    }
+  }
+
+  /**
+   * Get user-friendly error message for download errors
+   */
+  private getDownloadErrorMessage(error: string): string {
+    const errorMap: Record<string, string> = {
+      'url_empty': t('machineSetup.urlEmpty'),
+      'url_invalid': t('machineSetup.urlInvalid'),
+      'url_not_https': t('machineSetup.urlNotHttps'),
+      'google_drive_not_direct': t('machineSetup.googleDriveNotDirect'),
+      'download_failed': t('machineSetup.errorDownloadFailed'),
+      'invalid_json': t('machineSetup.errorInvalidFormat'),
+      'invalid_format': t('machineSetup.errorInvalidFormat'),
+      'invalid_data_structure': t('machineSetup.errorInvalidStructure'),
+      'no_models_or_config': t('machineSetup.errorNoModels'),
+      'invalid_model_format': t('machineSetup.errorInvalidModel'),
+    };
+
+    return errorMap[error] || t('machineSetup.errorUnknown');
+  }
+
+  /**
+   * Show validation status
+   */
+  private showStatus(message: string, showSpinner: boolean): void {
+    if (!this.statusDisplay) return;
+
+    const textEl = this.statusDisplay.querySelector('.status-text');
+    const spinnerEl = this.statusDisplay.querySelector('.status-spinner');
+
+    if (textEl) {
+      textEl.textContent = message;
+    }
+
+    if (spinnerEl) {
+      (spinnerEl as HTMLElement).style.display = showSpinner ? 'inline-block' : 'none';
+    }
+
+    this.statusDisplay.style.display = 'flex';
+  }
+
+  /**
+   * Hide validation status
+   */
+  private hideStatus(): void {
+    if (this.statusDisplay) {
+      this.statusDisplay.style.display = 'none';
+    }
+  }
+
+  /**
+   * Show version info after successful validation
+   */
+  private showVersionInfo(version: string, modelsCount: number, description?: string): void {
+    if (!this.versionDisplay) return;
+
+    const badgeEl = this.versionDisplay.querySelector('.version-badge');
+
+    if (badgeEl) {
+      let text = `✓ ${t('machineSetup.referenceLoaded')} (v${version})`;
+      if (modelsCount > 0) {
+        text += ` - ${modelsCount} ${t('machineSetup.modelsImported', { count: modelsCount })}`;
+      }
+      if (description) {
+        text += ` - ${description}`;
+      }
+      badgeEl.textContent = text;
+    }
+
+    this.versionDisplay.style.display = 'block';
+  }
+
+  /**
+   * Clear version info display
+   */
+  private clearVersionInfo(): void {
+    if (this.versionDisplay) {
+      this.versionDisplay.style.display = 'none';
     }
   }
 

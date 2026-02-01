@@ -734,6 +734,27 @@ export const en: TranslationDict = {
     loadingTitle: 'Loading reference',
     loadingSubtitle: 'Please wait...',
     testingBlocked: 'Testing is only available after reference data is loaded.',
+
+    // Versioned reference database
+    versionInfo: 'Version {{version}}',
+    versionLoaded: 'Reference file loaded (Version {{version}})',
+    versionUpToDate: 'Local database is up-to-date (v{{version}})',
+    versionUpdateAvailable: 'Update available: v{{local}} → v{{remote}}',
+    versionUpdating: 'Updating reference database...',
+    versionUpdated: 'Reference database updated to v{{version}}',
+    versionSkipped: 'No update required (local: v{{local}}, remote: v{{remote}})',
+
+    // Export
+    exportTitle: 'Export reference database',
+    exportSuccess: 'Reference database exported: {{filename}}',
+    exportFailed: 'Export failed',
+    shareTitle: 'Share reference database',
+    shareSuccess: 'Reference database shared',
+    shareFailed: 'Sharing failed',
+
+    // Local references
+    localReferencesPreserved: 'Local references have been preserved',
+    localReferencesCount: '{{count}} local references',
   },
 
   footer: {
