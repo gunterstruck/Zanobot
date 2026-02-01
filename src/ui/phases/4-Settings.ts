@@ -325,7 +325,7 @@ export class SettingsPhase {
     try {
       logger.info('📤 Sharing database export...');
 
-      const { data, filename, file, blob } = await this.buildExportPayload();
+      const { filename, file, blob } = await this.buildExportPayload();
       const shareData: ShareData = {
         files: [file],
         title: t('settings.share.title'),
@@ -333,14 +333,25 @@ export class SettingsPhase {
       };
 
       if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-        logger.info(`✅ Database shared: ${filename}`);
-        notify.success(t('settings.share.success', { filename }), {
-          title: t('modals.databaseShared'),
-        });
-        return;
+        try {
+          await navigator.share(shareData);
+          logger.info(`✅ Database shared: ${filename}`);
+          notify.success(t('settings.share.success', { filename }), {
+            title: t('modals.databaseShared'),
+          });
+          return;
+        } catch (shareError) {
+          // User cancelled sharing - not an error
+          if ((shareError as Error).name === 'AbortError') {
+            logger.info('Share cancelled by user');
+            return;
+          }
+          // Permission denied or other share error - fall back to download
+          logger.warn('Share API failed, falling back to download:', shareError);
+        }
       }
 
+      // Fallback to download
       this.triggerDownload(blob, filename);
       notify.info(t('settings.share.fallback', { filename }), {
         title: t('modals.databaseExported'),
