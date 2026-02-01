@@ -735,7 +735,7 @@
         </footer>
     </div>
 
-    <!-- Modal for Recording -->
+    <!-- Modal for Recording (Reference Phase) -->
     <div id="recording-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -758,6 +758,49 @@
                 <button class="modal-btn btn-secondary" id="stop-recording-btn" data-i18n="buttons.stopRecording">Stop Recording</button>
                 <button class="modal-btn btn-primary" id="save-reference-btn" style="display: none;" data-i18n="buttons.saveReference">Save Reference</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Inspection Modal (Simplified PWA View for Diagnosis) -->
+    <div id="inspection-modal" class="modal inspection-modal" style="display: none;">
+        <div class="modal-content">
+            <!-- Fixed Header Banner -->
+            <header class="inspection-header">
+                <h1 class="inspection-question" data-i18n="inspection.mainQuestion">Hört sich die Maschine unauffällig an?</h1>
+                <p class="inspection-subtitle" id="inspection-subtitle" data-i18n="inspection.subtitleInitializing">Vorbereitung – bitte warten</p>
+                <p class="inspection-machine-name" id="inspection-machine-name"></p>
+            </header>
+
+            <!-- Scrollable Middle Content -->
+            <main class="inspection-content is-initializing" id="inspection-content">
+                <!-- Main Score Display with Pulse Animation -->
+                <div class="inspection-score-container" id="inspection-score-container">
+                    <!-- Pulse Animation Rings -->
+                    <div class="inspection-pulse-animation">
+                        <div class="inspection-pulse-ring"></div>
+                        <div class="inspection-pulse-ring"></div>
+                        <div class="inspection-pulse-ring"></div>
+                    </div>
+                    <!-- Score Value -->
+                    <span class="inspection-score" id="inspection-score">--<span class="inspection-score-unit">%</span></span>
+                    <!-- Status Label -->
+                    <span class="inspection-status-label" id="inspection-status-label" data-i18n="common.initializing">Initialisierung...</span>
+                </div>
+
+                <!-- Reference State Info -->
+                <div class="inspection-reference-info" id="inspection-reference-info">
+                    <div class="inspection-reference-label" data-i18n="inspection.referenceState">Referenzzustand</div>
+                    <div class="inspection-reference-value" id="inspection-reference-value">Normalbetrieb</div>
+                </div>
+
+                <!-- Dynamic Quality Hint -->
+                <div class="inspection-hint hint-hidden" id="inspection-hint" data-i18n="inspection.hintWaiting">Warte auf Maschinensignal...</div>
+            </main>
+
+            <!-- Fixed Footer with STOP Button -->
+            <footer class="inspection-footer">
+                <button class="inspection-stop-btn" id="inspection-stop-btn" data-i18n="inspection.stopButton">STOP</button>
+            </footer>
         </div>
     </div>
 

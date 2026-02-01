@@ -490,6 +490,28 @@ export const en: TranslationDict = {
     abnormal: 'ABNORMAL',
   },
 
+  // Inspection View (Simplified PWA)
+  inspection: {
+    // Header
+    mainQuestion: 'Does the machine sound normal?',
+    subtitle: 'Inspection running – please stay close to the machine',
+    subtitleInitializing: 'Preparing – please wait',
+    // Status words (simple, non-technical)
+    statusNormal: 'Normal',
+    statusUncertain: 'Uncertain',
+    statusDeviation: 'Deviation',
+    // Reference info
+    referenceState: 'Reference state',
+    referenceDefault: 'Normal operation',
+    // Dynamic hints for poor signal quality
+    hintMoveCloser: 'Please move closer to the machine',
+    hintChangePosition: 'Slightly change position',
+    hintHoldSteady: 'Hold device steady',
+    hintWaiting: 'Waiting for machine signal...',
+    // Button
+    stopButton: 'STOP',
+  },
+
   modeSelector: {
     title: 'Analysis Mode',
     description: 'Select the appropriate mode for your machine',
