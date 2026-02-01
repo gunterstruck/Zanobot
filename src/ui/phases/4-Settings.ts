@@ -347,7 +347,7 @@ export class SettingsPhase {
       });
     } catch (error) {
       logger.error('Share error:', error);
-      notify.error(t('settings.share.error'), error as Error);
+      notify.error(t('settings.shareError'), error as Error);
     }
   }
 
