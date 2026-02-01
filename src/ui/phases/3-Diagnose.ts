@@ -1164,10 +1164,13 @@ export class DiagnosePhase {
       ghostWrapper.appendChild(ghostImage);
       ghostContainer.appendChild(ghostWrapper);
 
-      const hint = document.createElement('p');
-      hint.className = 'ghost-overlay-hint';
-      hint.textContent = t('diagnose.display.ghostHint');
-      ghostContainer.appendChild(hint);
+      // Only show hint text in expert mode to keep advanced mode minimal
+      if (getViewLevel() === 'expert') {
+        const hint = document.createElement('p');
+        hint.className = 'ghost-overlay-hint';
+        hint.textContent = t('diagnose.display.ghostHint');
+        ghostContainer.appendChild(hint);
+      }
 
       cameraSection.appendChild(ghostContainer);
       logger.info('✅ Ghost overlay added to diagnosis modal');
@@ -1210,41 +1213,46 @@ export class DiagnosePhase {
     `;
     structuredContent.appendChild(scoreSection);
 
-    // === EXPERT DETAILS: Additional info below score (scrollable in expert mode) ===
-    const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
-    const refModelInfo = this.activeModels.length > 0
-      ? this.activeModels.map(m => {
-          const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-          return `${m.label} (${trainingDate})`;
-        }).join(', ')
-      : t('reference.noModelsYet');
+    // === EXPERT DETAILS: Only shown in expert view level (not advanced) ===
+    // Advanced mode: Clean, minimal interface without reference model info or debug values
+    // Expert mode: Full technical details for debugging and analysis
+    const currentViewLevel = getViewLevel();
+    if (currentViewLevel === 'expert') {
+      const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
+      const refModelInfo = this.activeModels.length > 0
+        ? this.activeModels.map(m => {
+            const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return `${m.label} (${trainingDate})`;
+          }).join(', ')
+        : t('reference.noModelsYet');
 
-    const expertDetails = document.createElement('div');
-    expertDetails.className = 'diagnosis-expert-details';
-    expertDetails.innerHTML = `
-      <div class="reference-model-info">
-        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
-        <div style="font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
-        <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
-      </div>
-      <div class="debug-info" data-view-level="expert">
-        <div style="color: var(--text-muted); margin-bottom: 2px; font-weight: 600; font-size: 0.65rem;">${t('diagnose.display.debugValues')}</div>
-        <div id="debug-weight-magnitude">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
-        <div id="debug-feature-magnitude">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
-        <div id="debug-magnitude-factor">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
-        <div id="debug-cosine">${t('diagnose.debug.cosine', { value: '--' })}</div>
-        <div id="debug-adjusted-cosine">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
-        <div id="debug-scaling-constant">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
-        <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
-      </div>
-    `;
-    structuredContent.appendChild(expertDetails);
+      const expertDetails = document.createElement('div');
+      expertDetails.className = 'diagnosis-expert-details';
+      expertDetails.innerHTML = `
+        <div class="reference-model-info">
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
+          <div style="font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
+        </div>
+        <div class="debug-info" data-view-level="expert">
+          <div style="color: var(--text-muted); margin-bottom: 2px; font-weight: 600; font-size: 0.65rem;">${t('diagnose.display.debugValues')}</div>
+          <div id="debug-weight-magnitude">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
+          <div id="debug-feature-magnitude">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
+          <div id="debug-magnitude-factor">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
+          <div id="debug-cosine">${t('diagnose.debug.cosine', { value: '--' })}</div>
+          <div id="debug-adjusted-cosine">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
+          <div id="debug-scaling-constant">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
+          <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
+        </div>
+      `;
+      structuredContent.appendChild(expertDetails);
+    }
 
     // Add structured content to modal body
     modalBody.appendChild(structuredContent);
