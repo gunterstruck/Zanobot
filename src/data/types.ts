@@ -15,6 +15,13 @@ export interface Machine {
   lastDiagnosisAt?: number; // Last diagnosis timestamp
   referenceModels: GMIAModel[]; // Trained reference models (multiclass diagnosis)
   referenceImage?: Blob; // Optional reference image for visual positioning (Ghost Image Overlay)
+
+  // NFC/Service Technician Setup Fields
+  referenceDbUrl?: string; // Google Drive direct download URL for reference database
+  location?: string; // Machine location (e.g., "Halle 3, Linie 2")
+  notes?: string; // Additional notes for service technicians
+  referenceDbVersion?: string; // Version of the downloaded reference database
+  referenceDbLoaded?: boolean; // Whether the reference DB has been downloaded
 }
 
 /**
@@ -165,6 +172,27 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'brand';
   debugMode: boolean;
   detectionMode: DetectionMode; // Default: 'STATIONARY' (Level 1)
+}
+
+/**
+ * Reference Database - Downloaded from Google Drive for NFC-based setup
+ * Contains pre-trained reference models and machine configuration
+ */
+export interface ReferenceDatabase {
+  machineId: string; // Links to Machine.id
+  version: string; // Database version for update checking
+  downloadedAt: number; // Timestamp when downloaded
+  sourceUrl: string; // Original download URL
+  data: {
+    // Reference models that can be imported
+    referenceModels?: GMIAModel[];
+    // Machine metadata
+    machineName?: string;
+    location?: string;
+    notes?: string;
+    // Any additional configuration
+    config?: Record<string, unknown>;
+  };
 }
 
 /**

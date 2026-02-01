@@ -732,6 +732,60 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // MACHINE SETUP (NFC/Service Technician)
+  // ============================================================================
+  machineSetup: {
+    // Form labels
+    title: 'Maschine einrichten',
+    referenceDbUrl: 'Referenz-DB-Link (Google Drive)',
+    referenceDbUrlRequired: 'Pflichtfeld',
+    referenceDbUrlHint: 'Nutze den Direct-Download-Link: https://drive.google.com/uc?export=download&id=FILE_ID',
+    location: 'Standort',
+    locationPlaceholder: 'z.B. Halle 3, Linie 2',
+    notes: 'Notizen',
+    notesPlaceholder: 'Zusätzliche Hinweise für Servicetechniker',
+
+    // Validation errors
+    urlEmpty: 'Bitte geben Sie einen Referenz-DB-Link ein.',
+    urlInvalid: 'Der Link scheint keine gültige URL zu sein.',
+    urlNotHttps: 'Der Link muss mit https:// beginnen.',
+    googleDriveNotDirect: 'Bitte verwenden Sie den Direct-Download-Link von Google Drive.',
+
+    // Download status
+    downloadingReference: 'Referenzdaten werden geladen...',
+    statusDownloading: 'Lade Referenzdaten herunter...',
+    statusParsing: 'Verarbeite Daten...',
+    statusValidating: 'Prüfe Datenformat...',
+    statusSaving: 'Speichere lokal...',
+    statusComplete: 'Fertig!',
+
+    // Download errors
+    errorMachineNotFound: 'Maschine nicht eingerichtet. Bitte wenden Sie sich an den Servicetechniker.',
+    errorNoReferenceUrl: 'Keine Referenzdaten hinterlegt. Bitte wenden Sie sich an den Servicetechniker.',
+    errorDownloadFailed: 'Download fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung.',
+    errorInvalidFormat: 'Die Referenzdaten haben ein ungültiges Format.',
+    errorInvalidStructure: 'Die Datenstruktur ist fehlerhaft.',
+    errorNoModels: 'Keine Referenzmodelle in den Daten gefunden.',
+    errorInvalidModel: 'Ein oder mehrere Referenzmodelle sind fehlerhaft.',
+    errorUnknown: 'Ein unbekannter Fehler ist aufgetreten.',
+
+    // Success messages
+    referenceLoaded: 'Referenzdaten erfolgreich geladen!',
+    modelsImported: '{{count}} Referenzmodelle importiert',
+    readyToTest: 'Bereit zum Testen',
+
+    // NFC related
+    nfcMachineLink: 'Maschinen-Link für NFC',
+    nfcLinkCopied: 'Link in Zwischenablage kopiert',
+    nfcWriteSuccess: 'NFC-Tag erfolgreich beschrieben',
+
+    // Loading overlay
+    loadingTitle: 'Referenz wird geladen',
+    loadingSubtitle: 'Bitte warten...',
+    testingBlocked: 'Testen ist erst nach dem Laden der Referenzdaten möglich.',
+  },
+
+  // ============================================================================
   // FOOTER
   // ============================================================================
   footer: {

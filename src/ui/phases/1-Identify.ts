@@ -19,6 +19,9 @@ import {
   type AudioDeviceInfo,
 } from '@core/audio/HardwareCheck.js';
 import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
+import { HashRouter } from '../HashRouter.js';
+import { ReferenceDbService } from '@data/ReferenceDbService.js';
+import { ReferenceLoadingOverlay } from '../components/ReferenceLoadingOverlay.js';
 
 type NDEFRecordInit = {
   recordType: 'url';
@@ -498,15 +501,29 @@ export class IdentifyPhase {
 
   /**
    * Handle machine selection or auto-create if missing
+   * Also triggers automatic reference database download for NFC-based setup
    */
   private async handleMachineId(id: string): Promise<boolean> {
     try {
-      const machine = await getMachine(id);
+      let machine = await getMachine(id);
 
       if (machine) {
         notify.success(t('identify.success.machineLoaded', { name: machine.name }));
         this.setCurrentMachine(machine);
         this.onMachineSelected(machine);
+
+        // Check if reference database download is needed (NFC setup flow)
+        const needsDownload = await ReferenceDbService.needsDownload(id);
+        if (needsDownload && machine.referenceDbUrl) {
+          await this.downloadReferenceDatabase(machine);
+          // Reload machine to get updated reference models
+          machine = await getMachine(id);
+          if (machine) {
+            this.setCurrentMachine(machine);
+            this.onMachineSelected(machine);
+          }
+        }
+
         return true;
       }
 
@@ -532,12 +549,81 @@ export class IdentifyPhase {
   }
 
   /**
+   * Download reference database for a machine (NFC setup flow)
+   * Shows loading overlay during download
+   */
+  private async downloadReferenceDatabase(machine: Machine): Promise<void> {
+    const overlay = new ReferenceLoadingOverlay();
+    overlay.show();
+
+    try {
+      const result = await ReferenceDbService.downloadAndApply(
+        machine.id,
+        (status, progress) => {
+          overlay.updateStatus(this.getLocalizedDownloadStatus(status), progress);
+        }
+      );
+
+      if (result.success) {
+        overlay.showSuccess();
+        logger.info(`✅ Reference DB downloaded: ${result.modelsImported} models, v${result.version}`);
+      } else {
+        overlay.showError(this.getLocalizedDownloadError(result.error || 'unknown'));
+        // Keep overlay visible longer for error
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        overlay.hide();
+      }
+    } catch (error) {
+      logger.error('Reference DB download error:', error);
+      overlay.showError(t('machineSetup.errorUnknown'));
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      overlay.hide();
+    }
+  }
+
+  /**
+   * Get localized download status message
+   */
+  private getLocalizedDownloadStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      downloading: t('machineSetup.statusDownloading'),
+      parsing: t('machineSetup.statusParsing'),
+      validating: t('machineSetup.statusValidating'),
+      saving: t('machineSetup.statusSaving'),
+      complete: t('machineSetup.statusComplete'),
+    };
+    return statusMap[status] || status;
+  }
+
+  /**
+   * Get localized download error message
+   */
+  private getLocalizedDownloadError(error: string): string {
+    const errorMap: Record<string, string> = {
+      machine_not_found: t('machineSetup.errorMachineNotFound'),
+      no_reference_url: t('machineSetup.errorNoReferenceUrl'),
+      download_failed: t('machineSetup.errorDownloadFailed'),
+      invalid_format: t('machineSetup.errorInvalidFormat'),
+      invalid_data_structure: t('machineSetup.errorInvalidStructure'),
+      no_models_or_config: t('machineSetup.errorNoModels'),
+      invalid_model_format: t('machineSetup.errorInvalidModel'),
+    };
+    return errorMap[error] || t('machineSetup.errorUnknown');
+  }
+
+  /**
    * Handle manual machine creation
+   * Includes service technician fields for NFC setup (expert mode)
    */
   private async handleCreateMachine(): Promise<void> {
     try {
       const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
       const idInput = document.getElementById('machine-id-input') as HTMLInputElement;
+
+      // Service technician fields (expert mode)
+      const refDbUrlInput = document.getElementById('reference-db-url-input') as HTMLInputElement;
+      const locationInput = document.getElementById('machine-location-input') as HTMLInputElement;
+      const notesInput = document.getElementById('machine-notes-input') as HTMLTextAreaElement;
 
       if (!nameInput || !idInput) {
         throw new Error('Input elements not found');
@@ -545,6 +631,11 @@ export class IdentifyPhase {
 
       const name = nameInput.value.trim();
       const idInputValue = idInput.value.trim();
+
+      // Get service technician fields if available
+      const referenceDbUrl = refDbUrlInput?.value.trim() || undefined;
+      const location = locationInput?.value.trim() || undefined;
+      const notes = notesInput?.value.trim() || undefined;
 
       // Validate name
       if (!name) {
@@ -561,6 +652,15 @@ export class IdentifyPhase {
       if (name.length > 100) {
         this.showError(t('identify.errors.nameTooLong'));
         return;
+      }
+
+      // Validate reference DB URL if provided
+      if (referenceDbUrl) {
+        const urlValidation = ReferenceDbService.validateUrl(referenceDbUrl);
+        if (!urlValidation.valid) {
+          this.showError(t(`machineSetup.${this.getUrlErrorKey(urlValidation.error || 'urlInvalid')}`));
+          return;
+        }
       }
 
       // Generate or validate ID
@@ -585,28 +685,35 @@ export class IdentifyPhase {
         return;
       }
 
-      // Create new machine
+      // Create new machine with service technician fields
       const machine: Machine = {
         id,
         name,
         createdAt: Date.now(),
-        referenceModels: [], // MULTICLASS: Initialize empty model array
+        referenceModels: [],
+        // Service technician fields (NFC setup)
+        referenceDbUrl,
+        location,
+        notes,
       };
 
       await saveMachine(machine);
       await this.refreshMachineLists();
 
-      // DEBUG LOGGING: Show created machine
       logger.debug('✅ Machine Created:', {
         id: machine.id,
         name: machine.name,
         createdAt: new Date(machine.createdAt).toLocaleString(),
+        hasReferenceDbUrl: !!machine.referenceDbUrl,
       });
       logger.debug('📞 Calling onMachineSelected() with new machine...');
 
       // Clear inputs
       nameInput.value = '';
       idInput.value = '';
+      if (refDbUrlInput) refDbUrlInput.value = '';
+      if (locationInput) locationInput.value = '';
+      if (notesInput) notesInput.value = '';
 
       this.showNotification(t('identify.success.machineCreated', { name }));
       this.setCurrentMachine(machine);
@@ -615,6 +722,19 @@ export class IdentifyPhase {
       logger.error('Create machine error:', error);
       this.showError(t('identify.errors.machineCreate'));
     }
+  }
+
+  /**
+   * Map URL validation error to i18n key
+   */
+  private getUrlErrorKey(error: string): string {
+    const errorMap: Record<string, string> = {
+      url_empty: 'urlEmpty',
+      url_invalid: 'urlInvalid',
+      url_not_https: 'urlNotHttps',
+      google_drive_not_direct: 'googleDriveNotDirect',
+    };
+    return errorMap[error] || 'urlInvalid';
   }
 
   /**
@@ -688,10 +808,26 @@ export class IdentifyPhase {
 
   /**
    * Deep link handling for magic URLs.
+   * Supports both:
+   * - Legacy query param format: ?machineId=<id>
+   * - New hash format: #/m/<id>
    */
   private async handleDeepLink(): Promise<void> {
-    const params = new URLSearchParams(window.location.search);
-    const machineId = params.get('machineId');
+    let machineId: string | null = null;
+    let isHashRoute = false;
+
+    // Check hash-based route first: #/m/<machine_id>
+    const hashMatch = window.location.hash.match(/^#\/m\/([^/]+)$/);
+    if (hashMatch) {
+      machineId = decodeURIComponent(hashMatch[1]);
+      isHashRoute = true;
+    }
+
+    // Fallback to legacy query param: ?machineId=<id>
+    if (!machineId) {
+      const params = new URLSearchParams(window.location.search);
+      machineId = params.get('machineId');
+    }
 
     if (!machineId) {
       return;
@@ -707,9 +843,18 @@ export class IdentifyPhase {
     let machineHandled = false;
     try {
       machineHandled = await this.handleMachineId(machineId);
-      params.delete('machineId');
-      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-      window.history.replaceState({}, document.title, newUrl);
+
+      // Clean up URL after processing
+      if (isHashRoute) {
+        // Clear hash
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      } else {
+        // Clear query param
+        const params = new URLSearchParams(window.location.search);
+        params.delete('machineId');
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        window.history.replaceState({}, document.title, newUrl);
+      }
     } catch (error) {
       logger.error('Failed to handle deep link:', error);
       this.showError(t('identify.errors.machineLoad'));
@@ -974,9 +1119,10 @@ export class IdentifyPhase {
       return;
     }
 
+    // Use hash-based URL for NFC: #/m/<machine_id>
     const baseUrl = this.getBaseAppUrl();
     const url = selectedOption === 'specific' && this.currentMachine
-      ? `${baseUrl}?machineId=${encodeURIComponent(this.currentMachine.id)}`
+      ? HashRouter.getFullMachineUrl(this.currentMachine.id)
       : baseUrl;
 
     this.nfcWriteBtn.disabled = true;
