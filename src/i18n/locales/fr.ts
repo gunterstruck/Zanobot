@@ -596,4 +596,24 @@ export const fr: TranslationDict = {
     refSubDesc: 'Enregistrement de référence de 10 secondes', diagSubDesc: 'Effectuer une analyse en direct', analyzeBtn: 'Analyser',
   },
   footer: { impressum: 'Mentions légales', privacy: 'Politique de confidentialité', about: 'À propos de Zanobo' },
+
+  // NFC IMPORT (Deep Link Import via ?importUrl=)
+  nfcImport: {
+    modalTitle: 'Sauvegarde NFC détectée',
+    warningOverwrite: 'Attention: La base de données locale sera écrasée!',
+    currentData: 'Données actuelles',
+    newData: 'Nouvelles données',
+    exportedAt: 'Exporté le',
+    confirmButton: 'Importer les données',
+    success: 'Base de données importée avec succès!',
+    successTitle: 'Importation terminée',
+    error: 'Échec de l\'importation',
+    errorTitle: 'Échec de l\'importation',
+    errorGitHubBlob: 'Erreur: Veuillez utiliser le lien "Raw" de GitHub, pas le lien web.',
+    errorFetchFailed: 'Échec du téléchargement. Veuillez vérifier l\'URL.',
+    errorNotJson: 'Erreur: L\'URL renvoie du HTML au lieu de JSON.\n\nVeuillez utiliser le lien "Raw" de GitHub.',
+    errorInvalidJson: 'Erreur: Le fichier ne contient pas de format JSON valide.',
+    errorInvalidStructure: 'Erreur: Le fichier n\'a pas le format de sauvegarde attendu.',
+    errorNetwork: 'Erreur réseau lors du chargement des données. Veuillez vérifier votre connexion.',
+  },
 };

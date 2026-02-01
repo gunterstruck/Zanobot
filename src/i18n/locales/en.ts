@@ -764,4 +764,31 @@ export const en: TranslationDict = {
     privacy: 'Privacy Policy',
     about: 'About Zanobo',
   },
+
+  // ============================================================================
+  // NFC IMPORT (Deep Link Import via ?importUrl=)
+  // ============================================================================
+  nfcImport: {
+    // Modal
+    modalTitle: 'NFC Backup Detected',
+    warningOverwrite: 'Warning: Local database will be overwritten!',
+    currentData: 'Current Data',
+    newData: 'New Data',
+    exportedAt: 'Exported on',
+    confirmButton: 'Import Data',
+
+    // Success
+    success: 'Database imported successfully!',
+    successTitle: 'Import Complete',
+
+    // Errors
+    error: 'Import failed',
+    errorTitle: 'Import Failed',
+    errorGitHubBlob: 'Error: Please use the "Raw" link from GitHub, not the web link.',
+    errorFetchFailed: 'Download failed. Please check the URL.',
+    errorNotJson: 'Error: The URL returns HTML instead of JSON.\n\nPlease use the "Raw" link from GitHub:\n1. Open the file on GitHub\n2. Click on "Raw"\n3. Copy the URL from the address bar',
+    errorInvalidJson: 'Error: The file does not contain valid JSON format.',
+    errorInvalidStructure: 'Error: The file does not have the expected backup format.',
+    errorNetwork: 'Network error loading data. Please check your internet connection.',
+  },
 };

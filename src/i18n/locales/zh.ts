@@ -595,4 +595,24 @@ export const zh: TranslationDict = {
     refSubDesc: '10秒参考录制', diagSubDesc: '执行实时分析', analyzeBtn: '分析',
   },
   footer: { impressum: '法律声明', privacy: '隐私政策', about: '关于Zanobo' },
+
+  // NFC IMPORT (Deep Link Import via ?importUrl=)
+  nfcImport: {
+    modalTitle: '检测到NFC备份',
+    warningOverwrite: '警告：本地数据库将被覆盖！',
+    currentData: '当前数据',
+    newData: '新数据',
+    exportedAt: '导出于',
+    confirmButton: '导入数据',
+    success: '数据库导入成功！',
+    successTitle: '导入完成',
+    error: '导入失败',
+    errorTitle: '导入失败',
+    errorGitHubBlob: '错误：请使用GitHub的"Raw"链接，而不是网页链接。',
+    errorFetchFailed: '下载失败。请检查URL。',
+    errorNotJson: '错误：URL返回的是HTML而不是JSON。\n\n请使用GitHub的"Raw"链接。',
+    errorInvalidJson: '错误：文件不包含有效的JSON格式。',
+    errorInvalidStructure: '错误：文件格式不是预期的备份格式。',
+    errorNetwork: '加载数据时出现网络错误。请检查您的网络连接。',
+  },
 };
