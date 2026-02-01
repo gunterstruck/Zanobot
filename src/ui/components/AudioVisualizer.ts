@@ -18,7 +18,7 @@ import {
   VISUALIZER_SETTINGS_EVENT,
   type VisualizerSettings,
 } from '@utils/visualizerSettings.js';
-import { setCanvasSize, getCanvasDimensions } from '@utils/canvasUtils.js';
+import { setCanvasSize } from '@utils/canvasUtils.js';
 
 export class AudioVisualizer {
   private canvas: HTMLCanvasElement;
