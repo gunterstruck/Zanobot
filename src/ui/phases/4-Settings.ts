@@ -41,6 +41,14 @@ export class SettingsPhase {
   private modeSelector: ModeSelector | null = null;
   private unsubscribeModeChange?: () => void;
 
+  // Pre-built export payload for instant sharing (preserves user gesture)
+  private preparedSharePayload: {
+    file: File;
+    filename: string;
+    blob: Blob;
+  } | null = null;
+  private isPreparingPayload = false;
+
   constructor() {}
 
   /**
@@ -85,6 +93,32 @@ export class SettingsPhase {
 
     // Load stats on init
     this.showStats();
+
+    // Pre-build share payload in background (for instant sharing without losing user gesture)
+    this.prepareSharePayload();
+  }
+
+  /**
+   * Prepare export payload in background for instant sharing.
+   * This is called on init so that when user clicks "Share",
+   * we can call navigator.share() immediately without async work,
+   * preserving the user gesture (required by Web Share API).
+   */
+  private async prepareSharePayload(): Promise<void> {
+    if (this.isPreparingPayload) return;
+
+    this.isPreparingPayload = true;
+    try {
+      logger.info('🔄 Preparing share payload in background...');
+      const payload = await this.buildExportPayload();
+      this.preparedSharePayload = payload;
+      logger.info('✅ Share payload ready');
+    } catch (error) {
+      logger.warn('Failed to prepare share payload:', error);
+      this.preparedSharePayload = null;
+    } finally {
+      this.isPreparingPayload = false;
+    }
   }
 
   /**
@@ -321,64 +355,92 @@ export class SettingsPhase {
   /**
    * Handle database share (send as file)
    *
-   * Note: Web Share API requires "transient user activation" - the share()
-   * call must happen quickly after the user gesture. We skip canShare()
-   * check to preserve the user gesture timing and try sharing directly.
+   * IMPORTANT: Web Share API requires "transient user activation" - the share()
+   * call must happen IMMEDIATELY after the user gesture (click), without any
+   * await in between. That's why we pre-build the payload in prepareSharePayload()
+   * and use it directly here.
    */
   private async handleShareData(): Promise<void> {
-    try {
-      logger.info('📤 Sharing database export...');
+    logger.info('📤 Share button clicked');
 
-      const { filename, file, blob } = await this.buildExportPayload();
+    // Use pre-built payload if available (instant share, preserves user gesture)
+    let payload = this.preparedSharePayload;
 
-      // Try to share directly without checking canShare() first.
-      // Reason: canShare() can return false on some browsers (iOS Safari)
-      // even when sharing would work. Also, the extra call costs time
-      // which can cause "user gesture" to expire, leading to permission errors.
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: t('settings.share.title'),
-            text: t('settings.share.text', { filename }),
-          });
-          logger.info(`✅ Database shared: ${filename}`);
-          notify.success(t('settings.share.success', { filename }), {
-            title: t('modals.databaseShared'),
-          });
-          return;
-        } catch (shareError) {
-          const errorName = (shareError as Error).name;
-          const errorMessage = (shareError as Error).message;
-
-          // User cancelled sharing - not an error
-          if (errorName === 'AbortError') {
-            logger.info('Share cancelled by user');
-            return;
-          }
-
-          // NotAllowedError: User gesture expired or file sharing not supported
-          // TypeError: Files not supported on this browser
-          logger.warn(`Share API failed (${errorName}): ${errorMessage}, falling back to download`);
-
-          // Fallback to download with error info
-          this.triggerDownload(blob, filename);
-          notify.info(`${t('settings.share.fallback', { filename })}\n\n[Debug: ${errorName}: ${errorMessage}]`, {
-            title: t('modals.databaseExported'),
-          });
-          return;
-        }
+    // If payload not ready yet, we have to build it now (will likely fail on Android)
+    if (!payload) {
+      if (this.isPreparingPayload) {
+        notify.info('Export wird vorbereitet... bitte kurz warten und erneut versuchen.');
+        return;
       }
 
-      // navigator.share not available at all
+      // Build payload now (fallback - user gesture will likely expire)
+      logger.warn('Share payload not ready, building now (user gesture may expire)');
+      try {
+        payload = await this.buildExportPayload();
+      } catch (error) {
+        logger.error('Failed to build export payload:', error);
+        notify.error(t('settings.shareError'), error as Error);
+        return;
+      }
+    }
+
+    const { file, filename, blob } = payload;
+
+    // Check if Web Share API with files is available
+    if (!navigator.share) {
+      logger.info('navigator.share not available, downloading instead');
       this.triggerDownload(blob, filename);
-      notify.info(`${t('settings.share.fallback', { filename })}\n\n[Debug: navigator.share not available]`, {
+      notify.info(t('settings.share.fallback', { filename }), {
         title: t('modals.databaseExported'),
       });
-    } catch (error) {
-      logger.error('Share error:', error);
-      notify.error(t('settings.shareError'), error as Error);
+      this.refreshSharePayload();
+      return;
     }
+
+    // Try sharing - this MUST happen immediately after click (no await before this!)
+    try {
+      await navigator.share({
+        files: [file],
+        title: t('settings.share.title'),
+        text: t('settings.share.text', { filename }),
+      });
+
+      logger.info(`✅ Database shared: ${filename}`);
+      notify.success(t('settings.share.success', { filename }), {
+        title: t('modals.databaseShared'),
+      });
+    } catch (shareError) {
+      const errorName = (shareError as Error).name;
+      const errorMessage = (shareError as Error).message;
+
+      // User cancelled sharing - not an error
+      if (errorName === 'AbortError') {
+        logger.info('Share cancelled by user');
+        return;
+      }
+
+      // NotAllowedError: User gesture expired or file sharing not supported
+      // TypeError: Files not supported on this browser
+      logger.warn(`Share API failed (${errorName}): ${errorMessage}`);
+
+      // Fallback to download
+      this.triggerDownload(blob, filename);
+      notify.info(t('settings.share.fallback', { filename }), {
+        title: t('modals.databaseExported'),
+      });
+    }
+
+    // Refresh payload for next share attempt (data may have changed)
+    this.refreshSharePayload();
+  }
+
+  /**
+   * Refresh the prepared share payload (call after sharing or when data changes)
+   */
+  private refreshSharePayload(): void {
+    this.preparedSharePayload = null;
+    // Rebuild in background
+    setTimeout(() => this.prepareSharePayload(), 100);
   }
 
   /**
