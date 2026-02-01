@@ -409,21 +409,16 @@ body {
         width: 100%;
         height: 100%;
         margin: 0;
-    }
-
-    .hero-image {
-        width: auto;
-        height: auto;
-        margin: 0 auto;
+        object-fit: cover;
     }
 }
 
 .hero-image {
-    width: auto;
+    width: 100%;
     height: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    object-fit: contain;
+    max-width: none;
+    margin: 0;
+    object-fit: cover;
     object-position: center;
     display: block;
 }
@@ -2108,13 +2103,13 @@ body {
         max-height: none !important;
         margin-bottom: 0 !important;
     }
-    /* Logo sichtbar halten, aber klein */
+    /* Banner füllt Container randlos (edge-to-edge) */
     .hero-header img {
-        width: auto !important;
-        height: auto !important;
-        max-width: 100% !important;
-        margin: 0 auto !important;
-        object-fit: contain !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        object-fit: cover !important;
         object-position: center !important;
         display: block !important;
     }
