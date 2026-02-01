@@ -2355,6 +2355,11 @@ body {
     display: none;
 }
 
+/* Advanced mode: Hide ghost overlay hint (only show in expert mode) */
+html[data-view-level="advanced"] .ghost-overlay-hint {
+    display: none;
+}
+
 /* Responsive adjustments for small screens */
 @media (max-height: 600px) {
     .diagnosis-middle-camera .ghost-overlay-container {
