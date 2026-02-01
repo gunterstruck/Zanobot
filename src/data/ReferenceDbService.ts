@@ -677,6 +677,10 @@ export class ReferenceDbService {
   /**
    * Share exported database using Web Share API (if available)
    *
+   * Note: Web Share API requires "transient user activation" - the share()
+   * call must happen quickly after the user gesture. We skip canShare()
+   * check to preserve the user gesture timing and try sharing directly.
+   *
    * @param machineId - Machine ID to export
    * @returns True if shared successfully, false otherwise
    */
@@ -687,35 +691,37 @@ export class ReferenceDbService {
       return false;
     }
 
-    // Check if Web Share API is available
-    if (!navigator.share || !navigator.canShare) {
-      // Fall back to download
-      return this.downloadExport(machineId);
+    // Try to share directly without checking canShare() first.
+    // Reason: canShare() can return false on some browsers (iOS Safari)
+    // even when sharing would work. Also, the extra call costs time
+    // which can cause "user gesture" to expire, leading to permission errors.
+    if (navigator.share) {
+      try {
+        const file = new File([exportResult.blob], exportResult.filename, {
+          type: 'application/json',
+        });
+
+        await navigator.share({
+          files: [file],
+          title: `Reference Database v${exportResult.version}`,
+        });
+
+        return true;
+      } catch (error) {
+        const errorName = (error as Error).name;
+
+        // User cancelled - not an error
+        if (errorName === 'AbortError') {
+          return false;
+        }
+
+        // NotAllowedError, TypeError, etc. - fall back to download
+        logger.warn(`Share failed (${errorName}), falling back to download:`, error);
+      }
     }
 
-    try {
-      const file = new File([exportResult.blob], exportResult.filename, {
-        type: 'application/json',
-      });
-
-      // Check if file sharing is supported
-      if (!navigator.canShare({ files: [file] })) {
-        return this.downloadExport(machineId);
-      }
-
-      await navigator.share({
-        files: [file],
-        title: `Reference Database v${exportResult.version}`,
-      });
-
-      return true;
-    } catch (error) {
-      // User cancelled or share failed
-      if ((error as Error).name !== 'AbortError') {
-        logger.error('Share failed:', error);
-      }
-      return false;
-    }
+    // Fall back to download
+    return this.downloadExport(machineId);
   }
 
   /**

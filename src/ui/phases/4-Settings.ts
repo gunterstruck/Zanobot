@@ -320,34 +320,46 @@ export class SettingsPhase {
 
   /**
    * Handle database share (send as file)
+   *
+   * Note: Web Share API requires "transient user activation" - the share()
+   * call must happen quickly after the user gesture. We skip canShare()
+   * check to preserve the user gesture timing and try sharing directly.
    */
   private async handleShareData(): Promise<void> {
     try {
       logger.info('📤 Sharing database export...');
 
       const { filename, file, blob } = await this.buildExportPayload();
-      const shareData: ShareData = {
-        files: [file],
-        title: t('settings.share.title'),
-        text: t('settings.share.text', { filename }),
-      };
 
-      if (navigator.share && navigator.canShare?.(shareData)) {
+      // Try to share directly without checking canShare() first.
+      // Reason: canShare() can return false on some browsers (iOS Safari)
+      // even when sharing would work. Also, the extra call costs time
+      // which can cause "user gesture" to expire, leading to permission errors.
+      if (navigator.share) {
         try {
-          await navigator.share(shareData);
+          await navigator.share({
+            files: [file],
+            title: t('settings.share.title'),
+            text: t('settings.share.text', { filename }),
+          });
           logger.info(`✅ Database shared: ${filename}`);
           notify.success(t('settings.share.success', { filename }), {
             title: t('modals.databaseShared'),
           });
           return;
         } catch (shareError) {
+          const errorName = (shareError as Error).name;
+          const errorMessage = (shareError as Error).message;
+
           // User cancelled sharing - not an error
-          if ((shareError as Error).name === 'AbortError') {
+          if (errorName === 'AbortError') {
             logger.info('Share cancelled by user');
             return;
           }
-          // Permission denied or other share error - fall back to download
-          logger.warn('Share API failed, falling back to download:', shareError);
+
+          // NotAllowedError: User gesture expired or file sharing not supported
+          // TypeError: Files not supported on this browser
+          logger.warn(`Share API failed (${errorName}): ${errorMessage}, falling back to download`);
         }
       }
 
