@@ -8,6 +8,10 @@
  * - PWA service worker
  */
 
+// Import CSS styles (processed by Vite for proper bundling)
+import './styles/style.css';
+import './styles/toast.css';
+
 import { initDB, getDBStats } from '@data/db.js';
 import { Router } from '@ui/router.js';
 import { BannerManager } from '@ui/BannerManager.js';
