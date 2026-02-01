@@ -923,6 +923,10 @@ export class IdentifyPhase {
       header.click();
     }
 
+    // Set flag to force basic view for NFC-initiated diagnosis
+    // This ensures simplified inspection modal is shown regardless of user's view level setting
+    document.body.setAttribute('data-nfc-diagnosis', 'true');
+
     const mode = document.body.getAttribute('data-detection-mode');
     const level2Button = document.getElementById('level2-diag-btn') as HTMLButtonElement | null;
     const level1Button = document.getElementById('diagnose-btn') as HTMLButtonElement | null;
