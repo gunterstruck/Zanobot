@@ -13,6 +13,7 @@ import './styles/style.css';
 import './styles/toast.css';
 
 import { initDB, getDBStats } from '@data/db.js';
+import { nfcImportService } from '@data/NfcImportService.js';
 import { Router } from '@ui/router.js';
 import { BannerManager } from '@ui/BannerManager.js';
 import { notify } from '@utils/notifications.js';
@@ -202,6 +203,12 @@ class ZanobotApp {
       );
     }
 
+    // NFC IMPORT CHECK: Handle ?importUrl= parameter from NFC deep links
+    // Must run BEFORE router initialization to show import dialog first
+    if (dbAvailable) {
+      await this.handleNfcImport();
+    }
+
     // CRITICAL FIX: Always initialize UI components (even without database)
     // This ensures buttons have event listeners and the app is interactive
     try {
@@ -238,6 +245,62 @@ class ZanobotApp {
         title: t('app.fatalError'),
         duration: 0,
       });
+    }
+  }
+
+  /**
+   * Handle NFC deep link import
+   *
+   * Checks for ?importUrl= parameter and handles the import workflow:
+   * 1. Fetch and validate import data
+   * 2. Show confirmation dialog
+   * 3. Import data if confirmed
+   *
+   * Security: Never auto-imports - always requires user confirmation
+   */
+  private async handleNfcImport(): Promise<void> {
+    // Check if URL contains import parameter
+    const check = nfcImportService.checkForImportUrl();
+
+    if (!check.hasImportUrl) {
+      return;
+    }
+
+    logger.info('🔗 NFC import URL detected, starting import workflow...');
+
+    // Fetch and validate the import data
+    const fetchResult = await nfcImportService.fetchAndValidate();
+
+    if (!fetchResult.success) {
+      logger.error(`❌ NFC import validation failed: ${fetchResult.error}`);
+      nfcImportService.showErrorModal(fetchResult.errorMessage || 'Import fehlgeschlagen');
+      return;
+    }
+
+    // Show confirmation dialog and handle import
+    try {
+      const imported = await nfcImportService.showConfirmationAndImport();
+
+      if (imported) {
+        logger.info('✅ NFC import completed successfully');
+        notify.success(
+          t('nfcImport.success') || 'Datenbank erfolgreich importiert!',
+          { title: t('nfcImport.successTitle') || 'Import abgeschlossen' }
+        );
+
+        // Reload the page to reflect imported data
+        // Small delay to show success notification
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      logger.error('❌ NFC import failed:', error);
+      notify.error(
+        t('nfcImport.error') || 'Import fehlgeschlagen',
+        error as Error,
+        { title: t('nfcImport.errorTitle') || 'Fehler' }
+      );
     }
   }
 

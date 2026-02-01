@@ -4953,6 +4953,188 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   NFC IMPORT MODAL
+   =================================== */
+.nfc-import-modal .modal-content {
+    max-width: 500px;
+    width: 90%;
+}
+
+.nfc-import-modal .modal-header.error {
+    background: var(--status-critical);
+    color: white;
+}
+
+.nfc-import-modal .modal-header.error h3 {
+    color: white;
+}
+
+.nfc-import-modal .modal-body {
+    padding: var(--spacing-lg);
+}
+
+.import-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid var(--status-warning);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.import-warning svg {
+    flex-shrink: 0;
+    color: var(--status-warning);
+}
+
+.import-warning p {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.import-comparison {
+    display: flex;
+    align-items: stretch;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.import-column {
+    flex: 1;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.import-column h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.import-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.import-column li {
+    padding: var(--spacing-xs) 0;
+    color: var(--text-primary);
+}
+
+.import-column li strong {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.import-column.import-new {
+    border-color: var(--status-healthy);
+    background: rgba(76, 175, 80, 0.05);
+}
+
+.import-column.import-new li strong {
+    color: var(--status-healthy);
+}
+
+.import-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    padding: 0 var(--spacing-sm);
+}
+
+.export-date {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+.import-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.import-error svg {
+    margin-bottom: var(--spacing-md);
+}
+
+.import-error .error-message {
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.nfc-import-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.nfc-import-modal .btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nfc-import-modal .btn-secondary {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.nfc-import-modal .btn-secondary:hover {
+    background: var(--bg-tertiary);
+}
+
+.nfc-import-modal .btn-primary {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: white;
+}
+
+.nfc-import-modal .btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+.nfc-import-modal .btn-danger {
+    background: var(--status-critical);
+    border: 1px solid var(--status-critical);
+    color: white;
+}
+
+.nfc-import-modal .btn-danger:hover {
+    filter: brightness(1.1);
+}
+
+@media (max-width: 480px) {
+    .import-comparison {
+        flex-direction: column;
+    }
+
+    .import-arrow {
+        transform: rotate(90deg);
+        padding: var(--spacing-xs) 0;
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
