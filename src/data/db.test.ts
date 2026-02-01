@@ -59,7 +59,7 @@ describe('Database Operations', () => {
       const db = await initDB();
 
       expect(db).toBeDefined();
-      expect(db.version).toBe(6); // Current DB version (Visual Positioning + App settings)
+      expect(db.version).toBe(7); // Current DB version (NFC Machine Setup + Reference Database)
     });
 
     it('should create all required object stores', async () => {
@@ -68,6 +68,8 @@ describe('Database Operations', () => {
       expect(db.objectStoreNames.contains('machines')).toBe(true);
       expect(db.objectStoreNames.contains('recordings')).toBe(true);
       expect(db.objectStoreNames.contains('diagnoses')).toBe(true);
+      expect(db.objectStoreNames.contains('app_settings')).toBe(true);
+      expect(db.objectStoreNames.contains('reference_data')).toBe(true);
     });
 
     it('should create indices for diagnoses store', async () => {

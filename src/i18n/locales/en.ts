@@ -685,6 +685,57 @@ export const en: TranslationDict = {
     analyzeBtn: 'Analyze',
   },
 
+  machineSetup: {
+    // Form labels
+    title: 'Machine Setup',
+    referenceDbUrl: 'Reference DB Link (Google Drive)',
+    referenceDbUrlRequired: 'Required',
+    referenceDbUrlHint: 'Use the direct download link: https://drive.google.com/uc?export=download&id=FILE_ID',
+    location: 'Location',
+    locationPlaceholder: 'e.g., Hall 3, Line 2',
+    notes: 'Notes',
+    notesPlaceholder: 'Additional notes for service technicians',
+
+    // Validation errors
+    urlEmpty: 'Please enter a reference DB link.',
+    urlInvalid: 'The link does not appear to be a valid URL.',
+    urlNotHttps: 'The link must start with https://.',
+    googleDriveNotDirect: 'Please use the direct download link from Google Drive.',
+
+    // Download status
+    downloadingReference: 'Loading reference data...',
+    statusDownloading: 'Downloading reference data...',
+    statusParsing: 'Processing data...',
+    statusValidating: 'Validating format...',
+    statusSaving: 'Saving locally...',
+    statusComplete: 'Complete!',
+
+    // Download errors
+    errorMachineNotFound: 'Machine not set up. Please contact the service technician.',
+    errorNoReferenceUrl: 'No reference data configured. Please contact the service technician.',
+    errorDownloadFailed: 'Download failed. Please check your internet connection.',
+    errorInvalidFormat: 'The reference data has an invalid format.',
+    errorInvalidStructure: 'The data structure is corrupted.',
+    errorNoModels: 'No reference models found in the data.',
+    errorInvalidModel: 'One or more reference models are corrupted.',
+    errorUnknown: 'An unknown error occurred.',
+
+    // Success messages
+    referenceLoaded: 'Reference data loaded successfully!',
+    modelsImported: '{{count}} reference models imported',
+    readyToTest: 'Ready to test',
+
+    // NFC related
+    nfcMachineLink: 'Machine link for NFC',
+    nfcLinkCopied: 'Link copied to clipboard',
+    nfcWriteSuccess: 'NFC tag written successfully',
+
+    // Loading overlay
+    loadingTitle: 'Loading reference',
+    loadingSubtitle: 'Please wait...',
+    testingBlocked: 'Testing is only available after reference data is loaded.',
+  },
+
   footer: {
     impressum: 'Legal Notice',
     privacy: 'Privacy Policy',

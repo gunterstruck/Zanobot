@@ -4560,6 +4560,162 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   MACHINE SETUP FORM (NFC/Service)
+   =================================== */
+.machine-setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.machine-setup-form .form-section {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+}
+
+.machine-setup-form .form-section-title {
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    font-weight: 600;
+    margin: 0 0 var(--space-md) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.machine-setup-form .form-group {
+    margin-bottom: var(--space-md);
+}
+
+.machine-setup-form .form-group.required label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.machine-setup-form .required-badge {
+    background: var(--status-faulty);
+    color: white;
+    font-size: var(--font-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+}
+
+.machine-setup-form label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.machine-setup-form .form-input {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--background-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.machine-setup-form .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+.machine-setup-form .form-input.input-error {
+    border-color: var(--status-faulty);
+    box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.2);
+}
+
+.machine-setup-form .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.machine-setup-form .form-hint {
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+    margin-top: var(--space-xs);
+    font-style: italic;
+}
+
+.machine-setup-form .form-error {
+    color: var(--status-faulty);
+    font-size: var(--font-xs);
+    margin-top: var(--space-xs);
+    display: none;
+}
+
+.machine-setup-form .nfc-link-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.machine-setup-form .nfc-link-display {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: var(--background-primary);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.machine-setup-form .nfc-link-display code {
+    flex: 1;
+    color: var(--primary-color);
+    font-size: var(--font-xs);
+    word-break: break-all;
+    font-family: monospace;
+}
+
+.machine-setup-form .copy-link-btn {
+    background: transparent;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.machine-setup-form .copy-link-btn:hover {
+    color: var(--primary-color);
+    background: var(--background-secondary);
+}
+
+/* Service Technician Fields (Expert Mode) */
+.service-tech-fields {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+}
+
+.service-tech-fields .option-divider {
+    margin-bottom: var(--space-md);
+}
+
+.input-hint {
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+    margin-top: var(--space-xs);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.machine-textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {

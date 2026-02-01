@@ -8,7 +8,7 @@
  */
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import type { Machine, Recording, DiagnosisResult, GMIAModel } from './types.js';
+import type { Machine, Recording, DiagnosisResult, GMIAModel, ReferenceDatabase } from './types.js';
 import { logger } from '@utils/logger.js';
 
 export interface AppSetting<T = unknown> {
@@ -51,10 +51,18 @@ interface ZanobotDB extends DBSchema {
     key: string;
     value: AppSetting;
   };
+  reference_data: {
+    key: string; // machineId
+    value: ReferenceDatabase;
+    indexes: {
+      'by-version': string;
+      'by-downloaded': number;
+    };
+  };
 }
 
 const DB_NAME = 'zanobot-db';
-const DB_VERSION = 6; // Incremented for Hero Banner app settings
+const DB_VERSION = 7; // Incremented for NFC Machine Setup + Reference Database
 
 let dbInstance: IDBPDatabase<ZanobotDB> | null = null;
 
@@ -194,6 +202,19 @@ export async function initDB(): Promise<IDBPDatabase<ZanobotDB>> {
       if (oldVersion < 6) {
         logger.info('🔄 Migrating database from v5 to v6 (App settings store)');
         logger.info('   ✅ Added app_settings store for UI assets');
+      }
+
+      // Migration from v6 to v7: Reference database store for NFC Machine Setup
+      if (!db.objectStoreNames.contains('reference_data')) {
+        const refStore = db.createObjectStore('reference_data', { keyPath: 'machineId' });
+        refStore.createIndex('by-version', 'version');
+        refStore.createIndex('by-downloaded', 'downloadedAt');
+      }
+
+      if (oldVersion < 7) {
+        logger.info('🔄 Migrating database from v6 to v7 (NFC Machine Setup)');
+        logger.info('   ✅ Added reference_data store for NFC-based setup');
+        logger.info('   ✅ Extended Machine model with referenceDbUrl, location, notes');
       }
     },
   });
@@ -626,6 +647,7 @@ export async function clearAllData(): Promise<void> {
   await db.clear('recordings');
   await db.clear('diagnoses');
   await db.clear('app_settings');
+  await db.clear('reference_data');
 
   logger.info('🗑️ All data cleared');
 }
@@ -964,4 +986,63 @@ export async function importData(
   }
 
   logger.info('✅ Data import complete');
+}
+
+// ============================================================================
+// REFERENCE DATABASE OPERATIONS (NFC Machine Setup)
+// ============================================================================
+
+/**
+ * Save reference database for a machine
+ *
+ * @param refDb - Reference database object
+ */
+export async function saveReferenceDatabase(refDb: ReferenceDatabase): Promise<void> {
+  const db = await initDB();
+  await db.put('reference_data', refDb);
+  logger.info(`💾 Reference database saved for machine: ${refDb.machineId}`);
+}
+
+/**
+ * Get reference database for a machine
+ *
+ * @param machineId - Machine ID
+ * @returns Reference database or undefined
+ */
+export async function getReferenceDatabase(machineId: string): Promise<ReferenceDatabase | undefined> {
+  const db = await initDB();
+  return await db.get('reference_data', machineId);
+}
+
+/**
+ * Delete reference database for a machine
+ *
+ * @param machineId - Machine ID
+ */
+export async function deleteReferenceDatabase(machineId: string): Promise<void> {
+  const db = await initDB();
+  await db.delete('reference_data', machineId);
+  logger.info(`🗑️ Reference database deleted for machine: ${machineId}`);
+}
+
+/**
+ * Check if a reference database exists for a machine
+ *
+ * @param machineId - Machine ID
+ * @returns True if reference database exists
+ */
+export async function hasReferenceDatabase(machineId: string): Promise<boolean> {
+  const db = await initDB();
+  const refDb = await db.get('reference_data', machineId);
+  return refDb !== undefined;
+}
+
+/**
+ * Get all reference databases
+ *
+ * @returns Array of all reference databases
+ */
+export async function getAllReferenceDatabases(): Promise<ReferenceDatabase[]> {
+  const db = await initDB();
+  return await db.getAll('reference_data');
 }
