@@ -7,7 +7,7 @@
 
 import { logger } from '@utils/logger.js';
 import { t } from '../../i18n/index.js';
-import { setCanvasSize, getCanvasDimensions } from '@utils/canvasUtils.js';
+import { setCanvasSize } from '@utils/canvasUtils.js';
 
 export class HealthGauge {
   private canvas: HTMLCanvasElement;
