@@ -35,6 +35,9 @@ export interface MachineLoadResult {
   created: boolean;
   error?: string;
   needsReferenceDownload: boolean;
+  needsUpdate?: boolean;
+  localVersion?: string;
+  remoteVersion?: string;
 }
 
 /**
@@ -144,7 +147,13 @@ export class HashRouter {
   }
 
   /**
-   * Handle machine route - load machine and download reference if needed
+   * Handle machine route - load machine and download/update reference if needed
+   *
+   * Version-aware flow:
+   * 1. Check if local DB exists
+   * 2. If not exists: download initial reference
+   * 3. If exists: compare versions (remote > local means update needed)
+   * 4. Only update if remote version is HIGHER than local
    */
   private async handleMachineRoute(machineId: string): Promise<void> {
     try {
@@ -157,10 +166,15 @@ export class HashRouter {
         return;
       }
 
-      // Check if reference download is needed
+      // Check if reference download or update is needed
       if (result.needsReferenceDownload) {
-        logger.info(`📥 Machine ${machineId} needs reference download`);
+        logger.info(`📥 Machine ${machineId} needs initial reference download`);
         await this.downloadReference(result.machine);
+      } else if (result.needsUpdate) {
+        logger.info(`📦 Machine ${machineId} has update available: v${result.localVersion} → v${result.remoteVersion}`);
+        await this.downloadReference(result.machine);
+      } else {
+        logger.info(`✓ Machine ${machineId} is up-to-date (v${result.localVersion || 'unknown'})`);
       }
 
       // Notify that machine is ready
@@ -176,11 +190,12 @@ export class HashRouter {
 
   /**
    * Load existing machine or create a placeholder
+   * Checks for both initial download and version-based updates
    */
   private async loadOrCreateMachine(machineId: string): Promise<MachineLoadResult> {
     // Try to load existing machine
-    let machine = await getMachine(machineId);
-    let created = false;
+    const machine = await getMachine(machineId);
+    const created = false;
 
     if (!machine) {
       // Machine not found - this can happen if:
@@ -195,13 +210,50 @@ export class HashRouter {
       };
     }
 
-    // Check if reference download is needed
-    const needsDownload = await ReferenceDbService.needsDownload(machineId);
+    // Check if initial reference download is needed (no local DB exists)
+    const needsInitialDownload = await ReferenceDbService.needsDownload(machineId);
 
+    if (needsInitialDownload) {
+      return {
+        machine,
+        created,
+        needsReferenceDownload: true,
+        needsUpdate: false,
+      };
+    }
+
+    // Local DB exists - check for version update
+    // Only fetch if machine has a reference URL configured
+    if (machine.referenceDbUrl) {
+      const updateCheck = await ReferenceDbService.needsUpdate(machineId);
+
+      if (updateCheck.needsUpdate && updateCheck.reason === 'version_higher') {
+        return {
+          machine,
+          created,
+          needsReferenceDownload: false,
+          needsUpdate: true,
+          localVersion: updateCheck.localVersion,
+          remoteVersion: updateCheck.remoteVersion,
+        };
+      }
+
+      // No update needed
+      return {
+        machine,
+        created,
+        needsReferenceDownload: false,
+        needsUpdate: false,
+        localVersion: updateCheck.localVersion,
+      };
+    }
+
+    // No reference URL - just return machine
     return {
       machine,
       created,
-      needsReferenceDownload: needsDownload,
+      needsReferenceDownload: false,
+      needsUpdate: false,
     };
   }
 

@@ -175,14 +175,52 @@ export interface AppSettings {
 }
 
 /**
- * Reference Database - Downloaded from Google Drive for NFC-based setup
+ * Reference Database File Format - Official format for Google Drive files
+ *
+ * This is the expected format for reference database files stored in Google Drive.
+ * Contains metadata about the database version and origin.
+ *
+ * Example:
+ * {
+ *   "db_meta": {
+ *     "db_version": "1.0.0",
+ *     "created_by": "service",
+ *     "created_at": "2025-01-15",
+ *     "description": "Normalbetrieb 50 Hz"
+ *   },
+ *   "models": [...],
+ *   "references": [...]
+ * }
+ */
+export interface ReferenceDbMeta {
+  db_version: string; // Semantic version (e.g., "1.0.0")
+  created_by: string; // Creator identifier (e.g., "service")
+  created_at: string; // ISO date string (YYYY-MM-DD)
+  description?: string; // Optional description of the database
+}
+
+export interface ReferenceDbFile {
+  db_meta: ReferenceDbMeta;
+  models: GMIAModel[]; // Official reference models
+  references?: unknown[]; // Additional reference data (for future use)
+  // Legacy fields (for backward compatibility)
+  referenceModels?: GMIAModel[];
+  machineName?: string;
+  location?: string;
+  notes?: string;
+  config?: Record<string, unknown>;
+}
+
+/**
+ * Reference Database - Local storage format for downloaded reference data
  * Contains pre-trained reference models and machine configuration
  */
 export interface ReferenceDatabase {
   machineId: string; // Links to Machine.id
-  version: string; // Database version for update checking
+  version: string; // Database version for update checking (from db_meta.db_version)
   downloadedAt: number; // Timestamp when downloaded
   sourceUrl: string; // Original download URL
+  dbMeta?: ReferenceDbMeta; // Original metadata from the file
   data: {
     // Reference models that can be imported
     referenceModels?: GMIAModel[];
@@ -193,6 +231,9 @@ export interface ReferenceDatabase {
     // Any additional configuration
     config?: Record<string, unknown>;
   };
+  // Track locally added references (by user)
+  localModels?: GMIAModel[]; // Models added locally after initial download
+  localModelsUpdatedAt?: number; // Timestamp of last local modification
 }
 
 /**
