@@ -44,6 +44,8 @@ import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
 import { t, getLanguage } from '../../i18n/index.js';
+import { getViewLevel } from '@utils/viewLevelSettings.js';
+import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -52,11 +54,13 @@ export class DiagnosePhase {
   private mediaStream: MediaStream | null = null;
   private cameraStream: MediaStream | null = null; // VISUAL POSITIONING: Camera stream for ghost overlay
   private audioWorkletManager: AudioWorkletManager | null = null;
+  private visualizer: AudioVisualizer | null = null; // Used in advanced/expert view
   private healthGauge: HealthGauge | null = null;
   private activeModels: GMIAModel[] = [];
 
   // Simplified inspection view state
   private lastMagnitudeFactor: number = 0;
+  private useSimplifiedView: boolean = true; // Determined by view level at start
 
   // Real-time processing
   private isProcessing: boolean = false;
@@ -322,8 +326,29 @@ export class DiagnosePhase {
       // Show recording modal
       this.showRecordingModal();
 
-      // Note: HealthGauge not used in simplified inspection view
-      // The inspection view uses direct DOM updates for better performance
+      // Determine view mode based on current view level setting
+      // basic → simplified inspection view (new modal)
+      // advanced/expert → original complex view (recording-modal)
+      const currentViewLevel = getViewLevel();
+      this.useSimplifiedView = currentViewLevel === 'basic';
+
+      logger.info(`📊 View level: ${currentViewLevel} → ${this.useSimplifiedView ? 'simplified' : 'advanced'} view`);
+
+      // Initialize visualizer for advanced/expert view
+      if (!this.useSimplifiedView && this.audioContext && this.mediaStream) {
+        const waveformCanvas = document.getElementById('waveform-canvas');
+        if (waveformCanvas) {
+          this.visualizer = new AudioVisualizer('waveform-canvas');
+          this.visualizer.start(this.audioContext, this.mediaStream);
+        }
+
+        // Initialize HealthGauge for advanced view
+        const gaugeCanvas = document.getElementById('health-gauge-canvas');
+        if (gaugeCanvas) {
+          this.healthGauge = new HealthGauge('health-gauge-canvas');
+          this.healthGauge.draw(0, 'UNKNOWN');
+        }
+      }
 
       // Initialize AudioWorklet Manager (always available at this point)
       this.audioWorkletManager = new AudioWorkletManager({
@@ -397,6 +422,12 @@ export class DiagnosePhase {
     if (this.audioWorkletManager) {
       this.audioWorkletManager.cleanup();
       this.audioWorkletManager = null;
+    }
+
+    // Stop visualizer (used in advanced/expert view)
+    if (this.visualizer) {
+      this.visualizer.stop();
+      this.visualizer = null;
     }
 
     // Stop media stream tracks
@@ -579,31 +610,45 @@ export class DiagnosePhase {
   /**
    * Update Smart Start status message
    *
-   * Updates the subtitle in the simplified inspection view during initialization.
+   * Updates both simplified and advanced views during initialization.
    * Shows descriptive feedback during the extended settling time (5 seconds).
    */
   private updateSmartStartStatus(message: string): void {
-    // Update inspection modal subtitle
-    const subtitleElement = document.getElementById('inspection-subtitle');
-    if (subtitleElement) {
-      // During initialization, show waiting message
-      if (message.includes('läuft')) {
-        subtitleElement.textContent = t('inspection.subtitle');
-      } else {
-        subtitleElement.textContent = t('inspection.subtitleInitializing');
+    if (this.useSimplifiedView) {
+      // === SIMPLIFIED VIEW ===
+      const subtitleElement = document.getElementById('inspection-subtitle');
+      if (subtitleElement) {
+        if (message.includes('läuft')) {
+          subtitleElement.textContent = t('inspection.subtitle');
+        } else {
+          subtitleElement.textContent = t('inspection.subtitleInitializing');
+        }
       }
-    }
 
-    // Also update hint element during Smart Start
-    const hintElement = document.getElementById('inspection-hint');
-    if (hintElement) {
-      if (message.includes('läuft')) {
-        // Hide hint when diagnosis is running (will be controlled by quality check)
-        hintElement.classList.add('hint-hidden');
-      } else {
-        // Show waiting hint during initialization
-        hintElement.textContent = t('inspection.hintWaiting');
-        hintElement.classList.remove('hint-hidden');
+      const hintElement = document.getElementById('inspection-hint');
+      if (hintElement) {
+        if (message.includes('läuft')) {
+          hintElement.classList.add('hint-hidden');
+        } else {
+          hintElement.textContent = t('inspection.hintWaiting');
+          hintElement.classList.remove('hint-hidden');
+        }
+      }
+    } else {
+      // === ADVANCED VIEW ===
+      const statusElement = document.getElementById('smart-start-status');
+      if (statusElement) {
+        let enhancedMessage = message;
+        if (message.includes('Stabilisierung')) {
+          enhancedMessage = t('diagnose.smartStart.stabilizing', { message });
+        } else if (message.includes('Warte')) {
+          enhancedMessage = t('diagnose.smartStart.waiting', { message });
+        }
+        statusElement.textContent = enhancedMessage;
+
+        if (message.includes('läuft')) {
+          statusElement.style.display = 'none';
+        }
       }
     }
   }
@@ -664,66 +709,124 @@ export class DiagnosePhase {
   }
 
   /**
-   * Update live display (Simplified Inspection View)
+   * Update live display based on current view mode
    *
-   * Updates the large percentage display, status label, and quality hints.
-   * Designed for industrial users - no technical jargon, clear visual feedback.
+   * - Simplified view: Updates large percentage, status label, quality hints
+   * - Advanced view: Updates HealthGauge, live score display, status
    */
   private updateLiveDisplay(score: number, status: string, detectedState?: string): void {
-    // Determine status class
     const normalizedStatus = status.toLowerCase();
-    const statusClass = normalizedStatus === 'healthy'
-      ? 'status-healthy'
-      : normalizedStatus === 'uncertain'
-        ? 'status-uncertain'
-        : 'status-faulty';
 
-    // Remove initializing state when we have real data
-    const contentElement = document.getElementById('inspection-content');
-    if (contentElement) {
-      contentElement.classList.remove('is-initializing');
-    }
+    if (this.useSimplifiedView) {
+      // === SIMPLIFIED INSPECTION VIEW ===
+      const statusClass = normalizedStatus === 'healthy'
+        ? 'status-healthy'
+        : normalizedStatus === 'uncertain'
+          ? 'status-uncertain'
+          : 'status-faulty';
 
-    // Update subtitle to "running" state
-    const subtitleElement = document.getElementById('inspection-subtitle');
-    if (subtitleElement) {
-      subtitleElement.textContent = t('inspection.subtitle');
-    }
-
-    // Update score container background color
-    const scoreContainer = document.getElementById('inspection-score-container');
-    if (scoreContainer) {
-      scoreContainer.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
-      scoreContainer.classList.add(statusClass);
-    }
-
-    // Update main score display
-    const scoreElement = document.getElementById('inspection-score');
-    if (scoreElement) {
-      const roundedScore = Math.round(score);
-      scoreElement.innerHTML = `${roundedScore}<span class="inspection-score-unit">%</span>`;
-      scoreElement.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
-      scoreElement.classList.add(statusClass);
-    }
-
-    // Update status label with simple, non-technical word
-    const statusLabel = document.getElementById('inspection-status-label');
-    if (statusLabel) {
-      let statusText: string;
-      if (normalizedStatus === 'healthy') {
-        statusText = t('inspection.statusNormal');
-      } else if (normalizedStatus === 'uncertain') {
-        statusText = t('inspection.statusUncertain');
-      } else {
-        statusText = t('inspection.statusDeviation');
+      // Remove initializing state when we have real data
+      const contentElement = document.getElementById('inspection-content');
+      if (contentElement) {
+        contentElement.classList.remove('is-initializing');
       }
-      statusLabel.textContent = statusText;
-      statusLabel.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
-      statusLabel.classList.add(statusClass);
-    }
 
-    // Update quality hints based on signal strength (magnitude factor)
-    this.updateQualityHint();
+      // Update subtitle to "running" state
+      const subtitleElement = document.getElementById('inspection-subtitle');
+      if (subtitleElement) {
+        subtitleElement.textContent = t('inspection.subtitle');
+      }
+
+      // Update score container background color
+      const scoreContainer = document.getElementById('inspection-score-container');
+      if (scoreContainer) {
+        scoreContainer.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
+        scoreContainer.classList.add(statusClass);
+      }
+
+      // Update main score display
+      const scoreElement = document.getElementById('inspection-score');
+      if (scoreElement) {
+        const roundedScore = Math.round(score);
+        scoreElement.innerHTML = `${roundedScore}<span class="inspection-score-unit">%</span>`;
+        scoreElement.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
+        scoreElement.classList.add(statusClass);
+      }
+
+      // Update status label with simple, non-technical word
+      const statusLabel = document.getElementById('inspection-status-label');
+      if (statusLabel) {
+        let statusText: string;
+        if (normalizedStatus === 'healthy') {
+          statusText = t('inspection.statusNormal');
+        } else if (normalizedStatus === 'uncertain') {
+          statusText = t('inspection.statusUncertain');
+        } else {
+          statusText = t('inspection.statusDeviation');
+        }
+        statusLabel.textContent = statusText;
+        statusLabel.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
+        statusLabel.classList.add(statusClass);
+      }
+
+      // Update quality hints based on signal strength
+      this.updateQualityHint();
+
+    } else {
+      // === ADVANCED/EXPERT VIEW ===
+      // Update HealthGauge
+      if (this.healthGauge) {
+        this.healthGauge.draw(score, status);
+      }
+
+      // Update score display in modal
+      const scoreElement = document.getElementById('live-health-score');
+      if (scoreElement) {
+        const scoreValue = score.toFixed(1);
+        const unitSpan = scoreElement.querySelector('.live-score-unit');
+        if (unitSpan) {
+          scoreElement.childNodes[0].textContent = scoreValue;
+        } else {
+          scoreElement.textContent = `${scoreValue}%`;
+        }
+      }
+
+      // Update score display container color
+      const scoreDisplay = document.getElementById('live-score-display');
+      if (scoreDisplay) {
+        scoreDisplay.classList.remove('score-healthy', 'score-uncertain', 'score-faulty');
+        if (score >= 75) {
+          scoreDisplay.classList.add('score-healthy');
+        } else if (score >= 50) {
+          scoreDisplay.classList.add('score-uncertain');
+        } else {
+          scoreDisplay.classList.add('score-faulty');
+        }
+      }
+
+      // Update status element
+      const statusElement = document.getElementById('live-status');
+      if (statusElement) {
+        const localizedStatus = normalizedStatus === 'healthy'
+          ? t('status.healthy')
+          : normalizedStatus === 'uncertain'
+            ? t('status.uncertain')
+            : normalizedStatus === 'faulty'
+              ? t('status.faulty')
+              : status;
+
+        // Show detected state if score meets confident match threshold
+        const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
+        const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
+
+        if (shouldShowState) {
+          statusElement.textContent = `${localizedStatus} | ${displayState}`;
+        } else {
+          statusElement.textContent = localizedStatus;
+        }
+        statusElement.className = `live-status status-${normalizedStatus}`;
+      }
+    }
   }
 
   /**
@@ -962,11 +1065,156 @@ export class DiagnosePhase {
   }
 
   /**
-   * Legacy method - redirect to new inspection modal
-   * @deprecated Use showInspectionModal instead
+   * Show the appropriate modal based on view level
+   *
+   * - basic: Simplified inspection modal (new design)
+   * - advanced/expert: Original recording modal with technical details
    */
   private showRecordingModal(): void {
-    this.showInspectionModal();
+    // Check view level at the time of showing modal
+    const currentViewLevel = getViewLevel();
+    this.useSimplifiedView = currentViewLevel === 'basic';
+
+    if (this.useSimplifiedView) {
+      this.showInspectionModal();
+    } else {
+      this.showAdvancedRecordingModal();
+    }
+  }
+
+  /**
+   * Show the advanced/expert recording modal with technical details
+   * (Original complex view for advanced/expert users)
+   */
+  private showAdvancedRecordingModal(): void {
+    const modal = document.getElementById('recording-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+
+    // Update machine name in modal subtitle
+    const machineIdElement = document.getElementById('machine-id');
+    if (machineIdElement) {
+      machineIdElement.textContent = this.machine.name;
+      logger.debug('✅ Modal machine name updated:', this.machine.name);
+    }
+
+    // Update button text and behavior
+    const stopBtn = document.getElementById('stop-recording-btn');
+    if (stopBtn) {
+      stopBtn.textContent = BUTTON_TEXT.STOP_DIAGNOSE;
+      stopBtn.onclick = () => this.stopRecording();
+    }
+
+    // Update modal title
+    const modalTitle = document.querySelector('#recording-modal .modal-header h3');
+    if (modalTitle) {
+      modalTitle.textContent = MODAL_TITLE.RECORDING_DIAGNOSE;
+    }
+
+    // Show health gauge canvas, hide waveform for diagnosis
+    const waveformCanvas = document.getElementById('waveform-canvas');
+    const gaugeCanvas = document.getElementById('health-gauge-canvas');
+    if (waveformCanvas) waveformCanvas.style.display = 'block';
+    if (gaugeCanvas) gaugeCanvas.style.display = 'block';
+
+    // Add Smart Start status and live score display
+    const modalBody = document.querySelector('#recording-modal .modal-body');
+    if (modalBody && modal && !modal.querySelector('.live-display')) {
+      // Get reference model info for display
+      const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
+      const refModelInfo = this.activeModels.length > 0
+        ? this.activeModels.map(m => {
+            const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return `${m.label} (${trainingDate})`;
+          }).join(', ')
+        : t('reference.noModelsYet');
+
+      const liveDisplay = document.createElement('div');
+      liveDisplay.className = 'live-display';
+      liveDisplay.innerHTML = `
+        <div id="smart-start-status" class="smart-start-status">${t('common.initializing')}</div>
+        <div class="reference-model-info" style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin: 12px 0; border-radius: 4px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${t('diagnose.display.referenceModels')}</div>
+          <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
+        </div>
+        <div class="debug-info" data-view-level="expert" style="background: rgba(255, 136, 0, 0.1); border-left: 3px solid #ff8800; padding: 8px 12px; margin: 12px 0; border-radius: 4px; font-family: monospace; font-size: 0.75rem;">
+          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">${t('diagnose.display.debugValues')}</div>
+          <div id="debug-weight-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
+          <div id="debug-feature-magnitude" style="color: var(--text-primary);">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
+          <div id="debug-magnitude-factor" style="color: var(--text-primary);">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
+          <div id="debug-cosine" style="color: var(--text-primary);">${t('diagnose.debug.cosine', { value: '--' })}</div>
+          <div id="debug-adjusted-cosine" style="color: var(--text-primary);">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
+          <div id="debug-scaling-constant" style="color: var(--text-primary);">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
+          <div id="debug-raw-score" style="color: var(--text-primary); font-weight: 600; margin-top: 4px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
+        </div>
+        <div class="live-score-container">
+          <p class="live-hint">${t('diagnose.display.signalHint')}</p>
+          <div id="live-score-display" class="live-score-display is-active">
+            <div class="live-score-ring"></div>
+            <p class="live-score-label">${t('diagnose.display.match')}</p>
+            <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
+          </div>
+          <p id="live-status" class="live-status">${t('status.analyzing')}</p>
+        </div>
+      `;
+      modalBody.appendChild(liveDisplay);
+    }
+
+    // VISUAL POSITIONING: Add ghost overlay if camera and reference image are available
+    if (this.cameraStream && this.machine.referenceImage && modalBody) {
+      const ghostContainer = document.createElement('div');
+      ghostContainer.id = 'ghost-overlay-container';
+      ghostContainer.className = 'ghost-overlay-container';
+      ghostContainer.style.cssText = `
+        position: relative;
+        width: 100%;
+        max-width: 300px;
+        margin: 12px auto;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid var(--primary-color);
+      `;
+
+      const video = document.createElement('video');
+      video.id = 'diagnosis-video';
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;
+      video.style.cssText = `width: 100%; height: auto; display: block;`;
+      video.srcObject = this.cameraStream;
+
+      const ghostImage = document.createElement('img');
+      ghostImage.id = 'ghost-overlay-image';
+      ghostImage.className = 'ghost-overlay-image';
+      ghostImage.style.cssText = `
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; opacity: 0.5; pointer-events: none; z-index: 10;
+      `;
+      const imageUrl = URL.createObjectURL(this.machine.referenceImage);
+      ghostImage.src = imageUrl;
+
+      const hint = document.createElement('p');
+      hint.className = 'ghost-overlay-hint';
+      hint.style.cssText = `font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 8px;`;
+      hint.textContent = t('diagnose.display.ghostHint');
+
+      ghostContainer.appendChild(video);
+      ghostContainer.appendChild(ghostImage);
+      modalBody.insertBefore(ghostContainer, modalBody.firstChild);
+      modalBody.insertBefore(hint, ghostContainer.nextSibling);
+
+      logger.info('✅ Ghost overlay added to diagnosis modal');
+    }
+
+    logger.info('✅ Advanced recording modal shown');
   }
 
   /**
@@ -1011,13 +1259,33 @@ export class DiagnosePhase {
       }
     }
 
-    // Also hide legacy recording modal (for backwards compatibility)
+    // Also hide and clean up recording modal (for advanced/expert view)
     const recordingModal = document.getElementById('recording-modal');
     if (recordingModal) {
       recordingModal.style.display = 'none';
+
+      // Clean up live display elements
+      const liveDisplay = recordingModal.querySelector('.live-display');
+      if (liveDisplay) {
+        liveDisplay.remove();
+      }
+
+      // Clean up ghost overlay elements
+      const ghostContainer = recordingModal.querySelector('#ghost-overlay-container');
+      if (ghostContainer) {
+        const ghostImage = ghostContainer.querySelector('#ghost-overlay-image') as HTMLImageElement | null;
+        if (ghostImage && ghostImage.src) {
+          URL.revokeObjectURL(ghostImage.src);
+        }
+        ghostContainer.remove();
+      }
+      const ghostHint = recordingModal.querySelector('.ghost-overlay-hint');
+      if (ghostHint) {
+        ghostHint.remove();
+      }
     }
 
-    logger.debug('🧹 Inspection modal hidden and reset');
+    logger.debug('🧹 Modals hidden and reset');
   }
 
   /**
@@ -1121,6 +1389,12 @@ export class DiagnosePhase {
         diagnoseBtn.removeEventListener('click', this.diagnoseButtonClickHandler);
       }
       this.diagnoseButtonClickHandler = null;
+    }
+
+    // Destroy visualizer
+    if (this.visualizer) {
+      this.visualizer.destroy();
+      this.visualizer = null;
     }
 
     // Cleanup health gauge instance to prevent leaks
