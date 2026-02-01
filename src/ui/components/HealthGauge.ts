@@ -7,6 +7,7 @@
 
 import { logger } from '@utils/logger.js';
 import { t } from '../../i18n/index.js';
+import { setCanvasSize, getCanvasDimensions } from '@utils/canvasUtils.js';
 
 export class HealthGauge {
   private canvas: HTMLCanvasElement;
@@ -38,7 +39,7 @@ export class HealthGauge {
     }
 
     this.ctx = ctx;
-    this.setCanvasSize();
+    setCanvasSize(this.canvas, this.ctx);
     this.updateThemeColors();
 
     // Listen for theme changes
@@ -78,18 +79,6 @@ export class HealthGauge {
       attributes: true,
       attributeFilter: ['data-theme']
     });
-  }
-
-  private setCanvasSize(): void {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = this.canvas.getBoundingClientRect();
-
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
-
-    // Reset transform to prevent cumulative scaling on repeated instantiation
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.scale(dpr, dpr);
   }
 
   /**

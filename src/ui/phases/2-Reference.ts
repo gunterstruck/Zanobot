@@ -26,6 +26,7 @@ import {
 import type { Machine, TrainingData, FeatureVector, QualityResult } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT } from '@ui/constants.js';
+import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
 import { t, getLanguage } from '../../i18n/index.js';
 
@@ -290,28 +291,16 @@ export class ReferencePhase {
     }
 
     // Stop media stream tracks
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-      this.mediaStream = null;
-    }
+    stopMediaStream(this.mediaStream);
+    this.mediaStream = null;
 
     // VISUAL POSITIONING: Stop camera stream
-    if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach((track) => track.stop());
-      this.cameraStream = null;
-    }
+    stopMediaStream(this.cameraStream);
+    this.cameraStream = null;
 
     // Close audio context with error handling to prevent leaks
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      try {
-        this.audioContext.close();
-      } catch (error) {
-        logger.warn('⚠️ Error closing AudioContext:', error);
-      } finally {
-        // Always null the reference to prevent leaks
-        this.audioContext = null;
-      }
-    }
+    closeAudioContext(this.audioContext);
+    this.audioContext = null;
 
     logger.debug('🧹 Reference phase cleanup complete');
   }

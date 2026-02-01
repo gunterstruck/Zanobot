@@ -19,6 +19,7 @@ import { MelSpectrogramGenerator } from '@core/audio/mel-spectrogram.js';
 import type { Level2AnalysisResult, HealthStatusResult } from '@core/ml/level2/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
+import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { getMachine, saveDiagnosis } from '@data/db.js';
 
@@ -391,21 +392,18 @@ export class Level2DiagnosePhase {
    * Without this, phone calls could be blocked!
    */
   private cleanupAudioStream(): void {
-    if (this.audioStream) {
-      this.audioStream.getTracks().forEach(track => track.stop());
-      this.audioStream = null;
+    if (stopMediaStream(this.audioStream)) {
       logger.debug('🎤 Audio stream released - microphone is now available for other apps');
     }
+    this.audioStream = null;
   }
 
   /**
    * Cleanup camera stream
    */
   private cleanupCameraStream(): void {
-    if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach(track => track.stop());
-      this.cameraStream = null;
-    }
+    stopMediaStream(this.cameraStream);
+    this.cameraStream = null;
 
     // Hide ghost container
     const ghostContainer = this.container?.querySelector('#level2-ghost-container') as HTMLElement;

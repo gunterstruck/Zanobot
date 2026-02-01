@@ -43,6 +43,7 @@ import {
 import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
+import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t, getLanguage } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
@@ -439,28 +440,16 @@ export class DiagnosePhase {
     }
 
     // Stop media stream tracks
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-      this.mediaStream = null;
-    }
+    stopMediaStream(this.mediaStream);
+    this.mediaStream = null;
 
     // VISUAL POSITIONING: Stop camera stream
-    if (this.cameraStream) {
-      this.cameraStream.getTracks().forEach((track) => track.stop());
-      this.cameraStream = null;
-    }
+    stopMediaStream(this.cameraStream);
+    this.cameraStream = null;
 
     // Close audio context with error handling to prevent leaks
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      try {
-        this.audioContext.close();
-      } catch (error) {
-        logger.warn('⚠️ Error closing AudioContext:', error);
-      } finally {
-        // Always null the reference to prevent leaks
-        this.audioContext = null;
-      }
-    }
+    closeAudioContext(this.audioContext);
+    this.audioContext = null;
 
     // Clean up dynamically created DOM elements to prevent memory leaks
     // CRITICAL FIX: Only remove elements within the recording modal to avoid affecting other UI
