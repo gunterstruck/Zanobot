@@ -41,9 +41,12 @@ export class MachineSetupForm {
   private errorDisplay: HTMLElement | null = null;
   private statusDisplay: HTMLElement | null = null;
   private versionDisplay: HTMLElement | null = null;
+  private exportSection: HTMLElement | null = null;
+  private exportDbBtn: HTMLButtonElement | null = null;
 
   // State
   private isValidating: boolean = false;
+  private isExporting: boolean = false;
 
   constructor(containerId: string) {
     this.containerId = containerId;
@@ -165,6 +168,23 @@ export class MachineSetupForm {
           </div>
           <p class="form-hint">${t('nfc.hint')}</p>
         </div>
+
+        <!-- Export Database Section (shown when machine has reference models) -->
+        <div class="form-section export-db-section" id="export-db-section" style="display: none;">
+          <h4 class="form-section-title">${t('machineSetup.exportDbTitle') || 'Referenzdatenbank exportieren'}</h4>
+          <p class="form-description">${t('machineSetup.exportDbDescription') || 'Exportieren Sie die Referenzdatenbank mit allen Modellen, um sie auf GitHub hochzuladen.'}</p>
+          <div class="export-db-actions">
+            <button type="button" class="action-btn export-db-btn" id="export-db-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>${t('machineSetup.exportDbButton') || 'Datenbank exportieren'}</span>
+            </button>
+          </div>
+          <p class="form-hint">${t('machineSetup.exportDbHint') || 'Die exportierte JSON-Datei kann auf GitHub Pages oder als Raw-File hochgeladen werden.'}</p>
+        </div>
       </form>
     `;
   }
@@ -183,6 +203,8 @@ export class MachineSetupForm {
     this.errorDisplay = document.getElementById('url-error');
     this.statusDisplay = document.getElementById('validation-status');
     this.versionDisplay = document.getElementById('version-info');
+    this.exportSection = document.getElementById('export-db-section');
+    this.exportDbBtn = document.getElementById('export-db-btn') as HTMLButtonElement;
 
     // Form submission
     this.form?.addEventListener('submit', (e) => this.handleSubmit(e));
@@ -196,6 +218,9 @@ export class MachineSetupForm {
 
     // Copy link button
     this.copyLinkBtn?.addEventListener('click', () => this.copyNfcLink());
+
+    // Export database button
+    this.exportDbBtn?.addEventListener('click', () => this.handleExportDatabase());
   }
 
   /**
@@ -235,6 +260,26 @@ export class MachineSetupForm {
     // Show NFC link section if machine has reference URL
     if (this.machine.referenceDbUrl) {
       this.nfcLinkDisplay.style.display = 'block';
+    }
+
+    // Show export section if machine has reference models
+    this.updateExportSection();
+  }
+
+  /**
+   * Update export section visibility
+   * Shows export button when machine has reference models or reference DB loaded
+   */
+  private updateExportSection(): void {
+    if (!this.exportSection || !this.machine) return;
+
+    const hasReferenceModels = this.machine.referenceModels && this.machine.referenceModels.length > 0;
+    const hasReferenceDbLoaded = this.machine.referenceDbLoaded;
+
+    if (hasReferenceModels || hasReferenceDbLoaded) {
+      this.exportSection.style.display = 'block';
+    } else {
+      this.exportSection.style.display = 'none';
     }
   }
 
@@ -537,6 +582,66 @@ export class MachineSetupForm {
   }
 
   /**
+   * Handle export database button click
+   * Exports the reference database for upload to GitHub
+   */
+  private async handleExportDatabase(): Promise<void> {
+    if (!this.machine || this.isExporting) return;
+
+    this.isExporting = true;
+
+    // Disable button and show loading state
+    if (this.exportDbBtn) {
+      this.exportDbBtn.disabled = true;
+      const btnSpan = this.exportDbBtn.querySelector('span');
+      if (btnSpan) {
+        btnSpan.textContent = t('machineSetup.exportDbExporting') || 'Exportiere...';
+      }
+    }
+
+    try {
+      // Try to share first (works better on mobile), fallback to download
+      const success = await ReferenceDbService.shareExport(this.machine.id);
+
+      if (success) {
+        logger.info(`✅ Reference DB exported for machine ${this.machine.id}`);
+
+        // Show success feedback
+        if (this.exportDbBtn) {
+          const originalHtml = this.exportDbBtn.innerHTML;
+          this.exportDbBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>${t('machineSetup.exportDbSuccess') || 'Exportiert!'}</span>
+          `;
+
+          setTimeout(() => {
+            if (this.exportDbBtn) {
+              this.exportDbBtn.innerHTML = originalHtml;
+            }
+          }, 3000);
+        }
+      } else {
+        logger.error('Export failed - no data returned');
+        this.showError(t('machineSetup.exportDbError') || 'Export fehlgeschlagen');
+      }
+    } catch (error) {
+      logger.error('Export database error:', error);
+      this.showError(t('machineSetup.exportDbError') || 'Export fehlgeschlagen');
+    } finally {
+      this.isExporting = false;
+      if (this.exportDbBtn) {
+        this.exportDbBtn.disabled = false;
+        const btnSpan = this.exportDbBtn.querySelector('span');
+        if (btnSpan) {
+          btnSpan.textContent = t('machineSetup.exportDbButton') || 'Datenbank exportieren';
+        }
+      }
+    }
+  }
+
+  /**
    * Clean up form
    */
   public destroy(): void {
@@ -553,5 +658,7 @@ export class MachineSetupForm {
     this.nfcLinkDisplay = null;
     this.copyLinkBtn = null;
     this.errorDisplay = null;
+    this.exportSection = null;
+    this.exportDbBtn = null;
   }
 }
