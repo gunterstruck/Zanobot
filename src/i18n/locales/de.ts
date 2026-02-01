@@ -514,6 +514,30 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // INSPECTION VIEW (Simplified PWA)
+  // ============================================================================
+  inspection: {
+    // Header
+    mainQuestion: 'Hört sich die Maschine unauffällig an?',
+    subtitle: 'Prüfung läuft – bitte nahe an die Maschine gehen',
+    subtitleInitializing: 'Vorbereitung – bitte warten',
+    // Status words (simple, non-technical)
+    statusNormal: 'Unauffällig',
+    statusUncertain: 'Unsicher',
+    statusDeviation: 'Abweichung',
+    // Reference info
+    referenceState: 'Referenzzustand',
+    referenceDefault: 'Normalbetrieb',
+    // Dynamic hints for poor signal quality
+    hintMoveCloser: 'Bitte näher an die Maschine gehen',
+    hintChangePosition: 'Position leicht verändern',
+    hintHoldSteady: 'Gerät ruhig halten',
+    hintWaiting: 'Warte auf Maschinensignal...',
+    // Button
+    stopButton: 'STOP',
+  },
+
+  // ============================================================================
   // MODE SELECTOR
   // ============================================================================
   modeSelector: {
