@@ -100,7 +100,7 @@ export class MachineSetupForm {
               id="reference-db-url"
               name="referenceDbUrl"
               class="form-input"
-              placeholder="https://drive.google.com/uc?export=download&id=..."
+              placeholder="https://username.github.io/datei.json"
               required
             />
             <p class="form-hint">${t('machineSetup.referenceDbUrlHint')}</p>

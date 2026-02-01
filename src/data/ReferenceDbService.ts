@@ -737,7 +737,8 @@ export class ReferenceDbService {
   }
 
   /**
-   * Validate URL format for Google Drive direct download
+   * Validate URL format for reference database sources
+   * Supports: GitHub (raw/pages), Google Drive direct download
    *
    * @param url - URL to validate
    * @returns Validation result
@@ -755,16 +756,25 @@ export class ReferenceDbService {
         return { valid: false, error: 'url_not_https' };
       }
 
-      // Validate Google Drive format (recommended but not required)
+      // Check for supported hosts
       const isGoogleDrive = parsed.hostname === 'drive.google.com';
+      const isGitHubRaw = parsed.hostname === 'raw.githubusercontent.com';
+      const isGitHubPages = parsed.hostname.endsWith('.github.io');
 
+      // GitHub URLs are always valid (raw and pages deliver direct files)
+      if (isGitHubRaw || isGitHubPages) {
+        return { valid: true };
+      }
+
+      // Google Drive requires direct download format
       if (isGoogleDrive) {
-        // Validate direct download format
         if (!url.includes('export=download') && !url.includes('/uc?')) {
           return { valid: false, error: 'google_drive_not_direct' };
         }
+        return { valid: true };
       }
 
+      // Other HTTPS URLs are accepted (for flexibility)
       return { valid: true };
     } catch {
       return { valid: false, error: 'url_invalid' };

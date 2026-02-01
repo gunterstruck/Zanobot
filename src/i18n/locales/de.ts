@@ -738,9 +738,9 @@ export const de: TranslationDict = {
   machineSetup: {
     // Form labels
     title: 'Maschine einrichten',
-    referenceDbUrl: 'Referenz-DB-Link (Google Drive)',
+    referenceDbUrl: 'Referenz-DB-Link',
     referenceDbUrlRequired: 'Pflichtfeld',
-    referenceDbUrlHint: 'Nutze den Direct-Download-Link: https://drive.google.com/uc?export=download&id=FILE_ID',
+    referenceDbUrlHint: 'GitHub Pages: https://username.github.io/datei.json oder GitHub Raw: https://raw.githubusercontent.com/...',
     location: 'Standort',
     locationPlaceholder: 'z.B. Halle 3, Linie 2',
     notes: 'Notizen',
@@ -750,7 +750,7 @@ export const de: TranslationDict = {
     urlEmpty: 'Bitte geben Sie einen Referenz-DB-Link ein.',
     urlInvalid: 'Der Link scheint keine gültige URL zu sein.',
     urlNotHttps: 'Der Link muss mit https:// beginnen.',
-    googleDriveNotDirect: 'Bitte verwenden Sie den Direct-Download-Link von Google Drive.',
+    googleDriveNotDirect: 'Google Drive Links müssen das Direct-Download-Format verwenden. Empfohlen: GitHub Pages nutzen.',
 
     // Download status
     downloadingReference: 'Referenzdaten werden geladen...',
