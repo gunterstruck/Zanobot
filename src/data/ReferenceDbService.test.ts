@@ -112,6 +112,18 @@ describe('ReferenceDbService', () => {
       expect(result.valid).toBe(false);
       expect(result.error).toBe('google_drive_not_direct');
     });
+
+    it('should accept GitHub Pages URLs', () => {
+      const url = 'https://gunterstruck.github.io/zanobot-backup.json';
+      const result = ReferenceDbService.validateUrl(url);
+      expect(result.valid).toBe(true);
+    });
+
+    it('should accept GitHub Raw URLs', () => {
+      const url = 'https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/reference.json';
+      const result = ReferenceDbService.validateUrl(url);
+      expect(result.valid).toBe(true);
+    });
   });
 
   describe('needsDownload', () => {
