@@ -6,7 +6,26 @@ import { logger } from '@utils/logger.js';
 const HERO_BANNER_SETTING_KEY = 'hero_banner';
 const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
-const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
+
+// Theme-specific banner configurations
+const BANNER_CONFIG: Record<string, { default: string; large: string }> = {
+  neon: {
+    default: './icons/zanobo_banner_1024x400.png',
+    large: './icons/zanobo_banner_1024x500.png',
+  },
+  light: {
+    default: './icons/zanobo_banner_1024x400.png',
+    large: './icons/zanobo_banner_1024x500.png',
+  },
+  brand: {
+    // Zanobo fun theme - uses cheerful banners when available
+    default: './icons/zanobo_banner_fun_de_1024x400.png',
+    large: './icons/zanobo_banner_fun_de_1024x500.png',
+  },
+};
+
+// Fallback banner paths
+const FALLBACK_BANNER = './icons/zanobo_banner_1024x400.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
 export class BannerManager {
@@ -138,11 +157,39 @@ export class BannerManager {
 
     const language = getLanguage();
     const isMobile = this.isMobileDevice();
-    const defaultPath = language === 'zh' && isMobile
-      ? CHINESE_MOBILE_BANNER_PATH
-      : DEFAULT_BANNER_PATH;
 
-    this.setHeroImage(defaultPath);
+    // Chinese mobile has special banner
+    if (language === 'zh' && isMobile) {
+      this.setHeroImage(CHINESE_MOBILE_BANNER_PATH);
+      return;
+    }
+
+    // Get current theme
+    const theme = document.documentElement.getAttribute('data-theme') || 'neon';
+    const config = BANNER_CONFIG[theme] || BANNER_CONFIG.neon;
+
+    // Use larger banner on mobile for emotional impact
+    const bannerPath = isMobile ? config.large : config.default;
+
+    // Try to load theme-specific banner, fallback if not found
+    this.loadBannerWithFallback(bannerPath);
+  }
+
+  private loadBannerWithFallback(primaryPath: string): void {
+    if (!this.heroImage) {
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      this.setHeroImage(primaryPath);
+    };
+    img.onerror = () => {
+      // Fallback to default banner if theme-specific doesn't exist
+      logger.info(`Banner ${primaryPath} not found, using fallback`);
+      this.setHeroImage(FALLBACK_BANNER);
+    };
+    img.src = primaryPath;
   }
 
   private updateHeroHeight(): void {

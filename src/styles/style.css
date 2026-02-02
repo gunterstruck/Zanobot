@@ -247,56 +247,56 @@
 }
 
 /* ===================================
-   THEME: BRAND (Zanobot Original)
-   Vibe: Corporate identity, balanced, professional cyan/teal
+   THEME: BRAND (Zanobo Fun)
+   Vibe: Warm, friendly, cheerful - light background with vibrant accents
    =================================== */
 [data-theme="brand"] {
-    /* Core Colors - Original Zanobot */
-    --primary-color: #00D4FF;
-    --primary-hover: #00B8E6;
-    --secondary-color: #40E0D0;
-    --accent-color: #00FFC6;
+    /* Core Colors - Warm & Friendly (Zanobo Fun Theme) */
+    --primary-color: #FF8C42;
+    --primary-hover: #E67A35;
+    --secondary-color: #00B4A0;
+    --accent-color: #FFD166;
 
-    /* Backgrounds */
-    --bg-primary: #0A1929;
-    --bg-secondary: #0D1F31;
-    --bg-tertiary: #112840;
-    --bg-card: rgba(17, 40, 64, 0.6);
-    --bg-modal: rgba(10, 25, 41, 0.95);
+    /* Backgrounds - Light & Airy Off-White */
+    --bg-primary: #FAFBFC;
+    --bg-secondary: #F5F7F9;
+    --bg-tertiary: #EEF2F5;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-modal: rgba(250, 251, 252, 0.98);
 
-    /* Text */
-    --text-primary: #FFFFFF;
-    --text-secondary: #B0BEC5;
-    --text-muted: #78909C;
+    /* Text - Dark for readability on light backgrounds */
+    --text-primary: #1A2B3C;
+    --text-secondary: #4A5568;
+    --text-muted: #718096;
 
-    /* Status Colors */
-    --status-healthy: #00E676;
-    --status-warning: #FFB74D;
-    --status-error: #FF5252;
-    --status-uncertain: #FFA726;
+    /* Status Colors - Vibrant but friendly */
+    --status-healthy: #48BB78;
+    --status-warning: #F6AD55;
+    --status-error: #FC8181;
+    --status-uncertain: #F6AD55;
 
-    /* Borders & Effects */
-    --border-color: rgba(0, 212, 255, 0.2);
-    --divider-color: rgba(255, 255, 255, 0.1);
+    /* Borders & Effects - Soft and warm */
+    --border-color: rgba(255, 140, 66, 0.25);
+    --divider-color: rgba(26, 43, 60, 0.1);
 
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
-    --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --glow-primary: 0 0 20px rgba(255, 140, 66, 0.2);
+    --glow-strong: 0 0 30px rgba(255, 140, 66, 0.3);
 
     /* Footer Surface */
-    --footer-bg: rgba(17, 40, 64, 0.9);
-    --footer-text: #ffffff;
-    --footer-border: rgba(0, 212, 255, 0.2);
+    --footer-bg: rgba(255, 255, 255, 0.95);
+    --footer-text: #1A2B3C;
+    --footer-border: rgba(255, 140, 66, 0.2);
 
-    /* Visualizer Colors */
-    --viz-bg: #0a0a0a;
-    --viz-grid: rgba(0, 212, 255, 0.08);
-    --viz-primary: rgba(0, 212, 255, 0.8);
-    --viz-fill-top: rgba(0, 212, 255, 0.3);
-    --viz-fill-bottom: rgba(0, 212, 255, 0.05);
-    --viz-text: rgba(0, 212, 255, 0.4);
+    /* Visualizer Colors - Warm tones */
+    --viz-bg: #FAFBFC;
+    --viz-grid: rgba(255, 140, 66, 0.12);
+    --viz-primary: rgba(255, 140, 66, 0.9);
+    --viz-fill-top: rgba(255, 140, 66, 0.3);
+    --viz-fill-bottom: rgba(255, 140, 66, 0.05);
+    --viz-text: rgba(255, 140, 66, 0.6);
 }
 
 /* ===================================
@@ -5881,7 +5881,7 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 [data-theme="brand"] {
-    --primary-color-rgb: 0, 212, 255;
+    --primary-color-rgb: 255, 140, 66;
 }
 
 /* ===================================
@@ -6054,8 +6054,40 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 [data-theme="brand"] .utility-bar {
-    background: rgba(10, 25, 41, 0.92);
-    border-color: rgba(0, 212, 255, 0.15);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 140, 66, 0.2);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand theme - Dashboard cards with warm styling */
+[data-theme="brand"] .dashboard-card {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(255, 140, 66, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="brand"] .dashboard-card:hover {
+    border-color: rgba(255, 140, 66, 0.3);
+    box-shadow: 0 4px 16px rgba(255, 140, 66, 0.12);
+}
+
+[data-theme="brand"] .dashboard-card.primary-action {
+    background: linear-gradient(135deg, #FF8C42 0%, #E67A35 100%);
+    border-color: transparent;
+}
+
+[data-theme="brand"] .dashboard-card.primary-action:hover {
+    background: linear-gradient(135deg, #E67A35 0%, #D06A28 100%);
+}
+
+/* Brand theme - Settings panel light styling */
+[data-theme="brand"] .settings-panel .collapsible-container {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(255, 140, 66, 0.15);
+}
+
+[data-theme="brand"] .hero-header {
+    background: linear-gradient(135deg, #FFF5EB 0%, #FFE8D6 100%);
 }
 
 /* Small screens: slightly tighter padding */
