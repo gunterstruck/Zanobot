@@ -22,8 +22,10 @@ import {
   getClassificationDetails,
   classifyDiagnosticState,
   classifyHealthStatus,
+  getAllModelScores,
   MIN_CONFIDENT_MATCH_SCORE,
 } from '@core/ml/scoring.js';
+import { WorkPointRanking, type WorkPoint } from '@ui/components/WorkPointRanking.js';
 import { saveDiagnosis, getMachine } from '@data/db.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
 import {
@@ -96,6 +98,16 @@ export class DiagnosePhase {
 
   // CRITICAL FIX: Store event listener reference for proper cleanup
   private diagnoseButtonClickHandler: (() => void) | null = null;
+
+  // Work Point Ranking (Advanced/Expert view)
+  private workPointRanking: WorkPointRanking | null = null;
+  private lastFeatureVector: {
+    features: Float64Array;
+    absoluteFeatures: Float64Array;
+    bins: number;
+    frequencyRange: [number, number];
+    rmsAmplitude?: number;
+  } | null = null; // Store for ranking calculation
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -520,6 +532,9 @@ export class DiagnosePhase {
       // Step 1: Extract features (Energy Spectral Densities)
       // CRITICAL FIX: Use actual sample rate from dspConfig (not hardcoded DEFAULT_DSP_CONFIG)
       const featureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
+
+      // Store last feature vector for ranking calculation in showResults
+      this.lastFeatureVector = featureVector;
 
       // Step 2: MULTICLASS CLASSIFICATION
       // Compare against all trained models and find best match
@@ -1439,6 +1454,9 @@ export class DiagnosePhase {
       }
     }
 
+    // Update Work Point Ranking (Advanced/Expert view)
+    this.updateWorkPointRanking();
+
     // Show modal
     modal.style.display = 'flex';
 
@@ -1447,8 +1465,70 @@ export class DiagnosePhase {
     if (closeBtn) {
       closeBtn.onclick = () => {
         modal.style.display = 'none';
+        // Cleanup ranking when modal closes
+        if (this.workPointRanking) {
+          this.workPointRanking.destroy();
+          this.workPointRanking = null;
+        }
       };
     }
+  }
+
+  /**
+   * Update Work Point Ranking component with all model scores
+   *
+   * This provides a detailed view of all trained machine states
+   * and their probability scores for Advanced/Expert users.
+   */
+  private updateWorkPointRanking(): void {
+    // Check if we have the necessary data
+    if (!this.lastFeatureVector || !this.activeModels || this.activeModels.length === 0) {
+      logger.debug('📊 WorkPointRanking: No feature vector or models available');
+      return;
+    }
+
+    // Get all model scores
+    const modelScores = getAllModelScores(
+      this.activeModels,
+      this.lastFeatureVector,
+      this.actualSampleRate
+    );
+
+    if (modelScores.length === 0) {
+      logger.debug('📊 WorkPointRanking: No scores calculated');
+      return;
+    }
+
+    // Convert to WorkPoint format
+    const workPoints: WorkPoint[] = modelScores.map((score) => ({
+      name: score.label === 'Baseline' ? t('reference.labels.baseline') : score.label,
+      score: score.score,
+      isHealthy: score.isHealthy,
+      metadata: {
+        trainingDate: score.trainingDate,
+      },
+    }));
+
+    // Initialize or update ranking component
+    const container = document.getElementById('work-point-ranking-container');
+    if (!container) {
+      logger.warn('📊 WorkPointRanking: Container not found');
+      return;
+    }
+
+    // Create ranking if not exists
+    if (!this.workPointRanking) {
+      this.workPointRanking = new WorkPointRanking('work-point-ranking-container', {
+        animate: true,
+        showRankNumbers: true,
+        maxItems: 10,
+      });
+    }
+
+    // Update with new data
+    this.workPointRanking.update(workPoints);
+
+    logger.info(`📊 WorkPointRanking updated with ${workPoints.length} states`);
   }
 
   private applyAppShellLayout(): void {
@@ -1490,6 +1570,13 @@ export class DiagnosePhase {
       this.healthGauge.destroy();
       this.healthGauge = null;
     }
+
+    // Cleanup work point ranking
+    if (this.workPointRanking) {
+      this.workPointRanking.destroy();
+      this.workPointRanking = null;
+    }
+    this.lastFeatureVector = null;
 
     // Clear score history
     this.scoreHistory.clear();

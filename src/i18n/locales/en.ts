@@ -663,6 +663,21 @@ export const en: TranslationDict = {
     viewHistory: 'View History',
   },
 
+  // Work Point Ranking (Probability Distribution View)
+  workPointRanking: {
+    title: 'State Analysis',
+    states: 'States',
+    ariaLabel: 'Ranking of detected machine states',
+    statusHealthy: 'Normal',
+    statusFaulty: 'Fault',
+    noData: 'No analysis data available',
+    rank: 'Rank',
+    probability: 'Probability',
+    topMatch: 'Best match',
+    sectionTitle: 'Detailed State Distribution',
+    sectionDescription: 'Probability distribution of all trained machine states',
+  },
+
   themes: {
     neonTitle: 'Neon Industrial',
     neonDescription: 'High-contrast neon palette for low-light environments. Accents guide attention to critical actions.',

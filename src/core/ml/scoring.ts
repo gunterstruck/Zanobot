@@ -681,6 +681,76 @@ export function classifyDiagnosticState(
 }
 
 /**
+ * Score data for a single work point (model)
+ */
+export interface WorkPointScore {
+  /** Name/label of the state */
+  label: string;
+  /** Score [0-100] */
+  score: number;
+  /** Whether this is a healthy state */
+  isHealthy: boolean;
+  /** Training date (if available) */
+  trainingDate?: number;
+}
+
+/**
+ * Get all model scores for ranking visualization.
+ *
+ * This function calculates scores for ALL trained models (not just the best match)
+ * to provide a complete probability distribution view for the WorkPointRanking component.
+ *
+ * @param models - Array of GMIA models to evaluate
+ * @param featureVector - Test feature vector from current audio
+ * @param testSampleRate - Sample rate of test audio
+ * @returns Array of WorkPointScore sorted by score (highest first)
+ */
+export function getAllModelScores(
+  models: GMIAModel[],
+  featureVector: FeatureVector,
+  testSampleRate: number
+): WorkPointScore[] {
+  if (models.length === 0) {
+    return [];
+  }
+
+  const scores: WorkPointScore[] = [];
+
+  for (const model of models) {
+    try {
+      // Calculate cosine similarity using existing GMIA inference
+      const cosineSimilarities = inferGMIA(model, [featureVector], testSampleRate);
+      const cosine = cosineSimilarities[0];
+
+      // Calculate magnitude adjustment + health score
+      const magnitudeFactor = calculateMagnitudeFactor(model.weightVector, featureVector.features);
+      const adjustedCosine = cosine * magnitudeFactor;
+      let score = calculateHealthScore(adjustedCosine, model.scalingConstant);
+
+      // Apply score calibration if baseline exists
+      if (model.baselineScore && model.baselineScore > 0) {
+        score = (score / model.baselineScore) * 100;
+        score = Math.min(100, Math.max(0, score)); // Clamp to [0, 100]
+      }
+
+      scores.push({
+        label: model.label,
+        score: Math.round(score * 10) / 10, // Round to 1 decimal
+        isHealthy: model.type === 'healthy',
+        trainingDate: model.trainingDate,
+      });
+    } catch (error) {
+      logger.warn(`Failed to calculate score for model "${model.label}":`, error);
+    }
+  }
+
+  // Sort by score (highest first)
+  scores.sort((a, b) => b.score - a.score);
+
+  return scores;
+}
+
+/**
  * Calculate magnitude factor for cosine similarity adjustment.
  *
  * NOTE: This function always returns 1.0 (no adjustment).
