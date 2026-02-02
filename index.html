@@ -12,8 +12,102 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
     <link rel="apple-touch-icon" href="./icons/icon-512.png">
 
-    <!-- Theme Bootstrap (loads before render) -->
-    <script src="./src/theme-bootstrap.js" type="module"></script>
+    <!-- Theme Bootstrap (loads before render - inline for guaranteed sync execution) -->
+    <script>
+    /**
+     * ZANOBOT THEME BOOTSTRAP - Inline version for guaranteed sync execution
+     * Prevents FOUC (Flash of Unstyled Content)
+     */
+    (function() {
+        'use strict';
+        const CONFIG_PATH = './config.json';
+        const THEME_STORAGE_KEY = 'zanobot-theme';
+        const DEFAULT_THEME = 'neon';
+        const AVAILABLE_THEMES = ['neon', 'light', 'brand'];
+        const VIEW_LEVEL_STORAGE_KEY = 'zanobot.view-level';
+        const DEFAULT_VIEW_LEVEL = 'basic';
+        const AVAILABLE_VIEW_LEVELS = ['basic', 'advanced', 'expert'];
+
+        function getStoredTheme() {
+            try { return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME; }
+            catch (e) { return DEFAULT_THEME; }
+        }
+        function getStoredViewLevel() {
+            try {
+                const level = localStorage.getItem(VIEW_LEVEL_STORAGE_KEY);
+                return level && AVAILABLE_VIEW_LEVELS.includes(level) ? level : DEFAULT_VIEW_LEVEL;
+            } catch (e) { return DEFAULT_VIEW_LEVEL; }
+        }
+        function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+        function applyViewLevel(level) { document.documentElement.setAttribute('data-view-level', level); }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch(CONFIG_PATH);
+                if (!response.ok) throw new Error('Failed to load config');
+                const config = await response.json();
+                if (getStoredTheme() === 'brand' && config.branding?.colors) applyBrandColors(config.branding.colors);
+                window.ZANOBOT_CONFIG = config;
+            } catch (error) { console.warn('Could not load config.json:', error); }
+        }
+
+        function applyBrandColors(colors) {
+            const root = document.documentElement;
+            if (colors.primary) root.style.setProperty('--primary-color', colors.primary);
+            if (colors.primaryHover) root.style.setProperty('--primary-hover', colors.primaryHover);
+            if (colors.secondary) root.style.setProperty('--secondary-color', colors.secondary);
+            if (colors.accent) root.style.setProperty('--accent-color', colors.accent);
+            if (colors.background) root.style.setProperty('--bg-primary', colors.background);
+            if (colors.backgroundSecondary) root.style.setProperty('--bg-secondary', colors.backgroundSecondary);
+        }
+
+        function initTheme() {
+            applyTheme(getStoredTheme());
+            applyViewLevel(getStoredViewLevel());
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadConfig);
+            else loadConfig();
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem(THEME_STORAGE_KEY)) applyTheme(e.matches ? 'neon' : 'light');
+                });
+            }
+        }
+
+        window.ZanobotTheme = {
+            setTheme: function(theme) {
+                if (!AVAILABLE_THEMES.includes(theme)) return;
+                try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch (e) {}
+                applyTheme(theme);
+                if (theme === 'brand' && window.ZANOBOT_CONFIG?.branding?.colors) applyBrandColors(window.ZANOBOT_CONFIG.branding.colors);
+                window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+            },
+            getTheme: function() { return getStoredTheme(); },
+            toggleTheme: function() {
+                const idx = AVAILABLE_THEMES.indexOf(getStoredTheme());
+                const next = AVAILABLE_THEMES[(idx + 1) % AVAILABLE_THEMES.length];
+                this.setTheme(next);
+                return next;
+            },
+            getAvailableThemes: function() { return [...AVAILABLE_THEMES]; },
+            getThemeDisplayName: function(theme) {
+                return { 'neon': 'Neon Industrial', 'light': 'Daylight', 'brand': 'Zanobo' }[theme] || theme;
+            },
+            getThemeDescription: function(theme) {
+                return {
+                    'neon': 'Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.',
+                    'light': 'Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.',
+                    'brand': 'Original Zanobo Design. Ausgewogen & professionell.'
+                }[theme] || '';
+            },
+            applyCustomColors: applyBrandColors,
+            reset: function() {
+                try { localStorage.removeItem(THEME_STORAGE_KEY); } catch (e) {}
+                applyTheme(DEFAULT_THEME);
+            }
+        };
+        initTheme();
+    })();
+    </script>
 </head>
 <body>
     <!-- Microphone Status Badge -->
