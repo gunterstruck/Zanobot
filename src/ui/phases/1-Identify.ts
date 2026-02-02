@@ -13,7 +13,7 @@ import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
-import { setViewLevelTemporary } from '@utils/viewLevelSettings.js';
+import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -66,6 +66,10 @@ export class IdentifyPhase {
   // NFC customerId field for Variante B
   private nfcCustomerIdInput: HTMLInputElement | null = null;
   private nfcDbUrlPreview: HTMLElement | null = null;
+
+  // NFC Onboarding context tracking
+  // Used to restore view level after NFC flow ends
+  private isNfcOnboardingActive: boolean = false;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -906,6 +910,9 @@ export class IdentifyPhase {
       // Start trace session for NFC/deep link
       onboardingTrace.start('nfc');
 
+      // Mark NFC onboarding as active (for view level restore later)
+      this.isNfcOnboardingActive = true;
+
       // TEIL A: NFC-Onboarding ⇒ immer "Einfacher Modus" (basic)
       // Setze UI-Modus temporär auf "basic" OHNE User-Settings zu überschreiben
       setViewLevelTemporary('basic', 'nfc_onboarding');
@@ -1020,7 +1027,8 @@ export class IdentifyPhase {
     }
     if (this.nfcDiagnosisConfirmBtn) {
       this.nfcDiagnosisConfirmBtn.addEventListener('click', () => {
-        this.closeNfcDiagnosisPrompt();
+        // startingTest=true: keep basic mode active during test
+        this.closeNfcDiagnosisPrompt(true);
         this.startDiagnosisFromNfc();
       });
     }
@@ -1040,9 +1048,22 @@ export class IdentifyPhase {
     this.nfcDiagnosisModal.style.display = 'flex';
   }
 
-  private closeNfcDiagnosisPrompt(): void {
+  /**
+   * Close the NFC diagnosis prompt
+   * @param startingTest - true if closing because test is starting (don't restore view level yet)
+   */
+  private closeNfcDiagnosisPrompt(startingTest: boolean = false): void {
     if (this.nfcDiagnosisModal) {
       this.nfcDiagnosisModal.style.display = 'none';
+    }
+
+    // Restore view level after NFC onboarding flow ends
+    // But NOT if we're starting the test - keep basic mode during test
+    // Restore only happens when user cancels/closes without starting test
+    if (this.isNfcOnboardingActive && !startingTest) {
+      this.isNfcOnboardingActive = false;
+      restoreViewLevel();
+      logger.debug('[NFC Onboarding] View level restored to user preference (dialog closed)');
     }
   }
 
