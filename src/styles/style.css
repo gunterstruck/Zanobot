@@ -5760,6 +5760,277 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   DASHBOARD GRID & CARDS
+   Industrial Work Dashboard Layout
+   =================================== */
+
+/* Dashboard Grid - 3 Main Action Cards */
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Dashboard Card Base Styling */
+.dashboard-card {
+    position: relative;
+    transition: all 0.25s ease;
+}
+
+/* Dashboard Card Header - Reduce Accordion Look */
+.dashboard-card .main-header {
+    background: transparent;
+    border-bottom: none;
+}
+
+.dashboard-card .main-header:hover {
+    background: rgba(var(--primary-color-rgb, 0, 212, 255), 0.04);
+}
+
+/* Replace Chevron with Action Arrow on Dashboard Cards */
+.dashboard-card .collapse-icon {
+    transform: rotate(-90deg);
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.dashboard-card:hover .collapse-icon {
+    color: var(--primary-color);
+    transform: rotate(-90deg) translateX(3px);
+}
+
+/* When expanded, rotate arrow down */
+.dashboard-card .collapse-icon.rotated {
+    transform: rotate(0deg);
+}
+
+/* Dashboard Card - expanded state */
+.dashboard-card .collapsible-content {
+    border-top: 1px solid var(--divider-color);
+}
+
+/* Dashboard Card - Context Info (shown below header) */
+.dashboard-card-context {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0 var(--spacing-lg) var(--spacing-sm);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.dashboard-card-context svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.dashboard-card-context .context-value {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Primary Action Card (Diagnose starten) - Subtle Priority */
+.dashboard-card--primary {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(var(--primary-color-rgb, 0, 212, 255), 0.1);
+}
+
+.dashboard-card--primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    opacity: 0.8;
+}
+
+.dashboard-card--primary:hover {
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.dashboard-card--primary .container-title {
+    color: var(--primary-color);
+}
+
+/* CSS Variables for RGB values (for rgba usage) */
+:root {
+    --primary-color-rgb: 0, 212, 255;
+}
+
+[data-theme="neon"] {
+    --primary-color-rgb: 0, 243, 255;
+}
+
+[data-theme="light"] {
+    --primary-color-rgb: 15, 23, 42;
+}
+
+[data-theme="brand"] {
+    --primary-color-rgb: 0, 212, 255;
+}
+
+/* ===================================
+   SETTINGS PANEL
+   Hidden from Dashboard, opened via Utility Bar
+   =================================== */
+.settings-panel {
+    display: none;
+    margin-top: var(--spacing-md);
+}
+
+.settings-panel.is-open {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* ===================================
+   UTILITY BAR
+   Bottom Navigation for Settings & Meta Links
+   =================================== */
+.utility-bar {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin: var(--spacing-md) auto 0;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: var(--footer-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--footer-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-sticky);
+}
+
+/* Utility Bar Item */
+.utility-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--footer-text);
+    opacity: 0.7;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 56px;
+    text-align: center;
+}
+
+.utility-item:hover,
+.utility-item:focus-visible {
+    opacity: 1;
+    background: rgba(var(--primary-color-rgb, 0, 212, 255), 0.08);
+    color: var(--primary-color);
+}
+
+.utility-item:active {
+    transform: scale(0.96);
+}
+
+.utility-item svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.utility-item:hover svg,
+.utility-item:focus-visible svg {
+    opacity: 1;
+}
+
+.utility-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 64px;
+}
+
+/* Theme-specific Utility Bar adjustments */
+[data-theme="light"] .utility-bar {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .utility-item:hover,
+[data-theme="light"] .utility-item:focus-visible {
+    background: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="neon"] .utility-bar {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(0, 243, 255, 0.15);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(0, 243, 255, 0.05);
+}
+
+[data-theme="brand"] .utility-bar {
+    background: rgba(10, 25, 41, 0.92);
+    border-color: rgba(0, 212, 255, 0.15);
+}
+
+/* Responsive: Larger touch targets on mobile */
+@media (max-width: 400px) {
+    .utility-bar {
+        padding: var(--spacing-sm) 0;
+        border-radius: var(--radius-md);
+    }
+
+    .utility-item {
+        min-width: 48px;
+        padding: var(--spacing-xs);
+    }
+
+    .utility-item span {
+        font-size: 0.6rem;
+        max-width: 56px;
+    }
+
+    .utility-item svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* Desktop: Slightly more spacing */
+@media (min-width: 768px) {
+    .utility-bar {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .utility-item {
+        flex-direction: row;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-width: auto;
+    }
+
+    .utility-item span {
+        font-size: 0.75rem;
+        max-width: none;
+    }
+}
+
+/* Hide old footer */
+.footer {
+    display: none;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
@@ -5767,7 +6038,8 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     .theme-switcher,
     .status-badge,
     .modal,
-    .footer {
+    .footer,
+    .utility-bar {
         display: none;
     }
 }

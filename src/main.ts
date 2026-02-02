@@ -517,7 +517,7 @@ class ZanobotApp {
   }
 
   /**
-   * Setup footer links (Impressum, Datenschutz, Über Zanobot)
+   * Setup footer links and utility bar (Impressum, Datenschutz, Über Zanobot, Settings)
    */
   private setupFooterLinks(): void {
     // Helper function to close a modal
@@ -529,6 +529,35 @@ class ZanobotApp {
     const openModal = (modal: HTMLElement) => {
       modal.style.display = 'flex';
     };
+
+    // Settings panel toggle (Utility Bar)
+    const settingsUtilityBtn = document.getElementById('settings-utility-btn');
+    const settingsPanel = document.getElementById('settings-panel');
+    const settingsContent = document.getElementById('settings');
+    const settingsCollapseIcon = settingsPanel?.querySelector('.collapse-icon');
+
+    if (settingsUtilityBtn && settingsPanel && settingsContent) {
+      settingsUtilityBtn.addEventListener('click', () => {
+        const isOpen = settingsPanel.classList.contains('is-open');
+
+        if (isOpen) {
+          // Close settings panel
+          settingsPanel.classList.remove('is-open');
+          settingsContent.style.display = 'none';
+          settingsCollapseIcon?.classList.remove('rotated');
+        } else {
+          // Open settings panel and scroll to it
+          settingsPanel.classList.add('is-open');
+          settingsContent.style.display = 'block';
+          settingsCollapseIcon?.classList.add('rotated');
+
+          // Smooth scroll to settings panel
+          setTimeout(() => {
+            settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 50);
+        }
+      });
+    }
 
     // Impressum modal
     const impressumBtn = document.getElementById('impressum-btn');
