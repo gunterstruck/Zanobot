@@ -504,25 +504,18 @@ export class IdentifyPhase {
    * Also triggers automatic reference database download for NFC-based setup
    *
    * @param id - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL from NFC link (enables auto-creation with DB)
    */
-  private async handleMachineId(id: string, referenceDbUrl?: string): Promise<boolean> {
+  private async handleMachineId(id: string): Promise<boolean> {
     try {
       let machine = await getMachine(id);
 
       if (machine) {
-        // Update referenceDbUrl if provided and different from current
-        if (referenceDbUrl && machine.referenceDbUrl !== referenceDbUrl) {
-          logger.info(`🔄 Updating reference URL for machine ${id}`);
-          machine.referenceDbUrl = referenceDbUrl;
-          await saveMachine(machine);
-        }
-
         notify.success(t('identify.success.machineLoaded', { name: machine.name }));
         this.setCurrentMachine(machine);
         this.onMachineSelected(machine);
 
-        // Check if reference database download is needed (NFC setup flow)
+        // Check if reference database download is needed
+        // The referenceDbUrl is stored in machine data (configured by operator)
         const needsDownload = await ReferenceDbService.needsDownload(id);
         if (needsDownload && machine.referenceDbUrl) {
           await this.downloadReferenceDatabase(machine);
@@ -537,18 +530,9 @@ export class IdentifyPhase {
         return true;
       }
 
-      // Machine not found - auto-create
-      // If referenceDbUrl is provided (from NFC link), include it for DB download
-      if (referenceDbUrl) {
-        // Validate URL before creating machine
-        const validation = ReferenceDbService.validateUrl(referenceDbUrl);
-        if (!validation.valid) {
-          logger.error(`Invalid reference URL: ${validation.error}`);
-          this.showError(t('identify.errors.invalidReferenceUrl') || 'Invalid reference database URL');
-          return false;
-        }
-        logger.info(`🆕 Auto-creating machine ${id} with reference DB URL from NFC`);
-      }
+      // Machine not found - auto-create WITHOUT referenceDbUrl
+      // The operator must configure the referenceDbUrl via MachineSetupForm
+      logger.info(`🆕 Auto-creating machine ${id} (no reference DB URL yet)`);
 
       const autoName = t('identify.messages.autoMachineName', { id });
       const newMachine: Machine = {
@@ -556,7 +540,7 @@ export class IdentifyPhase {
         name: autoName,
         createdAt: Date.now(),
         referenceModels: [],
-        referenceDbUrl: referenceDbUrl, // Include URL from NFC link
+        // Note: referenceDbUrl is NOT set here - operator must configure it
       };
 
       await saveMachine(newMachine);
@@ -564,17 +548,6 @@ export class IdentifyPhase {
       notify.success(t('identify.success.machineAutoCreated', { name: autoName }));
       this.setCurrentMachine(newMachine);
       this.onMachineSelected(newMachine);
-
-      // If referenceDbUrl was provided, download the database immediately
-      if (referenceDbUrl) {
-        await this.downloadReferenceDatabase(newMachine);
-        // Reload machine to get updated reference models and metadata
-        const updatedMachine = await getMachine(id);
-        if (updatedMachine) {
-          this.setCurrentMachine(updatedMachine);
-          this.onMachineSelected(updatedMachine);
-        }
-      }
 
       return true;
     } catch (error) {
@@ -846,28 +819,26 @@ export class IdentifyPhase {
    * Deep link handling for magic URLs.
    * Supports both:
    * - Legacy query param format: ?machineId=<id>
-   * - New hash format: #/m/<id> or #/m/<id>?ref=<encoded_url>
+   * - New hash format: #/m/<id>
    *
-   * When ref URL is provided (NFC setup flow):
-   * - Auto-creates machine if not found
-   * - Downloads reference database from GitHub/Drive
+   * Note: The NFC link contains ONLY the machine ID.
+   * The database URL is stored in the machine data (referenceDbUrl field),
+   * NOT in the NFC link. This allows updating the database without rewriting NFC tags.
    */
   private async handleDeepLink(): Promise<void> {
     let machineId: string | null = null;
-    let referenceDbUrl: string | undefined;
     let isHashRoute = false;
 
     // Check hash-based route first using HashRouter for correct parsing
-    // This properly handles #/m/<machine_id>?ref=<encoded_url>
+    // Format: #/m/<machine_id>
     const hash = window.location.hash;
     if (hash && hash.startsWith('#/m/')) {
       const router = new HashRouter();
       const match = router.parseHash(hash);
       if (match.type === 'machine' && match.machineId) {
         machineId = match.machineId;
-        referenceDbUrl = match.referenceDbUrl;
         isHashRoute = true;
-        logger.info(`🔗 Deep link parsed: machineId=${machineId}, hasRefUrl=${!!referenceDbUrl}`);
+        logger.info(`🔗 Deep link parsed: machineId=${machineId}`);
       }
     }
 
@@ -890,7 +861,8 @@ export class IdentifyPhase {
     this.showDeepLinkOverlay(true);
     let machineHandled = false;
     try {
-      machineHandled = await this.handleMachineId(machineId, referenceDbUrl);
+      // Note: referenceDbUrl is read from machine data, not from the deep link
+      machineHandled = await this.handleMachineId(machineId);
 
       // Clean up URL after processing
       if (isHashRoute) {
@@ -1171,11 +1143,12 @@ export class IdentifyPhase {
       return;
     }
 
-    // Use hash-based URL for NFC: #/m/<machine_id>?ref=<encoded_url>
-    // Include referenceDbUrl for auto-creation on new devices
+    // Use hash-based URL for NFC: #/m/<machine_id>
+    // Note: The NFC link contains ONLY the machine ID.
+    // The database URL is stored in machine data, not in the NFC link.
     const baseUrl = this.getBaseAppUrl();
     const url = selectedOption === 'specific' && this.currentMachine
-      ? HashRouter.getFullMachineUrl(this.currentMachine.id, this.currentMachine.referenceDbUrl)
+      ? HashRouter.getFullMachineUrl(this.currentMachine.id)
       : baseUrl;
 
     this.nfcWriteBtn.disabled = true;

@@ -739,8 +739,10 @@ export const de: TranslationDict = {
     // Form labels
     title: 'Maschine einrichten',
     referenceDbUrl: 'Referenz-DB-Link',
+    referenceDbUrlTitle: 'Referenz-Datenbank (GitHub Pages)',
     referenceDbUrlRequired: 'Pflichtfeld',
-    referenceDbUrlHint: 'GitHub Pages: https://username.github.io/datei.json oder GitHub Raw: https://raw.githubusercontent.com/...',
+    referenceDbUrlHintDetailed: 'Bitte geben Sie hier den direkten Link zu einer JSON-Datei an, die im Repository gunterstruck.github.io liegt.',
+    referenceDbUrlHint: 'Erlaubte Formate: https://gunterstruck.github.io/<pfad>/<datei>.json oder https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/<pfad>/<datei>.json — Andere Quellen (z.B. Google Drive) werden nicht unterstützt.',
     location: 'Standort',
     locationPlaceholder: 'z.B. Halle 3, Linie 2',
     notes: 'Notizen',
@@ -750,7 +752,9 @@ export const de: TranslationDict = {
     urlEmpty: 'Bitte geben Sie einen Referenz-DB-Link ein.',
     urlInvalid: 'Der Link scheint keine gültige URL zu sein.',
     urlNotHttps: 'Der Link muss mit https:// beginnen.',
-    googleDriveNotDirect: 'Google Drive Links müssen das Direct-Download-Format verwenden. Empfohlen: GitHub Pages nutzen.',
+    urlNotJson: 'Der Link muss auf eine .json-Datei verweisen.',
+    urlInvalidSource: 'Nur Links zu gunterstruck.github.io sind erlaubt. Andere Quellen (Google Drive, Dropbox, etc.) werden nicht unterstützt.',
+    googleDriveNotDirect: 'Google Drive wird nicht unterstützt. Bitte verwenden Sie gunterstruck.github.io.',
 
     // Download status
     downloadingReference: 'Referenzdaten werden geladen...',
@@ -797,6 +801,13 @@ export const de: TranslationDict = {
 
     // Export
     exportTitle: 'Referenzdatenbank exportieren',
+    exportDbTitle: 'Referenzdatenbank exportieren',
+    exportDbDescription: 'Exportieren Sie die Referenzdatenbank mit allen Modellen, um sie auf gunterstruck.github.io hochzuladen.',
+    exportDbButton: 'Datenbank exportieren',
+    exportDbHint: 'Die exportierte JSON-Datei kann in das Repository gunterstruck.github.io hochgeladen werden.',
+    exportDbExporting: 'Exportiere...',
+    exportDbSuccess: 'Exportiert!',
+    exportDbError: 'Export fehlgeschlagen',
     exportSuccess: 'Referenzdatenbank exportiert: {{filename}}',
     exportFailed: 'Export fehlgeschlagen',
     shareTitle: 'Referenzdatenbank teilen',

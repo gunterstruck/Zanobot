@@ -690,8 +690,10 @@ export const en: TranslationDict = {
     // Form labels
     title: 'Machine Setup',
     referenceDbUrl: 'Reference DB Link',
+    referenceDbUrlTitle: 'Reference Database (GitHub Pages)',
     referenceDbUrlRequired: 'Required',
-    referenceDbUrlHint: 'GitHub Pages: https://username.github.io/file.json or GitHub Raw: https://raw.githubusercontent.com/...',
+    referenceDbUrlHintDetailed: 'Please enter the direct link to a JSON file located in the gunterstruck.github.io repository.',
+    referenceDbUrlHint: 'Allowed formats: https://gunterstruck.github.io/<path>/<file>.json or https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/<path>/<file>.json — Other sources (e.g., Google Drive) are not supported.',
     location: 'Location',
     locationPlaceholder: 'e.g., Hall 3, Line 2',
     notes: 'Notes',
@@ -701,7 +703,9 @@ export const en: TranslationDict = {
     urlEmpty: 'Please enter a reference DB link.',
     urlInvalid: 'The link does not appear to be a valid URL.',
     urlNotHttps: 'The link must start with https://.',
-    googleDriveNotDirect: 'Google Drive links must use direct download format. Recommended: Use GitHub Pages instead.',
+    urlNotJson: 'The link must point to a .json file.',
+    urlInvalidSource: 'Only links to gunterstruck.github.io are allowed. Other sources (Google Drive, Dropbox, etc.) are not supported.',
+    googleDriveNotDirect: 'Google Drive is not supported. Please use gunterstruck.github.io.',
 
     // Download status
     downloadingReference: 'Loading reference data...',
@@ -748,6 +752,13 @@ export const en: TranslationDict = {
 
     // Export
     exportTitle: 'Export reference database',
+    exportDbTitle: 'Export Reference Database',
+    exportDbDescription: 'Export the reference database with all models for upload to gunterstruck.github.io.',
+    exportDbButton: 'Export Database',
+    exportDbHint: 'The exported JSON file can be uploaded to the gunterstruck.github.io repository.',
+    exportDbExporting: 'Exporting...',
+    exportDbSuccess: 'Exported!',
+    exportDbError: 'Export failed',
     exportSuccess: 'Reference database exported: {{filename}}',
     exportFailed: 'Export failed',
     shareTitle: 'Share reference database',

@@ -2,12 +2,19 @@
  * ZANOBOT - HASH ROUTER
  *
  * Handles hash-based routing for NFC deep links.
- * Format: #/m/<machine_id>?ref=<encoded_url>
+ * Format: #/m/<machine_id>
  *
- * This enables NFC tags to open the app directly to a specific machine,
- * triggering automatic reference database download for Basisnutzer.
- * The optional ref parameter contains the reference DB URL, allowing
- * machines to be auto-created when scanned on new devices.
+ * Design principle:
+ * - NFC tags contain ONLY the machine ID, NOT the database URL
+ * - The database URL is stored in the machine's data (referenceDbUrl field)
+ * - This allows updating the database URL without rewriting NFC tags
+ *
+ * Flow:
+ * 1. User scans NFC tag → Browser opens PWA with #/m/<machine_id>
+ * 2. PWA looks up machine by ID
+ * 3. PWA reads referenceDbUrl from machine data
+ * 4. PWA downloads reference database from gunterstruck.github.io
+ * 5. Machine is ready for testing
  */
 
 import { getMachine, saveMachine } from '@data/db.js';
@@ -22,8 +29,6 @@ import { t } from '../i18n/index.js';
 export interface RouteMatch {
   type: 'machine' | 'unknown';
   machineId?: string;
-  /** Reference DB URL from NFC link (allows auto-creation on new devices) */
-  referenceDbUrl?: string;
 }
 
 /**
@@ -95,60 +100,57 @@ export class HashRouter {
 
   /**
    * Parse hash URL and extract route info
-   * Supports: #/m/<machine_id> or #/m/<machine_id>?ref=<encoded_url>
+   * Format: #/m/<machine_id>
+   *
+   * Note: The database URL is NOT included in the NFC link.
+   * It is read from the machine's stored data (referenceDbUrl field).
    */
   public parseHash(hash: string): RouteMatch {
     // Remove leading # if present
     const cleanHash = hash.startsWith('#') ? hash.substring(1) : hash;
 
-    // Split path and query string
-    const [path, queryString] = cleanHash.split('?');
+    // Split path (ignore query string - not used for NFC links)
+    const [path] = cleanHash.split('?');
 
     // Match /m/<machine_id> pattern
     const machineMatch = path.match(/^\/m\/([^/?]+)/);
 
     if (machineMatch) {
-      const result: RouteMatch = {
+      return {
         type: 'machine',
         machineId: decodeURIComponent(machineMatch[1]),
       };
-
-      // Parse query parameters for ref URL
-      if (queryString) {
-        const params = new URLSearchParams(queryString);
-        const refUrl = params.get('ref');
-        if (refUrl) {
-          result.referenceDbUrl = decodeURIComponent(refUrl);
-        }
-      }
-
-      return result;
     }
 
     return { type: 'unknown' };
   }
 
   /**
-   * Generate hash URL for a machine
+   * Generate hash URL for a machine (NFC tag format)
+   *
+   * The hash contains ONLY the machine ID.
+   * The database URL is stored in the machine data, not in the NFC link.
+   * This allows updating the database without rewriting NFC tags.
+   *
    * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL to include (enables auto-creation on new devices)
    */
-  public static getMachineHash(machineId: string, referenceDbUrl?: string): string {
-    const base = `#/m/${encodeURIComponent(machineId)}`;
-    if (referenceDbUrl) {
-      return `${base}?ref=${encodeURIComponent(referenceDbUrl)}`;
-    }
-    return base;
+  public static getMachineHash(machineId: string): string {
+    return `#/m/${encodeURIComponent(machineId)}`;
   }
 
   /**
    * Generate full URL for NFC tag writing
+   *
+   * Format: https://gunterstruck.github.io/zanobot/#/m/<machine_id>
+   *
+   * The URL contains ONLY the machine ID.
+   * The database URL is stored in the machine data, not in the NFC link.
+   *
    * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL to include (enables auto-creation on new devices)
    */
-  public static getFullMachineUrl(machineId: string, referenceDbUrl?: string): string {
+  public static getFullMachineUrl(machineId: string): string {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}${this.getMachineHash(machineId, referenceDbUrl)}`;
+    return `${baseUrl}${this.getMachineHash(machineId)}`;
   }
 
   /**
@@ -162,33 +164,32 @@ export class HashRouter {
     }
 
     const match = this.parseHash(hash);
-    logger.info(`🔗 Hash route: ${hash} → ${match.type}${match.machineId ? ` (${match.machineId})` : ''}${match.referenceDbUrl ? ' (has ref URL)' : ''}`);
+    logger.info(`🔗 Hash route: ${hash} → ${match.type}${match.machineId ? ` (${match.machineId})` : ''}`);
 
     // Notify listeners
     this.onRouteChange?.(match);
 
     // Handle machine route
     if (match.type === 'machine' && match.machineId) {
-      await this.handleMachineRoute(match.machineId, match.referenceDbUrl);
+      await this.handleMachineRoute(match.machineId);
     }
   }
 
   /**
    * Handle machine route - load machine and download/update reference if needed
    *
-   * Version-aware flow:
-   * 1. Check if local DB exists (or auto-create if referenceDbUrl provided)
-   * 2. If not exists: download initial reference
-   * 3. If exists: compare versions (remote > local means update needed)
-   * 4. Only update if remote version is HIGHER than local
+   * Flow (NFC contains ONLY machine ID, NOT the database URL):
+   * 1. Load machine by ID
+   * 2. If machine exists: read referenceDbUrl from machine data
+   * 3. If machine has referenceDbUrl: check for download/update
+   * 4. If machine doesn't exist: create without referenceDbUrl (operator must configure)
    *
-   * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL from NFC link (enables auto-creation)
+   * @param machineId - Machine identifier from NFC/deep link
    */
-  private async handleMachineRoute(machineId: string, referenceDbUrl?: string): Promise<void> {
+  private async handleMachineRoute(machineId: string): Promise<void> {
     try {
-      // Load or create machine (auto-creates if referenceDbUrl provided)
-      const result = await this.loadOrCreateMachine(machineId, referenceDbUrl);
+      // Load or create machine
+      const result = await this.loadOrCreateMachine(machineId);
 
       if (result.error || !result.machine) {
         logger.error(`Failed to load machine ${machineId}:`, result.error);
@@ -203,8 +204,10 @@ export class HashRouter {
       } else if (result.needsUpdate) {
         logger.info(`📦 Machine ${machineId} has update available: v${result.localVersion} → v${result.remoteVersion}`);
         await this.downloadReference(result.machine);
-      } else {
+      } else if (result.machine.referenceDbUrl) {
         logger.info(`✓ Machine ${machineId} is up-to-date (v${result.localVersion || 'unknown'})`);
+      } else {
+        logger.info(`ℹ️ Machine ${machineId} has no reference DB URL configured`);
       }
 
       // Notify that machine is ready
@@ -219,58 +222,43 @@ export class HashRouter {
   }
 
   /**
-   * Load existing machine or create from NFC link data
-   * Checks for both initial download and version-based updates
+   * Load existing machine or create new one
    *
-   * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL from NFC link (enables auto-creation)
+   * The database URL is NOT in the NFC link - it's stored in the machine data.
+   * If machine doesn't exist, it's created WITHOUT a referenceDbUrl.
+   * The operator (Betreiber) must configure the referenceDbUrl via MachineSetupForm.
+   *
+   * @param machineId - Machine identifier from NFC/deep link
    */
-  private async loadOrCreateMachine(machineId: string, referenceDbUrl?: string): Promise<MachineLoadResult> {
+  private async loadOrCreateMachine(machineId: string): Promise<MachineLoadResult> {
     // Try to load existing machine
     let machine = await getMachine(machineId);
     let created = false;
 
     if (!machine) {
-      // Machine not found - check if we can auto-create from NFC link data
-      if (referenceDbUrl) {
-        // Validate the URL before creating machine
-        const validation = ReferenceDbService.validateUrl(referenceDbUrl);
-        if (!validation.valid) {
-          logger.error(`Invalid reference URL in NFC link: ${validation.error}`);
-          return {
-            machine: null,
-            created: false,
-            error: 'invalid_reference_url',
-            needsReferenceDownload: false,
-          };
-        }
-
-        // Auto-create machine with reference URL from NFC link
-        logger.info(`🆕 Auto-creating machine ${machineId} from NFC link`);
-        machine = {
-          id: machineId,
-          name: machineId, // Will be updated from reference DB metadata
-          createdAt: Date.now(),
-          referenceModels: [],
-          referenceDbUrl: referenceDbUrl,
-        };
-        await saveMachine(machine);
-        created = true;
-      } else {
-        // No reference URL provided - cannot auto-create
-        // User should contact Servicetechniker
-        return {
-          machine: null,
-          created: false,
-          error: 'machine_not_found',
-          needsReferenceDownload: false,
-        };
-      }
-    } else if (referenceDbUrl && machine.referenceDbUrl !== referenceDbUrl) {
-      // Machine exists but has different URL - update it
-      logger.info(`🔄 Updating reference URL for machine ${machineId}`);
-      machine.referenceDbUrl = referenceDbUrl;
+      // Machine not found - create it without referenceDbUrl
+      // The operator must configure the referenceDbUrl via MachineSetupForm
+      logger.info(`🆕 Auto-creating machine ${machineId} (no reference DB URL yet)`);
+      machine = {
+        id: machineId,
+        name: machineId, // Can be updated by operator later
+        createdAt: Date.now(),
+        referenceModels: [],
+        // Note: referenceDbUrl is NOT set here - operator must configure it
+      };
       await saveMachine(machine);
+      created = true;
+    }
+
+    // If machine has no referenceDbUrl configured, return early
+    // User needs to contact Servicetechniker to configure the machine
+    if (!machine.referenceDbUrl) {
+      return {
+        machine,
+        created,
+        needsReferenceDownload: false,
+        needsUpdate: false,
+      };
     }
 
     // Check if initial reference download is needed (no local DB exists)
@@ -286,37 +274,26 @@ export class HashRouter {
     }
 
     // Local DB exists - check for version update
-    // Only fetch if machine has a reference URL configured
-    if (machine.referenceDbUrl) {
-      const updateCheck = await ReferenceDbService.needsUpdate(machineId);
+    const updateCheck = await ReferenceDbService.needsUpdate(machineId);
 
-      if (updateCheck.needsUpdate && updateCheck.reason === 'version_higher') {
-        return {
-          machine,
-          created,
-          needsReferenceDownload: false,
-          needsUpdate: true,
-          localVersion: updateCheck.localVersion,
-          remoteVersion: updateCheck.remoteVersion,
-        };
-      }
-
-      // No update needed
+    if (updateCheck.needsUpdate && updateCheck.reason === 'version_higher') {
       return {
         machine,
         created,
         needsReferenceDownload: false,
-        needsUpdate: false,
+        needsUpdate: true,
         localVersion: updateCheck.localVersion,
+        remoteVersion: updateCheck.remoteVersion,
       };
     }
 
-    // No reference URL - just return machine
+    // No update needed
     return {
       machine,
       created,
       needsReferenceDownload: false,
       needsUpdate: false,
+      localVersion: updateCheck.localVersion,
     };
   }
 

@@ -5,10 +5,19 @@
  * Enables Servicetechniker to configure machines with pre-trained models,
  * and Basisnutzer to automatically download reference data when scanning NFC tags.
  *
+ * Data Source:
+ * Only ONE data source is allowed: https://github.com/gunterstruck/gunterstruck.github.io
+ * Reference databases must be uploaded as JSON files to this repository.
+ *
+ * Allowed URL formats:
+ * - https://gunterstruck.github.io/<path>/<file>.json (GitHub Pages)
+ * - https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/<path>/<file>.json
+ *
  * Flow:
- * 1. Servicetechniker creates machine with referenceDbUrl (Google Drive link)
- * 2. Servicetechniker programs NFC tag with #/m/<machine_id>
- * 3. Basisnutzer scans NFC tag → PWA opens → downloads reference DB → ready to test
+ * 1. Servicetechniker uploads reference DB to gunterstruck.github.io repository
+ * 2. Servicetechniker creates machine with referenceDbUrl pointing to the JSON file
+ * 3. Servicetechniker programs NFC tag with #/m/<machine_id> (only machine ID, NOT the DB URL)
+ * 4. Basisnutzer scans NFC tag → PWA opens → reads referenceDbUrl from machine data → downloads DB → ready to test
  */
 
 import {
@@ -63,9 +72,10 @@ export type ProgressCallback = (status: string, progress?: number) => void;
  * Reference Database Service
  *
  * Manages downloading, validating, and applying reference databases
- * from Google Drive for NFC-based machine setup.
+ * from gunterstruck.github.io for NFC-based machine setup.
  *
  * Key principles:
+ * - Only gunterstruck.github.io is accepted as data source
  * - Official reference databases are versioned (db_meta.db_version)
  * - Local copies are only updated when remote version > local version
  * - User-added local references are preserved during updates
@@ -573,7 +583,8 @@ export class ReferenceDbService {
 
   /**
    * Export the local reference database as a file
-   * Creates a file in the new db_meta format that can be uploaded to Google Drive
+   * Creates a file in the new db_meta format that can be uploaded to
+   * the gunterstruck.github.io repository on GitHub
    *
    * @param machineId - Machine ID
    * @returns Blob containing the exported JSON, or null on error
@@ -738,7 +749,10 @@ export class ReferenceDbService {
 
   /**
    * Validate URL format for reference database sources
-   * Supports: GitHub (raw/pages), Google Drive direct download
+   *
+   * ONLY supports the official data source:
+   * - GitHub Pages: https://gunterstruck.github.io/<path>/<file>.json
+   * - GitHub Raw: https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/<path>/<file>.json
    *
    * @param url - URL to validate
    * @returns Validation result
@@ -756,26 +770,23 @@ export class ReferenceDbService {
         return { valid: false, error: 'url_not_https' };
       }
 
-      // Check for supported hosts
-      const isGoogleDrive = parsed.hostname === 'drive.google.com';
-      const isGitHubRaw = parsed.hostname === 'raw.githubusercontent.com';
-      const isGitHubPages = parsed.hostname.endsWith('.github.io');
+      // Only allow gunterstruck.github.io (GitHub Pages)
+      const isGunterstruckPages = parsed.hostname === 'gunterstruck.github.io';
 
-      // GitHub URLs are always valid (raw and pages deliver direct files)
-      if (isGitHubRaw || isGitHubPages) {
-        return { valid: true };
-      }
+      // Only allow raw.githubusercontent.com for gunterstruck/gunterstruck.github.io repo
+      const isGunterstruckRaw = parsed.hostname === 'raw.githubusercontent.com' &&
+        parsed.pathname.startsWith('/gunterstruck/gunterstruck.github.io/');
 
-      // Google Drive requires direct download format
-      if (isGoogleDrive) {
-        if (!url.includes('export=download') && !url.includes('/uc?')) {
-          return { valid: false, error: 'google_drive_not_direct' };
+      if (isGunterstruckPages || isGunterstruckRaw) {
+        // Validate it's a JSON file
+        if (!parsed.pathname.toLowerCase().endsWith('.json')) {
+          return { valid: false, error: 'url_not_json' };
         }
         return { valid: true };
       }
 
-      // Other HTTPS URLs are accepted (for flexibility)
-      return { valid: true };
+      // All other sources are NOT allowed
+      return { valid: false, error: 'url_invalid_source' };
     } catch {
       return { valid: false, error: 'url_invalid' };
     }

@@ -1,10 +1,18 @@
 /**
  * ZANOBOT - MACHINE SETUP FORM
  *
- * UI component for Servicetechniker to configure machines with:
- * - Reference DB URL (required)
+ * UI component for Betreiber/Servicetechniker to configure machines with:
+ * - Reference DB URL (required) - must point to gunterstruck.github.io
  * - Location
  * - Notes
+ *
+ * Data source:
+ * Only gunterstruck.github.io is allowed as reference database source.
+ * The Betreiber uploads JSON files to this repository and enters the URL here.
+ *
+ * NFC concept:
+ * The NFC tag contains ONLY the machine ID, NOT the database URL.
+ * This allows updating the database URL without rewriting NFC tags.
  *
  * This form is used in the admin/service view to set up machines
  * that Basisnutzer can then access via NFC tags.
@@ -95,18 +103,19 @@ export class MachineSetupForm {
           <!-- Reference DB URL (Required) -->
           <div class="form-group required">
             <label for="reference-db-url">
-              ${t('machineSetup.referenceDbUrl')}
+              ${t('machineSetup.referenceDbUrlTitle')}
               <span class="required-badge">${t('machineSetup.referenceDbUrlRequired')}</span>
             </label>
+            <p class="form-hint form-hint-prominent">${t('machineSetup.referenceDbUrlHintDetailed')}</p>
             <input
               type="url"
               id="reference-db-url"
               name="referenceDbUrl"
               class="form-input"
-              placeholder="https://username.github.io/datei.json"
+              placeholder="https://gunterstruck.github.io/pfad/datei.json"
               required
             />
-            <p class="form-hint">${t('machineSetup.referenceDbUrlHint')}</p>
+            <p class="form-hint form-hint-secondary">${t('machineSetup.referenceDbUrlHint')}</p>
             <p class="form-error" id="url-error"></p>
             <!-- Validation status display -->
             <div class="form-status" id="validation-status" style="display: none;">
@@ -244,20 +253,22 @@ export class MachineSetupForm {
 
   /**
    * Update NFC link display
-   * Includes referenceDbUrl in the link for auto-creation on new devices
+   *
+   * The NFC link contains ONLY the machine ID, NOT the database URL.
+   * This allows updating the database URL without rewriting NFC tags.
    */
   private updateNfcLink(): void {
     if (!this.machine || !this.nfcLinkDisplay) return;
 
-    // Include referenceDbUrl in NFC link for auto-creation on new devices
-    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id, this.machine.referenceDbUrl);
+    // NFC link contains ONLY machine ID (no referenceDbUrl)
+    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id);
     const urlDisplay = document.getElementById('nfc-link-url');
 
     if (urlDisplay) {
       urlDisplay.textContent = fullUrl;
     }
 
-    // Show NFC link section if machine has reference URL
+    // Show NFC link section if machine has reference URL configured
     if (this.machine.referenceDbUrl) {
       this.nfcLinkDisplay.style.display = 'block';
     }
@@ -548,13 +559,14 @@ export class MachineSetupForm {
 
   /**
    * Copy NFC link to clipboard
-   * Includes referenceDbUrl for auto-creation on new devices
+   *
+   * The NFC link contains ONLY the machine ID, NOT the database URL.
    */
   private async copyNfcLink(): Promise<void> {
     if (!this.machine) return;
 
-    // Include referenceDbUrl in NFC link for auto-creation on new devices
-    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id, this.machine.referenceDbUrl);
+    // NFC link contains ONLY machine ID (no referenceDbUrl)
+    const fullUrl = HashRouter.getFullMachineUrl(this.machine.id);
 
     try {
       await navigator.clipboard.writeText(fullUrl);
