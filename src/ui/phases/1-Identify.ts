@@ -14,6 +14,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
+import { getDetectionModeManager } from '@core/detection-mode.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -912,6 +913,23 @@ export class IdentifyPhase {
 
       // Mark NFC onboarding as active (for view level restore later)
       this.isNfcOnboardingActive = true;
+
+      // KRITISCH: NFC-Onboarding ⇒ IMMER Detection Mode auf STATIONARY (Level 1/GMIA) setzen
+      // Dies muss VOR allem anderen passieren, da nur STATIONARY zuverlässige Messwerte liefert.
+      // Im CYCLIC Mode (Level 2/YAMNet) funktioniert die Messung nicht zuverlässig.
+      const modeManager = getDetectionModeManager();
+      const previousDetectionMode = modeManager.getMode();
+      if (previousDetectionMode !== 'STATIONARY') {
+        modeManager.setMode('STATIONARY');
+        logger.info(`🔧 NFC-Onboarding: Detection Mode von ${previousDetectionMode} auf STATIONARY gesetzt`);
+        onboardingTrace.success('detection_mode_set', {
+          from: previousDetectionMode,
+          to: 'STATIONARY',
+          reason: 'nfc_onboarding_requires_level1',
+        });
+      } else {
+        onboardingTrace.success('detection_mode_ok', { mode: 'STATIONARY' });
+      }
 
       // TEIL A: NFC-Onboarding ⇒ immer "Einfacher Modus" (basic)
       // Setze UI-Modus temporär auf "basic" OHNE User-Settings zu überschreiben
