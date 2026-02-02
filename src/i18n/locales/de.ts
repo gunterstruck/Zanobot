@@ -704,6 +704,23 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // WORK POINT RANKING (Probability Distribution View)
+  // ============================================================================
+  workPointRanking: {
+    title: 'Zustandsanalyse',
+    states: 'Zustände',
+    ariaLabel: 'Ranking der erkannten Maschinenzustände',
+    statusHealthy: 'Normal',
+    statusFaulty: 'Fehler',
+    noData: 'Keine Analysedaten verfügbar',
+    rank: 'Rang',
+    probability: 'Wahrscheinlichkeit',
+    topMatch: 'Beste Übereinstimmung',
+    sectionTitle: 'Detaillierte Zustandsverteilung',
+    sectionDescription: 'Wahrscheinlichkeitsverteilung aller trainierten Maschinenzustände',
+  },
+
+  // ============================================================================
   // THEME DESCRIPTIONS
   // ============================================================================
   themes: {
