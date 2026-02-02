@@ -7,6 +7,10 @@
    CSS VARIABLES & THEME SYSTEM
    =================================== */
 :root {
+    /* Test UI Scale Factor (1.0 = 100%, 0.75 = 75%) */
+    /* Used for scaling the Simple Mode Test Screen on small devices */
+    --test-ui-scale: 1;
+
     /* Spacing (Theme-Independent) */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
@@ -2190,6 +2194,107 @@ body {
 }
 
 /* ===================================
+   TEST UI SCALE - RESPONSIVE SCALING
+   Reduces UI to ~75% on small devices (iPhone SE, etc.)
+   =================================== */
+
+/* Small viewport: reduce scale to 75% */
+/* Triggers on: iPhone SE (375x667), small Android devices */
+@media (max-width: 400px), (max-height: 650px) {
+    :root {
+        --test-ui-scale: 0.75;
+    }
+}
+
+/* Medium-small viewport: slight reduction to 85% */
+@media (min-width: 401px) and (max-width: 480px) and (min-height: 651px) {
+    :root {
+        --test-ui-scale: 0.85;
+    }
+}
+
+/* Scaled Inspection Header */
+.inspection-header {
+    min-height: calc(80px * var(--test-ui-scale));
+    padding: calc(var(--spacing-md) * var(--test-ui-scale)) var(--spacing-md);
+}
+
+.inspection-question {
+    font-size: clamp(calc(1.1rem * var(--test-ui-scale)), calc(5vw * var(--test-ui-scale)), calc(1.5rem * var(--test-ui-scale)));
+    margin-bottom: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+.inspection-subtitle {
+    font-size: clamp(calc(0.75rem * var(--test-ui-scale)), calc(3vw * var(--test-ui-scale)), calc(0.875rem * var(--test-ui-scale)));
+}
+
+.inspection-machine-name {
+    font-size: calc(0.75rem * var(--test-ui-scale));
+    margin-top: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+/* Scaled Content Area */
+.inspection-content {
+    padding: calc(var(--spacing-sm) * var(--test-ui-scale));
+    gap: calc(var(--spacing-sm) * var(--test-ui-scale));
+}
+
+/* Scaled Score Container - the main visual element */
+.inspection-score-container {
+    width: clamp(calc(140px * var(--test-ui-scale)), calc(45vw * var(--test-ui-scale)), calc(220px * var(--test-ui-scale)));
+    height: clamp(calc(140px * var(--test-ui-scale)), calc(45vw * var(--test-ui-scale)), calc(220px * var(--test-ui-scale)));
+    max-width: min(calc(220px * var(--test-ui-scale)), 75%);
+    max-height: min(calc(220px * var(--test-ui-scale)), 40vh);
+}
+
+/* Scaled Score Text */
+.inspection-score {
+    font-size: clamp(calc(3rem * var(--test-ui-scale)), calc(18vw * var(--test-ui-scale)), calc(5.5rem * var(--test-ui-scale)));
+}
+
+/* Scaled Status Label */
+.inspection-status-label {
+    font-size: clamp(calc(1rem * var(--test-ui-scale)), calc(4vw * var(--test-ui-scale)), calc(1.4rem * var(--test-ui-scale)));
+    letter-spacing: calc(0.12em * var(--test-ui-scale));
+    bottom: calc(12% * var(--test-ui-scale) + 3%);
+}
+
+/* Scaled Reference Info Box */
+.inspection-reference-info {
+    font-size: calc(0.8rem * var(--test-ui-scale));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) calc(var(--spacing-sm) * var(--test-ui-scale));
+    border-radius: calc(var(--radius-sm) * var(--test-ui-scale));
+}
+
+.inspection-reference-label {
+    font-size: calc(0.7rem * var(--test-ui-scale));
+    margin-bottom: calc(0.2rem * var(--test-ui-scale));
+}
+
+/* Scaled Quality Hint */
+.inspection-hint {
+    font-size: clamp(calc(0.75rem * var(--test-ui-scale)), calc(2.5vw * var(--test-ui-scale)), calc(0.875rem * var(--test-ui-scale)));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) calc(var(--spacing-sm) * var(--test-ui-scale));
+    border-radius: calc(var(--radius-xs) * var(--test-ui-scale));
+}
+
+/* Scaled Footer - keeping touch target accessible */
+.inspection-footer {
+    min-height: calc(60px * var(--test-ui-scale));
+    padding: calc(var(--spacing-sm) * var(--test-ui-scale)) var(--spacing-md);
+    padding-bottom: max(calc(var(--spacing-sm) * var(--test-ui-scale)), env(safe-area-inset-bottom));
+}
+
+/* Scaled Stop Button - min 44px touch target maintained */
+.inspection-stop-btn {
+    padding: calc(var(--spacing-sm) * var(--test-ui-scale)) calc(var(--spacing-md) * var(--test-ui-scale));
+    font-size: clamp(calc(1rem * var(--test-ui-scale)), calc(3.5vw * var(--test-ui-scale)), calc(1.25rem * var(--test-ui-scale)));
+    letter-spacing: calc(0.12em * var(--test-ui-scale));
+    border-radius: calc(var(--radius-md) * var(--test-ui-scale));
+    min-height: max(44px, calc(50px * var(--test-ui-scale))); /* Ensure touch target */
+}
+
+/* ===================================
    ADVANCED/EXPERT DIAGNOSIS VIEW
    Same 20/60/20 layout with structured middle section
    =================================== */
@@ -2383,6 +2488,94 @@ html[data-view-level="advanced"] .ghost-overlay-hint {
     .diagnosis-middle-score .live-score {
         font-size: 1.75rem;
     }
+}
+
+/* ===================================
+   TEST UI SCALE - ADVANCED/EXPERT VIEW
+   Applies same scaling to diagnosis view
+   =================================== */
+
+/* Scaled Header for advanced/expert view */
+.diagnosis-active #recording-modal .modal-header {
+    min-height: calc(60px * var(--test-ui-scale));
+    padding: calc(var(--spacing-sm) * var(--test-ui-scale)) var(--spacing-md);
+}
+
+.diagnosis-active #recording-modal .modal-header h3 {
+    font-size: clamp(calc(0.9rem * var(--test-ui-scale)), calc(4vw * var(--test-ui-scale)), calc(1.15rem * var(--test-ui-scale)));
+}
+
+.diagnosis-active #recording-modal .modal-subtitle {
+    font-size: clamp(calc(0.7rem * var(--test-ui-scale)), calc(2.5vw * var(--test-ui-scale)), calc(0.8rem * var(--test-ui-scale)));
+}
+
+/* Scaled Body for advanced/expert view */
+.diagnosis-active #recording-modal .modal-body {
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale));
+    gap: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+/* Scaled Footer for advanced/expert view */
+.diagnosis-active #recording-modal .modal-actions {
+    min-height: calc(55px * var(--test-ui-scale));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) var(--spacing-md);
+    padding-bottom: max(calc(var(--spacing-xs) * var(--test-ui-scale)), env(safe-area-inset-bottom));
+}
+
+/* Scaled Camera Section */
+.diagnosis-middle-camera .ghost-overlay-container {
+    max-width: calc(200px * var(--test-ui-scale));
+}
+
+/* Scaled Spectrum Section */
+.diagnosis-middle-spectrum #waveform-canvas {
+    min-height: calc(70px * var(--test-ui-scale));
+    max-height: calc(110px * var(--test-ui-scale));
+}
+
+/* Scaled Score Display */
+.diagnosis-middle-score {
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) 0;
+}
+
+.diagnosis-middle-score .live-score-display {
+    width: clamp(calc(85px * var(--test-ui-scale)), calc(22vw * var(--test-ui-scale)), calc(120px * var(--test-ui-scale)));
+    height: clamp(calc(85px * var(--test-ui-scale)), calc(22vw * var(--test-ui-scale)), calc(120px * var(--test-ui-scale)));
+}
+
+.diagnosis-middle-score .live-score {
+    font-size: clamp(calc(1.75rem * var(--test-ui-scale)), calc(7vw * var(--test-ui-scale)), calc(2.25rem * var(--test-ui-scale)));
+}
+
+.diagnosis-middle-score .live-status {
+    font-size: calc(0.7rem * var(--test-ui-scale));
+    padding: calc(3px * var(--test-ui-scale)) calc(10px * var(--test-ui-scale));
+    margin-top: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+/* Scaled Expert Details */
+.diagnosis-expert-details {
+    gap: calc(var(--spacing-xs) * var(--test-ui-scale));
+    padding-top: calc(var(--spacing-xs) * var(--test-ui-scale));
+    margin-top: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+/* Scaled Smart Start Status */
+.diagnosis-active #smart-start-status {
+    font-size: calc(0.7rem * var(--test-ui-scale));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) calc(var(--spacing-sm) * var(--test-ui-scale));
+}
+
+/* Scaled Reference Model Info */
+.diagnosis-active .reference-model-info {
+    font-size: calc(0.65rem * var(--test-ui-scale));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) calc(var(--spacing-sm) * var(--test-ui-scale));
+}
+
+/* Scaled Debug Info */
+.diagnosis-active .debug-info {
+    font-size: calc(0.6rem * var(--test-ui-scale));
+    padding: calc(var(--spacing-xs) * var(--test-ui-scale)) calc(var(--spacing-sm) * var(--test-ui-scale));
 }
 
 /* ===================================
