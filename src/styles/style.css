@@ -402,6 +402,7 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
+/* Mobile: Keep generous 18vh for emotional impact */
 @media (max-width: 768px) {
     .hero-header {
         height: 18vh;
@@ -414,6 +415,19 @@ body {
         height: 100%;
         margin: 0;
         object-fit: cover;
+    }
+}
+
+/* Desktop: Compact banner to prioritize action cards above-the-fold */
+@media (min-width: 769px) {
+    .hero-header {
+        height: clamp(80px, 12vh, 160px);
+        min-height: 80px;
+        max-height: 160px;
+    }
+
+    .hero-image {
+        object-position: center 40%;
     }
 }
 
