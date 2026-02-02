@@ -17,6 +17,8 @@ import {
   getReferenceDatabase,
   saveReferenceDatabase,
   hasReferenceDatabase,
+  importData,
+  getAllMachines,
 } from './db.js';
 import type { Machine, ReferenceDatabase, GMIAModel, ReferenceDbFile, ReferenceDbMeta } from './types.js';
 import { logger } from '@utils/logger.js';
@@ -478,7 +480,14 @@ export class ReferenceDbService {
       // Trace: Schema validation started
       onboardingTrace.step('schema_validation_started');
 
-      // Normalize to new format
+      // Check if this is a full database export (same format as manual export)
+      // If so, use the shared import path (db.importData) instead of reference DB normalization
+      if (this.isFullDatabaseExport(rawData)) {
+        logger.info('📦 Detected full database export format - using shared import path');
+        return await this.handleFullDatabaseImport(rawData, machineId, machine.referenceDbUrl, onProgress);
+      }
+
+      // Normalize to new format (reference database)
       const normalizedData = this.normalizeReferenceData(rawData);
 
       if (!normalizedData) {
@@ -655,6 +664,9 @@ export class ReferenceDbService {
 
     const d = data as Record<string, unknown>;
 
+    // Check for full database export format first (from manual export)
+    if (this.isFullDatabaseExport(d)) return 'zanobot_export_v1';
+
     if (d.db_meta && d.models) return 'new_format_with_models';
     if (d.db_meta) return 'new_format_partial';
     if (d.data && typeof d.data === 'object') return 'legacy_wrapped';
@@ -662,6 +674,179 @@ export class ReferenceDbService {
     if (d.config) return 'legacy_config_only';
 
     return 'unknown';
+  }
+
+  /**
+   * Check if data is a full database export (from Settings export)
+   * Format: { machines: [], recordings: [], diagnoses: [] }
+   *
+   * This format is different from reference databases and needs to be
+   * imported using the same path as manual import (db.importData).
+   */
+  private static isFullDatabaseExport(data: unknown): boolean {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    const d = data as Record<string, unknown>;
+
+    // Full database export has machines, recordings, and/or diagnoses arrays
+    const hasMachines = 'machines' in d && Array.isArray(d.machines);
+    const hasRecordings = 'recordings' in d && Array.isArray(d.recordings);
+    const hasDiagnoses = 'diagnoses' in d && Array.isArray(d.diagnoses);
+
+    // Must have at least machines array (the primary indicator)
+    // Also check that it's NOT a reference database format (no db_meta, referenceModels, etc.)
+    const isNotReferenceDb = !('db_meta' in d) && !('models' in d) && !('referenceModels' in d);
+
+    return hasMachines && isNotReferenceDb && (hasRecordings || hasDiagnoses || true);
+  }
+
+  /**
+   * Handle full database export import (shared import path)
+   *
+   * This method handles the case where the downloaded JSON is a full database
+   * export (from Settings export), not a reference database. It uses the same
+   * import logic as the manual import in Settings phase.
+   *
+   * Flow:
+   * 1. Validate the data structure
+   * 2. Replace/reset local database (like manual import)
+   * 3. Import the data using db.importData()
+   * 4. Find and select the target machine
+   * 5. Trigger app state reload
+   *
+   * @param rawData - The parsed JSON data
+   * @param machineId - Target machine ID to select after import
+   * @param sourceUrl - Source URL for logging
+   * @param onProgress - Progress callback
+   */
+  private static async handleFullDatabaseImport(
+    rawData: unknown,
+    machineId: string,
+    sourceUrl: string | undefined,
+    onProgress?: ProgressCallback
+  ): Promise<DownloadResult> {
+    const data = rawData as {
+      machines?: unknown[];
+      recordings?: unknown[];
+      diagnoses?: unknown[];
+    };
+
+    // Trace: Schema validation complete - using shared import path
+    onboardingTrace.success('schema_validation_complete', {
+      detectedFormat: 'zanobot_export_v1',
+      importPath: 'shared_manual_import',
+      machineCount: data.machines?.length || 0,
+      recordingCount: data.recordings?.length || 0,
+      diagnosisCount: data.diagnoses?.length || 0,
+    });
+
+    onProgress?.('validating', 50);
+
+    // Validate that we have at least machines data
+    if (!data.machines || data.machines.length === 0) {
+      logger.warn('⚠️ Full database export has no machines - importing anyway');
+    }
+
+    // Trace: DB import started (replace mode)
+    onboardingTrace.step('db_import_started', {
+      mode: 'replace_reset',
+      importPath: 'shared_manual_import',
+      machineCount: data.machines?.length || 0,
+      recordingCount: data.recordings?.length || 0,
+      diagnosisCount: data.diagnoses?.length || 0,
+    });
+
+    onProgress?.('saving', 70);
+
+    try {
+      // Use the shared import path with replace/reset (merge = false)
+      // This is exactly what the manual import in Settings does
+      await importData(
+        {
+          machines: data.machines as Parameters<typeof importData>[0]['machines'],
+          recordings: data.recordings as Parameters<typeof importData>[0]['recordings'],
+          diagnoses: data.diagnoses as Parameters<typeof importData>[0]['diagnoses'],
+        },
+        false // merge = false → replace/reset
+      );
+
+      logger.info('✅ Full database import completed (replace mode)');
+
+      // Trace: DB import complete
+      onboardingTrace.success('db_import_complete', {
+        mode: 'replace_reset',
+        importPath: 'shared_manual_import',
+        machineCount: data.machines?.length || 0,
+        recordingCount: data.recordings?.length || 0,
+        diagnosisCount: data.diagnoses?.length || 0,
+      });
+
+      onProgress?.('complete', 90);
+
+      // Find the target machine in the imported data
+      const allMachines = await getAllMachines();
+      const targetMachine = allMachines.find(m => m.id === machineId);
+
+      if (targetMachine) {
+        logger.info(`✅ Target machine found after import: ${targetMachine.name} (${targetMachine.id})`);
+
+        // Trace: Machine selected
+        onboardingTrace.success('machine_selected', {
+          machineId: targetMachine.id,
+          machineName: targetMachine.name,
+          hasReferenceModels: (targetMachine.referenceModels?.length || 0) > 0,
+          referenceModelCount: targetMachine.referenceModels?.length || 0,
+        });
+      } else {
+        logger.warn(`⚠️ Target machine ${machineId} not found in imported data`);
+        // This is not a failure - the import was successful, just the target machine wasn't in the data
+        onboardingTrace.step('machine_not_in_import', {
+          machineId,
+          availableMachines: allMachines.map(m => m.id),
+        });
+      }
+
+      // Trace: App state reload needed
+      // Note: The actual reload is handled by the caller (IdentifyPhase)
+      onboardingTrace.success('app_state_reload', {
+        reason: 'full_database_import',
+        reloadTriggered: true,
+        targetMachineId: machineId,
+        targetMachineFound: !!targetMachine,
+      });
+
+      onProgress?.('complete', 100);
+
+      // Trace: Process complete
+      onboardingTrace.success('process_complete', {
+        importPath: 'shared_manual_import',
+        mode: 'replace_reset',
+        machineCount: data.machines?.length || 0,
+        targetMachineId: machineId,
+        targetMachineFound: !!targetMachine,
+      });
+
+      return {
+        success: true,
+        version: '1.0.0', // Full exports don't have version, use default
+        modelsImported: targetMachine?.referenceModels?.length || 0,
+      };
+    } catch (error) {
+      logger.error('❌ Full database import failed:', error);
+
+      // Trace: DB import failed
+      onboardingTrace.fail('db_import_failed', {
+        importPath: 'shared_manual_import',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      });
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'import_failed',
+      };
+    }
   }
 
   /**

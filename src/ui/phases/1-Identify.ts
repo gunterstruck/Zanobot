@@ -530,12 +530,17 @@ export class IdentifyPhase {
         // Check if reference database download is needed (NFC setup flow)
         const needsDownload = await ReferenceDbService.needsDownload(id);
         if (needsDownload && machine.referenceDbUrl) {
-          await this.downloadReferenceDatabase(machine);
+          const downloadSuccess = await this.downloadReferenceDatabase(machine);
           // Reload machine to get updated reference models
+          // For full database imports, the machine data might have changed significantly
           machine = await getMachine(id);
           if (machine) {
             this.setCurrentMachine(machine);
             this.onMachineSelected(machine);
+          }
+          // If download failed, still return true (machine exists) but log warning
+          if (!downloadSuccess) {
+            logger.warn(`⚠️ Reference download failed for machine ${id}, but machine exists`);
           }
         }
 
@@ -572,12 +577,17 @@ export class IdentifyPhase {
 
       // If referenceDbUrl was provided, download the database immediately
       if (referenceDbUrl) {
-        await this.downloadReferenceDatabase(newMachine);
+        const downloadSuccess = await this.downloadReferenceDatabase(newMachine);
         // Reload machine to get updated reference models and metadata
+        // For full database imports, the machine data might have changed significantly
         const updatedMachine = await getMachine(id);
         if (updatedMachine) {
           this.setCurrentMachine(updatedMachine);
           this.onMachineSelected(updatedMachine);
+        }
+        // If download failed, still return true (machine was created) but log warning
+        if (!downloadSuccess) {
+          logger.warn(`⚠️ Reference download failed for machine ${id}, but machine was created`);
         }
       }
 
@@ -592,8 +602,16 @@ export class IdentifyPhase {
   /**
    * Download reference database for a machine (NFC setup flow)
    * Shows loading overlay during download
+   *
+   * Supports both:
+   * - Reference database format (models) → applied to machine
+   * - Full database export format (machines, recordings, diagnoses) → full import with replace/reset
+   *
+   * After successful import (especially full DB import), this method:
+   * - Refreshes machine lists to reflect imported data
+   * - Returns true if import was successful (caller can then select machine)
    */
-  private async downloadReferenceDatabase(machine: Machine): Promise<void> {
+  private async downloadReferenceDatabase(machine: Machine): Promise<boolean> {
     const overlay = new ReferenceLoadingOverlay();
     overlay.show();
 
@@ -608,17 +626,29 @@ export class IdentifyPhase {
       if (result.success) {
         overlay.showSuccess();
         logger.info(`✅ Reference DB downloaded: ${result.modelsImported} models, v${result.version}`);
+
+        // CRITICAL: Refresh machine lists after successful import
+        // This is especially important for full database imports where the
+        // entire database was replaced - we need to reload all UI state
+        await this.refreshMachineLists();
+
+        // Also reload diagnosis history as it may have changed
+        await this.loadDiagnosisHistory();
+
+        return true;
       } else {
         overlay.showError(this.getLocalizedDownloadError(result.error || 'unknown'));
         // Keep overlay visible longer for error
         await new Promise(resolve => setTimeout(resolve, 3000));
         overlay.hide();
+        return false;
       }
     } catch (error) {
       logger.error('Reference DB download error:', error);
       overlay.showError(t('machineSetup.errorUnknown'));
       await new Promise(resolve => setTimeout(resolve, 3000));
       overlay.hide();
+      return false;
     }
   }
 
