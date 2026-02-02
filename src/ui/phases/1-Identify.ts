@@ -12,6 +12,7 @@ import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
+import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -22,6 +23,7 @@ import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audi
 import { HashRouter } from '../HashRouter.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
 import { ReferenceLoadingOverlay } from '../components/ReferenceLoadingOverlay.js';
+import { traceOverlay } from '../components/OnboardingTraceOverlay.js';
 
 type NDEFRecordInit = {
   recordType: 'url';
@@ -870,6 +872,15 @@ export class IdentifyPhase {
     // This properly handles #/m/<machine_id>?c=<customer_id> (new) or ?ref=<encoded_url> (legacy)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#/m/')) {
+      // Start trace session for NFC/deep link
+      onboardingTrace.start('nfc');
+
+      // Show trace overlay for debugging (always show for NFC deep links, or when debug=1)
+      const showDebugTrace = OnboardingTraceService.shouldShowTrace();
+      if (showDebugTrace) {
+        traceOverlay.show();
+      }
+
       const router = new HashRouter();
       const match = router.parseHash(hash);
       if (match.type === 'machine' && match.machineId) {
@@ -894,6 +905,7 @@ export class IdentifyPhase {
     const validation = this.validateMachineId(machineId);
     if (!validation.valid) {
       this.showError(validation.error || t('identify.errors.invalidMachineId'));
+      onboardingTrace.fail('process_failed', { reason: 'invalid_machine_id', machineId });
       return;
     }
 
@@ -916,12 +928,23 @@ export class IdentifyPhase {
     } catch (error) {
       logger.error('Failed to handle deep link:', error);
       this.showError(t('identify.errors.machineLoad'));
+      onboardingTrace.fail('process_failed', {
+        reason: 'handle_machine_error',
+        error: error instanceof Error ? error.message : 'unknown',
+      });
     } finally {
       this.showDeepLinkOverlay(false);
     }
 
     if (machineHandled) {
+      // Trace: Test dialog shown
+      onboardingTrace.success('test_dialog_shown', { machineId });
+      // End trace session
+      onboardingTrace.end();
       this.openNfcDiagnosisPrompt();
+    } else {
+      // End trace session on failure
+      onboardingTrace.end();
     }
   }
 

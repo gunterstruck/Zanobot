@@ -14,6 +14,7 @@ import { getMachine, saveMachine } from '@data/db.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { onboardingTrace } from '@utils/onboardingTrace.js';
 import { t } from '../i18n/index.js';
 
 /**
@@ -111,6 +112,9 @@ export class HashRouter {
     // Remove leading # if present
     const cleanHash = hash.startsWith('#') ? hash.substring(1) : hash;
 
+    // Trace: Hash parsed
+    onboardingTrace.step('hash_parsed', { hash: cleanHash });
+
     // Split path and query string
     const [path, queryString] = cleanHash.split('?');
 
@@ -123,6 +127,9 @@ export class HashRouter {
         machineId: decodeURIComponent(machineMatch[1]),
       };
 
+      // Trace: Machine ID extracted
+      onboardingTrace.success('machine_id_extracted', { machineId: result.machineId });
+
       // Parse query parameters
       if (queryString) {
         const params = new URLSearchParams(queryString);
@@ -131,8 +138,13 @@ export class HashRouter {
         const customerId = params.get('c');
         if (customerId) {
           result.customerId = customerId;
+          // Trace: Customer ID extracted
+          onboardingTrace.success('customer_id_extracted', { customerId });
+
           // Auto-build the reference DB URL from customerId
           result.referenceDbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+          // Trace: DB URL derived
+          onboardingTrace.success('db_url_derived', { dbUrl: result.referenceDbUrl });
           logger.info(`🔗 CustomerId "${customerId}" → DB URL: ${result.referenceDbUrl}`);
         }
 
@@ -141,6 +153,8 @@ export class HashRouter {
           const refUrl = params.get('ref');
           if (refUrl) {
             result.referenceDbUrl = decodeURIComponent(refUrl);
+            // Trace: DB URL from legacy ref param
+            onboardingTrace.success('db_url_derived', { dbUrl: result.referenceDbUrl, source: 'legacy_ref' });
           }
         }
       }
@@ -197,6 +211,12 @@ export class HashRouter {
       return;
     }
 
+    // Trace: Deep link detected - start session if not already active
+    if (!onboardingTrace.isActive) {
+      onboardingTrace.start('deep_link');
+    }
+    onboardingTrace.step('deep_link_detected', { hash, fullUrl: window.location.href });
+
     const match = this.parseHash(hash);
     logger.info(`🔗 Hash route: ${hash} → ${match.type}${match.machineId ? ` (${match.machineId})` : ''}${match.referenceDbUrl ? ' (has ref URL)' : ''}`);
 
@@ -223,13 +243,31 @@ export class HashRouter {
    */
   private async handleMachineRoute(machineId: string, referenceDbUrl?: string): Promise<void> {
     try {
+      // Trace: Machine lookup
+      onboardingTrace.step('machine_lookup', { machineId, hasDbUrl: !!referenceDbUrl });
+
       // Load or create machine (auto-creates if referenceDbUrl provided)
       const result = await this.loadOrCreateMachine(machineId, referenceDbUrl);
 
       if (result.error || !result.machine) {
         logger.error(`Failed to load machine ${machineId}:`, result.error);
+        // Trace: Machine not found / error
+        onboardingTrace.fail('machine_not_found', { machineId, error: result.error });
+        onboardingTrace.fail('process_failed', { reason: result.error });
         this.onDownloadError?.(result.error || 'unknown_error');
         return;
+      }
+
+      // Trace: Machine found or created
+      if (result.created) {
+        onboardingTrace.success('machine_created', { machineId, name: result.machine.name });
+      } else {
+        onboardingTrace.success('machine_found', {
+          machineId,
+          name: result.machine.name,
+          hasLocalDb: !result.needsReferenceDownload,
+          localVersion: result.localVersion,
+        });
       }
 
       // Check if reference download or update is needed
@@ -241,7 +279,16 @@ export class HashRouter {
         await this.downloadReference(result.machine);
       } else {
         logger.info(`✓ Machine ${machineId} is up-to-date (v${result.localVersion || 'unknown'})`);
+        // Trace: No download needed
+        onboardingTrace.success('process_complete', {
+          machineId,
+          status: 'up_to_date',
+          version: result.localVersion,
+        });
       }
+
+      // Trace: Machine selected
+      onboardingTrace.success('machine_selected', { machineId, name: result.machine.name });
 
       // Notify that machine is ready
       this.onMachineReady?.(result.machine);
@@ -250,6 +297,11 @@ export class HashRouter {
       // window.history.replaceState(null, '', window.location.pathname);
     } catch (error) {
       logger.error('Error handling machine route:', error);
+      // Trace: Process failed
+      onboardingTrace.fail('process_failed', {
+        machineId,
+        error: error instanceof Error ? error.message : 'unknown_error',
+      });
       this.onDownloadError?.(error instanceof Error ? error.message : 'unknown_error');
     }
   }
