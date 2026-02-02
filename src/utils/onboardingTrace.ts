@@ -61,6 +61,7 @@ export type TraceStepId =
   | 'machine_not_found'
   | 'machine_created'
   | 'machine_selected'
+  | 'machine_not_in_import' // Target machine not found in imported database
   // Final Steps
   | 'test_dialog_shown'
   | 'process_complete'
