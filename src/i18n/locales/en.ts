@@ -692,25 +692,19 @@ export const en: TranslationDict = {
     analyzeBtn: 'Analyze',
   },
 
+  // ============================================================================
+  // MACHINE SETUP (NFC Deep Link - Status/Error Messages)
+  // Note: Manual URL entry UI was removed - referenceDbUrl is now derived
+  // from customerId via HashRouter.buildDbUrlFromCustomerId()
+  // ============================================================================
   machineSetup: {
-    // Form labels
-    title: 'Machine Setup',
-    referenceDbUrl: 'Reference DB Link',
-    referenceDbUrlRequired: 'Required',
-    referenceDbUrlHint: 'GitHub Pages: https://username.github.io/file.json or GitHub Raw: https://raw.githubusercontent.com/...',
-    location: 'Location',
-    locationPlaceholder: 'e.g., Hall 3, Line 2',
-    notes: 'Notes',
-    notesPlaceholder: 'Additional notes for service technicians',
-
-    // Validation errors
+    // Validation errors (used by 1-Identify.ts for URL validation)
     urlEmpty: 'Please enter a reference DB link.',
     urlInvalid: 'The link does not appear to be a valid URL.',
     urlNotHttps: 'The link must start with https://.',
-    googleDriveNotDirect: 'Google Drive links must use direct download format. Recommended: Use GitHub Pages instead.',
     urlNotOfficialSource: 'Only official data sources (gunterstruck.github.io) are accepted.',
 
-    // Download status
+    // Download status (used by HashRouter, 1-Identify.ts, ReferenceLoadingOverlay)
     downloadingReference: 'Loading reference data...',
     statusDownloading: 'Downloading reference data...',
     statusParsing: 'Processing data...',
@@ -718,9 +712,8 @@ export const en: TranslationDict = {
     statusSaving: 'Saving locally...',
     statusComplete: 'Complete!',
 
-    // Download errors
+    // Download errors (used by HashRouter, 1-Identify.ts)
     errorMachineNotFound: 'Machine not set up. Please contact the service technician.',
-    errorInvalidReferenceUrl: 'The reference link in the NFC tag is invalid.',
     errorNoReferenceUrl: 'No reference data configured. Please contact the service technician.',
     errorDownloadFailed: 'Download failed. Please check your internet connection.',
     errorInvalidFormat: 'The reference data has an invalid format.',
@@ -729,41 +722,13 @@ export const en: TranslationDict = {
     errorInvalidModel: 'One or more reference models are corrupted.',
     errorUnknown: 'An unknown error occurred.',
 
-    // Success messages
+    // Success messages (used by ReferenceLoadingOverlay)
     referenceLoaded: 'Reference data loaded successfully!',
-    modelsImported: '{{count}} reference models imported',
-    readyToTest: 'Ready to test',
 
-    // NFC related
-    nfcMachineLink: 'Machine link for NFC',
-    nfcLinkCopied: 'Link copied to clipboard',
-    nfcWriteSuccess: 'NFC tag written successfully',
-
-    // Loading overlay
+    // Loading overlay (used by ReferenceLoadingOverlay)
     loadingTitle: 'Loading reference',
     loadingSubtitle: 'Please wait...',
     testingBlocked: 'Testing is only available after reference data is loaded.',
-
-    // Versioned reference database
-    versionInfo: 'Version {{version}}',
-    versionLoaded: 'Reference file loaded (Version {{version}})',
-    versionUpToDate: 'Local database is up-to-date (v{{version}})',
-    versionUpdateAvailable: 'Update available: v{{local}} → v{{remote}}',
-    versionUpdating: 'Updating reference database...',
-    versionUpdated: 'Reference database updated to v{{version}}',
-    versionSkipped: 'No update required (local: v{{local}}, remote: v{{remote}})',
-
-    // Export
-    exportTitle: 'Export reference database',
-    exportSuccess: 'Reference database exported: {{filename}}',
-    exportFailed: 'Export failed',
-    shareTitle: 'Share reference database',
-    shareSuccess: 'Reference database shared',
-    shareFailed: 'Sharing failed',
-
-    // Local references
-    localReferencesPreserved: 'Local references have been preserved',
-    localReferencesCount: '{{count}} local references',
   },
 
   footer: {
