@@ -8,19 +8,21 @@ const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
 
 // Theme-specific banner configurations
-const BANNER_CONFIG: Record<string, { default: string; large: string }> = {
+// - standard: 1024x500 (full height, used on mobile for emotional impact)
+// - compact: 1024x400 (reduced height, used on desktop for work-focused layout)
+const BANNER_CONFIG: Record<string, { compact: string; standard: string }> = {
   neon: {
-    default: './icons/zanobo_banner_1024x400.png',
-    large: './icons/zanobo_banner_1024x500.png',
+    compact: './icons/zanobo_banner_1024x400.png',
+    standard: './icons/zanobo_banner_1024x500.png',
   },
   light: {
-    default: './icons/zanobo_banner_1024x400.png',
-    large: './icons/zanobo_banner_1024x500.png',
+    compact: './icons/zanobo_banner_1024x400.png',
+    standard: './icons/zanobo_banner_1024x500.png',
   },
   brand: {
-    // Zanobo fun theme - uses cheerful banners when available
-    default: './icons/zanobo_banner_fun_de_1024x400.png',
-    large: './icons/zanobo_banner_fun_de_1024x500.png',
+    // Zanobo Fun Theme - fröhliche Banner
+    compact: './icons/zanobo_banner_fun_de_1024x400.png',
+    standard: './icons/zanobo_banner_fun_de_1024x500.png',
   },
 };
 
@@ -168,8 +170,8 @@ export class BannerManager {
     const theme = document.documentElement.getAttribute('data-theme') || 'neon';
     const config = BANNER_CONFIG[theme] || BANNER_CONFIG.neon;
 
-    // Use larger banner on mobile for emotional impact
-    const bannerPath = isMobile ? config.large : config.default;
+    // Mobile: Standard-Banner (500px), Desktop: Kompakt-Banner (400px)
+    const bannerPath = isMobile ? config.standard : config.compact;
 
     // Try to load theme-specific banner, fallback if not found
     this.loadBannerWithFallback(bannerPath);
