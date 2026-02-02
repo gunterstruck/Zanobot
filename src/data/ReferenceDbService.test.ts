@@ -75,16 +75,21 @@ describe('ReferenceDbService', () => {
   });
 
   describe('URL Validation', () => {
-    it('should accept valid Google Drive direct download URLs', () => {
+    // MVP Security: Only official GitHub Pages URLs are accepted
+    // This ensures all reference databases come from a trusted source
+
+    it('should reject Google Drive URLs (not official source)', () => {
       const url = 'https://drive.google.com/uc?export=download&id=abc123';
       const result = ReferenceDbService.validateUrl(url);
-      expect(result.valid).toBe(true);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('url_not_official_source');
     });
 
-    it('should accept HTTPS URLs from other hosts', () => {
+    it('should reject HTTPS URLs from non-official hosts', () => {
       const url = 'https://example.com/reference.json';
       const result = ReferenceDbService.validateUrl(url);
-      expect(result.valid).toBe(true);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('url_not_official_source');
     });
 
     it('should reject empty URLs', () => {
@@ -106,23 +111,30 @@ describe('ReferenceDbService', () => {
       expect(result.error).toBe('url_invalid');
     });
 
-    it('should reject Google Drive URLs without export=download', () => {
+    it('should reject Google Drive sharing URLs (not official source)', () => {
       const url = 'https://drive.google.com/file/d/abc123/view';
       const result = ReferenceDbService.validateUrl(url);
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('google_drive_not_direct');
+      expect(result.error).toBe('url_not_official_source');
     });
 
-    it('should accept GitHub Pages URLs', () => {
+    it('should accept official GitHub Pages URLs', () => {
       const url = 'https://gunterstruck.github.io/zanobot-backup.json';
       const result = ReferenceDbService.validateUrl(url);
       expect(result.valid).toBe(true);
     });
 
-    it('should accept GitHub Raw URLs', () => {
-      const url = 'https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/reference.json';
+    it('should accept official GitHub Pages URLs with subdirectories', () => {
+      const url = 'https://gunterstruck.github.io/machines/ref-db-v2.json';
       const result = ReferenceDbService.validateUrl(url);
       expect(result.valid).toBe(true);
+    });
+
+    it('should reject GitHub Raw URLs (not official source)', () => {
+      const url = 'https://raw.githubusercontent.com/gunterstruck/gunterstruck.github.io/main/reference.json';
+      const result = ReferenceDbService.validateUrl(url);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('url_not_official_source');
     });
   });
 
