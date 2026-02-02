@@ -49,41 +49,21 @@ export class SettingsPhase {
   } | null = null;
   private isPreparingPayload = false;
 
+  // CRITICAL FIX: Store event handler references for proper cleanup in destroy()
+  private eventHandlers: Map<string, { element: HTMLElement; handler: () => void }> = new Map();
+
   constructor() {}
 
   /**
    * Initialize the settings phase UI
    */
   public init(): void {
-    // Export database button
-    const exportBtn = document.getElementById('export-data-btn');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => this.handleExportData());
-    }
-
-    // Import database button
-    const importBtn = document.getElementById('import-data-btn');
-    if (importBtn) {
-      importBtn.addEventListener('click', () => this.handleImportData());
-    }
-
-    // Share database button
-    const shareBtn = document.getElementById('share-data-btn');
-    if (shareBtn) {
-      shareBtn.addEventListener('click', () => this.handleShareData());
-    }
-
-    // Clear all data button
-    const clearBtn = document.getElementById('clear-data-btn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => this.handleClearData());
-    }
-
-    // Show statistics button
-    const statsBtn = document.getElementById('show-stats-btn');
-    if (statsBtn) {
-      statsBtn.addEventListener('click', () => this.showStats());
-    }
+    // CRITICAL FIX: Use helper method to register event handlers for proper cleanup
+    this.registerEventHandler('export-data-btn', () => this.handleExportData());
+    this.registerEventHandler('import-data-btn', () => this.handleImportData());
+    this.registerEventHandler('share-data-btn', () => this.handleShareData());
+    this.registerEventHandler('clear-data-btn', () => this.handleClearData());
+    this.registerEventHandler('show-stats-btn', () => this.showStats());
 
     this.initVisualizerScaleSettings();
     this.initDeviceInvariantSettings();
@@ -649,9 +629,28 @@ export class SettingsPhase {
   }
 
   /**
+   * Register an event handler with automatic cleanup tracking
+   * CRITICAL FIX: Prevents memory leaks by storing references for removal in destroy()
+   */
+  private registerEventHandler(elementId: string, handler: () => void): void {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.addEventListener('click', handler);
+      this.eventHandlers.set(elementId, { element: element as HTMLElement, handler });
+    }
+  }
+
+  /**
    * Cleanup
    */
   public destroy(): void {
+    // CRITICAL FIX: Remove all registered event handlers to prevent memory leaks
+    for (const [elementId, { element, handler }] of this.eventHandlers) {
+      element.removeEventListener('click', handler);
+      logger.debug(`🧹 Removed event handler from ${elementId}`);
+    }
+    this.eventHandlers.clear();
+
     // Cleanup mode selector
     if (this.modeSelector) {
       this.modeSelector.destroy();
@@ -663,5 +662,8 @@ export class SettingsPhase {
       this.unsubscribeModeChange();
       this.unsubscribeModeChange = undefined;
     }
+
+    // Clear prepared share payload to release memory
+    this.preparedSharePayload = null;
   }
 }

@@ -371,7 +371,8 @@ export class DiagnosePhase {
         },
         onSmartStartStateChange: (state) => {
           const statusMsg = getSmartStartStatusMessage(state);
-          this.updateSmartStartStatus(statusMsg);
+          // CRITICAL FIX: Pass phase directly to avoid hardcoded string matching
+          this.updateSmartStartStatus(statusMsg, state.phase);
         },
         onSmartStartComplete: (rms) => {
           logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
@@ -609,13 +610,25 @@ export class DiagnosePhase {
    *
    * Updates both simplified and advanced views during initialization.
    * Shows descriptive feedback during the extended settling time (5 seconds).
+   *
+   * CRITICAL FIX: Now accepts optional phase parameter to avoid hardcoded string matching
+   * which would fail in non-German locales.
+   *
+   * @param message - Status message to display
+   * @param phase - Optional SmartStart phase ('idle' | 'warmup' | 'waiting' | 'recording')
    */
-  private updateSmartStartStatus(message: string): void {
+  private updateSmartStartStatus(message: string, phase?: 'idle' | 'warmup' | 'waiting' | 'recording'): void {
+    // CRITICAL FIX: Check phase instead of matching German strings
+    // This ensures internationalization works correctly
+    const isRecording = phase === 'recording';
+    const isWarmup = phase === 'warmup';
+    const isWaiting = phase === 'waiting';
+
     if (this.useSimplifiedView) {
       // === SIMPLIFIED VIEW ===
       const subtitleElement = document.getElementById('inspection-subtitle');
       if (subtitleElement) {
-        if (message.includes('läuft')) {
+        if (isRecording) {
           subtitleElement.textContent = t('inspection.subtitle');
         } else {
           subtitleElement.textContent = t('inspection.subtitleInitializing');
@@ -624,7 +637,7 @@ export class DiagnosePhase {
 
       const hintElement = document.getElementById('inspection-hint');
       if (hintElement) {
-        if (message.includes('läuft')) {
+        if (isRecording) {
           hintElement.classList.add('hint-hidden');
         } else {
           hintElement.textContent = t('inspection.hintWaiting');
@@ -636,14 +649,14 @@ export class DiagnosePhase {
       const statusElement = document.getElementById('smart-start-status');
       if (statusElement) {
         let enhancedMessage = message;
-        if (message.includes('Stabilisierung')) {
+        if (isWarmup) {
           enhancedMessage = t('diagnose.smartStart.stabilizing', { message });
-        } else if (message.includes('Warte')) {
+        } else if (isWaiting) {
           enhancedMessage = t('diagnose.smartStart.waiting', { message });
         }
         statusElement.textContent = enhancedMessage;
 
-        if (message.includes('läuft')) {
+        if (isRecording) {
           statusElement.style.display = 'none';
         }
       }
