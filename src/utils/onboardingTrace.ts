@@ -65,7 +65,13 @@ export type TraceStepId =
   // Final Steps
   | 'test_dialog_shown'
   | 'process_complete'
-  | 'process_failed';
+  | 'process_failed'
+  // UI Mode (NFC onboarding forces simple mode)
+  | 'ui_mode_set'
+  // Onboarding completion tracking
+  | 'onboarding_complete'
+  // Trace visibility tracking
+  | 'trace_hidden';
 
 /**
  * Trace entry with details
@@ -413,6 +419,47 @@ export class OnboardingTraceService {
     this._isActive = false;
     this.stepStartTimes.clear();
     this.notifyListeners();
+  }
+
+  /**
+   * Check if the current session completed successfully (no errors).
+   * Used to determine if trace overlay should be auto-hidden.
+   *
+   * @returns true if session exists, has ended, and has no errors
+   */
+  public isSuccessful(): boolean {
+    if (!this.currentSession) {
+      return false;
+    }
+
+    // Must have ended
+    if (!this.currentSession.endedAt) {
+      return false;
+    }
+
+    // Must have no errors
+    return !this.currentSession.hasError;
+  }
+
+  /**
+   * Check if the trace overlay should be automatically hidden.
+   *
+   * Rules:
+   * - If debug=1 in URL: NEVER auto-hide (always visible for developers)
+   * - If session has error: NEVER auto-hide (keep visible for debugging)
+   * - If session completed successfully: AUTO-HIDE
+   *
+   * @returns true if trace should be automatically hidden
+   */
+  public shouldAutoHide(): boolean {
+    // Check for explicit debug mode - never hide in debug mode
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('debug') === '1') {
+      return false;
+    }
+
+    // Auto-hide only on successful completion
+    return this.isSuccessful();
   }
 }
 

@@ -108,3 +108,55 @@ export const applyViewLevel = (): ViewLevel => {
  * Get all available view levels
  */
 export const getAvailableViewLevels = (): ViewLevel[] => [...validLevels];
+
+/**
+ * Set the view level temporarily WITHOUT persisting to localStorage.
+ * Used for NFC onboarding to force "basic" mode without overwriting user preference.
+ *
+ * @param level - The view level to apply temporarily
+ * @param reason - Optional reason for logging (e.g., 'nfc_onboarding')
+ * @returns The applied level
+ */
+export const setViewLevelTemporary = (level: ViewLevel, reason?: string): ViewLevel => {
+  // Validate the level
+  if (!validLevels.includes(level)) {
+    level = defaultLevel;
+  }
+
+  // Update the data attribute on the HTML element (but DO NOT persist to localStorage)
+  document.documentElement.setAttribute('data-view-level', level);
+
+  // Dispatch custom event for reactive updates
+  window.dispatchEvent(
+    new CustomEvent<ViewLevel>(VIEW_LEVEL_EVENT, { detail: level })
+  );
+
+  // Log for debugging
+  if (reason) {
+    console.debug(`[ViewLevel] Temporary set to "${level}" (reason: ${reason})`);
+  }
+
+  return level;
+};
+
+/**
+ * Restore the view level from localStorage (undo temporary override).
+ * Called after NFC onboarding completes to restore user's preferred setting.
+ *
+ * @returns The restored level from localStorage
+ */
+export const restoreViewLevel = (): ViewLevel => {
+  const savedLevel = readFromStorage();
+
+  // Re-apply the saved level
+  document.documentElement.setAttribute('data-view-level', savedLevel);
+
+  // Dispatch custom event for reactive updates
+  window.dispatchEvent(
+    new CustomEvent<ViewLevel>(VIEW_LEVEL_EVENT, { detail: savedLevel })
+  );
+
+  console.debug(`[ViewLevel] Restored to saved preference: "${savedLevel}"`);
+
+  return savedLevel;
+};
