@@ -13,6 +13,7 @@ import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
+import { setViewLevelTemporary } from '@utils/viewLevelSettings.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -905,6 +906,11 @@ export class IdentifyPhase {
       // Start trace session for NFC/deep link
       onboardingTrace.start('nfc');
 
+      // TEIL A: NFC-Onboarding ⇒ immer "Einfacher Modus" (basic)
+      // Setze UI-Modus temporär auf "basic" OHNE User-Settings zu überschreiben
+      setViewLevelTemporary('basic', 'nfc_onboarding');
+      onboardingTrace.success('ui_mode_set', { mode: 'basic', reason: 'nfc_onboarding' });
+
       // Show trace overlay for debugging (always show for NFC deep links, or when debug=1)
       const showDebugTrace = OnboardingTraceService.shouldShowTrace();
       if (showDebugTrace) {
@@ -969,12 +975,25 @@ export class IdentifyPhase {
     if (machineHandled) {
       // Trace: Test dialog shown
       onboardingTrace.success('test_dialog_shown', { machineId });
+      // Mark onboarding as complete
+      onboardingTrace.success('onboarding_complete', { status: 'success' });
       // End trace session
       onboardingTrace.end();
+
+      // TEIL B: Automatisches Ausblenden des Protokolls bei Erfolg
+      // Wenn kein Fehler aufgetreten ist UND nicht im Debug-Modus: Overlay vollständig ausblenden
+      if (onboardingTrace.shouldAutoHide()) {
+        onboardingTrace.success('trace_hidden', { reason: 'success' });
+        traceOverlay.hide();
+        logger.debug('[NFC Onboarding] Trace overlay auto-hidden (success, no errors)');
+      }
+
       this.openNfcDiagnosisPrompt();
     } else {
-      // End trace session on failure
+      // End trace session on failure - Protokoll bleibt sichtbar
       onboardingTrace.end();
+      // Trace overlay bleibt sichtbar für Fehleranalyse (Teil B Fehlerfall)
+      logger.debug('[NFC Onboarding] Trace overlay remains visible (error occurred)');
     }
   }
 
