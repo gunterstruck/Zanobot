@@ -850,4 +850,69 @@ export const de: TranslationDict = {
     errorInvalidStructure: 'Fehler: Die Datei hat nicht das erwartete Backup-Format.',
     errorNetwork: 'Netzwerkfehler beim Laden der Daten. Bitte prüfen Sie Ihre Internetverbindung.',
   },
+
+  // ============================================================================
+  // ONBOARDING TRACE (Debug Protocol)
+  // ============================================================================
+  trace: {
+    // UI
+    title: 'Debug-Protokoll',
+    toggle: 'Protokoll ein-/ausklappen',
+    copyToClipboard: 'Protokoll kopieren',
+    copy: 'Kopieren',
+    copied: 'Kopiert!',
+    copyFailed: 'Fehler',
+    noEntries: 'Noch keine Einträge',
+
+    // Status
+    statusRunning: 'Läuft...',
+    statusComplete: 'Abgeschlossen',
+    statusFailed: 'Fehlgeschlagen',
+
+    // Step labels - these map to TraceStepId
+    steps: {
+      // Deep Link Processing
+      deep_link_detected: 'Deep-Link erkannt',
+      hash_parsed: 'Hash geparst',
+      machine_id_extracted: 'Maschinen-ID extrahiert',
+      customer_id_extracted: 'Kunden-ID extrahiert',
+      db_url_derived: 'DB-URL abgeleitet',
+
+      // Download Process
+      download_started: 'Download gestartet',
+      download_complete: 'Download abgeschlossen',
+      download_failed: 'Download fehlgeschlagen',
+
+      // JSON Processing
+      json_parse_started: 'JSON-Parse gestartet',
+      json_parse_complete: 'JSON-Parse erfolgreich',
+      json_parse_failed: 'JSON-Parse fehlgeschlagen',
+
+      // Validation
+      schema_validation_started: 'Schema-Validierung gestartet',
+      schema_validation_complete: 'Schema-Validierung erfolgreich',
+      schema_validation_failed: 'Schema-Validierung fehlgeschlagen',
+
+      // Database Operations
+      db_reset_started: 'DB-Reset gestartet',
+      db_import_started: 'DB-Import gestartet',
+      db_import_complete: 'DB-Import abgeschlossen',
+      db_import_failed: 'DB-Import fehlgeschlagen',
+
+      // App State
+      app_state_reload: 'App-Status neu geladen',
+
+      // Machine Operations
+      machine_lookup: 'Maschine wird gesucht',
+      machine_found: 'Maschine gefunden',
+      machine_not_found: 'Maschine nicht gefunden',
+      machine_created: 'Maschine erstellt',
+      machine_selected: 'Maschine ausgewählt',
+
+      // Final Steps
+      test_dialog_shown: 'Test-Dialog angezeigt',
+      process_complete: 'Prozess abgeschlossen',
+      process_failed: 'Prozess fehlgeschlagen',
+    },
+  },
 };

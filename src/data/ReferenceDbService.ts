@@ -20,6 +20,7 @@ import {
 } from './db.js';
 import type { Machine, ReferenceDatabase, GMIAModel, ReferenceDbFile, ReferenceDbMeta } from './types.js';
 import { logger } from '@utils/logger.js';
+import { onboardingTrace } from '@utils/onboardingTrace.js';
 
 /**
  * Result of a reference database download operation
@@ -396,10 +397,12 @@ export class ReferenceDbService {
       const machine = await getMachine(machineId);
 
       if (!machine) {
+        onboardingTrace.fail('db_import_failed', { reason: 'machine_not_found', machineId });
         return { success: false, error: 'machine_not_found' };
       }
 
       if (!machine.referenceDbUrl) {
+        onboardingTrace.fail('db_import_failed', { reason: 'no_reference_url', machineId });
         return { success: false, error: 'no_reference_url' };
       }
 
@@ -408,29 +411,82 @@ export class ReferenceDbService {
 
       onProgress?.('downloading', 10);
 
+      // Trace: Download started
+      onboardingTrace.step('download_started', {
+        url: machine.referenceDbUrl,
+        machineId,
+      });
+
       // Download the reference database
       const response = await this.fetchWithRetry(machine.referenceDbUrl);
 
       if (!response.ok) {
         logger.error(`Failed to download reference DB: HTTP ${response.status}`);
+        // Trace: Download failed
+        onboardingTrace.fail('download_failed', {
+          httpStatus: response.status,
+          statusText: response.statusText,
+          url: machine.referenceDbUrl,
+        });
         return { success: false, error: 'download_failed' };
       }
 
+      // Get response metadata for trace
+      const contentType = response.headers.get('content-type') || 'unknown';
+      const contentLength = response.headers.get('content-length');
+
+      // Clone response so we can read body twice (once for size, once for JSON)
+      const responseClone = response.clone();
+      const bodyText = await responseClone.text();
+      const byteLength = new Blob([bodyText]).size;
+
+      // Trace: Download complete
+      onboardingTrace.success('download_complete', {
+        httpStatus: response.status,
+        contentType,
+        byteLength,
+        byteLengthFormatted: byteLength > 1024 ? `${(byteLength / 1024).toFixed(1)} KB` : `${byteLength} bytes`,
+      });
+
       onProgress?.('parsing', 40);
+
+      // Trace: JSON parse started
+      onboardingTrace.step('json_parse_started', { byteLength });
 
       // Parse the JSON response
       let rawData: unknown;
       try {
-        rawData = await response.json();
+        rawData = JSON.parse(bodyText);
       } catch (e) {
+        const parseError = e instanceof Error ? e.message : 'Unknown parse error';
         logger.error('Failed to parse reference DB JSON:', e);
+        // Trace: JSON parse failed
+        onboardingTrace.fail('json_parse_failed', {
+          error: parseError,
+          preview: bodyText.substring(0, 100),
+        });
         return { success: false, error: 'invalid_format' };
       }
+
+      // Trace: JSON parse complete
+      onboardingTrace.success('json_parse_complete', {
+        type: typeof rawData,
+        isArray: Array.isArray(rawData),
+        topLevelKeys: rawData && typeof rawData === 'object' ? Object.keys(rawData as object).slice(0, 10) : [],
+      });
+
+      // Trace: Schema validation started
+      onboardingTrace.step('schema_validation_started');
 
       // Normalize to new format
       const normalizedData = this.normalizeReferenceData(rawData);
 
       if (!normalizedData) {
+        // Trace: Schema validation failed
+        onboardingTrace.fail('schema_validation_failed', {
+          reason: 'normalization_failed',
+          detectedFormat: this.detectDataFormat(rawData),
+        });
         return { success: false, error: 'invalid_format' };
       }
 
@@ -443,6 +499,12 @@ export class ReferenceDbService {
 
         if (comparison <= 0) {
           logger.info(`⏭️ Skipping download: local version (${existingLocalDb.version}) >= remote (${remoteVersion})`);
+          onboardingTrace.success('schema_validation_complete', {
+            skipped: true,
+            reason: 'version_not_higher',
+            localVersion: existingLocalDb.version,
+            remoteVersion,
+          });
           return {
             success: true,
             version: existingLocalDb.version,
@@ -463,15 +525,39 @@ export class ReferenceDbService {
 
       // Validate models if present
       if (models.length > 0) {
-        for (const model of models) {
+        for (let i = 0; i < models.length; i++) {
+          const model = models[i];
           if (!this.isValidModel(model)) {
             logger.error('Invalid model format in reference DB');
+            // Trace: Schema validation failed
+            onboardingTrace.fail('schema_validation_failed', {
+              reason: 'invalid_model_format',
+              modelIndex: i,
+              modelLabel: (model as unknown as Record<string, unknown>)?.label || 'unknown',
+              missingFields: this.getMissingModelFields(model),
+            });
             return { success: false, error: 'invalid_model_format' };
           }
         }
       }
 
+      // Trace: Schema validation complete
+      onboardingTrace.success('schema_validation_complete', {
+        version: remoteVersion,
+        modelsCount: models.length,
+        hasDbMeta: !!dbMeta,
+        detectedFormat: normalizedData.models.length > 0 ? 'new_format' : 'legacy_format',
+      });
+
       onProgress?.('saving', 80);
+
+      // Trace: DB import started
+      onboardingTrace.step('db_import_started', {
+        mode: existingLocalDb ? 'update' : 'initial',
+        previousVersion: existingLocalDb?.version,
+        newVersion: remoteVersion,
+        modelsCount: models.length,
+      });
 
       // Build reference data for storage
       const refData: ReferenceDatabase['data'] = {
@@ -513,9 +599,30 @@ export class ReferenceDbService {
       machine.referenceDbVersion = refDb.version;
       await saveMachine(machine);
 
+      // Trace: DB import complete
+      onboardingTrace.success('db_import_complete', {
+        version: remoteVersion,
+        modelsImported,
+        localModelsPreserved: existingLocalDb?.localModels?.length || 0,
+      });
+
+      // Trace: App state reload
+      onboardingTrace.success('app_state_reload', {
+        machineId,
+        referenceDbLoaded: true,
+        version: remoteVersion,
+      });
+
       onProgress?.('complete', 100);
 
       logger.info(`✅ Reference DB loaded for machine ${machineId}: v${remoteVersion}, ${modelsImported} models imported`);
+
+      // Trace: Process complete
+      onboardingTrace.success('process_complete', {
+        machineId,
+        version: remoteVersion,
+        modelsImported,
+      });
 
       return {
         success: true,
@@ -525,11 +632,61 @@ export class ReferenceDbService {
       };
     } catch (error) {
       logger.error('Reference DB download error:', error);
+      // Trace: Process failed
+      onboardingTrace.fail('process_failed', {
+        machineId,
+        error: error instanceof Error ? error.message : 'unknown_error',
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : undefined,
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'unknown_error',
       };
     }
+  }
+
+  /**
+   * Detect data format for debugging
+   */
+  private static detectDataFormat(data: unknown): string {
+    if (!data || typeof data !== 'object') {
+      return 'not_object';
+    }
+
+    const d = data as Record<string, unknown>;
+
+    if (d.db_meta && d.models) return 'new_format_with_models';
+    if (d.db_meta) return 'new_format_partial';
+    if (d.data && typeof d.data === 'object') return 'legacy_wrapped';
+    if (d.referenceModels) return 'legacy_direct';
+    if (d.config) return 'legacy_config_only';
+
+    return 'unknown';
+  }
+
+  /**
+   * Get missing required fields from a model for debugging
+   */
+  private static getMissingModelFields(model: unknown): string[] {
+    const missing: string[] = [];
+    if (!model || typeof model !== 'object') {
+      return ['entire_model_invalid'];
+    }
+
+    const m = model as Record<string, unknown>;
+    const requiredFields = ['label', 'type', 'weightVector'];
+
+    for (const field of requiredFields) {
+      if (!(field in m)) {
+        missing.push(field);
+      }
+    }
+
+    if (m.type !== 'healthy' && m.type !== 'faulty') {
+      missing.push(`type_invalid(${m.type})`);
+    }
+
+    return missing;
   }
 
   /**

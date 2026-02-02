@@ -798,4 +798,69 @@ export const en: TranslationDict = {
     errorInvalidStructure: 'Error: The file does not have the expected backup format.',
     errorNetwork: 'Network error loading data. Please check your internet connection.',
   },
+
+  // ============================================================================
+  // ONBOARDING TRACE (Debug Protocol)
+  // ============================================================================
+  trace: {
+    // UI
+    title: 'Debug Protocol',
+    toggle: 'Toggle protocol',
+    copyToClipboard: 'Copy protocol',
+    copy: 'Copy',
+    copied: 'Copied!',
+    copyFailed: 'Error',
+    noEntries: 'No entries yet',
+
+    // Status
+    statusRunning: 'Running...',
+    statusComplete: 'Complete',
+    statusFailed: 'Failed',
+
+    // Step labels - these map to TraceStepId
+    steps: {
+      // Deep Link Processing
+      deep_link_detected: 'Deep link detected',
+      hash_parsed: 'Hash parsed',
+      machine_id_extracted: 'Machine ID extracted',
+      customer_id_extracted: 'Customer ID extracted',
+      db_url_derived: 'DB URL derived',
+
+      // Download Process
+      download_started: 'Download started',
+      download_complete: 'Download complete',
+      download_failed: 'Download failed',
+
+      // JSON Processing
+      json_parse_started: 'JSON parse started',
+      json_parse_complete: 'JSON parse successful',
+      json_parse_failed: 'JSON parse failed',
+
+      // Validation
+      schema_validation_started: 'Schema validation started',
+      schema_validation_complete: 'Schema validation successful',
+      schema_validation_failed: 'Schema validation failed',
+
+      // Database Operations
+      db_reset_started: 'DB reset started',
+      db_import_started: 'DB import started',
+      db_import_complete: 'DB import complete',
+      db_import_failed: 'DB import failed',
+
+      // App State
+      app_state_reload: 'App state reloaded',
+
+      // Machine Operations
+      machine_lookup: 'Looking up machine',
+      machine_found: 'Machine found',
+      machine_not_found: 'Machine not found',
+      machine_created: 'Machine created',
+      machine_selected: 'Machine selected',
+
+      // Final Steps
+      test_dialog_shown: 'Test dialog shown',
+      process_complete: 'Process complete',
+      process_failed: 'Process failed',
+    },
+  },
 };
