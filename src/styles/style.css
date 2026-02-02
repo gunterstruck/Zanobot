@@ -5937,7 +5937,9 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 
 /* ===================================
    UTILITY BAR
-   Bottom Navigation for Settings & Meta Links
+   Fixed 2×2 Grid Layout - Same on ALL viewports
+   [ Einstellungen ]   [ Über        ]
+   [ Datenschutz   ]   [ Impressum   ]
    =================================== */
 .utility-bar {
     position: sticky;
@@ -5947,12 +5949,14 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     width: 100%;
     max-width: var(--content-max-width);
     margin: var(--spacing-md) auto 0;
-    padding: var(--spacing-sm) var(--spacing-xs);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+    padding: var(--spacing-sm);
+
+    /* Fixed 2×2 Grid - deterministic, not "best effort" */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
     gap: var(--spacing-xs);
+
     background: var(--footer-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -5961,47 +5965,49 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     box-shadow: var(--shadow-md);
     z-index: var(--z-sticky);
     box-sizing: border-box;
-    overflow: hidden;
 }
 
-/* Utility Bar Item */
+/* Utility Bar Item - Always Icon + Full Label */
 .utility-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-xs);
+    min-height: 44px;
+
     background: transparent;
     border: none;
     border-radius: var(--radius-sm);
     color: var(--footer-text);
-    opacity: 0.7;
-    font-size: 0.6rem;
+    opacity: 0.75;
+
+    font-size: 0.75rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 0;
-    flex: 1 1 auto;
-    max-width: 80px;
+    letter-spacing: 0.01em;
     text-align: center;
+
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 .utility-item:hover,
 .utility-item:focus-visible {
     opacity: 1;
     background: rgba(var(--primary-color-rgb, 0, 212, 255), 0.08);
-    color: var(--primary-color);
 }
 
 .utility-item:active {
-    transform: scale(0.96);
+    opacity: 0.9;
 }
 
+/* Icon styling */
 .utility-item svg {
     flex-shrink: 0;
-    opacity: 0.8;
+    width: 18px;
+    height: 18px;
+    opacity: 0.85;
 }
 
 .utility-item:hover svg,
@@ -6009,11 +6015,11 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     opacity: 1;
 }
 
+/* Label - Always fully visible, no truncation */
 .utility-item span {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 60px;
+    overflow: visible;
+    text-overflow: clip;
     line-height: 1.2;
 }
 
@@ -6039,81 +6045,22 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     border-color: rgba(0, 212, 255, 0.15);
 }
 
-/* Responsive: 2-row layout on small screens */
-@media (max-width: 400px) {
+/* Small screens: slightly tighter padding */
+@media (max-width: 360px) {
     .utility-bar {
         padding: var(--spacing-xs);
-        border-radius: var(--radius-md);
-        gap: 2px;
+        gap: 4px;
     }
 
     .utility-item {
-        flex: 1 1 calc(50% - 4px);
-        max-width: calc(50% - 4px);
-        padding: var(--spacing-xs);
-    }
-
-    .utility-item span {
-        font-size: 0.55rem;
-        max-width: 52px;
+        padding: var(--spacing-xs) 4px;
+        font-size: 0.7rem;
+        gap: 4px;
     }
 
     .utility-item svg {
         width: 16px;
         height: 16px;
-    }
-}
-
-/* Very small screens: tighter layout */
-@media (max-width: 320px) {
-    .utility-bar {
-        padding: 4px;
-        gap: 2px;
-    }
-
-    .utility-item {
-        padding: 4px 2px;
-    }
-
-    .utility-item span {
-        font-size: 0.5rem;
-        max-width: 44px;
-    }
-
-    .utility-item svg {
-        width: 14px;
-        height: 14px;
-    }
-}
-
-/* Desktop: Full labels, better spacing */
-@media (min-width: 768px) {
-    .utility-bar {
-        padding: var(--spacing-sm) var(--spacing-lg);
-        flex-wrap: nowrap;
-        justify-content: center;
-        gap: var(--spacing-md);
-    }
-
-    .utility-item {
-        flex: 0 0 auto;
-        flex-direction: row;
-        gap: var(--spacing-xs);
-        padding: var(--spacing-xs) var(--spacing-md);
-        max-width: none;
-    }
-
-    .utility-item span {
-        font-size: 0.8rem;
-        max-width: none;
-        white-space: nowrap;
-        overflow: visible;
-        text-overflow: clip;
-    }
-
-    .utility-item svg {
-        width: 18px;
-        height: 18px;
     }
 }
 
