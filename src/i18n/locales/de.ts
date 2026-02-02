@@ -739,27 +739,18 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
-  // MACHINE SETUP (NFC/Service Technician)
+  // MACHINE SETUP (NFC Deep Link - Status/Error Messages)
+  // Note: Manual URL entry UI was removed - referenceDbUrl is now derived
+  // from customerId via HashRouter.buildDbUrlFromCustomerId()
   // ============================================================================
   machineSetup: {
-    // Form labels
-    title: 'Maschine einrichten',
-    referenceDbUrl: 'Referenz-DB-Link',
-    referenceDbUrlRequired: 'Pflichtfeld',
-    referenceDbUrlHint: 'GitHub Pages: https://username.github.io/datei.json oder GitHub Raw: https://raw.githubusercontent.com/...',
-    location: 'Standort',
-    locationPlaceholder: 'z.B. Halle 3, Linie 2',
-    notes: 'Notizen',
-    notesPlaceholder: 'Zusätzliche Hinweise für Servicetechniker',
-
-    // Validation errors
+    // Validation errors (used by 1-Identify.ts for URL validation)
     urlEmpty: 'Bitte geben Sie einen Referenz-DB-Link ein.',
     urlInvalid: 'Der Link scheint keine gültige URL zu sein.',
     urlNotHttps: 'Der Link muss mit https:// beginnen.',
-    googleDriveNotDirect: 'Google Drive Links müssen das Direct-Download-Format verwenden. Empfohlen: GitHub Pages nutzen.',
     urlNotOfficialSource: 'Nur offizielle Datenquellen (gunterstruck.github.io) werden akzeptiert.',
 
-    // Download status
+    // Download status (used by HashRouter, 1-Identify.ts, ReferenceLoadingOverlay)
     downloadingReference: 'Referenzdaten werden geladen...',
     statusDownloading: 'Lade Referenzdaten herunter...',
     statusParsing: 'Verarbeite Daten...',
@@ -767,9 +758,8 @@ export const de: TranslationDict = {
     statusSaving: 'Speichere lokal...',
     statusComplete: 'Fertig!',
 
-    // Download errors
+    // Download errors (used by HashRouter, 1-Identify.ts)
     errorMachineNotFound: 'Maschine nicht eingerichtet. Bitte wenden Sie sich an den Servicetechniker.',
-    errorInvalidReferenceUrl: 'Der Referenz-Link im NFC-Tag ist ungültig.',
     errorNoReferenceUrl: 'Keine Referenzdaten hinterlegt. Bitte wenden Sie sich an den Servicetechniker.',
     errorDownloadFailed: 'Download fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung.',
     errorInvalidFormat: 'Die Referenzdaten haben ein ungültiges Format.',
@@ -778,41 +768,13 @@ export const de: TranslationDict = {
     errorInvalidModel: 'Ein oder mehrere Referenzmodelle sind fehlerhaft.',
     errorUnknown: 'Ein unbekannter Fehler ist aufgetreten.',
 
-    // Success messages
+    // Success messages (used by ReferenceLoadingOverlay)
     referenceLoaded: 'Referenzdaten erfolgreich geladen!',
-    modelsImported: '{{count}} Referenzmodelle importiert',
-    readyToTest: 'Bereit zum Testen',
 
-    // NFC related
-    nfcMachineLink: 'Maschinen-Link für NFC',
-    nfcLinkCopied: 'Link in Zwischenablage kopiert',
-    nfcWriteSuccess: 'NFC-Tag erfolgreich beschrieben',
-
-    // Loading overlay
+    // Loading overlay (used by ReferenceLoadingOverlay)
     loadingTitle: 'Referenz wird geladen',
     loadingSubtitle: 'Bitte warten...',
     testingBlocked: 'Testen ist erst nach dem Laden der Referenzdaten möglich.',
-
-    // Versioned reference database
-    versionInfo: 'Version {{version}}',
-    versionLoaded: 'Referenzdatei geladen (Version {{version}})',
-    versionUpToDate: 'Lokale Datenbank ist aktuell (v{{version}})',
-    versionUpdateAvailable: 'Update verfügbar: v{{local}} → v{{remote}}',
-    versionUpdating: 'Aktualisiere Referenzdatenbank...',
-    versionUpdated: 'Referenzdatenbank aktualisiert auf v{{version}}',
-    versionSkipped: 'Kein Update erforderlich (lokal: v{{local}}, remote: v{{remote}})',
-
-    // Export
-    exportTitle: 'Referenzdatenbank exportieren',
-    exportSuccess: 'Referenzdatenbank exportiert: {{filename}}',
-    exportFailed: 'Export fehlgeschlagen',
-    shareTitle: 'Referenzdatenbank teilen',
-    shareSuccess: 'Referenzdatenbank geteilt',
-    shareFailed: 'Teilen fehlgeschlagen',
-
-    // Local references
-    localReferencesPreserved: 'Lokale Referenzen wurden beibehalten',
-    localReferencesCount: '{{count}} lokale Referenzen',
   },
 
   // ============================================================================

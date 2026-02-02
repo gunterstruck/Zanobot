@@ -16,12 +16,19 @@ export interface Machine {
   referenceModels: GMIAModel[]; // Trained reference models (multiclass diagnosis)
   referenceImage?: Blob; // Optional reference image for visual positioning (Ghost Image Overlay)
 
-  // NFC/Service Technician Setup Fields
-  referenceDbUrl?: string; // Google Drive direct download URL for reference database
-  location?: string; // Machine location (e.g., "Halle 3, Linie 2")
-  notes?: string; // Additional notes for service technicians
-  referenceDbVersion?: string; // Version of the downloaded reference database
-  referenceDbLoaded?: boolean; // Whether the reference DB has been downloaded
+  // Internal/Runtime Fields (derived from NFC deep link, not user-editable)
+  // Note: referenceDbUrl is now derived at runtime from customerId via HashRouter.buildDbUrlFromCustomerId()
+  // These fields are kept for backward compatibility but are no longer exposed in UI
+  /** @internal Derived from NFC customerId parameter - not user-editable */
+  referenceDbUrl?: string;
+  /** @internal */
+  location?: string;
+  /** @internal */
+  notes?: string;
+  /** @internal Version of the downloaded reference database */
+  referenceDbVersion?: string;
+  /** @internal Whether the reference DB has been downloaded */
+  referenceDbLoaded?: boolean;
 }
 
 /**

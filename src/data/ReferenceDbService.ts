@@ -2,13 +2,16 @@
  * ZANOBOT - REFERENCE DATABASE SERVICE
  *
  * Handles downloading and managing reference databases for NFC-based machine setup.
- * Enables Servicetechniker to configure machines with pre-trained models,
- * and Basisnutzer to automatically download reference data when scanning NFC tags.
+ * Enables Basisnutzer to automatically download reference data when scanning NFC tags.
  *
- * Flow:
- * 1. Servicetechniker creates machine with referenceDbUrl (Google Drive link)
- * 2. Servicetechniker programs NFC tag with #/m/<machine_id>
- * 3. Basisnutzer scans NFC tag → PWA opens → downloads reference DB → ready to test
+ * Flow (MVP - Variante B):
+ * 1. NFC tag contains: #/m/<machineId>?c=<customerId>
+ * 2. HashRouter derives referenceDbUrl: https://gunterstruck.github.io/<customerId>/db-latest.json
+ * 3. ReferenceDbService downloads and imports the full database export (replace/reset)
+ * 4. Machine is auto-created or updated, reference models are applied
+ *
+ * Note: The referenceDbUrl is derived at runtime from the customerId parameter.
+ * There is no manual URL entry - all data comes from the official GitHub Pages source.
  */
 
 import {
@@ -37,7 +40,7 @@ export interface DownloadResult {
 
 /**
  * Result of fetching and validating a reference database
- * Used by MachineSetupForm to validate before saving
+ * Used internally to validate downloaded data before importing
  */
 export interface FetchValidateResult {
   success: boolean;
@@ -224,7 +227,7 @@ export class ReferenceDbService {
 
   /**
    * Fetch and validate a reference database without saving
-   * Used by MachineSetupForm to validate before saving machine config
+   * Used internally to validate downloaded data before importing
    *
    * @param url - URL to fetch the reference database from
    * @returns Validation result with metadata
