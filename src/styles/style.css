@@ -5885,14 +5885,48 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     animation: slideDown 0.3s ease-out;
 }
 
-/* Settings Panel Header - Not clickable (only via Utility Bar) */
+/* Settings Panel Header - Contains title and close button */
 .settings-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: default;
-    pointer-events: none;
 }
 
 .settings-panel-header .collapse-icon {
     display: none;
+}
+
+/* Settings Close Button */
+.settings-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.settings-close-btn:hover,
+.settings-close-btn:focus-visible {
+    background: rgba(255, 82, 82, 0.1);
+    border-color: var(--status-error);
+    color: var(--status-error);
+}
+
+.settings-close-btn:active {
+    transform: scale(0.95);
+}
+
+.settings-close-btn svg {
+    flex-shrink: 0;
 }
 
 /* When settings panel is open, show content directly */
@@ -6052,22 +6086,34 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     }
 }
 
-/* Desktop: Slightly more spacing */
+/* Desktop: Full labels, better spacing */
 @media (min-width: 768px) {
     .utility-bar {
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: var(--spacing-sm) var(--spacing-lg);
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: var(--spacing-md);
     }
 
     .utility-item {
+        flex: 0 0 auto;
         flex-direction: row;
         gap: var(--spacing-xs);
-        padding: var(--spacing-xs) var(--spacing-sm);
-        min-width: auto;
+        padding: var(--spacing-xs) var(--spacing-md);
+        max-width: none;
     }
 
     .utility-item span {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         max-width: none;
+        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .utility-item svg {
+        width: 18px;
+        height: 18px;
     }
 }
 

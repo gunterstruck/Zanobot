@@ -454,18 +454,21 @@
         <!-- Settings Panel (Separate from Dashboard, opened via Utility Bar only) -->
         <section class="main-container settings-panel" id="settings-panel">
             <div class="main-header settings-panel-header">
-                    <div class="header-with-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <!-- Settings/Gear Icon -->
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
-                        </svg>
-                        <h3 class="container-title" data-i18n="settingsUI.title">Einstellungen</h3>
-                    </div>
-                    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
+                <div class="header-with-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Settings/Gear Icon -->
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
                     </svg>
+                    <h3 class="container-title" data-i18n="settingsUI.title">Einstellungen</h3>
                 </div>
+                <button type="button" class="settings-close-btn" id="settings-close-btn" aria-label="Einstellungen schließen">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
                 <div id="settings" class="collapsible-content" style="display: none;">
                     <div class="container-content">
                         <div class="settings-list">

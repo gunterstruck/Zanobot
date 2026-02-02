@@ -530,34 +530,56 @@ class ZanobotApp {
       modal.style.display = 'flex';
     };
 
-    // Settings panel toggle (Utility Bar)
+    // Settings panel toggle (Utility Bar + Close Button)
     const settingsUtilityBtn = document.getElementById('settings-utility-btn');
+    const settingsCloseBtn = document.getElementById('settings-close-btn');
     const settingsPanel = document.getElementById('settings-panel');
     const settingsContent = document.getElementById('settings');
-    const settingsCollapseIcon = settingsPanel?.querySelector('.collapse-icon');
 
+    // Helper to close settings panel
+    const closeSettingsPanel = () => {
+      if (settingsPanel && settingsContent) {
+        settingsPanel.classList.remove('is-open');
+        settingsContent.style.display = 'none';
+      }
+    };
+
+    // Helper to open settings panel
+    const openSettingsPanel = () => {
+      if (settingsPanel && settingsContent) {
+        settingsPanel.classList.add('is-open');
+        settingsContent.style.display = 'block';
+
+        // Smooth scroll to settings panel
+        setTimeout(() => {
+          settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
+    };
+
+    // Toggle via Utility Bar button
     if (settingsUtilityBtn && settingsPanel && settingsContent) {
       settingsUtilityBtn.addEventListener('click', () => {
         const isOpen = settingsPanel.classList.contains('is-open');
-
         if (isOpen) {
-          // Close settings panel
-          settingsPanel.classList.remove('is-open');
-          settingsContent.style.display = 'none';
-          settingsCollapseIcon?.classList.remove('rotated');
+          closeSettingsPanel();
         } else {
-          // Open settings panel and scroll to it
-          settingsPanel.classList.add('is-open');
-          settingsContent.style.display = 'block';
-          settingsCollapseIcon?.classList.add('rotated');
-
-          // Smooth scroll to settings panel
-          setTimeout(() => {
-            settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 50);
+          openSettingsPanel();
         }
       });
     }
+
+    // Close via dedicated close button
+    if (settingsCloseBtn) {
+      settingsCloseBtn.addEventListener('click', closeSettingsPanel);
+    }
+
+    // Close settings with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsPanel?.classList.contains('is-open')) {
+        closeSettingsPanel();
+      }
+    });
 
     // Impressum modal
     const impressumBtn = document.getElementById('impressum-btn');
