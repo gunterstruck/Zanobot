@@ -484,15 +484,20 @@ class ZanobotApp {
       '.view-level-btn[data-level]'
     );
 
+    // Helper function to update button active states
+    const updateButtonStates = (activeLevel: ViewLevel) => {
+      viewLevelBtns.forEach((btn) => {
+        const level = btn.getAttribute('data-level') as ViewLevel;
+        if (level === activeLevel) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    };
+
     // Set initial active state
-    viewLevelBtns.forEach((btn) => {
-      const level = btn.getAttribute('data-level') as ViewLevel;
-      if (level === savedLevel) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
-    });
+    updateButtonStates(savedLevel);
 
     // Add click handlers
     viewLevelBtns.forEach((btn) => {
@@ -505,15 +510,17 @@ class ZanobotApp {
         logger.debug(`👁️ View level changed to: ${level}`);
 
         // Update active state on all buttons
-        viewLevelBtns.forEach((b) => {
-          if (b.getAttribute('data-level') === level) {
-            b.classList.add('active');
-          } else {
-            b.classList.remove('active');
-          }
-        });
+        updateButtonStates(level);
       });
     });
+
+    // CRITICAL: Listen for programmatic view level changes (e.g., NFC onboarding)
+    // This ensures buttons stay in sync when setViewLevelTemporary() is called
+    window.addEventListener('zanobot:view-level-change', ((event: CustomEvent<ViewLevel>) => {
+      const newLevel = event.detail;
+      logger.debug(`👁️ View level changed programmatically to: ${newLevel}`);
+      updateButtonStates(newLevel);
+    }) as EventListener);
   }
 
   /**
