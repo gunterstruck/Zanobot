@@ -14,6 +14,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
+import { getDetectionModeManager } from '@core/detection-mode.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -907,16 +908,54 @@ export class IdentifyPhase {
     // This properly handles #/m/<machine_id>?c=<customer_id> (new) or ?ref=<encoded_url> (legacy)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#/m/')) {
-      // Start trace session for NFC/deep link
+      // ═══════════════════════════════════════════════════════════════════════════
+      // KRITISCH: NFC-Onboarding erzwingt Simple Mode - BEVOR irgendetwas anderes läuft!
+      // Reihenfolge: 1) View Level → 2) Detection Mode → 3) Trace → 4) Rest
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      // SCHRITT 1: View Level auf "basic" setzen (UI-Darstellung)
+      // Muss SOFORT passieren, bevor irgendwelche UI-Komponenten initialisiert werden
+      const previousViewLevel = document.documentElement.getAttribute('data-view-level') || 'unknown';
+      setViewLevelTemporary('basic', 'nfc_onboarding');
+      // Validierung: Sicherstellen, dass das Attribut wirklich gesetzt wurde
+      const currentViewLevel = document.documentElement.getAttribute('data-view-level');
+      if (currentViewLevel !== 'basic') {
+        logger.error(`❌ NFC-Onboarding: View Level konnte nicht auf 'basic' gesetzt werden! Ist: ${currentViewLevel}`);
+        // Fallback: Manuell setzen
+        document.documentElement.setAttribute('data-view-level', 'basic');
+      }
+      logger.info(`🎨 NFC-Onboarding: View Level von '${previousViewLevel}' auf 'basic' gesetzt`);
+
+      // SCHRITT 2: Detection Mode auf STATIONARY setzen (Mess-Algorithmus)
+      // STATIONARY (Level 1/GMIA) liefert zuverlässige Messwerte, CYCLIC (Level 2/YAMNet) nicht
+      const modeManager = getDetectionModeManager();
+      const previousDetectionMode = modeManager.getMode();
+      if (previousDetectionMode !== 'STATIONARY') {
+        modeManager.setMode('STATIONARY');
+        logger.info(`🔧 NFC-Onboarding: Detection Mode von ${previousDetectionMode} auf STATIONARY gesetzt`);
+      }
+
+      // SCHRITT 3: Trace-Session starten (für Debugging/Protokoll)
       onboardingTrace.start('nfc');
 
       // Mark NFC onboarding as active (for view level restore later)
       this.isNfcOnboardingActive = true;
 
-      // TEIL A: NFC-Onboarding ⇒ immer "Einfacher Modus" (basic)
-      // Setze UI-Modus temporär auf "basic" OHNE User-Settings zu überschreiben
-      setViewLevelTemporary('basic', 'nfc_onboarding');
-      onboardingTrace.success('ui_mode_set', { mode: 'basic', reason: 'nfc_onboarding' });
+      // Trace: Beide Mode-Änderungen protokollieren
+      onboardingTrace.success('ui_mode_set', {
+        from: previousViewLevel,
+        to: 'basic',
+        reason: 'nfc_onboarding',
+      });
+      if (previousDetectionMode !== 'STATIONARY') {
+        onboardingTrace.success('detection_mode_set', {
+          from: previousDetectionMode,
+          to: 'STATIONARY',
+          reason: 'nfc_onboarding_requires_level1',
+        });
+      } else {
+        onboardingTrace.success('detection_mode_ok', { mode: 'STATIONARY' });
+      }
 
       // Show trace overlay for debugging (always show for NFC deep links, or when debug=1)
       const showDebugTrace = OnboardingTraceService.shouldShowTrace();

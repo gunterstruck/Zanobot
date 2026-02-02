@@ -470,7 +470,8 @@ body {
     flex-direction: column;
     flex: 0 0 auto;
     justify-content: flex-start;
-    gap: clamp(8px, 2vh, var(--spacing-lg));
+    /* STABIL: Fester Abstand zwischen Containern - unabhängig vom Collapse-Zustand */
+    gap: var(--spacing-md);
     align-items: stretch;
     /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
@@ -488,7 +489,8 @@ body {
     }
 
     .main-actions {
-        gap: clamp(16px, 2.2vh, 28px);
+        /* STABIL: Fester Abstand auf Desktop - nicht von vh abhängig */
+        gap: var(--spacing-lg);
     }
 
     .main-header {
@@ -605,6 +607,8 @@ body {
     box-shadow: var(--shadow-md);
     transition: all 0.3s ease;
     overflow: hidden;
+    /* STABIL: Container darf nicht wachsen/schrumpfen - behält natürliche Größe */
+    flex: 0 0 auto;
 }
 
 .main-container:hover {
@@ -898,7 +902,8 @@ body {
    COLLAPSIBLE SECTIONS
    =================================== */
 .collapsible {
-    /* Collapsible behavior */
+    /* STABIL: Container behält feste Position im Flex-Layout */
+    flex: 0 0 auto;
 }
 
 .section-header {
@@ -922,6 +927,12 @@ body {
 .collapsible-content {
     animation: slideDown 0.3s ease-out;
     overflow: hidden;
+}
+
+/* STABIL: Wenn Content hidden ist, Container behält Mindesthöhe durch Header */
+.collapsible-content[style*="display: none"] + .main-header,
+.collapsible > .main-header {
+    /* Header bleibt stabil sichtbar */
 }
 
 /* ===================================

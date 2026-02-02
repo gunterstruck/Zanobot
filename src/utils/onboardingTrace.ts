@@ -68,6 +68,9 @@ export type TraceStepId =
   | 'process_failed'
   // UI Mode (NFC onboarding forces simple mode)
   | 'ui_mode_set'
+  // Detection Mode (NFC onboarding forces STATIONARY/Level 1)
+  | 'detection_mode_set'
+  | 'detection_mode_ok'
   // Onboarding completion tracking
   | 'onboarding_complete'
   // Trace visibility tracking
