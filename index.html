@@ -1002,6 +1002,22 @@
                         </span>
                     </label>
                 </div>
+
+                <!-- Customer ID Input Field (Variante B) -->
+                <div class="nfc-customer-id-section">
+                    <label for="nfc-customer-id-input" class="nfc-customer-id-label" data-i18n="nfc.customerIdLabel">Kundenkennung (c)</label>
+                    <p class="nfc-customer-id-description" data-i18n="nfc.customerIdDescription">Diese Kennung bestimmt, welche Referenzdaten beim NFC-Scan geladen werden. Die App lädt automatisch: https://gunterstruck.github.io/&lt;Kundenkennung&gt;/db-latest.json</p>
+                    <input
+                        type="text"
+                        id="nfc-customer-id-input"
+                        class="nfc-customer-id-input"
+                        placeholder="z.B. Kundenkennung_nr1"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <p class="nfc-db-url-preview" id="nfc-db-url-preview" style="display: none;"></p>
+                </div>
+
                 <div class="nfc-status" id="nfc-status" role="status"></div>
                 <p class="nfc-hint" data-i18n="nfc.hint">Halten Sie den NFC-Tag an die Rückseite Ihres Geräts.</p>
             </div>

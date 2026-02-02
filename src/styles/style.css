@@ -2454,6 +2454,62 @@ html[data-view-level="advanced"] .ghost-overlay-hint {
     margin: 0;
 }
 
+/* NFC Customer ID Section (Variante B) */
+.nfc-customer-id-section {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.nfc-customer-id-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.nfc-customer-id-description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.4;
+}
+
+.nfc-customer-id-input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.nfc-customer-id-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.nfc-customer-id-input::placeholder {
+    color: var(--text-muted);
+}
+
+.nfc-db-url-preview {
+    font-size: 0.7rem;
+    color: var(--primary-color);
+    margin: var(--spacing-xs) 0 0 0;
+    word-break: break-all;
+    font-family: monospace;
+    padding: var(--spacing-xs);
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: var(--radius-sm);
+}
+
 /* ===================================
    DEEP LINK OVERLAY
    =================================== */

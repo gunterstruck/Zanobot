@@ -60,6 +60,9 @@ export class IdentifyPhase {
   private nfcDiagnosisModal: HTMLElement | null = null;
   private nfcDiagnosisConfirmBtn: HTMLButtonElement | null = null;
   private nfcDiagnosisCancelBtn: HTMLButtonElement | null = null;
+  // NFC customerId field for Variante B
+  private nfcCustomerIdInput: HTMLInputElement | null = null;
+  private nfcDbUrlPreview: HTMLElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -769,6 +772,7 @@ export class IdentifyPhase {
       url_invalid: 'urlInvalid',
       url_not_https: 'urlNotHttps',
       google_drive_not_direct: 'googleDriveNotDirect',
+      url_not_official_source: 'urlNotOfficialSource',
     };
     return errorMap[error] || 'urlInvalid';
   }
@@ -844,30 +848,36 @@ export class IdentifyPhase {
 
   /**
    * Deep link handling for magic URLs.
-   * Supports both:
+   * Supports:
+   * - New format: #/m/<id>?c=<customer_id> (customerId builds DB URL automatically)
+   * - Legacy hash format: #/m/<id>?ref=<encoded_url>
    * - Legacy query param format: ?machineId=<id>
-   * - New hash format: #/m/<id> or #/m/<id>?ref=<encoded_url>
    *
-   * When ref URL is provided (NFC setup flow):
+   * When customerId (c) is provided (NFC setup flow - Variante B):
+   * - DB URL is built automatically: https://gunterstruck.github.io/<customerId>/db-latest.json
    * - Auto-creates machine if not found
-   * - Downloads reference database from GitHub/Drive
+   * - Downloads and imports the complete database
+   * - Selects the specific machine
+   * - Offers "Test starten" immediately
    */
   private async handleDeepLink(): Promise<void> {
     let machineId: string | null = null;
     let referenceDbUrl: string | undefined;
+    let customerId: string | undefined;
     let isHashRoute = false;
 
     // Check hash-based route first using HashRouter for correct parsing
-    // This properly handles #/m/<machine_id>?ref=<encoded_url>
+    // This properly handles #/m/<machine_id>?c=<customer_id> (new) or ?ref=<encoded_url> (legacy)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#/m/')) {
       const router = new HashRouter();
       const match = router.parseHash(hash);
       if (match.type === 'machine' && match.machineId) {
         machineId = match.machineId;
+        customerId = match.customerId;
         referenceDbUrl = match.referenceDbUrl;
         isHashRoute = true;
-        logger.info(`🔗 Deep link parsed: machineId=${machineId}, hasRefUrl=${!!referenceDbUrl}`);
+        logger.info(`🔗 Deep link parsed: machineId=${machineId}, customerId=${customerId || 'none'}, dbUrl=${referenceDbUrl || 'none'}`);
       }
     }
 
@@ -1020,6 +1030,10 @@ export class IdentifyPhase {
     this.nfcSpecificDetail = document.getElementById('nfc-option-specific-detail');
     this.nfcSupportDetails = document.getElementById('nfc-support-details');
 
+    // CustomerId input field for Variante B
+    this.nfcCustomerIdInput = document.getElementById('nfc-customer-id-input') as HTMLInputElement | null;
+    this.nfcDbUrlPreview = document.getElementById('nfc-db-url-preview');
+
     const closeBtn = document.getElementById('close-nfc-writer-modal');
     const cancelBtn = document.getElementById('nfc-cancel-btn');
 
@@ -1058,7 +1072,30 @@ export class IdentifyPhase {
       });
     }
 
+    // Update DB URL preview when customerId changes
+    if (this.nfcCustomerIdInput) {
+      this.nfcCustomerIdInput.addEventListener('input', () => this.updateNfcDbUrlPreview());
+    }
+
     this.updateNfcSpecificOption();
+  }
+
+  /**
+   * Update the DB URL preview based on customerId input
+   */
+  private updateNfcDbUrlPreview(): void {
+    if (!this.nfcDbUrlPreview || !this.nfcCustomerIdInput) {
+      return;
+    }
+
+    const customerId = this.nfcCustomerIdInput.value.trim();
+    if (customerId) {
+      const dbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+      this.nfcDbUrlPreview.textContent = t('nfc.dbUrlPreview', { url: dbUrl });
+      this.nfcDbUrlPreview.style.display = 'block';
+    } else {
+      this.nfcDbUrlPreview.style.display = 'none';
+    }
   }
 
   private getNfcSupportStatus(): { supported: boolean; message?: string } {
@@ -1171,12 +1208,23 @@ export class IdentifyPhase {
       return;
     }
 
-    // Use hash-based URL for NFC: #/m/<machine_id>?ref=<encoded_url>
-    // Include referenceDbUrl for auto-creation on new devices
+    // Get customerId from input field (required for machine-specific links)
+    const customerId = this.nfcCustomerIdInput?.value.trim() || '';
+
+    // Validate: customerId is required for machine-specific links
+    if (selectedOption === 'specific' && !customerId) {
+      this.setNfcStatus(t('nfc.customerIdRequired'), 'error');
+      return;
+    }
+
+    // Use hash-based URL for NFC: #/m/<machine_id>?c=<customer_id>
+    // The customerId determines which database to load (Variante B)
     const baseUrl = this.getBaseAppUrl();
     const url = selectedOption === 'specific' && this.currentMachine
-      ? HashRouter.getFullMachineUrl(this.currentMachine.id, this.currentMachine.referenceDbUrl)
+      ? HashRouter.getFullMachineUrl(this.currentMachine.id, customerId)
       : baseUrl;
+
+    logger.info(`📝 Writing NFC tag: ${url}`);
 
     this.nfcWriteBtn.disabled = true;
     this.setNfcStatus(t('nfc.statusWriting'));
