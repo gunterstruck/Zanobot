@@ -422,10 +422,15 @@ export class OnboardingTraceService {
   }
 
   /**
-   * Check if the current session completed successfully (no errors).
-   * Used to determine if trace overlay should be auto-hidden.
+   * Check if the current session completed successfully.
+   * Not just "no errors" - also verifies critical steps were completed.
    *
-   * @returns true if session exists, has ended, and has no errors
+   * Required steps for a valid successful onboarding:
+   * - Machine must be found, created, or selected
+   * - Test dialog must be shown
+   * - Onboarding must be marked complete
+   *
+   * @returns true if session exists, has ended, has no errors, AND critical steps passed
    */
   public isSuccessful(): boolean {
     if (!this.currentSession) {
@@ -438,7 +443,26 @@ export class OnboardingTraceService {
     }
 
     // Must have no errors
-    return !this.currentSession.hasError;
+    if (this.currentSession.hasError) {
+      return false;
+    }
+
+    // Check for critical success steps (not just absence of failure)
+    const successSteps = this.currentSession.entries.filter(e => e.status === 'success');
+    const successStepIds = new Set(successSteps.map(e => e.stepId));
+
+    // Machine must have been handled (found, created, or selected)
+    const hasMachineStep = successStepIds.has('machine_found') ||
+                           successStepIds.has('machine_created') ||
+                           successStepIds.has('machine_selected');
+
+    // Test dialog must have been shown
+    const hasTestDialogStep = successStepIds.has('test_dialog_shown');
+
+    // Onboarding must be marked complete
+    const hasOnboardingComplete = successStepIds.has('onboarding_complete');
+
+    return hasMachineStep && hasTestDialogStep && hasOnboardingComplete;
   }
 
   /**
