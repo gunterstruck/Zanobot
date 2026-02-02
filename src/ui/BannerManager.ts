@@ -8,19 +8,22 @@ const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
 
 // Theme-specific banner configurations
-// - standard: 1024x500 (full height, used on mobile for emotional impact)
-// - compact: 1024x400 (reduced height, used on desktop for work-focused layout)
+// Jedes Theme hat eigene Banner - Theme-Wechsel triggert automatische Banner-Auswahl
+// - standard: 1024x500 (full height, used on mobile)
+// - compact: 1024x400 (reduced height, used on desktop)
 const BANNER_CONFIG: Record<string, { compact: string; standard: string }> = {
+  // Dark/Industrial Theme - technisch, ruhig
   neon: {
     compact: './icons/zanobo_banner_1024x400.png',
     standard: './icons/zanobo_banner_1024x500.png',
   },
+  // Daylight Theme - hell, nüchtern (temporär: Zanobo-Banner bis eigene existieren)
   light: {
-    compact: './icons/zanobo_banner_1024x400.png',
-    standard: './icons/zanobo_banner_1024x500.png',
+    compact: './icons/zanobo_banner_fun_de_1024x400.png',
+    standard: './icons/zanobo_banner_fun_de_1024x500.png',
   },
+  // Zanobo Theme - fröhlich, emotional, Marken-Theme
   brand: {
-    // Zanobo Fun Theme - fröhliche Banner
     compact: './icons/zanobo_banner_fun_de_1024x400.png',
     standard: './icons/zanobo_banner_fun_de_1024x500.png',
   },
@@ -49,7 +52,19 @@ export class BannerManager {
     }
 
     this.bindEvents();
+    this.bindThemeChangeListener();
     void this.restoreBannerFromStorage();
+  }
+
+  /**
+   * Theme-Banner-Kopplung: Bei Theme-Wechsel wird automatisch das passende Banner gesetzt.
+   * Dies verhindert inkonsistente Zustände (z.B. Dark Theme + helles Zanobo-Banner).
+   */
+  private bindThemeChangeListener(): void {
+    window.addEventListener('themechange', () => {
+      logger.info('🎨 Theme changed, updating banner to match');
+      this.applyDefaultBanner();
+    });
   }
 
   private bindEvents(): void {
