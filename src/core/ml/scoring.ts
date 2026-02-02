@@ -632,7 +632,9 @@ export function classifyDiagnosticState(
 
   // Step 4: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
-  if (bestScore < UNCERTAINTY_THRESHOLD || bestModel === null) {
+  // CRITICAL FIX: Check bestModel === null FIRST to prevent null reference error
+  // This ensures we never access bestModel.type when bestModel is null
+  if (bestModel === null || bestScore < UNCERTAINTY_THRESHOLD) {
     // Anomaly detected, but doesn't match any known pattern
     // OR all scores were zero/negative (bestModel remains null)
     status = 'uncertain';
@@ -640,6 +642,7 @@ export function classifyDiagnosticState(
   } else {
     // Matched a known state - use model's type directly
     // This allows multiple healthy states (e.g., "Idle", "Full Load") and multiple faults
+    // bestModel is guaranteed to be non-null here due to the check above
     status = bestModel.type; // 'healthy' or 'faulty' from the winning model
   }
 
