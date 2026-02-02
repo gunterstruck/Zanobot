@@ -62,9 +62,41 @@ const readFromStorage = (): ViewLevel => {
 };
 
 /**
- * Get the current view level
+ * Read view level from DOM attribute (for temporary overrides like NFC onboarding)
  */
-export const getViewLevel = (): ViewLevel => readFromStorage();
+const readFromDom = (): ViewLevel | null => {
+  try {
+    const domValue = document.documentElement.getAttribute('data-view-level');
+    if (domValue && validLevels.includes(domValue as ViewLevel)) {
+      return domValue as ViewLevel;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Get the current view level.
+ *
+ * IMPORTANT: This function checks the DOM attribute FIRST, then falls back to localStorage.
+ * This ensures that temporary overrides (like NFC onboarding forcing 'basic' mode)
+ * are respected by all code that reads the view level.
+ *
+ * Priority:
+ * 1. DOM attribute (data-view-level) - for temporary overrides
+ * 2. localStorage - for persisted user preference
+ * 3. defaultLevel ('basic') - fallback
+ */
+export const getViewLevel = (): ViewLevel => {
+  // First check DOM attribute (handles temporary overrides like NFC onboarding)
+  const domLevel = readFromDom();
+  if (domLevel !== null) {
+    return domLevel;
+  }
+  // Fall back to localStorage (persisted user preference)
+  return readFromStorage();
+};
 
 /**
  * Set the view level and persist to localStorage
@@ -108,6 +140,17 @@ export const applyViewLevel = (): ViewLevel => {
  * Get all available view levels
  */
 export const getAvailableViewLevels = (): ViewLevel[] => [...validLevels];
+
+/**
+ * Get the stored (persisted) view level from localStorage.
+ *
+ * Unlike getViewLevel(), this function ONLY reads from localStorage and
+ * ignores any temporary DOM overrides. Use this for Settings UI to show
+ * the user's actual saved preference.
+ *
+ * @returns The stored view level from localStorage (or default if not set)
+ */
+export const getStoredViewLevel = (): ViewLevel => readFromStorage();
 
 /**
  * Set the view level temporarily WITHOUT persisting to localStorage.
