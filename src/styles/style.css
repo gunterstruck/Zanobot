@@ -383,6 +383,7 @@ body {
 
 /* ===================================
    HERO HEADER IMAGE
+   Head-Safe Rendering - Never crop critical content
    =================================== */
 .hero-header {
     width: 100%;
@@ -391,54 +392,52 @@ body {
     margin-right: auto;
     margin-top: var(--spacing-sm);
     position: relative;
-    height: clamp(108px, 18vh, 216px);
-    min-height: 108px;
-    max-height: 234px;
     margin-bottom: 0;
     overflow: hidden;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, rgba(7, 18, 33, 0.8) 0%, rgba(17, 40, 64, 0.8) 100%);
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
-    border: 1px solid rgba(0, 212, 255, 0.2);
+    /* Gradient background visible when image uses contain */
+    background: linear-gradient(135deg,
+        var(--bg-secondary) 0%,
+        var(--bg-tertiary) 50%,
+        var(--bg-secondary) 100%);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
-/* Mobile: Keep generous 18vh for emotional impact */
+/* Mobile: Generous height, full image visible */
 @media (max-width: 768px) {
     .hero-header {
-        height: 18vh;
-        min-height: 18vh;
-        max-height: 18vh;
-    }
-
-    .hero-image {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        object-fit: cover;
+        /* Aspect ratio based on 1024×500 format */
+        aspect-ratio: 1024 / 500;
+        height: auto;
+        min-height: 100px;
+        max-height: 25vh;
     }
 }
 
-/* Desktop: Compact banner to prioritize action cards above-the-fold */
+/* Desktop: Compact, work-focused, but head-safe */
 @media (min-width: 769px) {
     .hero-header {
-        height: clamp(80px, 12vh, 160px);
+        /* Aspect ratio based on 1024×400 format (more compact) */
+        aspect-ratio: 1024 / 400;
+        height: auto;
         min-height: 80px;
-        max-height: 160px;
-    }
-
-    .hero-image {
-        object-position: center 40%;
+        max-height: 14vh;
     }
 }
 
+/* Hero Image - Head-Safe Rendering Strategy */
 .hero-image {
     width: 100%;
     height: 100%;
     max-width: none;
     margin: 0;
-    object-fit: cover;
-    object-position: center;
     display: block;
+    /* CRITICAL: contain ensures NO cropping of heads/faces/logos */
+    object-fit: contain;
+    object-position: center;
+    /* Smooth transition for format switches */
+    transition: opacity 0.2s ease;
 }
 
 .hero-upload-btn {
