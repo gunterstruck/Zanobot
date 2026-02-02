@@ -324,24 +324,24 @@ export class DiagnosePhase {
         `📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`
       );
 
-      // Show recording modal
-      this.showRecordingModal();
-
-      // Determine view mode based on current view level setting
-      // basic → simplified inspection view (new modal)
-      // advanced/expert → original complex view (recording-modal)
-      // EXCEPTION: NFC-initiated diagnosis always uses simplified view
+      // Level 1 (STATIONARY/GMIA) = "Schnelltest" ALWAYS uses simplified view
+      // This is the quick test mode - user settings only affect Level 2 (CYCLIC/YAMNet)
+      // IMPORTANT: This must happen BEFORE showRecordingModal() to display the correct modal
       const isNfcDiagnosis = document.body.getAttribute('data-nfc-diagnosis') === 'true';
       if (isNfcDiagnosis) {
         // Clear flag after reading to prevent affecting future diagnoses
         document.body.removeAttribute('data-nfc-diagnosis');
       }
 
-      const currentViewLevel = getViewLevel();
-      // Force basic view for NFC-initiated diagnosis, otherwise use user's setting
-      this.useSimplifiedView = isNfcDiagnosis || currentViewLevel === 'basic';
+      // Level 1 always uses simplified view regardless of user settings
+      // This ensures consistent "Schnelltest" experience
+      this.useSimplifiedView = true;
 
-      logger.info(`📊 View level: ${currentViewLevel} → ${this.useSimplifiedView ? 'simplified' : 'advanced'} view${isNfcDiagnosis ? ' (NFC forced)' : ''}`);
+      const currentViewLevel = getViewLevel();
+      logger.info(`📊 Level 1 (Schnelltest): View level setting is '${currentViewLevel}' but forcing simplified view${isNfcDiagnosis ? ' (NFC initiated)' : ''}`);
+
+      // Show recording modal (uses pre-calculated useSimplifiedView)
+      this.showRecordingModal();
 
       // Initialize visualizer for advanced/expert view
       if (!this.useSimplifiedView && this.audioContext && this.mediaStream) {
@@ -1079,12 +1079,13 @@ export class DiagnosePhase {
    *
    * - basic: Simplified inspection modal (new design)
    * - advanced/expert: Original recording modal with technical details
+   *
+   * IMPORTANT: useSimplifiedView must be set BEFORE calling this method.
+   * The flag is calculated in startDiagnosis() considering NFC mode and user settings.
    */
   private showRecordingModal(): void {
-    // Check view level at the time of showing modal
-    const currentViewLevel = getViewLevel();
-    this.useSimplifiedView = currentViewLevel === 'basic';
-
+    // Use pre-calculated useSimplifiedView flag (set in startDiagnosis)
+    // This ensures NFC-initiated diagnoses always use simplified view
     if (this.useSimplifiedView) {
       this.showInspectionModal();
     } else {
