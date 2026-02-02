@@ -625,6 +625,12 @@ export const en: TranslationDict = {
     unsupported: 'NFC writing is not supported on this device.',
     requiresSecureContext: 'NFC writing requires a secure (HTTPS) connection.',
     unsupportedBrowser: 'NFC writing requires Chrome on Android.',
+    // Customer ID (Variant B)
+    customerIdLabel: 'Customer ID (c)',
+    customerIdDescription: 'This ID determines which reference data is loaded when scanning the NFC tag. The app automatically loads: https://gunterstruck.github.io/<CustomerID>/db-latest.json',
+    customerIdPlaceholder: 'e.g. Customer_ID_1',
+    customerIdRequired: 'Please enter a customer ID.',
+    dbUrlPreview: 'Loaded DB URL: {{url}}',
   },
 
   review: {
@@ -702,6 +708,7 @@ export const en: TranslationDict = {
     urlInvalid: 'The link does not appear to be a valid URL.',
     urlNotHttps: 'The link must start with https://.',
     googleDriveNotDirect: 'Google Drive links must use direct download format. Recommended: Use GitHub Pages instead.',
+    urlNotOfficialSource: 'Only official data sources (gunterstruck.github.io) are accepted.',
 
     // Download status
     downloadingReference: 'Loading reference data...',

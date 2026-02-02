@@ -737,8 +737,15 @@ export class ReferenceDbService {
   }
 
   /**
+   * GitHub Pages base URL for reference databases (MVP)
+   * All customer databases must be hosted under this domain for security
+   */
+  public static readonly GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
+
+  /**
    * Validate URL format for reference database sources
-   * Supports: GitHub (raw/pages), Google Drive direct download
+   * MVP: Only accepts URLs from the official GitHub Pages repository
+   * Rule: https://gunterstruck.github.io/<customerId>/db-latest.json
    *
    * @param url - URL to validate
    * @returns Validation result
@@ -756,25 +763,15 @@ export class ReferenceDbService {
         return { valid: false, error: 'url_not_https' };
       }
 
-      // Check for supported hosts
-      const isGoogleDrive = parsed.hostname === 'drive.google.com';
-      const isGitHubRaw = parsed.hostname === 'raw.githubusercontent.com';
-      const isGitHubPages = parsed.hostname.endsWith('.github.io');
+      // MVP Security Rule: Only accept URLs from the official GitHub Pages repository
+      // This ensures all reference databases come from a trusted source
+      const isOfficialGitHubPages = parsed.hostname === 'gunterstruck.github.io';
 
-      // GitHub URLs are always valid (raw and pages deliver direct files)
-      if (isGitHubRaw || isGitHubPages) {
-        return { valid: true };
+      if (!isOfficialGitHubPages) {
+        return { valid: false, error: 'url_not_official_source' };
       }
 
-      // Google Drive requires direct download format
-      if (isGoogleDrive) {
-        if (!url.includes('export=download') && !url.includes('/uc?')) {
-          return { valid: false, error: 'google_drive_not_direct' };
-        }
-        return { valid: true };
-      }
-
-      // Other HTTPS URLs are accepted (for flexibility)
+      // Valid: URL is from the official GitHub Pages
       return { valid: true };
     } catch {
       return { valid: false, error: 'url_invalid' };

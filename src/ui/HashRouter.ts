@@ -2,12 +2,12 @@
  * ZANOBOT - HASH ROUTER
  *
  * Handles hash-based routing for NFC deep links.
- * Format: #/m/<machine_id>?ref=<encoded_url>
+ * Format: #/m/<machine_id>?c=<customer_id>
  *
  * This enables NFC tags to open the app directly to a specific machine,
  * triggering automatic reference database download for Basisnutzer.
- * The optional ref parameter contains the reference DB URL, allowing
- * machines to be auto-created when scanned on new devices.
+ * The customerId parameter (c) determines which customer's database to load.
+ * The DB URL is automatically built: https://gunterstruck.github.io/<customerId>/db-latest.json
  */
 
 import { getMachine, saveMachine } from '@data/db.js';
@@ -17,11 +17,19 @@ import { logger } from '@utils/logger.js';
 import { t } from '../i18n/index.js';
 
 /**
+ * Base URL for GitHub Pages reference databases (MVP)
+ * All customer databases are hosted under this domain
+ */
+export const GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
+
+/**
  * Route match result
  */
 export interface RouteMatch {
   type: 'machine' | 'unknown';
   machineId?: string;
+  /** Customer ID from NFC link (c parameter) - used to build DB URL */
+  customerId?: string;
   /** Reference DB URL from NFC link (allows auto-creation on new devices) */
   referenceDbUrl?: string;
 }
@@ -95,7 +103,9 @@ export class HashRouter {
 
   /**
    * Parse hash URL and extract route info
-   * Supports: #/m/<machine_id> or #/m/<machine_id>?ref=<encoded_url>
+   * Supports:
+   * - New format: #/m/<machine_id>?c=<customer_id> (customerId builds DB URL automatically)
+   * - Legacy format: #/m/<machine_id>?ref=<encoded_url> (full URL in parameter)
    */
   public parseHash(hash: string): RouteMatch {
     // Remove leading # if present
@@ -113,12 +123,25 @@ export class HashRouter {
         machineId: decodeURIComponent(machineMatch[1]),
       };
 
-      // Parse query parameters for ref URL
+      // Parse query parameters
       if (queryString) {
         const params = new URLSearchParams(queryString);
-        const refUrl = params.get('ref');
-        if (refUrl) {
-          result.referenceDbUrl = decodeURIComponent(refUrl);
+
+        // New format: customerId (c parameter) - preferred
+        const customerId = params.get('c');
+        if (customerId) {
+          result.customerId = customerId;
+          // Auto-build the reference DB URL from customerId
+          result.referenceDbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+          logger.info(`🔗 CustomerId "${customerId}" → DB URL: ${result.referenceDbUrl}`);
+        }
+
+        // Legacy format: full ref URL (fallback for backwards compatibility)
+        if (!result.referenceDbUrl) {
+          const refUrl = params.get('ref');
+          if (refUrl) {
+            result.referenceDbUrl = decodeURIComponent(refUrl);
+          }
         }
       }
 
@@ -129,14 +152,27 @@ export class HashRouter {
   }
 
   /**
+   * Build the reference database URL from a customer ID
+   * Rule: https://gunterstruck.github.io/<customerId>/db-latest.json
+   *
+   * @param customerId - Customer identifier (e.g., "Kundenkennung_nr1")
+   * @returns Full URL to the customer's database
+   */
+  public static buildDbUrlFromCustomerId(customerId: string): string {
+    // Sanitize customerId: remove leading/trailing slashes, encode special chars
+    const sanitized = customerId.trim().replace(/^\/+|\/+$/g, '');
+    return `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(sanitized)}/db-latest.json`;
+  }
+
+  /**
    * Generate hash URL for a machine
    * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL to include (enables auto-creation on new devices)
+   * @param customerId - Optional customer ID (determines which database to load)
    */
-  public static getMachineHash(machineId: string, referenceDbUrl?: string): string {
+  public static getMachineHash(machineId: string, customerId?: string): string {
     const base = `#/m/${encodeURIComponent(machineId)}`;
-    if (referenceDbUrl) {
-      return `${base}?ref=${encodeURIComponent(referenceDbUrl)}`;
+    if (customerId) {
+      return `${base}?c=${encodeURIComponent(customerId)}`;
     }
     return base;
   }
@@ -144,11 +180,11 @@ export class HashRouter {
   /**
    * Generate full URL for NFC tag writing
    * @param machineId - Machine identifier
-   * @param referenceDbUrl - Optional reference DB URL to include (enables auto-creation on new devices)
+   * @param customerId - Optional customer ID (determines which database to load)
    */
-  public static getFullMachineUrl(machineId: string, referenceDbUrl?: string): string {
+  public static getFullMachineUrl(machineId: string, customerId?: string): string {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}${this.getMachineHash(machineId, referenceDbUrl)}`;
+    return `${baseUrl}${this.getMachineHash(machineId, customerId)}`;
   }
 
   /**
