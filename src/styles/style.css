@@ -6114,11 +6114,13 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    pointer-events: none; /* Clicks pass through to button */
 }
 
 .diagnose-tile-icon svg {
     color: var(--primary-color);
     stroke: var(--primary-color);
+    pointer-events: none; /* Clicks pass through to button */
 }
 
 .diagnose-tile-label {
@@ -6127,6 +6129,7 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     color: var(--text-secondary);
     text-align: center;
     line-height: 1.2;
+    pointer-events: none; /* Clicks pass through to button */
 }
 
 /* ----------------------------------------

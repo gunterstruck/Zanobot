@@ -67,37 +67,58 @@ export class DiagnoseCardController {
     // Scan button
     const scanBtn = document.getElementById('diagnose-scan-btn');
     if (scanBtn) {
-      scanBtn.addEventListener('click', () => {
+      scanBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logger.debug('[DiagnoseCardController] Scan button clicked');
         if (this.onScanRequested) {
           this.onScanRequested();
         }
       });
+      logger.debug('[DiagnoseCardController] Scan button listener attached');
+    } else {
+      logger.warn('[DiagnoseCardController] Scan button not found: #diagnose-scan-btn');
     }
 
     // Select existing machine button
     const selectBtn = document.getElementById('diagnose-select-btn');
     if (selectBtn) {
-      selectBtn.addEventListener('click', () => {
+      selectBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logger.debug('[DiagnoseCardController] Select button clicked');
         if (this.onSelectRequested) {
           this.onSelectRequested();
         }
       });
+      logger.debug('[DiagnoseCardController] Select button listener attached');
+    } else {
+      logger.warn('[DiagnoseCardController] Select button not found: #diagnose-select-btn');
     }
 
     // Create new machine button
     const createBtn = document.getElementById('diagnose-create-btn');
     if (createBtn) {
-      createBtn.addEventListener('click', () => {
+      createBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logger.debug('[DiagnoseCardController] Create button clicked');
         if (this.onCreateRequested) {
           this.onCreateRequested();
         }
       });
+      logger.debug('[DiagnoseCardController] Create button listener attached');
+    } else {
+      logger.warn('[DiagnoseCardController] Create button not found: #diagnose-create-btn');
     }
 
     // Change machine button (in State A)
     const changeMachineBtn = document.getElementById('diagnose-change-machine-btn');
     if (changeMachineBtn) {
-      changeMachineBtn.addEventListener('click', () => {
+      changeMachineBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logger.debug('[DiagnoseCardController] Change machine button clicked');
         this.showNoMachineState();
         this.currentMachine = null;
       });
