@@ -272,3 +272,55 @@ export interface DBSchema {
     };
   };
 }
+
+// ============================================================================
+// AUTO-DETECTION TYPES
+// Used for automatic machine recognition in "Zustand prüfen" flow
+// ============================================================================
+
+/**
+ * Auto-Detection Thresholds
+ * Defines the confidence levels for machine recognition decisions
+ */
+export const AUTO_DETECTION_THRESHOLDS = {
+  /** High confidence: Automatic recognition (≥80%) */
+  HIGH_CONFIDENCE: 80,
+  /** Low confidence: Below this, no match found (<40%) */
+  LOW_CONFIDENCE: 40,
+  /** Minimum models required: At least one reference model needed */
+  MIN_MODELS: 1,
+} as const;
+
+/**
+ * Result of comparing audio against a single machine's reference models
+ */
+export interface MachineMatchResult {
+  /** The machine being compared */
+  machine: Machine;
+  /** Best matching model from this machine */
+  bestModel: GMIAModel | null;
+  /** Similarity score [0-100] */
+  similarity: number;
+  /** Raw cosine similarity */
+  rawCosine: number;
+  /** Detected state label */
+  detectedState: string;
+  /** Health status based on best model type */
+  status: 'healthy' | 'uncertain' | 'faulty';
+}
+
+/**
+ * Result of auto-detection across all machines
+ */
+export interface AutoDetectionResult {
+  /** Detection outcome category */
+  outcome: 'high_confidence' | 'uncertain' | 'no_match';
+  /** Best matching machine (if any) */
+  bestMatch: MachineMatchResult | null;
+  /** All machine matches, sorted by similarity (highest first) */
+  candidates: MachineMatchResult[];
+  /** Timestamp of the detection */
+  timestamp: number;
+  /** Feature vector used for detection (for subsequent diagnosis) */
+  featureVector?: FeatureVector;
+}

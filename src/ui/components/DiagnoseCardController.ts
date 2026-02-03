@@ -2,8 +2,14 @@
  * ZANOBOT - DiagnoseCardController
  *
  * Controls the state-based UI of the "Zustand prüfen" card.
- * Manages transitions between:
- * - State B: No machine selected (shows three equal action buttons)
+ *
+ * NEW AUTO-DETECTION FLOW:
+ * The primary action "Jetzt prüfen" starts diagnosis without requiring
+ * machine pre-selection. The system automatically recognizes machines.
+ *
+ * States:
+ * - Primary: "Jetzt prüfen" button (always visible, starts auto-detection)
+ * - Secondary: Manual machine selection (scan, select, create) as fallback
  * - State A: Machine selected (shows machine info + ANALYSIEREN button)
  */
 
@@ -26,6 +32,7 @@ export class DiagnoseCardController {
   private onScanRequested: (() => void) | null = null;
   private onSelectRequested: (() => void) | null = null;
   private onCreateRequested: (() => void) | null = null;
+  private onAutoDetectRequested: (() => void) | null = null;
 
   constructor() {
     // Elements will be initialized in init()
@@ -39,11 +46,13 @@ export class DiagnoseCardController {
     onScanRequested: () => void;
     onSelectRequested: () => void;
     onCreateRequested: () => void;
+    onAutoDetectRequested?: () => void;
   }): void {
     this.onMachineSelected = callbacks.onMachineSelected;
     this.onScanRequested = callbacks.onScanRequested;
     this.onSelectRequested = callbacks.onSelectRequested;
     this.onCreateRequested = callbacks.onCreateRequested;
+    this.onAutoDetectRequested = callbacks.onAutoDetectRequested || null;
 
     // Get UI elements
     this.noMachineState = document.getElementById('diagnose-no-machine');
@@ -64,7 +73,21 @@ export class DiagnoseCardController {
    * Set up event listeners for UI interactions
    */
   private setupEventListeners(): void {
-    // Scan button
+    // PRIMARY ACTION: Auto-detect button ("Jetzt prüfen")
+    const autoDetectBtn = document.getElementById('diagnose-auto-detect-btn');
+    if (autoDetectBtn) {
+      autoDetectBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logger.debug('[DiagnoseCardController] Auto-detect button clicked');
+        if (this.onAutoDetectRequested) {
+          this.onAutoDetectRequested();
+        }
+      });
+      logger.debug('[DiagnoseCardController] Auto-detect button listener attached');
+    }
+
+    // SECONDARY: Scan button
     const scanBtn = document.getElementById('diagnose-scan-btn');
     if (scanBtn) {
       scanBtn.addEventListener('click', (e) => {
@@ -80,7 +103,7 @@ export class DiagnoseCardController {
       logger.warn('[DiagnoseCardController] Scan button not found: #diagnose-scan-btn');
     }
 
-    // Select existing machine button
+    // SECONDARY: Select existing machine button
     const selectBtn = document.getElementById('diagnose-select-btn');
     if (selectBtn) {
       selectBtn.addEventListener('click', (e) => {
@@ -96,7 +119,7 @@ export class DiagnoseCardController {
       logger.warn('[DiagnoseCardController] Select button not found: #diagnose-select-btn');
     }
 
-    // Create new machine button
+    // SECONDARY: Create new machine button
     const createBtn = document.getElementById('diagnose-create-btn');
     if (createBtn) {
       createBtn.addEventListener('click', (e) => {
@@ -122,6 +145,43 @@ export class DiagnoseCardController {
         this.showNoMachineState();
         this.currentMachine = null;
       });
+    }
+
+    // Toggle for showing/hiding manual selection options
+    const showManualBtn = document.getElementById('diagnose-show-manual-btn');
+    if (showManualBtn) {
+      showManualBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleManualSelection();
+      });
+    }
+  }
+
+  /**
+   * Toggle visibility of manual machine selection options
+   */
+  private toggleManualSelection(): void {
+    const manualSection = document.getElementById('diagnose-manual-selection');
+    const toggleBtn = document.getElementById('diagnose-show-manual-btn');
+
+    if (manualSection && toggleBtn) {
+      const isHidden = manualSection.style.display === 'none';
+      manualSection.style.display = isHidden ? 'block' : 'none';
+
+      // Update button text
+      const btnText = toggleBtn.querySelector('span');
+      if (btnText) {
+        btnText.textContent = isHidden
+          ? t('autoDetect.hideManualSelection')
+          : t('autoDetect.showManualSelection');
+      }
+
+      // Toggle chevron rotation
+      const chevron = toggleBtn.querySelector('.chevron-icon');
+      if (chevron) {
+        chevron.classList.toggle('rotated', isHidden);
+      }
     }
   }
 

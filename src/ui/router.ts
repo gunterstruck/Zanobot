@@ -18,11 +18,12 @@ import { DiagnosePhase } from './phases/3-Diagnose.js';
 import { SettingsPhase } from './phases/4-Settings.js';
 import { Level2ReferencePhase } from './phases/Level2-Reference.js';
 import { Level2DiagnosePhase } from './phases/Level2-Diagnose.js';
+import { AutoDetectionPhase } from './phases/AutoDetectionPhase.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { ReferenceCardController } from './components/ReferenceCardController.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
 import { getAllMachines } from '@data/db.js';
-import type { DetectionMode } from '@data/types.js';
+import type { DetectionMode, AutoDetectionResult, MachineMatchResult } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { notify } from '@utils/notifications.js';
@@ -40,6 +41,9 @@ export class Router {
   // Level 2 (YAMNet) phases
   private level2ReferencePhase: Level2ReferencePhase | null = null;
   private level2DiagnosePhase: Level2DiagnosePhase | null = null;
+
+  // Auto-detection phase (simplified flow)
+  private autoDetectionPhase: AutoDetectionPhase | null = null;
 
   // Card state controllers
   private diagnoseCardController: DiagnoseCardController;
@@ -65,6 +69,7 @@ export class Router {
       onScanRequested: () => this.handleDiagnoseScanRequest(),
       onSelectRequested: () => this.handleDiagnoseSelectRequest(),
       onCreateRequested: () => this.handleDiagnoseCreateRequest(),
+      onAutoDetectRequested: () => this.handleAutoDetectRequest(),
     });
 
     // Initialize ReferenceCardController for state-based UI (mirrors DiagnoseCardController)
@@ -77,6 +82,10 @@ export class Router {
 
     // Lock Phase 2 and 3 initially
     this.lockPhases();
+
+    // CRITICAL: Explicitly ensure auto-detect buttons are always enabled
+    // This is needed because auto-detection works WITHOUT machine pre-selection
+    this.ensureAutoDetectButtonsEnabled();
 
     // Set initial mode visibility
     this.updateModeVisibility(this.modeManager.getMode());
@@ -276,6 +285,244 @@ export class Router {
     }
   }
 
+  // ============================================================================
+  // AUTO-DETECTION FLOW (Simplified "Zustand prüfen")
+  // ============================================================================
+
+  /**
+   * Handle auto-detect request from diagnose card
+   * Starts the simplified flow where no machine pre-selection is needed
+   */
+  private handleAutoDetectRequest(): void {
+    logger.info('🔍 Auto-detection requested');
+
+    // Get selected microphone device ID from Phase 1
+    const selectedDeviceId = this.identifyPhase.getSelectedDeviceId();
+
+    // Cleanup any existing auto-detection phase
+    if (this.autoDetectionPhase) {
+      this.autoDetectionPhase.destroy();
+      this.autoDetectionPhase = null;
+    }
+
+    // Create new auto-detection phase with callbacks
+    this.autoDetectionPhase = new AutoDetectionPhase(
+      {
+        onMachineRecognized: (machine, result) => this.handleMachineRecognized(machine, result),
+        onUncertainMatch: (candidates, result) => this.handleUncertainMatch(candidates, result),
+        onNoMatch: (result) => this.handleNoMatch(result),
+        onCancel: () => this.handleAutoDetectCancel(),
+      },
+      selectedDeviceId
+    );
+
+    // Start detection
+    this.autoDetectionPhase.start();
+  }
+
+  /**
+   * Fall A: Machine recognized with high confidence (≥80%)
+   * Auto-select the machine and show diagnosis result
+   */
+  private handleMachineRecognized(machine: Machine, result: AutoDetectionResult): void {
+    logger.info(`✅ Machine auto-recognized: ${machine.name}`);
+
+    // Show recognition result modal
+    this.showMachineRecognizedModal(machine, result);
+  }
+
+  /**
+   * Fall B: Uncertain match (40-79%)
+   * Show candidates for user selection
+   */
+  private handleUncertainMatch(candidates: MachineMatchResult[], result: AutoDetectionResult): void {
+    logger.info(`⚠️ Uncertain match with ${candidates.length} candidates`);
+
+    // Show selection modal
+    this.showCandidateSelectionModal(candidates, result);
+  }
+
+  /**
+   * Fall C: No match found (<40%)
+   * Show "unknown sound" modal with options
+   */
+  private handleNoMatch(result: AutoDetectionResult): void {
+    logger.info('❌ No matching machine found');
+
+    // Show no-match modal
+    this.showNoMatchModal(result);
+  }
+
+  /**
+   * Auto-detection cancelled by user
+   */
+  private handleAutoDetectCancel(): void {
+    logger.info('🚫 Auto-detection cancelled');
+
+    // Cleanup
+    if (this.autoDetectionPhase) {
+      this.autoDetectionPhase.destroy();
+      this.autoDetectionPhase = null;
+    }
+  }
+
+  /**
+   * Show modal for Fall A: Machine recognized with high confidence
+   */
+  private showMachineRecognizedModal(machine: Machine, result: AutoDetectionResult): void {
+    const modal = document.getElementById('machine-recognized-modal');
+    if (!modal) return;
+
+    // Update machine info
+    const nameEl = document.getElementById('recognized-machine-name');
+    if (nameEl) nameEl.textContent = machine.name;
+
+    const similarityEl = document.getElementById('recognized-similarity');
+    if (similarityEl && result.bestMatch) {
+      similarityEl.textContent = `${result.bestMatch.similarity.toFixed(0)}%`;
+    }
+
+    // Update status based on the match
+    const statusEl = document.getElementById('recognized-status');
+    if (statusEl && result.bestMatch) {
+      const status = result.bestMatch.status;
+      statusEl.textContent = status === 'healthy'
+        ? t('status.healthy')
+        : status === 'faulty'
+          ? t('status.faulty')
+          : t('status.uncertain');
+      statusEl.className = `recognized-status status-${status}`;
+    }
+
+    // Setup continue button - proceed to full diagnosis
+    const continueBtn = document.getElementById('recognized-continue-btn');
+    if (continueBtn) {
+      continueBtn.onclick = () => {
+        modal.style.display = 'none';
+        this.onMachineSelected(machine);
+        // Auto-start diagnosis with the recognized machine
+        setTimeout(() => {
+          const diagnoseBtn = document.getElementById('diagnose-btn');
+          if (diagnoseBtn) diagnoseBtn.click();
+        }, 100);
+      };
+    }
+
+    // Setup "different machine" button
+    const differentBtn = document.getElementById('recognized-different-btn');
+    if (differentBtn) {
+      differentBtn.onclick = () => {
+        modal.style.display = 'none';
+        this.expandSection('select-machine-content');
+      };
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * Show modal for Fall B: Uncertain match with candidate selection
+   */
+  private showCandidateSelectionModal(candidates: MachineMatchResult[], result: AutoDetectionResult): void {
+    const modal = document.getElementById('candidate-selection-modal');
+    if (!modal) return;
+
+    // Build candidate list
+    const listEl = document.getElementById('candidate-list');
+    if (listEl) {
+      listEl.innerHTML = '';
+
+      candidates.forEach((candidate, index) => {
+        const item = document.createElement('button');
+        item.className = 'candidate-item';
+        item.innerHTML = `
+          <div class="candidate-info">
+            <span class="candidate-name">${candidate.machine.name}</span>
+            <span class="candidate-similarity">${candidate.similarity.toFixed(0)}%</span>
+          </div>
+          <div class="candidate-status status-${candidate.status}">
+            ${candidate.status === 'healthy' ? t('status.healthy') : candidate.status === 'faulty' ? t('status.faulty') : t('status.uncertain')}
+          </div>
+        `;
+        item.onclick = () => {
+          modal.style.display = 'none';
+          this.onMachineSelected(candidate.machine);
+          // Auto-start diagnosis
+          setTimeout(() => {
+            const diagnoseBtn = document.getElementById('diagnose-btn');
+            if (diagnoseBtn) diagnoseBtn.click();
+          }, 100);
+        };
+        listEl.appendChild(item);
+      });
+
+      // Add "New machine" option
+      const newMachineItem = document.createElement('button');
+      newMachineItem.className = 'candidate-item candidate-new';
+      newMachineItem.innerHTML = `
+        <div class="candidate-info">
+          <span class="candidate-name">${t('autoDetect.newMachine')}</span>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      `;
+      newMachineItem.onclick = () => {
+        modal.style.display = 'none';
+        this.handleDiagnoseCreateRequest();
+      };
+      listEl.appendChild(newMachineItem);
+    }
+
+    // Setup cancel button
+    const cancelBtn = document.getElementById('candidate-cancel-btn');
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * Show modal for Fall C: No match found
+   */
+  private showNoMatchModal(result: AutoDetectionResult): void {
+    const modal = document.getElementById('no-match-modal');
+    if (!modal) return;
+
+    // Setup "Record reference" button
+    const recordRefBtn = document.getElementById('no-match-record-btn');
+    if (recordRefBtn) {
+      recordRefBtn.onclick = () => {
+        modal.style.display = 'none';
+        // Open reference section and create flow
+        this.handleReferenceCreateRequest();
+      };
+    }
+
+    // Setup "New machine" button
+    const newMachineBtn = document.getElementById('no-match-new-machine-btn');
+    if (newMachineBtn) {
+      newMachineBtn.onclick = () => {
+        modal.style.display = 'none';
+        this.handleDiagnoseCreateRequest();
+      };
+    }
+
+    // Setup cancel button
+    const cancelBtn = document.getElementById('no-match-cancel-btn');
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+    modal.style.display = 'flex';
+  }
+
   /**
    * Initialize Phase 2 (Reference) and Phase 3 (Diagnose)
    * Initializes the appropriate phases based on current detection mode.
@@ -467,10 +714,45 @@ export class Router {
       if (btn.classList.contains('diagnose-tile')) {
         return;
       }
+      // Skip auto-detect button - it should always be clickable since
+      // auto-detection works without requiring machine pre-selection
+      if (btn.classList.contains('auto-detect-btn')) {
+        return;
+      }
+      // Skip manual selection toggle - always needs to be clickable
+      if (btn.classList.contains('manual-selection-toggle')) {
+        return;
+      }
       btn.disabled = !enabled;
       btn.style.opacity = enabled ? '1' : '0.5';
       btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     });
+  }
+
+  /**
+   * Explicitly ensure auto-detect buttons are always enabled
+   * Called after lockPhases() to guarantee these buttons remain clickable
+   */
+  private ensureAutoDetectButtonsEnabled(): void {
+    // Auto-detect button
+    const autoDetectBtn = document.getElementById('diagnose-auto-detect-btn');
+    if (autoDetectBtn instanceof HTMLButtonElement) {
+      autoDetectBtn.disabled = false;
+      autoDetectBtn.style.opacity = '1';
+      autoDetectBtn.style.cursor = 'pointer';
+      autoDetectBtn.style.pointerEvents = 'auto';
+      logger.debug('[Router] Auto-detect button explicitly enabled');
+    }
+
+    // Manual selection toggle
+    const manualToggleBtn = document.getElementById('diagnose-show-manual-btn');
+    if (manualToggleBtn instanceof HTMLButtonElement) {
+      manualToggleBtn.disabled = false;
+      manualToggleBtn.style.opacity = '1';
+      manualToggleBtn.style.cursor = 'pointer';
+      manualToggleBtn.style.pointerEvents = 'auto';
+      logger.debug('[Router] Manual selection toggle explicitly enabled');
+    }
   }
 
   /**

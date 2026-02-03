@@ -627,6 +627,41 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // AUTO-DETECTION (Simplified "Check condition" Flow)
+  // ============================================================================
+  autoDetect: {
+    // Primary CTA
+    startButton: 'Check now',
+    hint: 'The system automatically recognizes known machines',
+
+    // Manual selection toggle
+    showManualSelection: 'Select machine manually',
+    hideManualSelection: 'Hide manual selection',
+
+    // Listening modal
+    listening: 'Listening...',
+    waitingForSignal: 'Please hold microphone near the machine',
+    initializing: 'Initializing...',
+    analyzing: 'Analyzing sound...',
+
+    // Fall A: Machine recognized (≥80%)
+    machineRecognized: 'Machine recognized',
+    matchConfidence: 'Match confidence',
+    continueAnalysis: 'Continue analysis',
+    differentMachine: 'Different machine',
+
+    // Fall B: Uncertain match (40-79%)
+    uncertainMatch: 'Which machine is this?',
+    selectMachine: 'Please select the matching machine',
+
+    // Fall C: No match (<40%)
+    noMatch: "I don't recognize this sound yet",
+    noMatchHint: 'Would you like to record a reference?',
+    recordReference: 'Record reference',
+    newMachine: 'Create new machine',
+  },
+
+  // ============================================================================
   // NFC WRITER
   // ============================================================================
   nfc: {
