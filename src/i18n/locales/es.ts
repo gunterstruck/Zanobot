@@ -14,7 +14,7 @@ export const es: TranslationDict = {
     scan: 'Escanear',
     create: 'Crear',
     record: 'Grabar',
-    startDiagnosis: 'Iniciar diagnóstico',
+    startDiagnosis: 'Verificar estado',
     analyze: 'Analizar',
     close: 'Cerrar',
     cancel: 'Cancelar',
@@ -63,8 +63,8 @@ export const es: TranslationDict = {
     databaseShared: 'Base de datos compartida',
     databaseImported: 'Base de datos importada',
     databaseCleared: 'Base de datos borrada',
-    nfcDiagnosisTitle: '¿Iniciar diagnóstico?',
-    nfcDiagnosisPrompt: 'Máquina detectada. ¿Iniciar el diagnóstico ahora?',
+    nfcDiagnosisTitle: '¿Verificar estado?',
+    nfcDiagnosisPrompt: 'Máquina detectada. ¿Verificar estado ahora?',
   },
 
   // ============================================================================

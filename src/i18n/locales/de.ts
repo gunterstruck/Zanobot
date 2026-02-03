@@ -16,7 +16,7 @@ export const de: TranslationDict = {
     scan: 'Scannen',
     create: 'Erstellen',
     record: 'Aufnehmen',
-    startDiagnosis: 'Diagnose starten',
+    startDiagnosis: 'Zustand prüfen',
     analyze: 'Analysieren',
     close: 'Schließen',
     cancel: 'Abbrechen',
@@ -65,8 +65,8 @@ export const de: TranslationDict = {
     databaseShared: 'Datenbank versendet',
     databaseImported: 'Datenbank importiert',
     databaseCleared: 'Datenbank geleert',
-    nfcDiagnosisTitle: 'Diagnose starten?',
-    nfcDiagnosisPrompt: 'Maschine erkannt. Diagnose jetzt starten?',
+    nfcDiagnosisTitle: 'Zustand prüfen?',
+    nfcDiagnosisPrompt: 'Maschine erkannt. Zustand jetzt prüfen?',
   },
 
   // ============================================================================

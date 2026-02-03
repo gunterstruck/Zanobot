@@ -14,7 +14,7 @@ export const zh: TranslationDict = {
     scan: '扫描',
     create: '创建',
     record: '录制',
-    startDiagnosis: '开始诊断',
+    startDiagnosis: '检查状态',
     analyze: '分析',
     close: '关闭',
     cancel: '取消',
@@ -63,8 +63,8 @@ export const zh: TranslationDict = {
     databaseShared: '数据库已分享',
     databaseImported: '数据库已导入',
     databaseCleared: '数据库已清空',
-    nfcDiagnosisTitle: '开始诊断？',
-    nfcDiagnosisPrompt: '检测到机器。现在开始诊断吗？',
+    nfcDiagnosisTitle: '检查状态？',
+    nfcDiagnosisPrompt: '检测到机器。现在检查状态吗？',
   },
 
   // ============================================================================
