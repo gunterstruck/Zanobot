@@ -18,6 +18,15 @@
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
 
+    /* Layout Spacing System (Deliberate Visual Rhythm)
+       These control the vertical flow on the start screen:
+       - Cards are grouped tightly together (primary zone)
+       - Large gap separates cards from footer (hierarchy break)
+       - Footer sits "grounded" with breathing room below */
+    --space-card-gap: 1.5rem;        /* 24px - between action cards */
+    --space-section-gap: 3rem;       /* 48px - after cards, before footer */
+    --space-footer-bottom: 1.5rem;   /* 24px - below footer to viewport edge */
+
     /* Border Radius (Theme-Independent) */
     --radius-xs: 4px;
     --radius-sm: 8px;
@@ -108,6 +117,31 @@
     --viz-fill-top: rgba(59, 130, 246, 0.3);
     --viz-fill-bottom: rgba(59, 130, 246, 0.05);
     --viz-text: rgba(255, 255, 255, 0.4);
+}
+
+/* ===================================
+   RESPONSIVE SPACING SYSTEM
+   Deliberate vertical rhythm for different screen sizes
+   =================================== */
+
+/* Mobile (compact but clear hierarchy) */
+@media (max-width: 480px) {
+    :root {
+        --space-card-gap: 1.25rem;       /* 20px - slightly tighter on mobile */
+        --space-section-gap: 2.5rem;     /* 40px - still clear hierarchy break */
+        --space-footer-bottom: 1.25rem;  /* 20px - moderate bottom breathing room */
+    }
+}
+
+/* Tablet is default (481px - 900px) - uses :root values */
+
+/* Desktop (generous spacing) */
+@media (min-width: 901px) {
+    :root {
+        --space-card-gap: 1.75rem;       /* 28px - more breathing room */
+        --space-section-gap: 3.5rem;     /* 56px - generous hierarchy break */
+        --space-footer-bottom: 2rem;     /* 32px - comfortable bottom margin */
+    }
 }
 
 /* ===================================
@@ -330,13 +364,13 @@ body {
     max-width: 900px;
     margin: 0 auto;
     padding: var(--spacing-md);
-    padding-bottom: var(--spacing-xl);
+    padding-bottom: var(--space-footer-bottom);
     display: flex;
     flex-direction: column;
     /* Pack items from top - natural flow like a normal website */
     justify-content: flex-start;
-    /* Doubled gap (1rem = 16px) for comfortable spacing */
-    gap: 1rem;
+    /* No gap here - child elements control their own spacing for deliberate rhythm */
+    gap: 0;
     /* Natural height - grows with content, allows scrolling */
     min-height: 100dvh;
     height: auto;
@@ -397,7 +431,8 @@ body {
     max-width: var(--content-max-width);
     margin-left: auto;
     margin-right: auto;
-    /* No margin-top - let flex gap handle spacing */
+    /* Space after banner before cards - same rhythm as card gap */
+    margin-bottom: var(--space-card-gap);
     position: relative;
     /* Fixed height range for stability */
     height: clamp(108px, 18vh, 216px);
@@ -483,12 +518,14 @@ body {
     /* Prevent squashing - push down and scroll instead */
     flex: 0 0 auto;
     justify-content: flex-start;
-    /* Doubled gap (1rem = 16px) - matches container */
-    gap: 1rem;
+    /* Gap between action cards - tighter grouping for primary zone */
+    gap: var(--space-card-gap);
     align-items: stretch;
     width: 100%;
     max-width: var(--content-max-width);
     margin: 0 auto;
+    /* Deliberate large gap after cards - signals "end of primary actions" */
+    margin-bottom: var(--space-section-gap);
 }
 
 @media (min-width: 900px) {
@@ -1426,26 +1463,31 @@ body {
 .footer {
     /* Prevent browser from squashing footer when space is tight */
     flex-shrink: 0;
-    /* Push footer to bottom when content is short, scroll when long */
-    margin-top: auto;
+    /* Controlled spacing - section gap is on .main-actions margin-bottom */
+    margin-top: 0;
     width: 100%;
     max-width: var(--content-max-width);
-    /* Fixed height - no viewport dependency for stability */
+    /* Stable height - no viewport dependency */
     min-height: 80px;
     height: auto;
     margin-left: auto;
     margin-right: auto;
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
     text-align: center;
     border-radius: var(--radius-lg);
     background: var(--footer-bg);
-    box-shadow: var(--shadow-md);
+    /* Enhanced visual grounding - subtle top shadow creates "floor" effect */
+    box-shadow:
+        var(--shadow-md),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     border: 1px solid var(--footer-border);
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.3rem;
     color: var(--footer-text);
+    /* Smaller typography - footer is secondary, not competing with cards */
+    font-size: var(--font-sm);
 }
 
 .footer-compact {
