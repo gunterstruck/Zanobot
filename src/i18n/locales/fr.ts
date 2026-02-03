@@ -366,6 +366,30 @@ export const fr: TranslationDict = {
   },
 
   // ============================================================================
+  // AUTO-DETECTION (Simplified "Vérifier l'état" Flow)
+  // ============================================================================
+  autoDetect: {
+    startButton: 'Vérifier maintenant',
+    hint: 'Le système reconnaît automatiquement les machines connues',
+    showManualSelection: 'Sélectionner manuellement',
+    hideManualSelection: 'Masquer la sélection manuelle',
+    listening: 'Écoute en cours...',
+    waitingForSignal: 'Veuillez tenir le microphone près de la machine',
+    initializing: 'Initialisation...',
+    analyzing: 'Analyse du son...',
+    machineRecognized: 'Machine reconnue',
+    matchConfidence: 'Correspondance',
+    continueAnalysis: 'Continuer l\'analyse',
+    differentMachine: 'Autre machine',
+    uncertainMatch: 'Quelle machine est-ce ?',
+    selectMachine: 'Veuillez sélectionner la machine correspondante',
+    noMatch: 'Je ne reconnais pas encore ce son',
+    noMatchHint: 'Voulez-vous enregistrer une référence ?',
+    recordReference: 'Enregistrer une référence',
+    newMachine: 'Créer une nouvelle machine',
+  },
+
+  // ============================================================================
   // COMMON
   // ============================================================================
   common: {

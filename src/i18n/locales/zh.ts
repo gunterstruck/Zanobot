@@ -365,6 +365,30 @@ export const zh: TranslationDict = {
   },
 
   // ============================================================================
+  // AUTO-DETECTION (Simplified "检查状态" Flow)
+  // ============================================================================
+  autoDetect: {
+    startButton: '立即检查',
+    hint: '系统自动识别已知机器',
+    showManualSelection: '手动选择',
+    hideManualSelection: '隐藏手动选择',
+    listening: '正在聆听...',
+    waitingForSignal: '请将麦克风靠近机器',
+    initializing: '正在初始化...',
+    analyzing: '正在分析声音...',
+    machineRecognized: '已识别机器',
+    matchConfidence: '匹配度',
+    continueAnalysis: '继续分析',
+    differentMachine: '其他机器',
+    uncertainMatch: '这是哪台机器？',
+    selectMachine: '请选择匹配的机器',
+    noMatch: '我还不认识这个声音',
+    noMatchHint: '您想录制参考吗？',
+    recordReference: '录制参考',
+    newMachine: '创建新机器',
+  },
+
+  // ============================================================================
   // COMMON
   // ============================================================================
   common: {

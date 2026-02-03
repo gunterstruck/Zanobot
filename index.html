@@ -443,43 +443,71 @@
                     </svg>
                 </div>
                 <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
-                    <!-- State B: No machine selected - Three-way selection tiles -->
+                    <!-- NEW: Simplified Auto-Detection Flow -->
+                    <!-- Primary CTA: "Jetzt prüfen" - starts auto-detection without machine selection -->
                     <div id="diagnose-no-machine" class="container-content diagnose-state-content">
-                        <div class="diagnose-tiles">
-                            <!-- Tile 1: Scan QR/Barcode -->
-                            <button class="diagnose-tile" id="diagnose-scan-btn">
-                                <div class="diagnose-tile-icon">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="3" width="7" height="7" rx="1"/>
-                                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                                        <rect x="14" y="14" width="3" height="3"/>
-                                        <path d="M17 14h3v3m0 3h-3m3 0v-3"/>
-                                    </svg>
-                                </div>
-                                <span class="diagnose-tile-label" data-i18n="diagnose.scanCode">QR scannen</span>
+                        <!-- Primary Action: Auto-detect button -->
+                        <div class="auto-detect-primary">
+                            <button class="action-btn auto-detect-btn" id="diagnose-auto-detect-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                                <span data-i18n="autoDetect.startButton">Jetzt prüfen</span>
                             </button>
-                            <!-- Tile 2: Select existing machine -->
-                            <button class="diagnose-tile" id="diagnose-select-btn">
-                                <div class="diagnose-tile-icon">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="4" width="18" height="4" rx="1"/>
-                                        <rect x="3" y="10" width="18" height="4" rx="1"/>
-                                        <rect x="3" y="16" width="18" height="4" rx="1"/>
-                                    </svg>
-                                </div>
-                                <span class="diagnose-tile-label" data-i18n="diagnose.selectExisting">Maschine wählen</span>
-                            </button>
-                            <!-- Tile 3: Create new machine -->
-                            <button class="diagnose-tile" id="diagnose-create-btn">
-                                <div class="diagnose-tile-icon">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="12" y1="5" x2="12" y2="19"/>
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
-                                    </svg>
-                                </div>
-                                <span class="diagnose-tile-label" data-i18n="diagnose.createNew">Neue Maschine</span>
-                            </button>
+                            <p class="auto-detect-hint" data-i18n="autoDetect.hint">
+                                Das System erkennt automatisch bekannte Maschinen
+                            </p>
+                        </div>
+
+                        <!-- Secondary: Manual selection toggle -->
+                        <button class="manual-selection-toggle" id="diagnose-show-manual-btn">
+                            <span data-i18n="autoDetect.showManualSelection">Maschine manuell auswählen</span>
+                            <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+
+                        <!-- Manual selection options (hidden by default) -->
+                        <div id="diagnose-manual-selection" class="manual-selection-options" style="display: none;">
+                            <div class="diagnose-tiles">
+                                <!-- Tile 1: Scan QR/Barcode -->
+                                <button class="diagnose-tile" id="diagnose-scan-btn">
+                                    <div class="diagnose-tile-icon">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                            <rect x="14" y="14" width="3" height="3"/>
+                                            <path d="M17 14h3v3m0 3h-3m3 0v-3"/>
+                                        </svg>
+                                    </div>
+                                    <span class="diagnose-tile-label" data-i18n="diagnose.scanCode">QR scannen</span>
+                                </button>
+                                <!-- Tile 2: Select existing machine -->
+                                <button class="diagnose-tile" id="diagnose-select-btn">
+                                    <div class="diagnose-tile-icon">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="4" rx="1"/>
+                                            <rect x="3" y="10" width="18" height="4" rx="1"/>
+                                            <rect x="3" y="16" width="18" height="4" rx="1"/>
+                                        </svg>
+                                    </div>
+                                    <span class="diagnose-tile-label" data-i18n="diagnose.selectExisting">Maschine wählen</span>
+                                </button>
+                                <!-- Tile 3: Create new machine -->
+                                <button class="diagnose-tile" id="diagnose-create-btn">
+                                    <div class="diagnose-tile-icon">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"/>
+                                            <line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                    </div>
+                                    <span class="diagnose-tile-label" data-i18n="diagnose.createNew">Neue Maschine</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1678,6 +1706,110 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-primary" id="close-about-btn" data-i18n="buttons.close">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================
+         AUTO-DETECTION MODALS
+         Modals for the simplified "Zustand prüfen" flow with automatic machine recognition
+         ======================================================================== -->
+
+    <!-- Modal: Auto-Detection Listening (shows while detecting) -->
+    <div id="auto-detect-modal" class="modal auto-detect-modal" style="display: none;" role="dialog" aria-labelledby="auto-detect-title" aria-modal="true">
+        <div class="modal-content auto-detect-content">
+            <div class="auto-detect-visual">
+                <div class="pulse-circle" id="auto-detect-pulse">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </div>
+            </div>
+            <h3 id="auto-detect-title" class="auto-detect-title" data-i18n="autoDetect.listening">Höre zu...</h3>
+            <p id="auto-detect-subtitle" class="auto-detect-subtitle" data-i18n="autoDetect.waitingForSignal">Bitte Mikrofon an die Maschine halten</p>
+            <button class="modal-btn btn-secondary" id="auto-detect-cancel-btn" data-i18n="buttons.cancel">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- Modal: Machine Recognized (Fall A - High Confidence ≥80%) -->
+    <div id="machine-recognized-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="recognized-title" aria-modal="true">
+        <div class="modal-content recognized-content">
+            <div class="recognized-header">
+                <div class="recognized-icon status-healthy">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h3 id="recognized-title" class="recognized-title" data-i18n="autoDetect.machineRecognized">Maschine erkannt</h3>
+            </div>
+            <div class="recognized-info">
+                <p class="recognized-machine-name" id="recognized-machine-name">—</p>
+                <div class="recognized-details">
+                    <span class="recognized-similarity" id="recognized-similarity">—%</span>
+                    <span data-i18n="autoDetect.matchConfidence">Übereinstimmung</span>
+                </div>
+                <div id="recognized-status" class="recognized-status status-healthy">Unauffällig</div>
+            </div>
+            <div class="recognized-actions">
+                <button class="modal-btn btn-primary" id="recognized-continue-btn" data-i18n="autoDetect.continueAnalysis">Weiter prüfen</button>
+                <button class="modal-btn btn-secondary" id="recognized-different-btn" data-i18n="autoDetect.differentMachine">Andere Maschine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Candidate Selection (Fall B - Uncertain 40-79%) -->
+    <div id="candidate-selection-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="candidate-title" aria-modal="true">
+        <div class="modal-content candidate-content">
+            <div class="candidate-header">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--status-uncertain)" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <h3 id="candidate-title" class="candidate-title" data-i18n="autoDetect.uncertainMatch">Welche Maschine ist das?</h3>
+                <p class="candidate-subtitle" data-i18n="autoDetect.selectMachine">Bitte wählen Sie die passende Maschine</p>
+            </div>
+            <div class="candidate-list" id="candidate-list">
+                <!-- Candidates will be populated dynamically -->
+            </div>
+            <div class="candidate-actions">
+                <button class="modal-btn btn-secondary" id="candidate-cancel-btn" data-i18n="buttons.cancel">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: No Match Found (Fall C - Below 40%) -->
+    <div id="no-match-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="no-match-title" aria-modal="true">
+        <div class="modal-content no-match-content">
+            <div class="no-match-header">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9 9a3 3 0 1 1 6 0c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <h3 id="no-match-title" class="no-match-title" data-i18n="autoDetect.noMatch">Dieses Geräusch kenne ich noch nicht</h3>
+                <p class="no-match-subtitle" data-i18n="autoDetect.noMatchHint">Möchten Sie eine Referenz aufnehmen?</p>
+            </div>
+            <div class="no-match-actions">
+                <button class="modal-btn btn-primary" id="no-match-record-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    </svg>
+                    <span data-i18n="autoDetect.recordReference">Referenz aufnehmen</span>
+                </button>
+                <button class="modal-btn btn-secondary" id="no-match-new-machine-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span data-i18n="autoDetect.newMachine">Neue Maschine anlegen</span>
+                </button>
+                <button class="modal-btn btn-text" id="no-match-cancel-btn" data-i18n="buttons.cancel">Abbrechen</button>
             </div>
         </div>
     </div>

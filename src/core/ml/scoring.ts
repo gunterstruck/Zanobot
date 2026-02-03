@@ -12,7 +12,15 @@
  * - cos(α): Cosine similarity between test and reference
  */
 
-import type { GMIAModel, DiagnosisResult, FeatureVector } from '@data/types.js';
+import type {
+  GMIAModel,
+  DiagnosisResult,
+  FeatureVector,
+  Machine,
+  MachineMatchResult,
+  AutoDetectionResult,
+} from '@data/types.js';
+import { AUTO_DETECTION_THRESHOLDS } from '@data/types.js';
 import { inferGMIA } from './gmia.js';
 import { vectorMagnitude } from './mathUtils.js';
 import { logger } from '@utils/logger.js';
@@ -810,4 +818,168 @@ function generateMulticlassHint(
 
   // status === 'faulty'
   return t('scoring.multiclass.faulty', { label, score: score.toFixed(1) });
+}
+
+// ============================================================================
+// AUTO-DETECTION: MULTI-MACHINE CLASSIFICATION
+// Used for automatic machine recognition in "Zustand prüfen" flow
+// ============================================================================
+
+/**
+ * Compare audio against a single machine's reference models
+ *
+ * @param machine - Machine with reference models to compare against
+ * @param featureVector - Feature vector from test audio
+ * @param testSampleRate - Sample rate of test audio
+ * @returns Match result for this machine
+ */
+export function classifyAgainstMachine(
+  machine: Machine,
+  featureVector: FeatureVector,
+  testSampleRate: number
+): MachineMatchResult {
+  // Filter models by sample rate
+  const compatibleModels = machine.referenceModels?.filter(
+    (model) => model.sampleRate === testSampleRate
+  ) || [];
+
+  // No compatible models
+  if (compatibleModels.length === 0) {
+    return {
+      machine,
+      bestModel: null,
+      similarity: 0,
+      rawCosine: 0,
+      detectedState: 'UNKNOWN',
+      status: 'uncertain',
+    };
+  }
+
+  // Use existing multiclass classification
+  try {
+    const diagnosis = classifyDiagnosticState(compatibleModels, featureVector, testSampleRate);
+
+    // Find the best matching model
+    const bestModel = compatibleModels.find(
+      (m) => m.label === diagnosis.metadata?.detectedState
+    ) || compatibleModels[0];
+
+    return {
+      machine,
+      bestModel,
+      similarity: diagnosis.healthScore,
+      rawCosine: diagnosis.rawCosineSimilarity || 0,
+      detectedState: (diagnosis.metadata?.detectedState as string) || 'UNKNOWN',
+      status: diagnosis.status,
+    };
+  } catch (error) {
+    logger.warn(`Error classifying against machine ${machine.name}:`, error);
+    return {
+      machine,
+      bestModel: null,
+      similarity: 0,
+      rawCosine: 0,
+      detectedState: 'UNKNOWN',
+      status: 'uncertain',
+    };
+  }
+}
+
+/**
+ * Compare audio against ALL machines in the database
+ *
+ * This is the core function for automatic machine recognition.
+ * It compares the test audio against all machines and determines:
+ * - High confidence (≥80%): Automatic recognition
+ * - Uncertain (40-79%): Show selection to user
+ * - No match (<40%): Unknown sound
+ *
+ * @param machines - All machines to compare against
+ * @param featureVector - Feature vector from test audio
+ * @param testSampleRate - Sample rate of test audio
+ * @returns Auto-detection result with outcome and candidates
+ */
+export function classifyAcrossAllMachines(
+  machines: Machine[],
+  featureVector: FeatureVector,
+  testSampleRate: number
+): AutoDetectionResult {
+  const timestamp = Date.now();
+
+  // Filter machines that have reference models
+  const machinesWithModels = machines.filter(
+    (m) => m.referenceModels && m.referenceModels.length >= AUTO_DETECTION_THRESHOLDS.MIN_MODELS
+  );
+
+  if (machinesWithModels.length === 0) {
+    logger.info('🔍 Auto-detection: No machines with reference models found');
+    return {
+      outcome: 'no_match',
+      bestMatch: null,
+      candidates: [],
+      timestamp,
+      featureVector,
+    };
+  }
+
+  // Compare against all machines
+  const candidates: MachineMatchResult[] = [];
+
+  for (const machine of machinesWithModels) {
+    const result = classifyAgainstMachine(machine, featureVector, testSampleRate);
+    candidates.push(result);
+  }
+
+  // Sort by similarity (highest first)
+  candidates.sort((a, b) => b.similarity - a.similarity);
+
+  // Determine outcome based on best match
+  const bestMatch = candidates[0] || null;
+  const bestSimilarity = bestMatch?.similarity || 0;
+
+  let outcome: AutoDetectionResult['outcome'];
+
+  if (bestSimilarity >= AUTO_DETECTION_THRESHOLDS.HIGH_CONFIDENCE) {
+    outcome = 'high_confidence';
+    logger.info(
+      `✅ Auto-detection: High confidence match! ${bestMatch?.machine.name} (${bestSimilarity.toFixed(1)}%)`
+    );
+  } else if (bestSimilarity >= AUTO_DETECTION_THRESHOLDS.LOW_CONFIDENCE) {
+    outcome = 'uncertain';
+    logger.info(
+      `⚠️ Auto-detection: Uncertain match. Best: ${bestMatch?.machine.name} (${bestSimilarity.toFixed(1)}%)`
+    );
+  } else {
+    outcome = 'no_match';
+    logger.info(
+      `❌ Auto-detection: No match found. Best similarity: ${bestSimilarity.toFixed(1)}%`
+    );
+  }
+
+  return {
+    outcome,
+    bestMatch,
+    candidates,
+    timestamp,
+    featureVector,
+  };
+}
+
+/**
+ * Get top candidates for user selection (Fall B: uncertain match)
+ *
+ * Filters candidates above the minimum threshold and returns them
+ * for display to the user.
+ *
+ * @param result - Auto-detection result
+ * @param maxCandidates - Maximum number of candidates to return (default: 5)
+ * @returns Filtered candidates above minimum threshold
+ */
+export function getTopCandidates(
+  result: AutoDetectionResult,
+  maxCandidates: number = 5
+): MachineMatchResult[] {
+  return result.candidates
+    .filter((c) => c.similarity >= AUTO_DETECTION_THRESHOLDS.LOW_CONFIDENCE)
+    .slice(0, maxCandidates);
 }
