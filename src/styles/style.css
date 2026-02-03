@@ -18,6 +18,10 @@
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
 
+    /* Dynamic Layout Gap - responsive vertical rhythm for main layout
+       Shrinks on small screens, expands on large screens, all gaps sync */
+    --layout-gap-dynamic: clamp(0.5rem, 2vh, 1.5rem);
+
     /* Border Radius (Theme-Independent) */
     --radius-xs: 4px;
     --radius-sm: 8px;
@@ -335,8 +339,8 @@ body {
     flex-direction: column;
     /* Pack items from top - don't stretch to fill viewport */
     justify-content: flex-start;
-    /* Fixed spacing - no viewport dependency for browser/PWA consistency */
-    gap: var(--spacing-md);
+    /* Unified dynamic gap - all vertical spacing syncs together */
+    gap: var(--layout-gap-dynamic);
     min-height: 100dvh;
 }
 
@@ -344,13 +348,6 @@ body {
     .container {
         padding: var(--spacing-lg);
         padding-bottom: var(--spacing-xl);
-    }
-}
-
-@media (min-width: 900px) {
-    .container {
-        /* Match .main-actions gap at desktop breakpoint */
-        gap: var(--spacing-lg);
     }
 }
 
@@ -486,10 +483,9 @@ body {
     flex-direction: column;
     flex: 0 0 auto;
     justify-content: flex-start;
-    /* STABIL: Fester Abstand zwischen Containern - unabhängig vom Collapse-Zustand */
-    gap: var(--spacing-md);
+    /* Unified dynamic gap - matches container for consistent vertical rhythm */
+    gap: var(--layout-gap-dynamic);
     align-items: stretch;
-    /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
     max-width: var(--content-max-width);
     margin: 0 auto;
@@ -502,11 +498,6 @@ body {
 
     .container {
         max-width: 520px;
-    }
-
-    .main-actions {
-        /* STABIL: Fester Abstand auf Desktop - nicht von vh abhängig */
-        gap: var(--spacing-lg);
     }
 
     .main-header {
