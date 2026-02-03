@@ -126,21 +126,13 @@
     <div class="container">
         <!-- Hero Header Image -->
         <section class="hero-header">
-            <img src="./icons/zanobo_banner_1024x400.png" alt="ZANOBO AI Assistant - AI-powered machine health monitoring through sound analysis" class="hero-image">
+            <img src="./icons/zanobo_banner_1024x500.png" alt="ZANOBO AI Assistant - AI-powered machine health monitoring through sound analysis" class="hero-image">
 
             <!-- Banner Text Overlay -->
             <div class="hero-text-overlay">
                 <h1 class="hero-headline" data-i18n="banner.headline">Hört sich die Anlage normal an?</h1>
                 <p class="hero-subline" data-i18n="banner.subline">Zustand in Sekunden prüfen – direkt am Gerät, offline</p>
             </div>
-
-            <button type="button" class="hero-upload-btn" id="hero-banner-upload-btn" aria-label="Bannerbild hochladen">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3l2-2h4l2 2h3a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
-                </svg>
-            </button>
-            <input type="file" id="hero-banner-upload-input" class="hero-upload-input" accept="image/png">
         </section>
 
         <div class="main-actions">
@@ -1261,6 +1253,44 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="settings-divider"></div>
+
+                    <!-- Banner Settings (Advanced+ only) -->
+                    <div class="setting-category" data-view-level="advanced">
+                        <h4 class="setting-category-title" data-i18n="settingsUI.bannerTitle">Banner-Bild</h4>
+                        <p class="setting-category-description" data-i18n="settingsUI.bannerDescription">Passen Sie das Banner-Bild der Startseite an. Jedes Theme kann ein eigenes Banner haben.</p>
+
+                        <!-- Banner Preview -->
+                        <div class="banner-preview-container">
+                            <img id="banner-preview-image" class="banner-preview-image" alt="Banner-Vorschau">
+                        </div>
+
+                        <!-- Banner Actions -->
+                        <div class="banner-actions">
+                            <button class="action-btn secondary-btn" id="banner-upload-btn" type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <span data-i18n="settingsUI.bannerUpload">Banner hochladen</span>
+                            </button>
+                            <button class="action-btn tertiary-btn" id="banner-reset-btn" type="button" disabled>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="1 4 1 10 7 10"/>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                                </svg>
+                                <span data-i18n="settingsUI.bannerReset">Auf Standard zurücksetzen</span>
+                            </button>
+                            <input type="file" id="banner-upload-input" style="display: none;" accept="image/png">
+                        </div>
+
+                        <p class="setting-description" data-i18n="settingsUI.bannerHint">
+                            Empfohlen: 1024×400 oder 1024×500 Pixel, PNG-Format. Das linke Drittel bleibt für Text frei.
+                        </p>
                     </div>
 
                     <!-- Divider -->

@@ -244,6 +244,12 @@ export async function getAppSetting<T>(key: string): Promise<AppSetting<T> | und
   return await db.get('app_settings', key) as AppSetting<T> | undefined;
 }
 
+export async function deleteAppSetting(key: string): Promise<void> {
+  const db = await initDB();
+  await db.delete('app_settings', key);
+  logger.info(`🗑️ App setting deleted: ${key}`);
+}
+
 // ============================================================================
 // STORAGE QUOTA MANAGEMENT
 // ============================================================================
