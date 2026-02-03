@@ -397,7 +397,7 @@ body {
     max-width: var(--content-max-width);
     margin-left: auto;
     margin-right: auto;
-    margin-top: var(--spacing-sm);
+    /* No margin-top - let flex gap handle spacing */
     position: relative;
     /* Fixed height range for stability */
     height: clamp(108px, 18vh, 216px);
@@ -1426,6 +1426,8 @@ body {
 .footer {
     /* Prevent browser from squashing footer when space is tight */
     flex-shrink: 0;
+    /* Push footer to bottom when content is short, scroll when long */
+    margin-top: auto;
     width: 100%;
     max-width: var(--content-max-width);
     /* Fixed height - no viewport dependency for stability */
@@ -3236,132 +3238,6 @@ html[data-view-level="advanced"] .ghost-overlay-hint {
         width: 42px;
         height: 42px;
         justify-content: center;
-    }
-}
-
-/* ===================================
-   COMPACT MODE (iPhone SE / Small Screens)
-   Force "One-Screen-Experience"
-   =================================== */
-/* ===================================
-   COMPACT MODE (iPhone SE / Small Screens)
-   Strict "One-Screen" Enforcement
-   =================================== */
-@media (max-height: 700px) {
-    /* Compact Mode: Override content width for all elements */
-    :root {
-        --content-max-width: 360px;
-    }
-
-    /* 1. Haupt-Container fixieren */
-    .container {
-        --compact-gap: clamp(6px, 1.4vh, 12px);
-        height: 100dvh !important; /* Nutze den vollen Viewport */
-        width: 100% !important;
-        padding: 8px !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important; /* VERHINDERT Scrollen des gesamten Screens */
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0 !important;
-    }
-    /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
-    .hero-header {
-        flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        margin-bottom: 0 !important;
-    }
-    /* Banner füllt Container randlos (edge-to-edge) */
-    .hero-header img {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        object-fit: cover !important;
-        object-position: center !important;
-        display: block !important;
-    }
-    .logo svg, .logo {
-        height: 100% !important;
-        width: auto !important;
-        display: block !important;
-    }
-    /* Unnötige Texte im Header ausblenden um Platz zu sparen */
-    .brand-subtitle, .header-divider {
-        display: none !important;
-    }
-    /* 3. Mittelteil (Buttons): Packt sich zusammen */
-    .main-actions, .phases-container {
-        flex: 1 1 auto !important; /* Nimmt restlichen Platz */
-        min-height: 0 !important; /* WICHTIG: Erlaubt Schrumpfen unter Inhalt-Größe */
-        overflow-y: auto !important; /* Scrollen NUR hier, falls nötig */
-
-        /* Layout: Natural top-down flow */
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-start !important;
-        gap: 1rem !important;
-        padding: 0 !important;
-        width: 100% !important;
-        margin: 0 auto !important;
-    }
-    .main-actions .main-container {
-        margin-bottom: 0 !important;
-    }
-    .main-header {
-        min-height: clamp(72px, 10.5vh, 96px) !important;
-        padding: clamp(0.75rem, 3vh, 1.35rem) clamp(0.75rem, 3vw, 1.1rem) !important;
-    }
-    .container-title {
-        font-size: 0.95rem !important;
-    }
-    /* Button-Styling kompakt */
-    .action-btn, button {
-        flex: 0 0 auto !important; /* Buttons behalten ihre Größe */
-        height: auto !important;
-        padding: 6px 10px !important;
-        margin: 0 !important;
-        font-size: 0.8rem !important;
-        white-space: nowrap !important;
-    }
-    /* 4. Footer: Darf NICHT aus dem Bild rutschen */
-    .footer, .app-footer {
-        flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
-        margin-top: 0 !important;
-        padding: 4px 6px !important;
-        height: clamp(36px, 6vh, 54px) !important;
-        z-index: 10;
-    }
-    /* Links nebeneinander */
-    .legal-info, .footer p {
-        display: flex !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        margin: 0 !important;
-        font-size: 0.55rem !important;
-    }
-    .footer-link, .separator {
-        display: inline-block !important;
-        font-size: 0.55rem !important;
-    }
-
-    /* Bei geöffnetem Bereich: normales Scrollen, Footer darf verschwinden */
-    body.compact-expanded .container {
-        overflow-y: auto !important;
-    }
-
-    body.compact-expanded .main-actions,
-    body.compact-expanded .phases-container {
-        flex: 0 0 auto !important;
-        overflow: visible !important;
-        justify-content: flex-start !important;
-    }
-
-    body.compact-expanded .footer,
-    body.compact-expanded .app-footer {
-        display: none !important;
     }
 }
 
