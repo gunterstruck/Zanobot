@@ -710,6 +710,15 @@ export class Router {
       if (btn.classList.contains('diagnose-tile')) {
         return;
       }
+      // Skip auto-detect button - it should always be clickable since
+      // auto-detection works without requiring machine pre-selection
+      if (btn.classList.contains('auto-detect-btn')) {
+        return;
+      }
+      // Skip manual selection toggle - always needs to be clickable
+      if (btn.classList.contains('manual-selection-toggle')) {
+        return;
+      }
       btn.disabled = !enabled;
       btn.style.opacity = enabled ? '1' : '0.5';
       btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
