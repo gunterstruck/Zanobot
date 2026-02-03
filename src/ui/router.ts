@@ -83,6 +83,10 @@ export class Router {
     // Lock Phase 2 and 3 initially
     this.lockPhases();
 
+    // CRITICAL: Explicitly ensure auto-detect buttons are always enabled
+    // This is needed because auto-detection works WITHOUT machine pre-selection
+    this.ensureAutoDetectButtonsEnabled();
+
     // Set initial mode visibility
     this.updateModeVisibility(this.modeManager.getMode());
 
@@ -723,6 +727,32 @@ export class Router {
       btn.style.opacity = enabled ? '1' : '0.5';
       btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     });
+  }
+
+  /**
+   * Explicitly ensure auto-detect buttons are always enabled
+   * Called after lockPhases() to guarantee these buttons remain clickable
+   */
+  private ensureAutoDetectButtonsEnabled(): void {
+    // Auto-detect button
+    const autoDetectBtn = document.getElementById('diagnose-auto-detect-btn');
+    if (autoDetectBtn instanceof HTMLButtonElement) {
+      autoDetectBtn.disabled = false;
+      autoDetectBtn.style.opacity = '1';
+      autoDetectBtn.style.cursor = 'pointer';
+      autoDetectBtn.style.pointerEvents = 'auto';
+      logger.debug('[Router] Auto-detect button explicitly enabled');
+    }
+
+    // Manual selection toggle
+    const manualToggleBtn = document.getElementById('diagnose-show-manual-btn');
+    if (manualToggleBtn instanceof HTMLButtonElement) {
+      manualToggleBtn.disabled = false;
+      manualToggleBtn.style.opacity = '1';
+      manualToggleBtn.style.cursor = 'pointer';
+      manualToggleBtn.style.pointerEvents = 'auto';
+      logger.debug('[Router] Manual selection toggle explicitly enabled');
+    }
   }
 
   /**

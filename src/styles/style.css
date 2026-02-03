@@ -6601,6 +6601,21 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     pointer-events: none;
 }
 
+/* CRITICAL: Force auto-detect button to always be clickable
+   These rules override any JavaScript-applied disabled states */
+#diagnose-auto-detect-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+#diagnose-auto-detect-btn:disabled {
+    /* Even when disabled attribute is set, keep it visually and functionally enabled */
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
 .auto-detect-hint {
     color: var(--text-muted);
     font-size: 0.85rem;
@@ -6621,6 +6636,19 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     font-size: 0.85rem;
     cursor: pointer;
     transition: color 0.2s ease;
+}
+
+/* CRITICAL: Force manual selection toggle to always be clickable */
+#diagnose-show-manual-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+#diagnose-show-manual-btn:disabled {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
 }
 
 .manual-selection-toggle:hover {
