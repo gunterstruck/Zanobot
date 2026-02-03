@@ -389,11 +389,64 @@
                     </svg>
                 </div>
                 <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
-                    <!-- Level 1 (GMIA) Diagnose Content -->
-                    <div class="container-content level1-content" data-detection-mode="STATIONARY">
-                        <p class="sub-description" data-i18n="diagnose.liveAnalysis">Live-Analyse durchführen</p>
-                        <button class="action-btn" id="diagnose-btn" data-i18n="buttons.analyze">Analysieren</button>
+                    <!-- State B: No machine selected - Three-way selection tiles -->
+                    <div id="diagnose-no-machine" class="container-content diagnose-state-content">
+                        <div class="diagnose-tiles">
+                            <!-- Tile 1: Scan QR/Barcode -->
+                            <button class="diagnose-tile" id="diagnose-scan-btn">
+                                <div class="diagnose-tile-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                        <rect x="14" y="14" width="3" height="3"/>
+                                        <path d="M17 14h3v3m0 3h-3m3 0v-3"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-tile-label" data-i18n="diagnose.scanCode">QR scannen</span>
+                            </button>
+                            <!-- Tile 2: Select existing machine -->
+                            <button class="diagnose-tile" id="diagnose-select-btn">
+                                <div class="diagnose-tile-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="4" rx="1"/>
+                                        <rect x="3" y="10" width="18" height="4" rx="1"/>
+                                        <rect x="3" y="16" width="18" height="4" rx="1"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-tile-label" data-i18n="diagnose.selectExisting">Maschine wählen</span>
+                            </button>
+                            <!-- Tile 3: Create new machine -->
+                            <button class="diagnose-tile" id="diagnose-create-btn">
+                                <div class="diagnose-tile-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-tile-label" data-i18n="diagnose.createNew">Neue Maschine</span>
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- State A: Machine selected - Ready to analyze -->
+                    <div id="diagnose-machine-ready" class="container-content diagnose-state-content" style="display: none;">
+                        <div class="diagnose-machine-info">
+                            <div class="diagnose-machine-details">
+                                <h4 class="diagnose-machine-name" id="diagnose-selected-machine-name">—</h4>
+                                <p class="diagnose-machine-meta" id="diagnose-selected-machine-meta"></p>
+                            </div>
+                            <button class="diagnose-change-machine-btn" id="diagnose-change-machine-btn" data-i18n-title="diagnose.changeMachine" title="Maschine wechseln">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Analyze button only visible when machine is selected -->
+                        <button class="action-btn diagnose-main-btn" id="diagnose-btn" data-i18n="buttons.analyze">Analysieren</button>
+                    </div>
+
                     <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
                     <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
                         <!-- Default content shown before machine selection -->
@@ -744,7 +797,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p class="modal-description" data-i18n="modals.nfcDiagnosisPrompt">Maschine erkannt. Diagnose jetzt starten?</p>
+                <p class="modal-description" data-i18n="modals.nfcDiagnosisPrompt">Maschine erkannt. Zustand jetzt prüfen?</p>
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-secondary" id="nfc-diagnosis-cancel-btn" data-i18n="common.no">Nein</button>

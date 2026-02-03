@@ -18,10 +18,13 @@ import { DiagnosePhase } from './phases/3-Diagnose.js';
 import { SettingsPhase } from './phases/4-Settings.js';
 import { Level2ReferencePhase } from './phases/Level2-Reference.js';
 import { Level2DiagnosePhase } from './phases/Level2-Diagnose.js';
+import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
+import { getAllMachines } from '@data/db.js';
 import type { DetectionMode } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { notify } from '@utils/notifications.js';
 import { t } from '../i18n/index.js';
 
 export class Router {
@@ -37,6 +40,9 @@ export class Router {
   private level2ReferencePhase: Level2ReferencePhase | null = null;
   private level2DiagnosePhase: Level2DiagnosePhase | null = null;
 
+  // Diagnose card state controller
+  private diagnoseCardController: DiagnoseCardController;
+
   // Mode management
   private modeManager = getDetectionModeManager();
   private unsubscribeModeChange?: () => void;
@@ -49,6 +55,15 @@ export class Router {
     // Initialize Phase 4 (Settings - always available, independent of machine selection)
     this.settingsPhase = new SettingsPhase();
     this.settingsPhase.init();
+
+    // Initialize DiagnoseCardController for state-based UI
+    this.diagnoseCardController = new DiagnoseCardController();
+    this.diagnoseCardController.init({
+      onMachineSelected: (machine) => this.onMachineSelected(machine),
+      onScanRequested: () => this.handleDiagnoseScanRequest(),
+      onSelectRequested: () => this.handleDiagnoseSelectRequest(),
+      onCreateRequested: () => this.handleDiagnoseCreateRequest(),
+    });
 
     // Lock Phase 2 and 3 initially
     this.lockPhases();
@@ -90,6 +105,9 @@ export class Router {
     // Update UI to show selected machine
     this.updateMachineDisplay(machine);
 
+    // Update diagnose card state to show machine info
+    this.diagnoseCardController.setMachine(machine);
+
     // Unlock Phase 2 and 3
     this.unlockPhases();
 
@@ -98,6 +116,90 @@ export class Router {
 
     // Initialize Phase 2 and 3 with the selected machine
     this.initializePhases(machine);
+  }
+
+  /**
+   * Handle scan request from diagnose card
+   * Opens the scanner modal via IdentifyPhase
+   */
+  private handleDiagnoseScanRequest(): void {
+    logger.info('📷 Scan requested from diagnose card');
+    // Trigger the scan button click in the identify phase
+    const scanBtn = document.getElementById('scan-btn');
+    if (scanBtn) {
+      scanBtn.click();
+    }
+  }
+
+  /**
+   * Handle select existing machine request from diagnose card
+   * Checks if machines exist, then expands the machine selection section
+   */
+  private async handleDiagnoseSelectRequest(): Promise<void> {
+    logger.info('📋 Select machine requested from diagnose card');
+
+    try {
+      const machines = await getAllMachines();
+
+      if (machines.length === 0) {
+        // No machines exist - show hint and redirect to create
+        notify.info(t('diagnose.noMachinesYet'), {
+          title: t('diagnose.noMachinesHint'),
+          duration: 4000,
+        });
+        // Redirect to create new machine
+        this.handleDiagnoseCreateRequest();
+        return;
+      }
+
+      // Machines exist - show the selection
+      this.expandSection('select-machine-content');
+      // Scroll to machine overview section
+      const machineOverview = document.getElementById('machine-overview');
+      if (machineOverview) {
+        machineOverview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (error) {
+      logger.error('Error checking machines:', error);
+      // Fallback: just expand the section
+      this.expandSection('select-machine-content');
+    }
+  }
+
+  /**
+   * Handle create machine request from diagnose card
+   * Expands the machine selection section and focuses on name input
+   */
+  private handleDiagnoseCreateRequest(): void {
+    logger.info('➕ Create machine requested from diagnose card');
+    // Expand the machine selection section
+    this.expandSection('select-machine-content');
+    // Focus on the name input
+    const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
+    if (nameInput) {
+      nameInput.focus();
+    }
+  }
+
+  /**
+   * Expand a collapsible section by content ID
+   */
+  private expandSection(sectionId: string): void {
+    const content = document.getElementById(sectionId);
+    if (!content) {
+      return;
+    }
+
+    const computedDisplay = window.getComputedStyle(content).display;
+    if (computedDisplay === 'none') {
+      content.style.display = content.dataset.originalDisplay || 'block';
+    }
+
+    const header = document.querySelector(`.section-header[data-target="${sectionId}"]`);
+    const icon = header?.querySelector('.collapse-icon');
+    if (icon) {
+      icon.classList.add('rotated');
+    }
   }
 
   /**
@@ -286,6 +388,11 @@ export class Router {
 
     const buttons = section.querySelectorAll('button');
     buttons.forEach((btn) => {
+      // Skip diagnose tile buttons - they should always be clickable
+      // to allow machine selection even when phase is "locked"
+      if (btn.classList.contains('diagnose-tile')) {
+        return;
+      }
       btn.disabled = !enabled;
       btn.style.opacity = enabled ? '1' : '0.5';
       btn.style.cursor = enabled ? 'pointer' : 'not-allowed';

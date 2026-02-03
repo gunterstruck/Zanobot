@@ -6062,6 +6062,187 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   DIAGNOSE CARD STATE-BASED UI
+   =================================== */
+
+/* Container for state-based content */
+.diagnose-state-content {
+    padding: var(--spacing-md);
+}
+
+/* ----------------------------------------
+   State B: No machine selected
+   Horizontal 3-tile selection layout
+   ---------------------------------------- */
+.diagnose-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+/* Square touch tiles */
+.diagnose-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    aspect-ratio: 1;
+    padding: var(--spacing-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--btn-transition);
+    min-height: 90px;
+}
+
+.diagnose-tile:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: var(--hover-lift);
+    box-shadow: var(--shadow-md);
+}
+
+.diagnose-tile:active {
+    transform: var(--active-press);
+}
+
+.diagnose-tile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    pointer-events: none; /* Clicks pass through to button */
+}
+
+.diagnose-tile-icon svg {
+    color: var(--primary-color);
+    stroke: var(--primary-color);
+    pointer-events: none; /* Clicks pass through to button */
+}
+
+.diagnose-tile-label {
+    font-size: var(--font-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    pointer-events: none; /* Clicks pass through to button */
+}
+
+/* ----------------------------------------
+   State A: Machine selected
+   Ready to analyze
+   ---------------------------------------- */
+.diagnose-machine-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.diagnose-machine-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.diagnose-machine-name {
+    font-size: var(--font-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diagnose-machine-meta {
+    font-size: var(--font-sm);
+    color: var(--text-muted);
+    margin: var(--spacing-xs) 0 0 0;
+}
+
+.diagnose-change-machine-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--btn-transition);
+    flex-shrink: 0;
+    margin-left: var(--spacing-sm);
+}
+
+.diagnose-change-machine-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Main analyze button - dominant CTA */
+.diagnose-main-btn {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    padding: var(--spacing-md) var(--spacing-xl);
+    min-height: 56px;
+    width: 100%;
+}
+
+/* ----------------------------------------
+   Responsive: Tablet and larger
+   ---------------------------------------- */
+@media (min-width: 481px) {
+    .diagnose-tile {
+        min-height: 100px;
+    }
+
+    .diagnose-tile-icon svg {
+        width: 44px;
+        height: 44px;
+    }
+
+    .diagnose-tile-label {
+        font-size: var(--font-sm);
+    }
+}
+
+/* ----------------------------------------
+   Responsive: Small screens
+   Keep horizontal but tighter
+   ---------------------------------------- */
+@media (max-width: 480px) {
+    .diagnose-tiles {
+        gap: var(--spacing-xs);
+    }
+
+    .diagnose-tile {
+        min-height: 80px;
+        padding: var(--spacing-xs);
+    }
+
+    .diagnose-tile-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .diagnose-tile-label {
+        font-size: 0.65rem;
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
