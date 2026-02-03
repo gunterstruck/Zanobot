@@ -255,9 +255,9 @@ export const de: TranslationDict = {
 
     // State-based card UI
     selectMachineFirst: 'Bitte zuerst eine Maschine auswählen',
-    scanCode: 'Barcode / QR',
-    selectMachine: 'Maschine wählen',
-    createNew: 'Neue Maschine',
+    scanCode: 'Barcode / QR scannen',
+    selectExisting: 'Maschine auswählen',
+    createNew: 'Neue Maschine anlegen',
     statesReady: '{{count}} Zustand trainiert',
     noReference: 'Noch keine Referenz',
     changeMachine: 'Maschine wechseln',

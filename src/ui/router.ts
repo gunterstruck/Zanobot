@@ -59,6 +59,7 @@ export class Router {
     this.diagnoseCardController.init({
       onMachineSelected: (machine) => this.onMachineSelected(machine),
       onScanRequested: () => this.handleDiagnoseScanRequest(),
+      onSelectRequested: () => this.handleDiagnoseSelectRequest(),
       onCreateRequested: () => this.handleDiagnoseCreateRequest(),
     });
 
@@ -125,6 +126,21 @@ export class Router {
     const scanBtn = document.getElementById('scan-btn');
     if (scanBtn) {
       scanBtn.click();
+    }
+  }
+
+  /**
+   * Handle select existing machine request from diagnose card
+   * Expands the machine selection section and scrolls to machine list
+   */
+  private handleDiagnoseSelectRequest(): void {
+    logger.info('📋 Select machine requested from diagnose card');
+    // Expand the machine selection section
+    this.expandSection('select-machine-content');
+    // Scroll to machine overview section
+    const machineOverview = document.getElementById('machine-overview');
+    if (machineOverview) {
+      machineOverview.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 

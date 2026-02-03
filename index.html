@@ -392,30 +392,40 @@
                     <!-- State B: No machine selected - Machine selection prompt -->
                     <div id="diagnose-no-machine" class="container-content diagnose-state-content">
                         <p class="diagnose-prompt" data-i18n="diagnose.selectMachineFirst">Bitte zuerst eine Maschine auswählen</p>
-                        <div class="diagnose-selection-bar">
-                            <!-- Left: Scan QR/Barcode -->
-                            <button class="diagnose-selection-option" id="diagnose-scan-btn">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="8" height="8" rx="1"/>
-                                    <rect x="13" y="3" width="8" height="8" rx="1"/>
-                                    <rect x="3" y="13" width="8" height="8" rx="1"/>
-                                    <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
-                                </svg>
-                                <span data-i18n="diagnose.scanCode">Barcode / QR</span>
+                        <div class="diagnose-action-buttons">
+                            <!-- Option 1: Scan QR/Barcode -->
+                            <button class="diagnose-action-btn" id="diagnose-scan-btn">
+                                <div class="diagnose-action-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                        <rect x="14" y="14" width="3" height="3"/>
+                                        <path d="M17 14h3v3m0 3h-3m3 0v-3"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-action-label" data-i18n="diagnose.scanCode">Barcode / QR scannen</span>
                             </button>
-                            <!-- Middle: Machine dropdown -->
-                            <div class="diagnose-selection-option diagnose-dropdown-wrapper">
-                                <select id="diagnose-machine-dropdown" class="diagnose-machine-select">
-                                    <option value="" data-i18n="diagnose.selectMachine">Maschine wählen</option>
-                                </select>
-                            </div>
-                            <!-- Right: Create new machine -->
-                            <button class="diagnose-selection-option" id="diagnose-create-btn">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19"/>
-                                    <line x1="5" y1="12" x2="19" y2="12"/>
-                                </svg>
-                                <span data-i18n="diagnose.createNew">Neue Maschine</span>
+                            <!-- Option 2: Select existing machine -->
+                            <button class="diagnose-action-btn" id="diagnose-select-btn">
+                                <div class="diagnose-action-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        <path d="M9 12l2 2 4-4"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-action-label" data-i18n="diagnose.selectExisting">Maschine auswählen</span>
+                            </button>
+                            <!-- Option 3: Create new machine -->
+                            <button class="diagnose-action-btn" id="diagnose-create-btn">
+                                <div class="diagnose-action-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="9"/>
+                                        <line x1="12" y1="8" x2="12" y2="16"/>
+                                        <line x1="8" y1="12" x2="16" y2="12"/>
+                                    </svg>
+                                </div>
+                                <span class="diagnose-action-label" data-i18n="diagnose.createNew">Neue Maschine anlegen</span>
                             </button>
                         </div>
                     </div>
@@ -427,7 +437,7 @@
                                 <h4 class="diagnose-machine-name" id="diagnose-selected-machine-name">—</h4>
                                 <p class="diagnose-machine-meta" id="diagnose-selected-machine-meta"></p>
                             </div>
-                            <button class="diagnose-change-machine-btn" id="diagnose-change-machine-btn" title="Maschine wechseln">
+                            <button class="diagnose-change-machine-btn" id="diagnose-change-machine-btn" data-i18n-title="diagnose.changeMachine" title="Maschine wechseln">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -438,8 +448,7 @@
 
                     <!-- Level 1 (GMIA) Diagnose Content -->
                     <div class="container-content level1-content" data-detection-mode="STATIONARY">
-                        <p class="sub-description" data-i18n="diagnose.liveAnalysis">Live-Analyse durchführen</p>
-                        <button class="action-btn" id="diagnose-btn" data-i18n="buttons.analyze">Analysieren</button>
+                        <button class="action-btn diagnose-main-btn" id="diagnose-btn" data-i18n="buttons.analyze">Analysieren</button>
                     </div>
                     <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
                     <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
@@ -791,7 +800,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p class="modal-description" data-i18n="modals.nfcDiagnosisPrompt">Maschine erkannt. Diagnose jetzt starten?</p>
+                <p class="modal-description" data-i18n="modals.nfcDiagnosisPrompt">Maschine erkannt. Zustand jetzt prüfen?</p>
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-secondary" id="nfc-diagnosis-cancel-btn" data-i18n="common.no">Nein</button>

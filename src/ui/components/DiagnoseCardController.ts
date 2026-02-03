@@ -3,11 +3,10 @@
  *
  * Controls the state-based UI of the "Zustand prüfen" card.
  * Manages transitions between:
- * - State B: No machine selected (shows selection options)
+ * - State B: No machine selected (shows three equal action buttons)
  * - State A: Machine selected (shows machine info + ANALYSIEREN button)
  */
 
-import { getAllMachines } from '@data/db.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { t } from '../../i18n/index.js';
@@ -19,13 +18,13 @@ export class DiagnoseCardController {
   // UI Elements
   private noMachineState: HTMLElement | null = null;
   private machineReadyState: HTMLElement | null = null;
-  private machineDropdown: HTMLSelectElement | null = null;
   private machineNameDisplay: HTMLElement | null = null;
   private machineMetaDisplay: HTMLElement | null = null;
 
   // Callbacks
   private onMachineSelected: ((machine: Machine) => void) | null = null;
   private onScanRequested: (() => void) | null = null;
+  private onSelectRequested: (() => void) | null = null;
   private onCreateRequested: (() => void) | null = null;
 
   constructor() {
@@ -38,24 +37,22 @@ export class DiagnoseCardController {
   public init(callbacks: {
     onMachineSelected: (machine: Machine) => void;
     onScanRequested: () => void;
+    onSelectRequested: () => void;
     onCreateRequested: () => void;
   }): void {
     this.onMachineSelected = callbacks.onMachineSelected;
     this.onScanRequested = callbacks.onScanRequested;
+    this.onSelectRequested = callbacks.onSelectRequested;
     this.onCreateRequested = callbacks.onCreateRequested;
 
     // Get UI elements
     this.noMachineState = document.getElementById('diagnose-no-machine');
     this.machineReadyState = document.getElementById('diagnose-machine-ready');
-    this.machineDropdown = document.getElementById('diagnose-machine-dropdown') as HTMLSelectElement;
     this.machineNameDisplay = document.getElementById('diagnose-selected-machine-name');
     this.machineMetaDisplay = document.getElementById('diagnose-selected-machine-meta');
 
     // Set up event listeners
     this.setupEventListeners();
-
-    // Load machines into dropdown
-    void this.loadMachineDropdown();
 
     // Show initial state (no machine selected)
     this.showNoMachineState();
@@ -77,7 +74,17 @@ export class DiagnoseCardController {
       });
     }
 
-    // Create button
+    // Select existing machine button
+    const selectBtn = document.getElementById('diagnose-select-btn');
+    if (selectBtn) {
+      selectBtn.addEventListener('click', () => {
+        if (this.onSelectRequested) {
+          this.onSelectRequested();
+        }
+      });
+    }
+
+    // Create new machine button
     const createBtn = document.getElementById('diagnose-create-btn');
     if (createBtn) {
       createBtn.addEventListener('click', () => {
@@ -87,75 +94,13 @@ export class DiagnoseCardController {
       });
     }
 
-    // Machine dropdown
-    if (this.machineDropdown) {
-      this.machineDropdown.addEventListener('change', (e) => {
-        const select = e.target as HTMLSelectElement;
-        const machineId = select.value;
-        if (machineId) {
-          void this.handleDropdownSelection(machineId);
-        }
-      });
-    }
-
-    // Change machine button
+    // Change machine button (in State A)
     const changeMachineBtn = document.getElementById('diagnose-change-machine-btn');
     if (changeMachineBtn) {
       changeMachineBtn.addEventListener('click', () => {
         this.showNoMachineState();
         this.currentMachine = null;
       });
-    }
-  }
-
-  /**
-   * Load machines into the dropdown
-   */
-  public async loadMachineDropdown(): Promise<void> {
-    if (!this.machineDropdown) return;
-
-    try {
-      const machines = await getAllMachines();
-
-      // Sort by most recent activity
-      machines.sort((a, b) => {
-        const aTime = a.lastDiagnosisAt || a.createdAt;
-        const bTime = b.lastDiagnosisAt || b.createdAt;
-        return bTime - aTime;
-      });
-
-      // Clear existing options (keep the first placeholder option)
-      while (this.machineDropdown.options.length > 1) {
-        this.machineDropdown.remove(1);
-      }
-
-      // Add machine options
-      for (const machine of machines) {
-        const option = document.createElement('option');
-        option.value = machine.id;
-        option.textContent = machine.name;
-        this.machineDropdown.appendChild(option);
-      }
-
-      logger.debug(`[DiagnoseCardController] Loaded ${machines.length} machines into dropdown`);
-    } catch (error) {
-      logger.error('[DiagnoseCardController] Failed to load machines:', error);
-    }
-  }
-
-  /**
-   * Handle dropdown selection
-   */
-  private async handleDropdownSelection(machineId: string): Promise<void> {
-    try {
-      const machines = await getAllMachines();
-      const machine = machines.find(m => m.id === machineId);
-
-      if (machine && this.onMachineSelected) {
-        this.onMachineSelected(machine);
-      }
-    } catch (error) {
-      logger.error('[DiagnoseCardController] Error selecting machine:', error);
     }
   }
 
@@ -194,11 +139,6 @@ export class DiagnoseCardController {
     if (this.machineReadyState) {
       this.machineReadyState.style.display = 'none';
     }
-
-    // Reset dropdown selection
-    if (this.machineDropdown) {
-      this.machineDropdown.value = '';
-    }
   }
 
   /**
@@ -234,12 +174,5 @@ export class DiagnoseCardController {
       return t('diagnose.statesReady', { count: String(count) });
     }
     return t('diagnose.noReference');
-  }
-
-  /**
-   * Refresh the machine dropdown (call after new machine is created)
-   */
-  public async refresh(): Promise<void> {
-    await this.loadMachineDropdown();
   }
 }
