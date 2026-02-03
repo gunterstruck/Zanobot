@@ -533,8 +533,11 @@
 /* Focus Theme: Secondary Actions - Machine Select & Reference */
 [data-theme="focus"] .main-actions > .main-container:nth-child(1),
 [data-theme="focus"] .main-actions > .main-container:nth-child(2) {
-    /* Narrower width (65-70%), right-aligned */
+    /* Narrower width (65-70%), explicitly right-aligned */
     width: var(--focus-secondary-width, 65%);
+    align-self: flex-end;
+    margin-left: auto;
+    margin-right: 0;
     /* Subtler appearance - visually receded */
     border: var(--focus-secondary-border);
     background: rgba(250, 251, 252, 0.9);
