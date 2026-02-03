@@ -844,4 +844,12 @@ export const en: TranslationDict = {
       process_failed: 'Process failed',
     },
   },
+
+  // ============================================================================
+  // BADGES (UI Hints)
+  // ============================================================================
+  badges: {
+    recommended: 'Recommended',
+    nextStep: 'Next Step',
+  },
 };

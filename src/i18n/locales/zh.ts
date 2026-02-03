@@ -615,4 +615,10 @@ export const zh: TranslationDict = {
     errorInvalidStructure: '错误：文件格式不是预期的备份格式。',
     errorNetwork: '加载数据时出现网络错误。请检查您的网络连接。',
   },
+
+  // BADGES (UI Hints)
+  badges: {
+    recommended: '推荐',
+    nextStep: '下一步',
+  },
 };
