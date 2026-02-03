@@ -333,7 +333,8 @@ body {
     padding-bottom: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    gap: clamp(12px, 2vh, var(--spacing-lg));
+    /* Unified vertical rhythm: matches .main-actions gap for consistent spacing */
+    gap: var(--spacing-md);
     min-height: 100dvh;
 }
 
@@ -341,6 +342,13 @@ body {
     .container {
         padding: var(--spacing-lg);
         padding-bottom: var(--spacing-xl);
+    }
+}
+
+@media (min-width: 900px) {
+    .container {
+        /* Match .main-actions gap at desktop breakpoint */
+        gap: var(--spacing-lg);
     }
 }
 
@@ -394,7 +402,7 @@ body {
     height: clamp(108px, 18vh, 216px);
     min-height: 108px;
     max-height: 234px;
-    margin-bottom: 0;
+    /* Spacing controlled by parent .container gap - no extra margin needed */
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, rgba(7, 18, 33, 0.8) 0%, rgba(17, 40, 64, 0.8) 100%);
@@ -1421,7 +1429,7 @@ body {
    FOOTER
    =================================== */
 .footer {
-    margin-top: 0;
+    /* Spacing controlled by parent .container gap - no extra margin needed */
     width: 100%;
     max-width: var(--content-max-width);
     height: clamp(80px, 9vh, 160px);
@@ -1441,7 +1449,6 @@ body {
 }
 
 .footer-compact {
-    margin-top: var(--spacing-sm);
     padding-top: 0.5rem;
 }
 
