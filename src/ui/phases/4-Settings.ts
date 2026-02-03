@@ -71,6 +71,9 @@ export class SettingsPhase {
     // Initialize mode selector for analysis method selection
     this.initModeSelector();
 
+    // Initialize banner settings (advanced/expert only)
+    this.initBannerSettings();
+
     // Load stats on init
     this.showStats();
 
@@ -303,6 +306,74 @@ export class SettingsPhase {
         });
       });
     }
+  }
+
+  private async initBannerSettings(): Promise<void> {
+    const previewImage = document.getElementById('banner-preview-image') as HTMLImageElement | null;
+    const uploadBtn = document.getElementById('banner-upload-btn');
+    const resetBtn = document.getElementById('banner-reset-btn') as HTMLButtonElement | null;
+    const uploadInput = document.getElementById('banner-upload-input') as HTMLInputElement | null;
+
+    if (!previewImage || !uploadBtn || !resetBtn || !uploadInput) {
+      return;
+    }
+
+    // Import BannerManager dynamically to access instance
+    const { getBannerManager } = await import('../BannerManager.js');
+    const bannerManager = getBannerManager();
+
+    if (!bannerManager) {
+      logger.warn('⚠️ BannerManager not available for settings');
+      return;
+    }
+
+    // Update preview and reset button state
+    const updateBannerPreview = async () => {
+      const currentSrc = bannerManager.getCurrentBannerSrc();
+      if (currentSrc) {
+        previewImage.src = currentSrc;
+      }
+
+      const hasCustom = await bannerManager.hasCustomBannerForCurrentTheme();
+      resetBtn.disabled = !hasCustom;
+    };
+
+    // Initial update
+    void updateBannerPreview();
+
+    // Upload button click
+    uploadBtn.addEventListener('click', () => {
+      uploadInput.click();
+    });
+
+    // Handle file selection
+    uploadInput.addEventListener('change', async (event) => {
+      const input = event.currentTarget as HTMLInputElement | null;
+      const file = input?.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      const success = await bannerManager.uploadBanner(file);
+      if (success) {
+        await updateBannerPreview();
+      }
+
+      // Clear input so same file can be selected again
+      input.value = '';
+    });
+
+    // Reset button click
+    resetBtn.addEventListener('click', async () => {
+      await bannerManager.resetBanner();
+      await updateBannerPreview();
+    });
+
+    // Update preview when theme changes
+    window.addEventListener('themechange', () => {
+      void updateBannerPreview();
+    });
   }
 
   /**

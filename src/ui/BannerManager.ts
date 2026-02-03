@@ -1,12 +1,11 @@
-import { getAppSetting, saveAppSetting } from '@data/db.js';
+import { getAppSetting, saveAppSetting, deleteAppSetting } from '@data/db.js';
 import { getLanguage } from '../i18n/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 
-const HERO_BANNER_SETTING_KEY = 'hero_banner';
 const VALID_BANNER_WIDTHS = new Set([1024]);
 const VALID_BANNER_HEIGHTS = new Set([400, 500]);
-const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
+const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x500.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
 /**
@@ -15,97 +14,155 @@ const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
  */
 const THEME_BANNER_PATHS: Record<string, string> = {
   // Dark Theme (neon): technical, professional, high contrast - dark banner with neon blue head
-  neon: './icons/dark_1024x400.png',
+  neon: './icons/dark_1024x500.png',
   // Zanobo Theme (brand): brand identity, emotional, creative - colorful banner
-  brand: './icons/colorful_1024x400.png',
+  brand: './icons/colorful_1024x500.png',
   // Light Theme: factual, calm, neutral - light blue/whitish banner
-  light: './icons/lightblue_1024x400.png',
+  light: './icons/lightblue_1024x500.png',
   // Focus Theme (Steve Jobs): maximum clarity, focus on action - same light banner as Light Theme
-  focus: './icons/lightblue_1024x400.png',
+  focus: './icons/lightblue_1024x500.png',
 };
+
+/**
+ * Get the storage key for a theme-specific custom banner
+ */
+function getThemeBannerKey(theme: string): string {
+  return `hero_banner_${theme}`;
+}
+
+// Global instance for access from Settings
+let bannerManagerInstance: BannerManager | null = null;
+
+/**
+ * Get the global BannerManager instance
+ */
+export function getBannerManager(): BannerManager | null {
+  return bannerManagerInstance;
+}
 
 export class BannerManager {
   private heroHeader: HTMLElement | null;
   private heroImage: HTMLImageElement | null;
-  private uploadButton: HTMLButtonElement | null;
-  private uploadInput: HTMLInputElement | null;
   private currentObjectUrl: string | null = null;
   private hasCustomBanner: boolean = false;
+  private currentTheme: string = 'brand';
 
   constructor() {
     this.heroHeader = document.querySelector('.hero-header');
     this.heroImage = document.querySelector('.hero-header img');
-    this.uploadButton = document.querySelector('#hero-banner-upload-btn');
-    this.uploadInput = document.querySelector('#hero-banner-upload-input');
 
-    if (!this.heroImage || !this.uploadButton || !this.uploadInput) {
-      logger.warn('⚠️ Hero banner upload UI not found, skipping BannerManager setup');
+    if (!this.heroImage) {
+      logger.warn('⚠️ Hero banner image not found, skipping BannerManager setup');
       return;
     }
 
-    this.bindEvents();
+    // Store global instance for Settings access
+    bannerManagerInstance = this;
+
     void this.restoreBannerFromStorage();
   }
 
-  private bindEvents(): void {
-    this.uploadButton?.addEventListener('click', () => {
-      this.uploadInput?.click();
-    });
-
-    this.uploadInput?.addEventListener('change', (event) => {
-      void this.handleFileSelection(event);
-    });
+  /**
+   * Get current theme from DOM
+   */
+  private getCurrentTheme(): string {
+    return document.documentElement.getAttribute('data-theme') || 'brand';
   }
 
-  private async handleFileSelection(event: Event): Promise<void> {
-    const input = event.currentTarget as HTMLInputElement | null;
-    const file = input?.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+  /**
+   * Public method to handle file upload from Settings
+   * Returns true if upload was successful
+   */
+  public async uploadBanner(file: File): Promise<boolean> {
     if (file.type !== 'image/png') {
-      notify.error('Format muss 1024x400/500 PNG sein.');
-      input.value = '';
-      return;
+      notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+      return false;
     }
 
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
 
-    img.onload = async () => {
-      const isValidSize =
-        VALID_BANNER_WIDTHS.has(img.width) && VALID_BANNER_HEIGHTS.has(img.height);
+    return new Promise((resolve) => {
+      img.onload = async () => {
+        const isValidSize =
+          VALID_BANNER_WIDTHS.has(img.width) && VALID_BANNER_HEIGHTS.has(img.height);
 
-      if (!isValidSize) {
+        if (!isValidSize) {
+          URL.revokeObjectURL(objectUrl);
+          notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+          resolve(false);
+          return;
+        }
+
+        try {
+          const theme = this.getCurrentTheme();
+          const key = getThemeBannerKey(theme);
+          await saveAppSetting(key, file);
+          this.setHeroImage(objectUrl);
+          this.hasCustomBanner = true;
+          notify.success('Banner wurde aktualisiert.');
+          resolve(true);
+        } catch (error) {
+          URL.revokeObjectURL(objectUrl);
+          logger.error('❌ Failed to save hero banner', error);
+          notify.error('Banner konnte nicht gespeichert werden.', error as Error);
+          resolve(false);
+        }
+      };
+
+      img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        notify.error('Format muss 1024x400/500 PNG sein.');
-        input.value = '';
-        return;
-      }
+        notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+        resolve(false);
+      };
 
-      try {
-        await saveAppSetting(HERO_BANNER_SETTING_KEY, file);
-        this.setHeroImage(objectUrl);
-        this.hasCustomBanner = true;
-        notify.success('Bannerbild wurde gespeichert.');
-      } catch (error) {
-        URL.revokeObjectURL(objectUrl);
-        logger.error('❌ Failed to save hero banner', error);
-        notify.error('Bannerbild konnte nicht gespeichert werden.', error as Error);
-      } finally {
-        input.value = '';
-      }
-    };
+      img.src = objectUrl;
+    });
+  }
 
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      notify.error('Format muss 1024x400/500 PNG sein.');
-      input.value = '';
-    };
+  /**
+   * Public method to reset banner to theme default
+   * Called from Settings
+   */
+  public async resetBanner(): Promise<void> {
+    try {
+      const theme = this.getCurrentTheme();
+      const key = getThemeBannerKey(theme);
 
-    img.src = objectUrl;
+      // Delete custom banner for current theme
+      await deleteAppSetting(key);
+
+      // Apply default banner
+      this.hasCustomBanner = false;
+      this.applyDefaultBanner();
+
+      notify.success('Standardbanner wiederhergestellt.');
+      logger.info(`✅ Reset banner for theme: ${theme}`);
+    } catch (error) {
+      logger.error('❌ Failed to reset banner', error);
+      notify.error('Fehler beim Zurücksetzen des Banners.', error as Error);
+    }
+  }
+
+  /**
+   * Check if current theme has a custom banner
+   */
+  public async hasCustomBannerForCurrentTheme(): Promise<boolean> {
+    try {
+      const theme = this.getCurrentTheme();
+      const key = getThemeBannerKey(theme);
+      const stored = await getAppSetting<Blob>(key);
+      return !!stored?.value;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the current banner image source (for preview in Settings)
+   */
+  public getCurrentBannerSrc(): string | null {
+    return this.heroImage?.src || null;
   }
 
   private setHeroImage(objectUrl: string): void {
@@ -134,7 +191,10 @@ export class BannerManager {
     }
 
     try {
-      const stored = await getAppSetting<Blob>(HERO_BANNER_SETTING_KEY);
+      const theme = this.getCurrentTheme();
+      const key = getThemeBannerKey(theme);
+      const stored = await getAppSetting<Blob>(key);
+
       if (!stored?.value) {
         this.hasCustomBanner = false;
         this.applyDefaultBanner();
@@ -166,7 +226,7 @@ export class BannerManager {
     }
 
     // Apply theme-specific default banner
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'brand';
+    const currentTheme = this.getCurrentTheme();
     const themeBannerPath = THEME_BANNER_PATHS[currentTheme] || DEFAULT_BANNER_PATH;
 
     this.setHeroImage(themeBannerPath);
@@ -198,12 +258,27 @@ export class BannerManager {
 
   /**
    * Apply theme-appropriate banner when theme changes.
-   * Only updates the banner if no custom banner has been uploaded by the user.
+   * Only updates the banner if no custom banner has been uploaded by the user for this theme.
    */
-  public applyThemeBanner(): void {
-    if (this.hasCustomBanner) {
-      return;
+  public async applyThemeBanner(): Promise<void> {
+    const theme = this.getCurrentTheme();
+
+    // Check if this theme has a custom banner
+    const key = getThemeBannerKey(theme);
+    try {
+      const stored = await getAppSetting<Blob>(key);
+      if (stored?.value) {
+        const objectUrl = URL.createObjectURL(stored.value);
+        this.setHeroImage(objectUrl);
+        this.hasCustomBanner = true;
+        return;
+      }
+    } catch (error) {
+      logger.warn('⚠️ Failed to check for custom banner', error);
     }
+
+    // No custom banner for this theme, apply default
+    this.hasCustomBanner = false;
     this.applyDefaultBanner();
   }
 }
