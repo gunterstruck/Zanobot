@@ -1492,6 +1492,29 @@ body {
     font-size: 0.75rem;
     color: var(--footer-text);
     opacity: 0.6;
+    margin: 0;
+}
+
+/* Footer Grid Layout */
+.footer-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.footer-row:last-child {
+    margin-top: 0.15rem;
 }
 
 /* ===================================

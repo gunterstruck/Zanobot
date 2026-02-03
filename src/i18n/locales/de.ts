@@ -801,6 +801,7 @@ export const de: TranslationDict = {
     impressum: 'Impressum',
     privacy: 'Datenschutz',
     about: 'Über Zanobo',
+    settings: 'Einstellungen',
   },
 
   // ============================================================================

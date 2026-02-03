@@ -595,7 +595,7 @@ export const es: TranslationDict = {
     featureTrafficLight: 'Indicador de semáforo',
     refSubDesc: 'Grabación de referencia de 10 segundos', diagSubDesc: 'Realizar análisis en vivo', analyzeBtn: 'Analizar',
   },
-  footer: { impressum: 'Aviso legal', privacy: 'Política de privacidad', about: 'Acerca de Zanobo' },
+  footer: { impressum: 'Aviso legal', privacy: 'Política de privacidad', about: 'Acerca de Zanobo', settings: 'Configuración' },
 
   // NFC IMPORT (Deep Link Import via ?importUrl=)
   nfcImport: {

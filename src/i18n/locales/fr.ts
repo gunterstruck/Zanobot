@@ -595,7 +595,7 @@ export const fr: TranslationDict = {
     featureTrafficLight: 'Affichage état feux tricolores',
     refSubDesc: 'Enregistrement de référence de 10 secondes', diagSubDesc: 'Effectuer une analyse en direct', analyzeBtn: 'Analyser',
   },
-  footer: { impressum: 'Mentions légales', privacy: 'Politique de confidentialité', about: 'À propos de Zanobo' },
+  footer: { impressum: 'Mentions légales', privacy: 'Politique de confidentialité', about: 'À propos de Zanobo', settings: 'Paramètres' },
 
   // NFC IMPORT (Deep Link Import via ?importUrl=)
   nfcImport: {

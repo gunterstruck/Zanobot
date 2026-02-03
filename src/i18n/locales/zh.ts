@@ -594,7 +594,7 @@ export const zh: TranslationDict = {
     featureTrafficLight: '交通灯状态显示',
     refSubDesc: '10秒参考录制', diagSubDesc: '执行实时分析', analyzeBtn: '分析',
   },
-  footer: { impressum: '法律声明', privacy: '隐私政策', about: '关于Zanobo' },
+  footer: { impressum: '法律声明', privacy: '隐私政策', about: '关于Zanobo', settings: '设置' },
 
   // NFC IMPORT (Deep Link Import via ?importUrl=)
   nfcImport: {
