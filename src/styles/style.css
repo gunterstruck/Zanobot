@@ -904,6 +904,141 @@ body {
 }
 
 /* ===================================
+   HERO BANNER TEXT OVERLAY
+   =================================== */
+.hero-text-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    /* Left third stays free for illustration - text starts at 33.33% */
+    padding-left: calc(33.33% + 24px);
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hero-headline {
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 8px 0;
+    max-width: 100%;
+}
+
+.hero-subline {
+    font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 100%;
+}
+
+/* Theme-specific text colors */
+
+/* Dark Theme (Neon): Light text with high contrast */
+[data-theme="neon"] .hero-headline {
+    color: #00f3ff; /* Neon cyan */
+}
+
+[data-theme="neon"] .hero-subline {
+    color: rgba(248, 250, 252, 0.8); /* Almost white with opacity */
+}
+
+/* Light Theme: Dark text for readability */
+[data-theme="light"] .hero-headline {
+    color: #1e293b; /* Dark anthracite */
+}
+
+[data-theme="light"] .hero-subline {
+    color: #475569; /* Neutral gray */
+}
+
+/* Brand Theme (Zanobo): Primary color with brand identity */
+[data-theme="brand"] .hero-headline {
+    color: #00D4FF; /* Brand cyan */
+}
+
+[data-theme="brand"] .hero-subline {
+    color: rgba(176, 190, 197, 0.9); /* Muted cyan-grey */
+}
+
+/* Focus Theme (Steve Jobs): Very restrained, minimalist */
+[data-theme="focus"] .hero-headline {
+    color: #1e293b; /* Very dark grey */
+}
+
+[data-theme="focus"] .hero-subline {
+    color: #94a3b8; /* Light grey */
+}
+
+/* Optional: Subtle gradient behind text for better readability (max 10-15%) */
+.hero-text-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 33.33%;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(0, 0, 0, 0.05) 50%,
+        transparent 100%
+    );
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Light themes use lighter gradient */
+[data-theme="light"] .hero-text-overlay::before,
+[data-theme="focus"] .hero-text-overlay::before {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 100%
+    );
+}
+
+/* Responsive: Mobile adjustments */
+@media (max-width: 768px) {
+    .hero-text-overlay {
+        /* Maintain left third free on mobile */
+        padding-left: calc(33.33% + 16px);
+        padding-right: 16px;
+    }
+
+    .hero-headline {
+        font-size: clamp(0.95rem, 4vw, 1.2rem);
+        margin-bottom: 6px;
+    }
+
+    .hero-subline {
+        font-size: clamp(0.7rem, 2.8vw, 0.85rem);
+        line-height: 1.4;
+        /* Ensure max 2 lines on mobile */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+/* Extra small screens: Adjust text even more */
+@media (max-width: 480px) {
+    .hero-text-overlay {
+        padding-left: calc(33.33% + 12px);
+        padding-right: 12px;
+    }
+}
+
+/* ===================================
    MAIN ACTIONS LAYOUT (Fixed Centered Column)
    =================================== */
 .main-actions {
