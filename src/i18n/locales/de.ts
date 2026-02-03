@@ -895,4 +895,12 @@ export const de: TranslationDict = {
       process_failed: 'Prozess fehlgeschlagen',
     },
   },
+
+  // ============================================================================
+  // BADGES (UI Hints)
+  // ============================================================================
+  badges: {
+    recommended: 'Empfohlen',
+    nextStep: 'Nächster Schritt',
+  },
 };

@@ -616,4 +616,10 @@ export const fr: TranslationDict = {
     errorInvalidStructure: 'Erreur: Le fichier n\'a pas le format de sauvegarde attendu.',
     errorNetwork: 'Erreur réseau lors du chargement des données. Veuillez vérifier votre connexion.',
   },
+
+  // BADGES (UI Hints)
+  badges: {
+    recommended: 'Recommandé',
+    nextStep: 'Prochaine étape',
+  },
 };

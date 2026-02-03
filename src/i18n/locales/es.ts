@@ -616,4 +616,10 @@ export const es: TranslationDict = {
     errorInvalidStructure: 'Error: El archivo no tiene el formato de copia de seguridad esperado.',
     errorNetwork: 'Error de red al cargar los datos. Por favor verifique su conexión.',
   },
+
+  // BADGES (UI Hints)
+  badges: {
+    recommended: 'Recomendado',
+    nextStep: 'Siguiente paso',
+  },
 };

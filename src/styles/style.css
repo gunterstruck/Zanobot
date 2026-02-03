@@ -117,6 +117,16 @@
     --viz-fill-top: rgba(59, 130, 246, 0.3);
     --viz-fill-bottom: rgba(59, 130, 246, 0.05);
     --viz-text: rgba(255, 255, 255, 0.4);
+
+    /* Primary Card Tokens (for "Diagnose starten" CTA emphasis) */
+    --primary-card-accent: var(--primary-color);
+    --primary-card-border: 2px solid var(--primary-color);
+    --primary-card-glow: 0 0 16px rgba(0, 212, 255, 0.15);
+    --primary-card-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    --primary-card-hover-glow: 0 0 24px rgba(0, 212, 255, 0.25);
+    --primary-card-icon-filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
+    --primary-card-badge-bg: rgba(0, 212, 255, 0.12);
+    --primary-card-badge-border: rgba(0, 212, 255, 0.25);
 }
 
 /* ===================================
@@ -195,6 +205,16 @@
     --viz-fill-top: rgba(0, 243, 255, 0.4);
     --viz-fill-bottom: rgba(0, 243, 255, 0.08);
     --viz-text: rgba(0, 243, 255, 0.5);
+
+    /* Primary Card Tokens - Neon Cyberpunk */
+    --primary-card-accent: #00f3ff;
+    --primary-card-border: 2px solid rgba(0, 243, 255, 0.6);
+    --primary-card-glow: 0 0 20px rgba(0, 243, 255, 0.2);
+    --primary-card-shadow: 0 6px 28px rgba(0, 0, 0, 0.55);
+    --primary-card-hover-glow: 0 0 32px rgba(0, 243, 255, 0.35);
+    --primary-card-icon-filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
+    --primary-card-badge-bg: rgba(0, 243, 255, 0.1);
+    --primary-card-badge-border: rgba(0, 243, 255, 0.3);
 }
 
 /* ===================================
@@ -249,6 +269,16 @@
     --viz-fill-top: rgba(15, 23, 42, 0.3);
     --viz-fill-bottom: rgba(15, 23, 42, 0.05);
     --viz-text: rgba(15, 23, 42, 0.5);
+
+    /* Primary Card Tokens - Daylight High Contrast */
+    --primary-card-accent: #0f172a;
+    --primary-card-border: 2px solid rgba(15, 23, 42, 0.35);
+    --primary-card-glow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+    --primary-card-shadow: 0 6px 24px rgba(0, 0, 0, 0.14), 0 3px 10px rgba(0, 0, 0, 0.08);
+    --primary-card-hover-glow: 0 0 0 2px rgba(15, 23, 42, 0.12);
+    --primary-card-icon-filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.2));
+    --primary-card-badge-bg: rgba(15, 23, 42, 0.06);
+    --primary-card-badge-border: rgba(15, 23, 42, 0.15);
 }
 
 /* Light theme surface tuning for better readability */
@@ -278,6 +308,15 @@
 [data-theme="light"] .option-divider span {
     background: var(--bg-primary);
     color: var(--text-secondary);
+}
+
+/* Light theme primary card adjustments */
+[data-theme="light"] .main-container[data-variant="primary"] .main-header:hover {
+    background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .primary-card-badge {
+    color: var(--text-primary);
 }
 
 /* ===================================
@@ -331,6 +370,16 @@
     --viz-fill-top: rgba(0, 212, 255, 0.3);
     --viz-fill-bottom: rgba(0, 212, 255, 0.05);
     --viz-text: rgba(0, 212, 255, 0.4);
+
+    /* Primary Card Tokens - Zanobot Brand */
+    --primary-card-accent: #00D4FF;
+    --primary-card-border: 2px solid rgba(0, 212, 255, 0.5);
+    --primary-card-glow: 0 0 18px rgba(0, 212, 255, 0.18);
+    --primary-card-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    --primary-card-hover-glow: 0 0 28px rgba(0, 212, 255, 0.3);
+    --primary-card-icon-filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.45));
+    --primary-card-badge-bg: rgba(0, 212, 255, 0.1);
+    --primary-card-badge-border: rgba(0, 212, 255, 0.25);
 }
 
 /* ===================================
@@ -657,6 +706,86 @@ body {
 
 .main-container:hover {
     border-color: var(--primary-color);
+}
+
+/* ===================================
+   PRIMARY CARD VARIANT
+   "Diagnose starten" as primary CTA
+   Stacked visual cues for emphasis
+   =================================== */
+.main-container[data-variant="primary"] {
+    /* Stronger border (1px → 2px) with accent color */
+    border: var(--primary-card-border);
+
+    /* Elevated shadow + subtle outer glow */
+    box-shadow:
+        var(--primary-card-shadow),
+        var(--primary-card-glow);
+
+    /* Ensure it renders above siblings for shadow visibility */
+    position: relative;
+    z-index: 1;
+}
+
+/* Primary card header with icon emphasis */
+.main-container[data-variant="primary"] .main-header {
+    /* Slightly stronger divider */
+    border-bottom-color: rgba(var(--primary-card-accent), 0.15);
+}
+
+.main-container[data-variant="primary"] .header-with-icon svg {
+    /* Icon gets stronger accent filter */
+    filter: var(--primary-card-icon-filter);
+}
+
+.main-container[data-variant="primary"] .container-title {
+    /* Slightly bolder title */
+    font-weight: 700;
+}
+
+/* Enhanced hover state */
+.main-container[data-variant="primary"]:hover {
+    /* Stronger glow on hover */
+    box-shadow:
+        var(--primary-card-shadow),
+        var(--primary-card-hover-glow);
+}
+
+/* Active/pressed state */
+.main-container[data-variant="primary"]:active {
+    transform: translateY(1px);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.35),
+        var(--primary-card-glow);
+}
+
+/* Keyboard focus state (accessibility) */
+.main-container[data-variant="primary"]:focus-within {
+    outline: 2px solid var(--primary-card-accent);
+    outline-offset: 2px;
+}
+
+/* Primary Card Badge - "Empfohlen" label */
+.primary-card-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--primary-card-badge-bg);
+    border: 1px solid var(--primary-card-badge-border);
+    border-radius: var(--radius-xs);
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+/* Badge visibility on hover */
+.main-container[data-variant="primary"]:hover .primary-card-badge {
+    opacity: 1;
 }
 
 .container-content {
