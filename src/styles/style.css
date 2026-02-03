@@ -321,65 +321,105 @@
 
 /* ===================================
    THEME: BRAND (Zanobot Original)
-   Vibe: Corporate identity, balanced, professional cyan/teal
+   Vibe: Light, friendly, trustworthy - matching the colorful banner
+   "KI, der man vertraut – freundlich, klar, leicht."
    =================================== */
 [data-theme="brand"] {
-    /* Core Colors - Original Zanobot */
-    --primary-color: #00D4FF;
-    --primary-hover: #00B8E6;
-    --secondary-color: #40E0D0;
-    --accent-color: #00FFC6;
+    /* Core Colors - Friendly Cyan/Mint from Banner */
+    --primary-color: #00B8D9;           /* Friendly cyan */
+    --primary-hover: #00A0C0;
+    --secondary-color: #4DD0C0;         /* Soft mint-cyan */
+    --accent-color: #5ECFB8;            /* Gentle mint */
 
-    /* Backgrounds */
-    --bg-primary: #0A1929;
-    --bg-secondary: #0D1F31;
-    --bg-tertiary: #112840;
-    --bg-card: rgba(17, 40, 64, 0.6);
-    --bg-modal: rgba(10, 25, 41, 0.95);
+    /* Backgrounds - Light, airy, almost white */
+    --bg-primary: #f7fafc;              /* Very light, almost white */
+    --bg-secondary: #eef5fa;            /* Very light blue-grey */
+    --bg-tertiary: #e3edf5;             /* Subtle blue tint */
+    --bg-card: rgba(255, 255, 255, 0.98);  /* White cards */
+    --bg-modal: rgba(255, 255, 255, 0.98);
 
-    /* Text */
-    --text-primary: #FFFFFF;
-    --text-secondary: #B0BEC5;
-    --text-muted: #78909C;
+    /* Text - Dark anthracite, not pure black */
+    --text-primary: #2D3E50;            /* Dark anthracite */
+    --text-secondary: #5A6B7A;          /* Medium grey-blue */
+    --text-muted: #8A9AAA;              /* Light grey */
 
-    /* Status Colors */
-    --status-healthy: #00E676;
-    --status-warning: #FFB74D;
-    --status-error: #FF5252;
-    --status-uncertain: #FFA726;
+    /* Status Colors - Friendly, clear tones */
+    --status-healthy: #10B981;          /* Friendly green */
+    --status-warning: #F59E0B;          /* Warm amber */
+    --status-error: #EF4444;            /* Clear red */
+    --status-uncertain: #F97316;        /* Warm orange */
 
-    /* Borders & Effects */
-    --border-color: rgba(0, 212, 255, 0.2);
-    --divider-color: rgba(255, 255, 255, 0.1);
+    /* Borders & Effects - Soft, subtle */
+    --border-color: rgba(0, 184, 217, 0.18);
+    --divider-color: rgba(0, 0, 0, 0.06);
 
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
-    --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
+    /* Soft shadows - gentle depth */
+    --shadow-sm: 0 1px 3px rgba(0, 60, 80, 0.04), 0 1px 2px rgba(0, 60, 80, 0.02);
+    --shadow-md: 0 4px 12px rgba(0, 60, 80, 0.06), 0 2px 4px rgba(0, 60, 80, 0.03);
+    --shadow-lg: 0 8px 24px rgba(0, 60, 80, 0.08), 0 4px 8px rgba(0, 60, 80, 0.04);
+    --glow-primary: 0 0 16px rgba(0, 184, 217, 0.12);
+    --glow-strong: 0 0 24px rgba(0, 184, 217, 0.18);
 
-    /* Footer Surface - deeper shade for visual "floor" */
-    --footer-bg: rgba(7, 18, 33, 0.95);
-    --footer-text: #ffffff;
-    --footer-border: rgba(0, 212, 255, 0.15);
+    /* Footer Surface - subtle light distinction */
+    --footer-bg: #eef5fa;
+    --footer-text: #2D3E50;
+    --footer-border: rgba(0, 184, 217, 0.12);
 
-    /* Visualizer Colors */
-    --viz-bg: #0a0a0a;
-    --viz-grid: rgba(0, 212, 255, 0.08);
-    --viz-primary: rgba(0, 212, 255, 0.8);
-    --viz-fill-top: rgba(0, 212, 255, 0.3);
-    --viz-fill-bottom: rgba(0, 212, 255, 0.05);
-    --viz-text: rgba(0, 212, 255, 0.4);
+    /* Visualizer Colors - Light mode friendly */
+    --viz-bg: #f7fafc;
+    --viz-grid: rgba(0, 184, 217, 0.1);
+    --viz-primary: rgba(0, 184, 217, 0.85);
+    --viz-fill-top: rgba(0, 184, 217, 0.25);
+    --viz-fill-bottom: rgba(0, 184, 217, 0.05);
+    --viz-text: rgba(0, 140, 170, 0.6);
 
-    /* Primary Card Tokens - Zanobot Brand */
-    --primary-card-accent: #00D4FF;
-    --primary-card-border: 2px solid rgba(0, 212, 255, 0.5);
-    --primary-card-glow: 0 0 18px rgba(0, 212, 255, 0.18);
-    --primary-card-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-    --primary-card-hover-glow: 0 0 28px rgba(0, 212, 255, 0.3);
-    --primary-card-icon-filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.45));
-    --primary-card-badge-bg: rgba(0, 212, 255, 0.1);
-    --primary-card-badge-border: rgba(0, 212, 255, 0.25);
+    /* Primary Card Tokens - Light, highlighted but not dark */
+    --primary-card-accent: #00B8D9;
+    --primary-card-border: 2px solid rgba(0, 184, 217, 0.35);
+    --primary-card-glow: 0 0 0 1px rgba(0, 184, 217, 0.12), 0 0 16px rgba(0, 184, 217, 0.1);
+    --primary-card-shadow: 0 6px 20px rgba(0, 60, 80, 0.1), 0 3px 8px rgba(0, 60, 80, 0.05);
+    --primary-card-hover-glow: 0 0 24px rgba(0, 184, 217, 0.18);
+    --primary-card-icon-filter: drop-shadow(0 0 6px rgba(0, 184, 217, 0.35));
+    --primary-card-badge-bg: rgba(0, 184, 217, 0.08);
+    --primary-card-badge-border: rgba(0, 184, 217, 0.2);
+}
+
+/* Brand Theme: Light surface tuning for better readability */
+[data-theme="brand"] .sub-container {
+    background: var(--bg-primary);
+    border-color: rgba(0, 184, 217, 0.12);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="brand"] .machine-selection-option {
+    background: var(--bg-primary);
+    border-color: rgba(0, 184, 217, 0.12);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="brand"] .machine-input {
+    background: #ffffff;
+    border-color: rgba(0, 184, 217, 0.2);
+    color: var(--text-primary);
+}
+
+[data-theme="brand"] .machine-input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 184, 217, 0.1);
+}
+
+[data-theme="brand"] .option-divider span {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
+/* Brand theme primary card adjustments */
+[data-theme="brand"] .main-container[data-variant="primary"] .main-header:hover {
+    background: rgba(0, 184, 217, 0.04);
+}
+
+[data-theme="brand"] .primary-card-badge {
+    color: var(--text-primary);
 }
 
 /* ===================================
@@ -922,13 +962,13 @@ body {
     color: #475569; /* Neutral gray */
 }
 
-/* Brand Theme (Zanobo): Primary color with brand identity */
+/* Brand Theme (Zanobo): Light theme with brand identity */
 [data-theme="brand"] .hero-headline {
-    color: #00D4FF; /* Brand cyan */
+    color: #2D3E50; /* Dark anthracite for light background */
 }
 
 [data-theme="brand"] .hero-subline {
-    color: rgba(176, 190, 197, 0.9); /* Muted cyan-grey */
+    color: #5A6B7A; /* Medium grey-blue for readability */
 }
 
 /* Focus Theme (Steve Jobs): Very restrained, minimalist */
@@ -959,7 +999,8 @@ body {
 
 /* Light themes use lighter gradient */
 [data-theme="light"] .hero-text-overlay::before,
-[data-theme="focus"] .hero-text-overlay::before {
+[data-theme="focus"] .hero-text-overlay::before,
+[data-theme="brand"] .hero-text-overlay::before {
     background: linear-gradient(90deg,
         rgba(255, 255, 255, 0.15) 0%,
         rgba(255, 255, 255, 0.08) 50%,
@@ -2721,6 +2762,20 @@ body {
     opacity: 0.2;
 }
 
+/* Theme: Brand mode adjustments (light theme) */
+[data-theme="brand"] .ranking-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="brand"] .ranking-bar-container {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="brand"] .ranking-bar-glow {
+    opacity: 0.2;
+}
+
 /* Animation keyframes */
 @keyframes ranking-slide-in {
     from {
@@ -2754,6 +2809,12 @@ body {
 [data-theme="light"] {
     --status-healthy-rgb: 22, 163, 74;
     --status-error-rgb: 220, 38, 38;
+    --status-warning-rgb: 245, 158, 11;
+}
+
+[data-theme="brand"] {
+    --status-healthy-rgb: 16, 185, 129;
+    --status-error-rgb: 239, 68, 68;
     --status-warning-rgb: 245, 158, 11;
 }
 
@@ -5034,6 +5095,17 @@ select:focus-visible {
 }
 
 [data-theme="light"] .view-level-btn.active {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+/* Brand theme adjustments for view level selector (light theme) */
+[data-theme="brand"] .view-level-selector {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="brand"] .view-level-btn.active {
     background: var(--primary-color);
     color: #ffffff;
 }
