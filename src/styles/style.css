@@ -333,7 +333,9 @@ body {
     padding-bottom: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    /* Unified vertical rhythm: matches .main-actions gap for consistent spacing */
+    /* Pack items from top - don't stretch to fill viewport */
+    justify-content: flex-start;
+    /* Fixed spacing - no viewport dependency for browser/PWA consistency */
     gap: var(--spacing-md);
     min-height: 100dvh;
 }
@@ -393,16 +395,18 @@ body {
    HERO HEADER IMAGE
    =================================== */
 .hero-header {
+    /* Prevent browser from squashing header */
+    flex-shrink: 0;
     width: 100%;
     max-width: var(--content-max-width);
     margin-left: auto;
     margin-right: auto;
     margin-top: var(--spacing-sm);
     position: relative;
+    /* Fixed height range for stability */
     height: clamp(108px, 18vh, 216px);
     min-height: 108px;
     max-height: 234px;
-    /* Spacing controlled by parent .container gap - no extra margin needed */
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, rgba(7, 18, 33, 0.8) 0%, rgba(17, 40, 64, 0.8) 100%);
@@ -1429,13 +1433,16 @@ body {
    FOOTER
    =================================== */
 .footer {
-    /* Spacing controlled by parent .container gap - no extra margin needed */
+    /* Prevent browser from squashing footer when space is tight */
+    flex-shrink: 0;
     width: 100%;
     max-width: var(--content-max-width);
-    height: clamp(80px, 9vh, 160px);
+    /* Fixed height - no viewport dependency for stability */
+    min-height: 80px;
+    height: auto;
     margin-left: auto;
     margin-right: auto;
-    padding: clamp(0.35rem, 0.9vh, 0.9rem);
+    padding: 0.5rem 0.75rem;
     text-align: center;
     border-radius: var(--radius-lg);
     background: var(--footer-bg);
