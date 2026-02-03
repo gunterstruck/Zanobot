@@ -388,6 +388,11 @@ export class Router {
 
     const buttons = section.querySelectorAll('button');
     buttons.forEach((btn) => {
+      // Skip diagnose tile buttons - they should always be clickable
+      // to allow machine selection even when phase is "locked"
+      if (btn.classList.contains('diagnose-tile')) {
+        return;
+      }
       btn.disabled = !enabled;
       btn.style.opacity = enabled ? '1' : '0.5';
       btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
