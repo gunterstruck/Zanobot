@@ -252,6 +252,15 @@ export const de: TranslationDict = {
       healthyMatch: 'Akustische Signatur entspricht Referenzzustand "{{state}}" ({{score}}%). Keine Auffälligkeiten.',
       faultyMatch: 'Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "{{state}}" ({{score}}%). Inspektion empfohlen.',
     },
+
+    // State-based card UI
+    selectMachineFirst: 'Bitte zuerst eine Maschine auswählen',
+    scanCode: 'Barcode / QR',
+    selectMachine: 'Maschine wählen',
+    createNew: 'Neue Maschine',
+    statesReady: '{{count}} Zustand trainiert',
+    noReference: 'Noch keine Referenz',
+    changeMachine: 'Maschine wechseln',
   },
 
   // ============================================================================

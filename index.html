@@ -389,6 +389,53 @@
                     </svg>
                 </div>
                 <div id="run-diagnosis-content" class="collapsible-content" style="display: none;">
+                    <!-- State B: No machine selected - Machine selection prompt -->
+                    <div id="diagnose-no-machine" class="container-content diagnose-state-content">
+                        <p class="diagnose-prompt" data-i18n="diagnose.selectMachineFirst">Bitte zuerst eine Maschine auswählen</p>
+                        <div class="diagnose-selection-bar">
+                            <!-- Left: Scan QR/Barcode -->
+                            <button class="diagnose-selection-option" id="diagnose-scan-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="13" y="3" width="8" height="8" rx="1"/>
+                                    <rect x="3" y="13" width="8" height="8" rx="1"/>
+                                    <path d="M13 13h2v2m0 2h2v2m2-2h2v2"/>
+                                </svg>
+                                <span data-i18n="diagnose.scanCode">Barcode / QR</span>
+                            </button>
+                            <!-- Middle: Machine dropdown -->
+                            <div class="diagnose-selection-option diagnose-dropdown-wrapper">
+                                <select id="diagnose-machine-dropdown" class="diagnose-machine-select">
+                                    <option value="" data-i18n="diagnose.selectMachine">Maschine wählen</option>
+                                </select>
+                            </div>
+                            <!-- Right: Create new machine -->
+                            <button class="diagnose-selection-option" id="diagnose-create-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                <span data-i18n="diagnose.createNew">Neue Maschine</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- State A: Machine selected - Ready to analyze -->
+                    <div id="diagnose-machine-ready" class="container-content diagnose-state-content" style="display: none;">
+                        <div class="diagnose-machine-info">
+                            <div class="diagnose-machine-details">
+                                <h4 class="diagnose-machine-name" id="diagnose-selected-machine-name">—</h4>
+                                <p class="diagnose-machine-meta" id="diagnose-selected-machine-meta"></p>
+                            </div>
+                            <button class="diagnose-change-machine-btn" id="diagnose-change-machine-btn" title="Maschine wechseln">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Level 1 (GMIA) Diagnose Content -->
                     <div class="container-content level1-content" data-detection-mode="STATIONARY">
                         <p class="sub-description" data-i18n="diagnose.liveAnalysis">Live-Analyse durchführen</p>

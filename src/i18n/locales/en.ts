@@ -250,6 +250,15 @@ export const en: TranslationDict = {
       healthyMatch: 'Acoustic signature matches reference state "{{state}}" ({{score}}%). No abnormalities.',
       faultyMatch: 'Abnormality detected: Signature matches trained pattern "{{state}}" ({{score}}%). Inspection recommended.',
     },
+
+    // State-based card UI
+    selectMachineFirst: 'Please select a machine first',
+    scanCode: 'Barcode / QR',
+    selectMachine: 'Select machine',
+    createNew: 'New machine',
+    statesReady: '{{count}} state trained',
+    noReference: 'No reference yet',
+    changeMachine: 'Change machine',
   },
 
   // ============================================================================

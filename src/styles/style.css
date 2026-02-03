@@ -6062,6 +6062,176 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   DIAGNOSE CARD STATE-BASED UI
+   =================================== */
+
+/* Container for state-based content */
+.diagnose-state-content {
+    padding: var(--spacing-md);
+}
+
+/* State B: No machine selected */
+.diagnose-prompt {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Three-column selection bar */
+.diagnose-selection-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+/* Individual selection options */
+.diagnose-selection-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--btn-transition);
+    min-height: 80px;
+}
+
+.diagnose-selection-option:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: var(--hover-lift);
+}
+
+.diagnose-selection-option:active {
+    transform: var(--active-press);
+}
+
+.diagnose-selection-option svg {
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.diagnose-selection-option span {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Dropdown wrapper styling */
+.diagnose-dropdown-wrapper {
+    cursor: default;
+}
+
+.diagnose-dropdown-wrapper:hover {
+    transform: none;
+}
+
+.diagnose-machine-select {
+    width: 100%;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    appearance: auto;
+    -webkit-appearance: auto;
+}
+
+.diagnose-machine-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* State A: Machine selected - ready to analyze */
+.diagnose-machine-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.diagnose-machine-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.diagnose-machine-name {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diagnose-machine-meta {
+    font-size: var(--font-sm);
+    color: var(--text-muted);
+    margin: var(--spacing-xs) 0 0 0;
+}
+
+.diagnose-change-machine-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--btn-transition);
+    flex-shrink: 0;
+    margin-left: var(--spacing-sm);
+}
+
+.diagnose-change-machine-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .diagnose-selection-bar {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+
+    .diagnose-selection-option {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: var(--spacing-sm);
+        min-height: auto;
+    }
+
+    .diagnose-selection-option svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .diagnose-selection-option span {
+        text-align: left;
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
