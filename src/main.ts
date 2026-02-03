@@ -48,6 +48,7 @@ declare global {
 
 class ZanobotApp {
   private router: Router | null = null;
+  private bannerManager: BannerManager | null = null;
 
   constructor() {
     this.init();
@@ -227,7 +228,7 @@ class ZanobotApp {
       translateDOM();
 
       if (dbAvailable) {
-        new BannerManager();
+        this.bannerManager = new BannerManager();
       }
 
       // Note: Service Worker is automatically registered by VitePWA plugin
@@ -473,6 +474,9 @@ class ZanobotApp {
         // Update active state
         themeBtns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
+
+        // Apply theme-appropriate banner (if no custom banner)
+        this.bannerManager?.applyThemeBanner();
       });
     });
 
@@ -505,6 +509,9 @@ class ZanobotApp {
         if (window.ZanobotTheme?.toggleTheme) {
           window.ZanobotTheme.toggleTheme();
           logger.debug('🎨 Theme toggled via quick toggle button');
+
+          // Apply theme-appropriate banner (if no custom banner)
+          this.bannerManager?.applyThemeBanner();
         }
       });
     });

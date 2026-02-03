@@ -9,12 +9,28 @@ const VALID_BANNER_HEIGHTS = new Set([400, 500]);
 const DEFAULT_BANNER_PATH = './icons/zanobo_banner_1024x400.png';
 const CHINESE_MOBILE_BANNER_PATH = './icons/zanobo_cn_1024x400.png';
 
+/**
+ * Theme-to-banner mapping for automatic banner selection
+ * Each theme gets a visually appropriate default banner
+ */
+const THEME_BANNER_PATHS: Record<string, string> = {
+  // Dark Theme (neon): technical, professional, high contrast - dark banner with neon blue head
+  neon: './icons/dark_1024x400.png',
+  // Zanobo Theme (brand): brand identity, emotional, creative - colorful banner
+  brand: './icons/colorful_1024x400.png',
+  // Light Theme: factual, calm, neutral - light blue/whitish banner
+  light: './icons/lightblue_1024x400.png',
+  // Focus Theme (Steve Jobs): maximum clarity, focus on action - same light banner as Light Theme
+  focus: './icons/lightblue_1024x400.png',
+};
+
 export class BannerManager {
   private heroHeader: HTMLElement | null;
   private heroImage: HTMLImageElement | null;
   private uploadButton: HTMLButtonElement | null;
   private uploadInput: HTMLInputElement | null;
   private currentObjectUrl: string | null = null;
+  private hasCustomBanner: boolean = false;
 
   constructor() {
     this.heroHeader = document.querySelector('.hero-header');
@@ -72,6 +88,7 @@ export class BannerManager {
       try {
         await saveAppSetting(HERO_BANNER_SETTING_KEY, file);
         this.setHeroImage(objectUrl);
+        this.hasCustomBanner = true;
         notify.success('Bannerbild wurde gespeichert.');
       } catch (error) {
         URL.revokeObjectURL(objectUrl);
@@ -119,14 +136,17 @@ export class BannerManager {
     try {
       const stored = await getAppSetting<Blob>(HERO_BANNER_SETTING_KEY);
       if (!stored?.value) {
+        this.hasCustomBanner = false;
         this.applyDefaultBanner();
         return;
       }
 
       const objectUrl = URL.createObjectURL(stored.value);
       this.setHeroImage(objectUrl);
+      this.hasCustomBanner = true;
     } catch (error) {
       logger.warn('⚠️ Failed to restore hero banner from storage', error);
+      this.hasCustomBanner = false;
       this.applyDefaultBanner();
     }
   }
@@ -138,11 +158,18 @@ export class BannerManager {
 
     const language = getLanguage();
     const isMobile = this.isMobileDevice();
-    const defaultPath = language === 'zh' && isMobile
-      ? CHINESE_MOBILE_BANNER_PATH
-      : DEFAULT_BANNER_PATH;
 
-    this.setHeroImage(defaultPath);
+    // Chinese mobile users get a localized banner
+    if (language === 'zh' && isMobile) {
+      this.setHeroImage(CHINESE_MOBILE_BANNER_PATH);
+      return;
+    }
+
+    // Apply theme-specific default banner
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'brand';
+    const themeBannerPath = THEME_BANNER_PATHS[currentTheme] || DEFAULT_BANNER_PATH;
+
+    this.setHeroImage(themeBannerPath);
   }
 
   private updateHeroHeight(): void {
@@ -167,5 +194,16 @@ export class BannerManager {
     }
 
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  /**
+   * Apply theme-appropriate banner when theme changes.
+   * Only updates the banner if no custom banner has been uploaded by the user.
+   */
+  public applyThemeBanner(): void {
+    if (this.hasCustomBanner) {
+      return;
+    }
+    this.applyDefaultBanner();
   }
 }
