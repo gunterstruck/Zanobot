@@ -19,6 +19,7 @@ import { SettingsPhase } from './phases/4-Settings.js';
 import { Level2ReferencePhase } from './phases/Level2-Reference.js';
 import { Level2DiagnosePhase } from './phases/Level2-Diagnose.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
+import { ReferenceCardController } from './components/ReferenceCardController.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
 import { getAllMachines } from '@data/db.js';
 import type { DetectionMode } from '@data/types.js';
@@ -40,8 +41,9 @@ export class Router {
   private level2ReferencePhase: Level2ReferencePhase | null = null;
   private level2DiagnosePhase: Level2DiagnosePhase | null = null;
 
-  // Diagnose card state controller
+  // Card state controllers
   private diagnoseCardController: DiagnoseCardController;
+  private referenceCardController: ReferenceCardController;
 
   // Mode management
   private modeManager = getDetectionModeManager();
@@ -63,6 +65,14 @@ export class Router {
       onScanRequested: () => this.handleDiagnoseScanRequest(),
       onSelectRequested: () => this.handleDiagnoseSelectRequest(),
       onCreateRequested: () => this.handleDiagnoseCreateRequest(),
+    });
+
+    // Initialize ReferenceCardController for state-based UI (mirrors DiagnoseCardController)
+    this.referenceCardController = new ReferenceCardController();
+    this.referenceCardController.init({
+      onScanRequested: () => this.handleReferenceScanRequest(),
+      onSelectRequested: () => this.handleReferenceSelectRequest(),
+      onCreateRequested: () => this.handleReferenceCreateRequest(),
     });
 
     // Lock Phase 2 and 3 initially
@@ -105,8 +115,9 @@ export class Router {
     // Update UI to show selected machine
     this.updateMachineDisplay(machine);
 
-    // Update diagnose card state to show machine info
+    // Update card states to show machine info
     this.diagnoseCardController.setMachine(machine);
+    this.referenceCardController.setMachine(machine);
 
     // Unlock Phase 2 and 3
     this.unlockPhases();
@@ -172,6 +183,69 @@ export class Router {
    */
   private handleDiagnoseCreateRequest(): void {
     logger.info('➕ Create machine requested from diagnose card');
+    // Expand the machine selection section
+    this.expandSection('select-machine-content');
+    // Focus on the name input
+    const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
+    if (nameInput) {
+      nameInput.focus();
+    }
+  }
+
+  /**
+   * Handle scan request from reference card
+   * Opens the scanner modal via IdentifyPhase
+   */
+  private handleReferenceScanRequest(): void {
+    logger.info('📷 Scan requested from reference card');
+    // Trigger the scan button click in the identify phase
+    const scanBtn = document.getElementById('scan-btn');
+    if (scanBtn) {
+      scanBtn.click();
+    }
+  }
+
+  /**
+   * Handle select existing machine request from reference card
+   * Checks if machines exist, then expands the machine selection section
+   */
+  private async handleReferenceSelectRequest(): Promise<void> {
+    logger.info('📋 Select machine requested from reference card');
+
+    try {
+      const machines = await getAllMachines();
+
+      if (machines.length === 0) {
+        // No machines exist - show hint and redirect to create
+        notify.info(t('reference.noMachinesYet'), {
+          title: t('reference.noMachinesHint'),
+          duration: 4000,
+        });
+        // Redirect to create new machine
+        this.handleReferenceCreateRequest();
+        return;
+      }
+
+      // Machines exist - show the selection
+      this.expandSection('select-machine-content');
+      // Scroll to machine overview section
+      const machineOverview = document.getElementById('machine-overview');
+      if (machineOverview) {
+        machineOverview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (error) {
+      logger.error('Error checking machines:', error);
+      // Fallback: just expand the section
+      this.expandSection('select-machine-content');
+    }
+  }
+
+  /**
+   * Handle create machine request from reference card
+   * Expands the machine selection section and focuses on name input
+   */
+  private handleReferenceCreateRequest(): void {
+    logger.info('➕ Create machine requested from reference card');
     // Expand the machine selection section
     this.expandSection('select-machine-content');
     // Focus on the name input

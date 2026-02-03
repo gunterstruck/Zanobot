@@ -165,6 +165,13 @@ export const zh: TranslationDict = {
     fingerprintQualityLabel: '指纹质量：',
     fingerprintQualityConfident: '可信',
 
+    // State-based card UI (mirrors diagnose card)
+    statesRecorded: '{{count}} 个状态已录制',
+    noReferenceYet: '尚无参考',
+    changeMachine: '更换机器',
+    noMachinesYet: '尚未创建机器。',
+    noMachinesHint: '请先创建一台新机器。',
+
     recording: {
       alreadyRunning: '录制已在进行中。',
       cameraNotAvailable: '摄像头不可用。录制将在无位置图像的情况下继续。',

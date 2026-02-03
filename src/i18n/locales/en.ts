@@ -166,6 +166,13 @@ export const en: TranslationDict = {
     fingerprintQualityLabel: 'Fingerprint Quality:',
     fingerprintQualityConfident: 'CONFIDENT',
 
+    // State-based card UI (mirrors diagnose card)
+    statesRecorded: '{{count}} state recorded',
+    noReferenceYet: 'No reference yet',
+    changeMachine: 'Change machine',
+    noMachinesYet: 'No machines created yet.',
+    noMachinesHint: 'Please create a new machine first.',
+
     recording: {
       alreadyRunning: 'A recording is already in progress.',
       cameraNotAvailable: 'Camera not available. Recording will continue without position image.',
