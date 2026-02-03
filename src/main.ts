@@ -312,10 +312,42 @@ class ZanobotApp {
    * of only inline style to handle CSS-defined visibility.
    *
    * CRITICAL FIX: Added debouncing to prevent issues from rapid clicks
+   *
+   * ENHANCEMENT: Secondary cards expand to full width when opened
+   * Applies to: "Maschine auswählen" & "Referenz aufnehmen"
    */
   private setupCollapsibleSections(): void {
     const headers = document.querySelectorAll('.section-header');
     let isAnimating = false;
+
+    // Helper: Check if a card is a secondary card (first two in main-actions)
+    const isSecondaryCard = (element: Element | null): boolean => {
+      if (!element) return false;
+      const container = element.closest('.main-container');
+      if (!container) return false;
+      const parent = container.parentElement;
+      if (!parent?.classList.contains('main-actions')) return false;
+      const children = Array.from(parent.children).filter((el) =>
+        el.classList.contains('main-container')
+      );
+      const index = children.indexOf(container);
+      // Only first two cards are secondary (index 0 and 1)
+      return index === 0 || index === 1;
+    };
+
+    // Helper: Update expanded class on secondary cards
+    const updateExpandedClass = (
+      container: Element | null,
+      shouldExpand: boolean
+    ): void => {
+      if (!container || !isSecondaryCard(container)) return;
+      if (shouldExpand) {
+        container.classList.add('expanded');
+      } else {
+        container.classList.remove('expanded');
+      }
+    };
+
     const updateCompactExpandedState = () => {
       const contents = Array.from(
         document.querySelectorAll<HTMLElement>('.collapsible-content')
@@ -346,6 +378,9 @@ class ZanobotApp {
           return;
         }
 
+        // Get the container for expanded class management
+        const container = header.closest('.main-container');
+
         // CRITICAL FIX: Store original display mode on first interaction
         // This preserves flex, grid, or any other display value
         if (!content.dataset.originalDisplay) {
@@ -361,6 +396,8 @@ class ZanobotApp {
         // Toggle visibility while preserving original display mode
         if (isVisible) {
           content.style.display = 'none';
+          // Remove expanded class when closing
+          updateExpandedClass(container, false);
         } else {
           headers.forEach((otherHeader) => {
             if (otherHeader === header) {
@@ -379,6 +416,9 @@ class ZanobotApp {
 
             if (window.getComputedStyle(otherContent).display !== 'none') {
               otherContent.style.display = 'none';
+              // Remove expanded class from other cards
+              const otherContainer = otherHeader.closest('.main-container');
+              updateExpandedClass(otherContainer, false);
             }
 
             const otherIcon = otherHeader.querySelector('.collapse-icon');
@@ -391,6 +431,8 @@ class ZanobotApp {
           const originalDisplay = content.dataset.originalDisplay;
           content.style.display =
             originalDisplay && originalDisplay !== 'none' ? originalDisplay : '';
+          // Add expanded class when opening
+          updateExpandedClass(container, true);
         }
 
         // Rotate icon
