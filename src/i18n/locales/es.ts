@@ -14,7 +14,7 @@ export const es: TranslationDict = {
     scan: 'Escanear',
     create: 'Crear',
     record: 'Grabar',
-    startDiagnosis: 'Iniciar diagnóstico',
+    startDiagnosis: 'Verificar estado',
     analyze: 'Analizar',
     close: 'Cerrar',
     cancel: 'Cancelar',
@@ -63,8 +63,8 @@ export const es: TranslationDict = {
     databaseShared: 'Base de datos compartida',
     databaseImported: 'Base de datos importada',
     databaseCleared: 'Base de datos borrada',
-    nfcDiagnosisTitle: '¿Iniciar diagnóstico?',
-    nfcDiagnosisPrompt: 'Máquina detectada. ¿Iniciar el diagnóstico ahora?',
+    nfcDiagnosisTitle: '¿Verificar estado?',
+    nfcDiagnosisPrompt: 'Máquina detectada. ¿Verificar estado ahora?',
   },
 
   // ============================================================================
@@ -582,6 +582,9 @@ export const es: TranslationDict = {
     brandTitle: 'Zanobo',
     brandDescription: 'Tema de marca equilibrado con colores serenos. Diseñado para sesiones de diagnóstico prolongadas.',
     brandDesc: 'Tema de marca equilibrado con colores serenos. Diseñado para sesiones de diagnóstico prolongadas.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'Una acción. Sin ruido. Enfoque en lo esencial – todo lo demás desaparece.',
+    focusDesc: 'Una acción. Sin ruido. Claridad que funciona.',
   },
   level2Default: {
     referenceTitle: 'Grabación de referencia ML',

@@ -16,7 +16,7 @@ export const de: TranslationDict = {
     scan: 'Scannen',
     create: 'Erstellen',
     record: 'Aufnehmen',
-    startDiagnosis: 'Diagnose starten',
+    startDiagnosis: 'Zustand prüfen',
     analyze: 'Analysieren',
     close: 'Schließen',
     cancel: 'Abbrechen',
@@ -65,8 +65,8 @@ export const de: TranslationDict = {
     databaseShared: 'Datenbank versendet',
     databaseImported: 'Datenbank importiert',
     databaseCleared: 'Datenbank geleert',
-    nfcDiagnosisTitle: 'Diagnose starten?',
-    nfcDiagnosisPrompt: 'Maschine erkannt. Diagnose jetzt starten?',
+    nfcDiagnosisTitle: 'Zustand prüfen?',
+    nfcDiagnosisPrompt: 'Maschine erkannt. Zustand jetzt prüfen?',
   },
 
   // ============================================================================
@@ -733,6 +733,9 @@ export const de: TranslationDict = {
     brandTitle: 'Zanobo',
     brandDescription: 'Ausgewogenes Marken-Design mit ruhigen Farben. Für lange Diagnose-Sessions optimiert.',
     brandDesc: 'Ausgewogenes Marken-Design mit ruhigen Farben. Für lange Diagnose-Sessions optimiert.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'Eine Aktion. Kein Rauschen. Das Wesentliche im Fokus – alles andere tritt zurück.',
+    focusDesc: 'Eine Aktion. Kein Rauschen. Klarheit, die funktioniert.',
   },
 
   // ============================================================================
