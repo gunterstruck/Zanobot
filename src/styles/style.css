@@ -334,6 +334,194 @@
 }
 
 /* ===================================
+   THEME: FOCUS (Diagnose-first)
+   Vibe: Bright, friendly, optimistic, calm - Steve Jobs principle
+   "One primary action. Everything else supports it."
+   =================================== */
+[data-theme="focus"] {
+    /* Core Colors - Warm, inviting, professional */
+    --primary-color: #0891b2;         /* Warm teal - friendly yet professional */
+    --primary-hover: #0e7490;
+    --secondary-color: #06b6d4;
+    --accent-color: #f59e0b;          /* Warm amber - positive, optimistic */
+
+    /* Backgrounds - Light, airy, off-white */
+    --bg-primary: #fafbfc;            /* Warm off-white */
+    --bg-secondary: #f0f4f8;          /* Very light blue-grey */
+    --bg-tertiary: #e2e8f0;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-modal: rgba(255, 255, 255, 0.98);
+
+    /* Text - Soft dark for readability without harshness */
+    --text-primary: #1e293b;          /* Soft dark blue-grey */
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    /* Status Colors - Friendly, optimistic tones */
+    --status-healthy: #10b981;        /* Friendly green */
+    --status-warning: #f59e0b;        /* Warm amber */
+    --status-error: #ef4444;          /* Soft red */
+    --status-uncertain: #f97316;      /* Warm orange */
+
+    /* Borders & Effects - Soft, subtle */
+    --border-color: rgba(8, 145, 178, 0.15);
+    --divider-color: rgba(0, 0, 0, 0.06);
+
+    /* Soft shadows - gentle depth without harshness */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05);
+    --glow-primary: 0 0 16px rgba(8, 145, 178, 0.12);
+    --glow-strong: 0 0 24px rgba(8, 145, 178, 0.18);
+
+    /* Footer Surface - subtle distinction */
+    --footer-bg: #f0f4f8;
+    --footer-text: #1e293b;
+    --footer-border: rgba(8, 145, 178, 0.1);
+
+    /* Visualizer Colors - Light mode friendly */
+    --viz-bg: #fafbfc;
+    --viz-grid: rgba(8, 145, 178, 0.08);
+    --viz-primary: rgba(8, 145, 178, 0.85);
+    --viz-fill-top: rgba(8, 145, 178, 0.25);
+    --viz-fill-bottom: rgba(8, 145, 178, 0.05);
+    --viz-text: rgba(8, 145, 178, 0.5);
+
+    /* Focus Theme Specific: Hierarchy Variables */
+    --focus-primary-scale: 1;         /* Diagnose card: full prominence */
+    --focus-secondary-scale: 0.92;    /* Supporting cards: slightly smaller */
+    --focus-secondary-width: 70%;     /* Supporting cards: narrower width */
+}
+
+/* Focus Theme: Light surface tuning for better readability */
+[data-theme="focus"] .sub-container {
+    background: var(--bg-primary);
+    border-color: rgba(8, 145, 178, 0.1);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="focus"] .machine-selection-option {
+    background: var(--bg-primary);
+    border-color: rgba(8, 145, 178, 0.1);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="focus"] .machine-input {
+    background: #ffffff;
+    border-color: rgba(8, 145, 178, 0.2);
+    color: var(--text-primary);
+}
+
+[data-theme="focus"] .machine-input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+[data-theme="focus"] .option-divider span {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
+/* ===================================
+   FOCUS THEME: LAYOUT HIERARCHY
+   Steve Jobs Principle: "One primary action"
+   Diagnose = Primary (prominent, full-width, top)
+   Machine Select & Reference = Secondary (smaller, right-aligned)
+   =================================== */
+
+/* Focus Theme: Reorder containers - Diagnose FIRST */
+[data-theme="focus"] .main-actions {
+    /* Flex container for reordering */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Right-align children by default */
+}
+
+/* Focus Theme: Primary Action - Diagnose (full width, prominent) */
+[data-theme="focus"] .main-actions > .main-container:nth-child(3) {
+    /* Diagnose is the 3rd child in HTML, but visually FIRST */
+    order: -1;
+    width: 100%;
+    /* Enhanced visual prominence */
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(8, 145, 178, 0.1);
+    background: rgba(255, 255, 255, 0.98);
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(3) .main-header {
+    /* Larger, more prominent header for primary action */
+    min-height: clamp(90px, 12vh, 120px);
+    padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 3vw, var(--spacing-lg));
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(3) .container-title {
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(3) .header-with-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* Focus Theme: Secondary Actions - Machine Select & Reference */
+[data-theme="focus"] .main-actions > .main-container:nth-child(1),
+[data-theme="focus"] .main-actions > .main-container:nth-child(2) {
+    /* Narrower width, right-aligned */
+    width: var(--focus-secondary-width, 70%);
+    /* Subtler appearance */
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: var(--shadow-sm);
+    /* Visual marker: subtle left border accent */
+    border-left: 3px solid var(--text-muted);
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(1) .main-header,
+[data-theme="focus"] .main-actions > .main-container:nth-child(2) .main-header {
+    /* Smaller header for secondary actions */
+    min-height: clamp(60px, 8vh, 80px);
+    padding: clamp(0.6rem, 2vh, 1.5rem) clamp(0.75rem, 2.5vw, var(--spacing-md));
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(1) .container-title,
+[data-theme="focus"] .main-actions > .main-container:nth-child(2) .container-title {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+[data-theme="focus"] .main-actions > .main-container:nth-child(1) .header-with-icon svg,
+[data-theme="focus"] .main-actions > .main-container:nth-child(2) .header-with-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--text-muted);
+}
+
+/* Focus Theme: Secondary cards hover - subtle feedback */
+[data-theme="focus"] .main-actions > .main-container:nth-child(1):hover,
+[data-theme="focus"] .main-actions > .main-container:nth-child(2):hover {
+    border-left-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+/* Focus Theme: Primary card hover - confident feedback */
+[data-theme="focus"] .main-actions > .main-container:nth-child(3):hover {
+    box-shadow: var(--shadow-lg), 0 0 0 2px rgba(8, 145, 178, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Focus Theme: Mobile adjustments - maintain hierarchy on small screens */
+@media (max-width: 480px) {
+    [data-theme="focus"] .main-actions > .main-container:nth-child(1),
+    [data-theme="focus"] .main-actions > .main-container:nth-child(2) {
+        /* Slightly wider on mobile for touch targets, but still secondary */
+        width: 85%;
+    }
+}
+
+/* ===================================
    RESET & BASE STYLES
    =================================== */
 *, *::before, *::after {
