@@ -750,6 +750,7 @@ export const en: TranslationDict = {
     impressum: 'Legal Notice',
     privacy: 'Privacy Policy',
     about: 'About Zanobo',
+    settings: 'Settings',
   },
 
   // ============================================================================

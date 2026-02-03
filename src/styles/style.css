@@ -18,6 +18,15 @@
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
 
+    /* Layout Spacing System (Deliberate Visual Rhythm)
+       These control the vertical flow on the start screen:
+       - Cards are grouped tightly together (primary zone)
+       - Large gap separates cards from footer (hierarchy break)
+       - Footer sits "grounded" with breathing room below */
+    --space-card-gap: 1.5rem;        /* 24px - between action cards */
+    --space-section-gap: 3rem;       /* 48px - after cards, before footer */
+    --space-footer-bottom: 1.5rem;   /* 24px - below footer to viewport edge */
+
     /* Border Radius (Theme-Independent) */
     --radius-xs: 4px;
     --radius-sm: 8px;
@@ -96,10 +105,10 @@
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
     --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
 
-    /* Footer Surface */
-    --footer-bg: rgba(245, 250, 255, 0.94);
-    --footer-text: #0b1c2f;
-    --footer-border: rgba(15, 23, 42, 0.16);
+    /* Footer Surface - deeper shade for visual "floor" */
+    --footer-bg: rgba(7, 18, 33, 0.95);
+    --footer-text: #ffffff;
+    --footer-border: rgba(0, 212, 255, 0.15);
 
     /* Visualizer Colors (Theme-Aware) */
     --viz-bg: #0a0a0a;
@@ -108,6 +117,31 @@
     --viz-fill-top: rgba(59, 130, 246, 0.3);
     --viz-fill-bottom: rgba(59, 130, 246, 0.05);
     --viz-text: rgba(255, 255, 255, 0.4);
+}
+
+/* ===================================
+   RESPONSIVE SPACING SYSTEM
+   Deliberate vertical rhythm for different screen sizes
+   =================================== */
+
+/* Mobile (compact but clear hierarchy) */
+@media (max-width: 480px) {
+    :root {
+        --space-card-gap: 1.25rem;       /* 20px - slightly tighter on mobile */
+        --space-section-gap: 2.5rem;     /* 40px - still clear hierarchy break */
+        --space-footer-bottom: 1.25rem;  /* 20px - moderate bottom breathing room */
+    }
+}
+
+/* Tablet is default (481px - 900px) - uses :root values */
+
+/* Desktop (generous spacing) */
+@media (min-width: 901px) {
+    :root {
+        --space-card-gap: 1.75rem;       /* 28px - more breathing room */
+        --space-section-gap: 3.5rem;     /* 56px - generous hierarchy break */
+        --space-footer-bottom: 2rem;     /* 32px - comfortable bottom margin */
+    }
 }
 
 /* ===================================
@@ -149,10 +183,10 @@
     --glow-primary: 0 0 25px rgba(0, 243, 255, 0.4);
     --glow-strong: 0 0 40px rgba(0, 243, 255, 0.6);
 
-    /* Footer Surface */
-    --footer-bg: rgba(15, 23, 42, 0.92);
+    /* Footer Surface - darker than content cards for visual "floor" */
+    --footer-bg: rgba(5, 11, 20, 0.95);
     --footer-text: #f8fafc;
-    --footer-border: rgba(0, 243, 255, 0.25);
+    --footer-border: rgba(0, 243, 255, 0.2);
 
     /* Visualizer Colors */
     --viz-bg: #000000;
@@ -203,10 +237,10 @@
     --glow-primary: 0 0 20px rgba(15, 23, 42, 0.12), 0 0 8px rgba(15, 23, 42, 0.08);
     --glow-strong: 0 0 30px rgba(15, 23, 42, 0.18), 0 0 12px rgba(15, 23, 42, 0.12);
 
-    /* Footer Surface */
-    --footer-bg: rgba(255, 255, 255, 0.97);
+    /* Footer Surface - light grey to distinguish from white content cards */
+    --footer-bg: #e2e8f0;
     --footer-text: #0f172a;
-    --footer-border: rgba(15, 23, 42, 0.12);
+    --footer-border: rgba(15, 23, 42, 0.15);
 
     /* Visualizer Colors */
     --viz-bg: #f8fafc;
@@ -285,10 +319,10 @@
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
     --glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
 
-    /* Footer Surface */
-    --footer-bg: rgba(17, 40, 64, 0.9);
+    /* Footer Surface - deeper shade for visual "floor" */
+    --footer-bg: rgba(7, 18, 33, 0.95);
     --footer-text: #ffffff;
-    --footer-border: rgba(0, 212, 255, 0.2);
+    --footer-border: rgba(0, 212, 255, 0.15);
 
     /* Visualizer Colors */
     --viz-bg: #0a0a0a;
@@ -330,11 +364,17 @@ body {
     max-width: 900px;
     margin: 0 auto;
     padding: var(--spacing-md);
-    padding-bottom: var(--spacing-xl);
+    padding-bottom: var(--space-footer-bottom);
     display: flex;
     flex-direction: column;
-    gap: clamp(12px, 2vh, var(--spacing-lg));
+    /* Pack items from top - natural flow like a normal website */
+    justify-content: flex-start;
+    /* No gap here - child elements control their own spacing for deliberate rhythm */
+    gap: 0;
+    /* Natural height - grows with content, allows scrolling */
     min-height: 100dvh;
+    height: auto;
+    overflow-y: auto;
 }
 
 @media (min-width: 768px) {
@@ -385,16 +425,19 @@ body {
    HERO HEADER IMAGE
    =================================== */
 .hero-header {
+    /* Prevent browser from squashing header */
+    flex-shrink: 0;
     width: 100%;
     max-width: var(--content-max-width);
     margin-left: auto;
     margin-right: auto;
-    margin-top: var(--spacing-sm);
+    /* Space after banner before cards - same rhythm as card gap */
+    margin-bottom: var(--space-card-gap);
     position: relative;
+    /* Fixed height range for stability */
     height: clamp(108px, 18vh, 216px);
     min-height: 108px;
     max-height: 234px;
-    margin-bottom: 0;
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, rgba(7, 18, 33, 0.8) 0%, rgba(17, 40, 64, 0.8) 100%);
@@ -472,15 +515,17 @@ body {
 .main-actions {
     display: flex;
     flex-direction: column;
+    /* Prevent squashing - push down and scroll instead */
     flex: 0 0 auto;
     justify-content: flex-start;
-    /* STABIL: Fester Abstand zwischen Containern - unabhängig vom Collapse-Zustand */
-    gap: var(--spacing-md);
+    /* Gap between action cards - tighter grouping for primary zone */
+    gap: var(--space-card-gap);
     align-items: stretch;
-    /* NEU: Erzwingt mittige Spalte wie auf Smartphone */
     width: 100%;
     max-width: var(--content-max-width);
     margin: 0 auto;
+    /* Deliberate large gap after cards - signals "end of primary actions" */
+    margin-bottom: var(--space-section-gap);
 }
 
 @media (min-width: 900px) {
@@ -490,11 +535,6 @@ body {
 
     .container {
         max-width: 520px;
-    }
-
-    .main-actions {
-        /* STABIL: Fester Abstand auf Desktop - nicht von vh abhängig */
-        gap: var(--spacing-lg);
     }
 
     .main-header {
@@ -1421,27 +1461,36 @@ body {
    FOOTER
    =================================== */
 .footer {
+    /* Prevent browser from squashing footer when space is tight */
+    flex-shrink: 0;
+    /* Controlled spacing - section gap is on .main-actions margin-bottom */
     margin-top: 0;
     width: 100%;
     max-width: var(--content-max-width);
-    height: clamp(80px, 9vh, 160px);
+    /* Stable height - no viewport dependency */
+    min-height: 80px;
+    height: auto;
     margin-left: auto;
     margin-right: auto;
-    padding: clamp(0.35rem, 0.9vh, 0.9rem);
+    padding: 0.75rem 1rem;
     text-align: center;
     border-radius: var(--radius-lg);
     background: var(--footer-bg);
-    box-shadow: var(--shadow-md);
+    /* Enhanced visual grounding - subtle top shadow creates "floor" effect */
+    box-shadow:
+        var(--shadow-md),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     border: 1px solid var(--footer-border);
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.3rem;
     color: var(--footer-text);
+    /* Smaller typography - footer is secondary, not competing with cards */
+    font-size: var(--font-sm);
 }
 
 .footer-compact {
-    margin-top: var(--spacing-sm);
     padding-top: 0.5rem;
 }
 
@@ -1482,16 +1531,19 @@ body {
     color: var(--primary-color);
 }
 
-.separator {
-    color: var(--footer-text);
-    opacity: 0.65;
-    font-size: 0.875rem;
+/* Footer Grid Layout - Minimalist 2x2 Grid */
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs) 0;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
 }
 
-.copyright {
-    font-size: 0.75rem;
-    color: var(--footer-text);
-    opacity: 0.6;
+.footer-grid .footer-link {
+    justify-self: center;
+    padding: 0.25rem 0.5rem;
 }
 
 /* ===================================
@@ -3228,132 +3280,6 @@ html[data-view-level="advanced"] .ghost-overlay-hint {
         width: 42px;
         height: 42px;
         justify-content: center;
-    }
-}
-
-/* ===================================
-   COMPACT MODE (iPhone SE / Small Screens)
-   Force "One-Screen-Experience"
-   =================================== */
-/* ===================================
-   COMPACT MODE (iPhone SE / Small Screens)
-   Strict "One-Screen" Enforcement
-   =================================== */
-@media (max-height: 700px) {
-    /* Compact Mode: Override content width for all elements */
-    :root {
-        --content-max-width: 360px;
-    }
-
-    /* 1. Haupt-Container fixieren */
-    .container {
-        --compact-gap: clamp(6px, 1.4vh, 12px);
-        height: 100dvh !important; /* Nutze den vollen Viewport */
-        width: 100% !important;
-        padding: 8px !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important; /* VERHINDERT Scrollen des gesamten Screens */
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0 !important;
-    }
-    /* 2. Header: Darf NICHT schrumpfen (verschwinden), aber Logo kleiner */
-    .hero-header {
-        flex: 0 0 auto !important; /* Fixe Größe, kein Schrumpfen! */
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        margin-bottom: 0 !important;
-    }
-    /* Banner füllt Container randlos (edge-to-edge) */
-    .hero-header img {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        object-fit: cover !important;
-        object-position: center !important;
-        display: block !important;
-    }
-    .logo svg, .logo {
-        height: 100% !important;
-        width: auto !important;
-        display: block !important;
-    }
-    /* Unnötige Texte im Header ausblenden um Platz zu sparen */
-    .brand-subtitle, .header-divider {
-        display: none !important;
-    }
-    /* 3. Mittelteil (Buttons): Packt sich zusammen */
-    .main-actions, .phases-container {
-        flex: 1 1 auto !important; /* Nimmt restlichen Platz */
-        min-height: 0 !important; /* WICHTIG: Erlaubt Schrumpfen unter Inhalt-Größe */
-        overflow-y: auto !important; /* Scrollen NUR hier, falls nötig */
-
-        /* Layout: Eng zusammenpacken */
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-evenly !important;
-        gap: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        margin: 0 auto !important;
-    }
-    .main-actions .main-container {
-        margin-bottom: 0 !important;
-    }
-    .main-header {
-        min-height: clamp(72px, 10.5vh, 96px) !important;
-        padding: clamp(0.75rem, 3vh, 1.35rem) clamp(0.75rem, 3vw, 1.1rem) !important;
-    }
-    .container-title {
-        font-size: 0.95rem !important;
-    }
-    /* Button-Styling kompakt */
-    .action-btn, button {
-        flex: 0 0 auto !important; /* Buttons behalten ihre Größe */
-        height: auto !important;
-        padding: 6px 10px !important;
-        margin: 0 !important;
-        font-size: 0.8rem !important;
-        white-space: nowrap !important;
-    }
-    /* 4. Footer: Darf NICHT aus dem Bild rutschen */
-    .footer, .app-footer {
-        flex: 0 0 auto !important; /* Fixe Größe, klebt unten */
-        margin-top: 0 !important;
-        padding: 4px 6px !important;
-        height: clamp(36px, 6vh, 54px) !important;
-        z-index: 10;
-    }
-    /* Links nebeneinander */
-    .legal-info, .footer p {
-        display: flex !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        margin: 0 !important;
-        font-size: 0.55rem !important;
-    }
-    .footer-link, .separator {
-        display: inline-block !important;
-        font-size: 0.55rem !important;
-    }
-
-    /* Bei geöffnetem Bereich: normales Scrollen, Footer darf verschwinden */
-    body.compact-expanded .container {
-        overflow-y: auto !important;
-    }
-
-    body.compact-expanded .main-actions,
-    body.compact-expanded .phases-container {
-        flex: 0 0 auto !important;
-        overflow: visible !important;
-        justify-content: flex-start !important;
-    }
-
-    body.compact-expanded .footer,
-    body.compact-expanded .app-footer {
-        display: none !important;
     }
 }
 

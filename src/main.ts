@@ -584,8 +584,26 @@ class ZanobotApp {
       closeAboutBtn.addEventListener('click', () => closeModal(aboutModal));
     }
 
+    // Settings modal
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsModal = document.getElementById('close-settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings-btn');
+
+    if (settingsBtn && settingsModal) {
+      settingsBtn.addEventListener('click', () => openModal(settingsModal));
+    }
+
+    if (closeSettingsModal && settingsModal) {
+      closeSettingsModal.addEventListener('click', () => closeModal(settingsModal));
+    }
+
+    if (closeSettingsBtn && settingsModal) {
+      closeSettingsBtn.addEventListener('click', () => closeModal(settingsModal));
+    }
+
     // Close modals on background click
-    [impressumModal, datenschutzModal, aboutModal].forEach((modal) => {
+    [impressumModal, datenschutzModal, aboutModal, settingsModal].forEach((modal) => {
       if (modal) {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
@@ -598,7 +616,7 @@ class ZanobotApp {
     // Close modals with Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        [impressumModal, datenschutzModal, aboutModal].forEach((modal) => {
+        [impressumModal, datenschutzModal, aboutModal, settingsModal].forEach((modal) => {
           if (modal && window.getComputedStyle(modal).display !== 'none') {
             closeModal(modal);
           }
