@@ -6578,10 +6578,27 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
     justify-content: center;
     gap: var(--spacing-sm);
     margin: 0 auto var(--spacing-sm);
+    cursor: pointer;
+    background: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    color: var(--bg-primary);
+    border-radius: var(--radius-md);
+    transition: var(--btn-transition);
 }
 
-.auto-detect-btn svg {
+.auto-detect-btn:hover {
+    box-shadow: var(--glow-strong);
+    transform: var(--hover-scale);
+}
+
+.auto-detect-btn:active {
+    transform: var(--active-press);
+}
+
+.auto-detect-btn svg,
+.auto-detect-btn span {
     flex-shrink: 0;
+    pointer-events: none;
 }
 
 .auto-detect-hint {
