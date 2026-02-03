@@ -582,6 +582,9 @@ export const es: TranslationDict = {
     brandTitle: 'Zanobo',
     brandDescription: 'Tema de marca equilibrado con colores serenos. Diseñado para sesiones de diagnóstico prolongadas.',
     brandDesc: 'Tema de marca equilibrado con colores serenos. Diseñado para sesiones de diagnóstico prolongadas.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'Una acción. Sin ruido. Enfoque en lo esencial – todo lo demás desaparece.',
+    focusDesc: 'Una acción. Sin ruido. Claridad que funciona.',
   },
   level2Default: {
     referenceTitle: 'Grabación de referencia ML',

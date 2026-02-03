@@ -688,6 +688,9 @@ export const en: TranslationDict = {
     brandTitle: 'Zanobo',
     brandDescription: 'Balanced brand theme with calm colors. Designed for long diagnostic sessions.',
     brandDesc: 'Balanced brand theme with calm colors. Designed for long diagnostic sessions.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'One action. No noise. Focus on what matters – everything else fades away.',
+    focusDesc: 'One action. No noise. Clarity that works.',
   },
 
   level2Default: {

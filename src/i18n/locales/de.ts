@@ -733,6 +733,9 @@ export const de: TranslationDict = {
     brandTitle: 'Zanobo',
     brandDescription: 'Ausgewogenes Marken-Design mit ruhigen Farben. Für lange Diagnose-Sessions optimiert.',
     brandDesc: 'Ausgewogenes Marken-Design mit ruhigen Farben. Für lange Diagnose-Sessions optimiert.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'Eine Aktion. Kein Rauschen. Das Wesentliche im Fokus – alles andere tritt zurück.',
+    focusDesc: 'Eine Aktion. Kein Rauschen. Klarheit, die funktioniert.',
   },
 
   // ============================================================================
