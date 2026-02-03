@@ -20,9 +20,11 @@ import { Level2ReferencePhase } from './phases/Level2-Reference.js';
 import { Level2DiagnosePhase } from './phases/Level2-Diagnose.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { getDetectionModeManager } from '@core/detection-mode.js';
+import { getAllMachines } from '@data/db.js';
 import type { DetectionMode } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { notify } from '@utils/notifications.js';
 import { t } from '../i18n/index.js';
 
 export class Router {
@@ -131,16 +133,36 @@ export class Router {
 
   /**
    * Handle select existing machine request from diagnose card
-   * Expands the machine selection section and scrolls to machine list
+   * Checks if machines exist, then expands the machine selection section
    */
-  private handleDiagnoseSelectRequest(): void {
+  private async handleDiagnoseSelectRequest(): Promise<void> {
     logger.info('📋 Select machine requested from diagnose card');
-    // Expand the machine selection section
-    this.expandSection('select-machine-content');
-    // Scroll to machine overview section
-    const machineOverview = document.getElementById('machine-overview');
-    if (machineOverview) {
-      machineOverview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+      const machines = await getAllMachines();
+
+      if (machines.length === 0) {
+        // No machines exist - show hint and redirect to create
+        notify.info(t('diagnose.noMachinesYet'), {
+          title: t('diagnose.noMachinesHint'),
+          duration: 4000,
+        });
+        // Redirect to create new machine
+        this.handleDiagnoseCreateRequest();
+        return;
+      }
+
+      // Machines exist - show the selection
+      this.expandSection('select-machine-content');
+      // Scroll to machine overview section
+      const machineOverview = document.getElementById('machine-overview');
+      if (machineOverview) {
+        machineOverview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (error) {
+      logger.error('Error checking machines:', error);
+      // Fallback: just expand the section
+      this.expandSection('select-machine-content');
     }
   }
 

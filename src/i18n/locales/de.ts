@@ -253,14 +253,15 @@ export const de: TranslationDict = {
       faultyMatch: 'Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "{{state}}" ({{score}}%). Inspektion empfohlen.',
     },
 
-    // State-based card UI
-    selectMachineFirst: 'Bitte zuerst eine Maschine auswählen',
-    scanCode: 'Barcode / QR scannen',
-    selectExisting: 'Maschine auswählen',
-    createNew: 'Neue Maschine anlegen',
+    // State-based card UI (horizontal tiles)
+    scanCode: 'QR scannen',
+    selectExisting: 'Maschine wählen',
+    createNew: 'Neue Maschine',
     statesReady: '{{count}} Zustand trainiert',
     noReference: 'Noch keine Referenz',
     changeMachine: 'Maschine wechseln',
+    noMachinesYet: 'Noch keine Maschinen angelegt.',
+    noMachinesHint: 'Legen Sie zuerst eine neue Maschine an.',
   },
 
   // ============================================================================
