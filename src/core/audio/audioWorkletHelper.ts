@@ -301,6 +301,9 @@ export class AudioWorkletManager {
    * iOS WATCHDOG: Starts a timer to detect if audio processing freezes.
    * If no warmup updates are received within 2 seconds, triggers onAudioBlocked
    * callback to allow the UI to show an appropriate error/retry option.
+   *
+   * IMPORTANT: The watchdog is ONLY active on iOS devices to avoid false positives
+   * on Android in quiet environments where background noise is below the threshold.
    */
   startSmartStart(): void {
     if (!this.workletNode) {
@@ -319,9 +322,21 @@ export class AudioWorkletManager {
       this.watchdogTimer = null;
     }
 
+    // Send platform info to worklet so it knows whether to run iOS-specific checks
+    // This prevents false positives on Android in quiet environments
+    const runningOnIOS = isIOS();
+    this.workletNode.port.postMessage({
+      type: 'set-platform',
+      isIOS: runningOnIOS,
+    });
+
     // ============================================
     // iOS WATCHDOG: Detect frozen audio processing
     // ============================================
+    // IMPORTANT: Only run on iOS devices!
+    // On Android, this can cause false positives in quiet environments
+    // because the watchdog checks for non-zero samples during warmup.
+    //
     // On iOS, even after AudioContext.resume(), the audio pipeline may not
     // deliver samples if:
     // 1. Mic permission was granted but iOS is blocking at OS level
@@ -330,82 +345,84 @@ export class AudioWorkletManager {
     //
     // The watchdog checks every 500ms if warmup updates are being received.
     // If no updates for 2 seconds during warmup phase, trigger onAudioBlocked.
-    const WATCHDOG_CHECK_INTERVAL_MS = 500;
-    const WATCHDOG_TIMEOUT_MS = 2000;
+    if (runningOnIOS) {
+      const WATCHDOG_CHECK_INTERVAL_MS = 500;
+      const WATCHDOG_TIMEOUT_MS = 2000;
 
-    this.watchdogTimer = setInterval(() => {
-      const now = Date.now();
-      const timeSinceStart = now - this.warmupStartTime;
-      const timeSinceLastUpdate = now - this.lastWarmupUpdate;
+      this.watchdogTimer = setInterval(() => {
+        const now = Date.now();
+        const timeSinceStart = now - this.warmupStartTime;
+        const timeSinceLastUpdate = now - this.lastWarmupUpdate;
 
-      // Only check during warmup phase (first ~5 seconds)
-      // After warmup, the 'waiting' phase has its own 30-second timeout
-      const warmUpDuration = this.config.warmUpDuration || 5000;
-      if (timeSinceStart > warmUpDuration) {
-        // Warmup phase passed, stop watchdog
-        if (this.watchdogTimer) {
-          clearInterval(this.watchdogTimer);
-          this.watchdogTimer = null;
-        }
-        return;
-      }
-
-      // Check if we've received any audio data
-      if (!this.hasReceivedAudioData && timeSinceStart > WATCHDOG_TIMEOUT_MS) {
-        logger.error('❌ iOS Audio Watchdog: No audio data received for 2 seconds');
-        logger.error(`   AudioContext state: ${this.audioContext?.state}`);
-
-        // Clear watchdog
-        if (this.watchdogTimer) {
-          clearInterval(this.watchdogTimer);
-          this.watchdogTimer = null;
-        }
-
-        // Attempt one more resume (iOS sometimes needs multiple attempts)
-        if (this.audioContext && this.audioContext.state !== 'running') {
-          logger.info('🔄 Attempting AudioContext resume (watchdog recovery)...');
-          this.audioContext.resume()
-            .then(() => {
-              logger.info(`✅ AudioContext resumed: state=${this.audioContext?.state}`);
-              // Give it another chance - restart the watchdog for 2 more seconds
-              this.hasReceivedAudioData = false;
-              this.lastWarmupUpdate = Date.now();
-              this.warmupStartTime = Date.now();
-              this.watchdogTimer = setInterval(() => {
-                if (!this.hasReceivedAudioData && Date.now() - this.warmupStartTime > WATCHDOG_TIMEOUT_MS) {
-                  // Still no data after retry - give up and notify
-                  if (this.watchdogTimer) {
-                    clearInterval(this.watchdogTimer);
-                    this.watchdogTimer = null;
-                  }
-                  if (this.config.onAudioBlocked) {
-                    this.config.onAudioBlocked();
-                  }
-                }
-              }, WATCHDOG_CHECK_INTERVAL_MS);
-            })
-            .catch(() => {
-              // Resume failed, notify immediately
-              if (this.config.onAudioBlocked) {
-                this.config.onAudioBlocked();
-              }
-            });
-        } else {
-          // AudioContext is running but still no data - mic is blocked at OS level
-          if (this.config.onAudioBlocked) {
-            this.config.onAudioBlocked();
+        // Only check during warmup phase (first ~5 seconds)
+        // After warmup, the 'waiting' phase has its own 30-second timeout
+        const warmUpDuration = this.config.warmUpDuration || 5000;
+        if (timeSinceStart > warmUpDuration) {
+          // Warmup phase passed, stop watchdog
+          if (this.watchdogTimer) {
+            clearInterval(this.watchdogTimer);
+            this.watchdogTimer = null;
           }
+          return;
         }
-        return;
-      }
 
-      // Check for stalled warmup updates (receiving some data but then it stopped)
-      if (this.hasReceivedAudioData && timeSinceLastUpdate > WATCHDOG_TIMEOUT_MS) {
-        logger.warn('⚠️ iOS Audio Watchdog: Warmup updates stalled');
-        // This might be normal if warmup completed and transitioned to waiting phase
-        // Don't trigger onAudioBlocked, just log for debugging
-      }
-    }, WATCHDOG_CHECK_INTERVAL_MS);
+        // Check if we've received any audio data
+        if (!this.hasReceivedAudioData && timeSinceStart > WATCHDOG_TIMEOUT_MS) {
+          logger.error('❌ iOS Audio Watchdog: No audio data received for 2 seconds');
+          logger.error(`   AudioContext state: ${this.audioContext?.state}`);
+
+          // Clear watchdog
+          if (this.watchdogTimer) {
+            clearInterval(this.watchdogTimer);
+            this.watchdogTimer = null;
+          }
+
+          // Attempt one more resume (iOS sometimes needs multiple attempts)
+          if (this.audioContext && this.audioContext.state !== 'running') {
+            logger.info('🔄 Attempting AudioContext resume (watchdog recovery)...');
+            this.audioContext.resume()
+              .then(() => {
+                logger.info(`✅ AudioContext resumed: state=${this.audioContext?.state}`);
+                // Give it another chance - restart the watchdog for 2 more seconds
+                this.hasReceivedAudioData = false;
+                this.lastWarmupUpdate = Date.now();
+                this.warmupStartTime = Date.now();
+                this.watchdogTimer = setInterval(() => {
+                  if (!this.hasReceivedAudioData && Date.now() - this.warmupStartTime > WATCHDOG_TIMEOUT_MS) {
+                    // Still no data after retry - give up and notify
+                    if (this.watchdogTimer) {
+                      clearInterval(this.watchdogTimer);
+                      this.watchdogTimer = null;
+                    }
+                    if (this.config.onAudioBlocked) {
+                      this.config.onAudioBlocked();
+                    }
+                  }
+                }, WATCHDOG_CHECK_INTERVAL_MS);
+              })
+              .catch(() => {
+                // Resume failed, notify immediately
+                if (this.config.onAudioBlocked) {
+                  this.config.onAudioBlocked();
+                }
+              });
+          } else {
+            // AudioContext is running but still no data - mic is blocked at OS level
+            if (this.config.onAudioBlocked) {
+              this.config.onAudioBlocked();
+            }
+          }
+          return;
+        }
+
+        // Check for stalled warmup updates (receiving some data but then it stopped)
+        if (this.hasReceivedAudioData && timeSinceLastUpdate > WATCHDOG_TIMEOUT_MS) {
+          logger.warn('⚠️ iOS Audio Watchdog: Warmup updates stalled');
+          // This might be normal if warmup completed and transitioned to waiting phase
+          // Don't trigger onAudioBlocked, just log for debugging
+        }
+      }, WATCHDOG_CHECK_INTERVAL_MS);
+    }
 
     this.workletNode.port.postMessage({ type: 'start-smart-start' });
   }

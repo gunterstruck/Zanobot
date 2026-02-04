@@ -60,9 +60,11 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
 
     // iOS WATCHDOG: Track audio data quality during warmup
     // iOS may deliver all-zero samples if mic is blocked/muted at OS level
+    // NOTE: These checks are ONLY run on iOS devices (set via 'set-platform' message)
     this.warmupSamplesProcessed = 0;
     this.warmupNonZeroSamples = 0;
     this.hasReportedAudioBlocked = false;
+    this.isIOS = false; // Will be set via 'set-platform' message from manager
 
     // Dynamic chunk size based on actual sample rate
     // Will be set via 'init' message from manager
@@ -142,6 +144,12 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         this.writePos = 0;
         this.readPos = 0;
         this.samplesWritten = 0;
+        break;
+      case 'set-platform':
+        // Receive platform info from main thread
+        // iOS-specific watchdog checks are only run when isIOS is true
+        // This prevents false positives on Android in quiet environments
+        this.isIOS = message.isIOS === true;
         break;
     }
   }
@@ -224,33 +232,37 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         const remainingSamples = Math.max(0, this.warmUpDurationSamples - elapsedSamples);
         const remainingMs = Math.floor((remainingSamples / this.sampleRate) * 1000);
 
-        // iOS WATCHDOG: Track audio data quality
-        // Count how many samples have actual signal vs silence
-        for (let i = 0; i < inputChannel.length; i++) {
-          this.warmupSamplesProcessed++;
-          if (Math.abs(inputChannel[i]) > IOS_NOISE_FLOOR) {
-            this.warmupNonZeroSamples++;
+        // iOS WATCHDOG: Track audio data quality (ONLY on iOS!)
+        // On Android, this can cause false positives in quiet environments
+        // because background noise may be below the noise floor threshold.
+        if (this.isIOS) {
+          // Count how many samples have actual signal vs silence
+          for (let i = 0; i < inputChannel.length; i++) {
+            this.warmupSamplesProcessed++;
+            if (Math.abs(inputChannel[i]) > IOS_NOISE_FLOOR) {
+              this.warmupNonZeroSamples++;
+            }
           }
-        }
 
-        // iOS WATCHDOG: Check for blocked audio after 2 seconds of warmup
-        // If we've processed 2 seconds worth of samples but have < 10% non-zero,
-        // iOS is likely blocking the microphone.
-        const twoSecondsInSamples = this.sampleRate * 2;
-        if (
-          !this.hasReportedAudioBlocked &&
-          this.warmupSamplesProcessed >= twoSecondsInSamples
-        ) {
-          const nonZeroRatio = this.warmupNonZeroSamples / this.warmupSamplesProcessed;
-          if (nonZeroRatio < IOS_MIN_NONZERO_SAMPLE_RATIO) {
-            // Report potential iOS audio block
-            this.hasReportedAudioBlocked = true;
-            this.port.postMessage({
-              type: 'ios-audio-blocked',
-              samplesProcessed: this.warmupSamplesProcessed,
-              nonZeroSamples: this.warmupNonZeroSamples,
-              nonZeroRatio: nonZeroRatio
-            });
+          // iOS WATCHDOG: Check for blocked audio after 2 seconds of warmup
+          // If we've processed 2 seconds worth of samples but have < 10% non-zero,
+          // iOS is likely blocking the microphone.
+          const twoSecondsInSamples = this.sampleRate * 2;
+          if (
+            !this.hasReportedAudioBlocked &&
+            this.warmupSamplesProcessed >= twoSecondsInSamples
+          ) {
+            const nonZeroRatio = this.warmupNonZeroSamples / this.warmupSamplesProcessed;
+            if (nonZeroRatio < IOS_MIN_NONZERO_SAMPLE_RATIO) {
+              // Report potential iOS audio block
+              this.hasReportedAudioBlocked = true;
+              this.port.postMessage({
+                type: 'ios-audio-blocked',
+                samplesProcessed: this.warmupSamplesProcessed,
+                nonZeroSamples: this.warmupNonZeroSamples,
+                nonZeroRatio: nonZeroRatio
+              });
+            }
           }
         }
 
