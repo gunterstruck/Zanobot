@@ -20,6 +20,7 @@
  */
 
 import { logger } from './logger.js';
+import { getLocale } from '../i18n/index.js';
 
 /**
  * Trace entry status
@@ -336,9 +337,9 @@ export class OnboardingTraceService {
     lines.push('=== ZANOBOT Onboarding-Protokoll ===');
     lines.push(`Session: ${session.sessionId}`);
     lines.push(`Quelle: ${session.source}`);
-    lines.push(`Start: ${new Date(session.startedAt).toLocaleString('de-DE')}`);
+    lines.push(`Start: ${new Date(session.startedAt).toLocaleString(getLocale())}`);
     if (session.endedAt) {
-      lines.push(`Ende: ${new Date(session.endedAt).toLocaleString('de-DE')}`);
+      lines.push(`Ende: ${new Date(session.endedAt).toLocaleString(getLocale())}`);
       lines.push(`Dauer: ${session.endedAt - session.startedAt}ms`);
     }
     lines.push(`Status: ${session.hasError ? 'FEHLER' : 'OK'}`);
@@ -349,7 +350,7 @@ export class OnboardingTraceService {
     lines.push('--- Schritte ---');
 
     for (const entry of session.entries) {
-      const time = new Date(entry.timestamp).toLocaleTimeString('de-DE', {
+      const time = new Date(entry.timestamp).toLocaleTimeString(getLocale(), {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
