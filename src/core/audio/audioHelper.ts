@@ -466,6 +466,10 @@ export class SmartStartManager {
    * 1. Calculate median RMS (baseline noise level)
    * 2. Set trigger = max(baseline * 3, config.signalThreshold)
    * 3. This adapts to environment noise while preventing false triggers
+   *
+   * iOS FIX: If all RMS samples are zero (or near-zero), iOS may be muting
+   * the microphone during the learning period. In this case, fall back to
+   * the default signal threshold to avoid setting an impossible trigger.
    */
   private computeAdaptiveTrigger(): void {
     if (this.rmsHistory.length === 0) {
@@ -474,12 +478,44 @@ export class SmartStartManager {
       return;
     }
 
+    // iOS FIX: Check if all samples are effectively zero
+    // iOS sometimes mutes/filters audio during the first few seconds,
+    // resulting in all-zero RMS values. If median is below noise floor,
+    // use the default threshold instead of an impossible adaptive one.
+    const NOISE_FLOOR = 0.0001; // Below this is considered "silence"
+
     // Sort RMS values to find median
     const sorted = [...this.rmsHistory].sort((a, b) => a - b);
     const medianIndex = Math.floor(sorted.length / 2);
     const medianRMS = sorted.length % 2 === 0
       ? (sorted[medianIndex - 1] + sorted[medianIndex]) / 2
       : sorted[medianIndex];
+
+    // iOS FIX: If median is below noise floor, iOS likely muted the mic
+    // Use default threshold to prevent impossible signal detection
+    if (medianRMS < NOISE_FLOOR) {
+      logger.warn(
+        `⚠️ iOS Audio Filter Detected: Median RMS ${medianRMS.toFixed(6)} is below noise floor. ` +
+        `Using default threshold ${this.config.signalThreshold.toFixed(4)} instead of impossible adaptive trigger.`
+      );
+      this.adaptiveTriggerThreshold = this.config.signalThreshold;
+      return;
+    }
+
+    // Count how many samples are non-zero
+    const nonZeroSamples = this.rmsHistory.filter(rms => rms > NOISE_FLOOR);
+    const nonZeroRatio = nonZeroSamples.length / this.rmsHistory.length;
+
+    // iOS FIX: If less than 30% of samples have signal, iOS may be applying
+    // aggressive noise suppression. Log warning and use default threshold.
+    if (nonZeroRatio < 0.3) {
+      logger.warn(
+        `⚠️ iOS Audio Filter Detected: Only ${(nonZeroRatio * 100).toFixed(0)}% of samples have signal. ` +
+        `Using default threshold ${this.config.signalThreshold.toFixed(4)}.`
+      );
+      this.adaptiveTriggerThreshold = this.config.signalThreshold;
+      return;
+    }
 
     // Set trigger = baseline * 3, but not lower than config threshold
     // Factor 3 ensures we detect signal above noise while avoiding false triggers
@@ -489,7 +525,7 @@ export class SmartStartManager {
 
     logger.info(
       `📊 Adaptive trigger computed: ${adaptiveThreshold.toFixed(4)} ` +
-      `(baseline: ${medianRMS.toFixed(4)}, samples: ${this.rmsHistory.length})`
+      `(baseline: ${medianRMS.toFixed(4)}, samples: ${this.rmsHistory.length}, nonZero: ${(nonZeroRatio * 100).toFixed(0)}%)`
     );
   }
 

@@ -185,6 +185,10 @@ export const en: TranslationDict = {
       noSignal: 'Please move closer to the machine and try again.',
       positionImage: '📷 Position image will be captured automatically',
       instruction: 'Hold the microphone 10-30 cm in front of the machine.',
+      // iOS Audio Blocked (watchdog detection)
+      iosAudioBlocked: 'Microphone blocked',
+      iosAudioBlockedMessage: 'The microphone is not providing audio data.\n\nPossible causes:\n• Another app is using the microphone\n• iOS is blocking microphone access\n• System volume is muted\n\nPlease close other apps and try again.',
+      iosAudioBlockedRetry: 'Try again',
     },
 
     quality: {

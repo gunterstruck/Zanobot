@@ -400,6 +400,22 @@ export class DiagnosePhase {
           this.cleanup();
           this.hideRecordingModal();
         },
+        // iOS AUDIO BLOCKED: Handle case where iOS is blocking the microphone
+        // This is detected by the iOS watchdog in AudioWorkletManager when no
+        // audio data is received for 2 seconds during the warmup phase.
+        onAudioBlocked: () => {
+          logger.error('❌ iOS Audio Blocked detected in Diagnose phase');
+
+          // Show user-friendly error with retry option
+          notify.error(t('reference.recording.iosAudioBlockedMessage'), new Error('iOS audio blocked'), {
+            title: t('reference.recording.iosAudioBlocked'),
+            duration: 0, // Keep visible until dismissed
+          });
+
+          // Cleanup and hide modal
+          this.cleanup();
+          this.hideRecordingModal();
+        },
       });
 
       // Initialize AudioWorklet
