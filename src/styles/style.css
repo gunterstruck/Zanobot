@@ -7099,6 +7099,112 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   MOBILE OPTIMIZATION: MACHINE SELECTION
+   Full-width layout for better input visibility on small screens
+   =================================== */
+
+/* Remove card-like boxing for cleaner mobile layout */
+.machine-selection-option {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: var(--spacing-sm) 0;
+    margin-bottom: 0;
+    box-shadow: none;
+}
+
+/* Theme overrides - remove backgrounds */
+[data-theme="light"] .machine-selection-option,
+[data-theme="brand"] .machine-selection-option,
+[data-theme="focus"] .machine-selection-option {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Clearer visual separation with border-bottom instead of boxes */
+.machine-selection-option:not(:last-child) {
+    border-bottom: 1px solid var(--divider-color);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Section headers: left-aligned, prominent */
+.machine-selection-option .option-header {
+    margin-bottom: var(--spacing-sm);
+}
+
+.machine-selection-option .option-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Reduced description margin */
+.machine-selection-option .option-description {
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Mobile: Maximize input width */
+@media (max-width: 640px) {
+    /* Reduce container padding for more input space */
+    #select-machine-content .container-content {
+        padding-left: var(--spacing-xs);
+        padding-right: var(--spacing-xs);
+    }
+
+    /* Input groups: labels above fields (already default, ensure it) */
+    .machine-selection-option .input-group {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .machine-selection-option .input-group label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        font-size: 0.8rem;
+    }
+
+    /* Full-width inputs with minimal padding */
+    .machine-selection-option .machine-input {
+        width: 100%;
+        padding: 0.875rem 0.75rem;
+        font-size: 1rem; /* Prevent iOS zoom on focus */
+        box-sizing: border-box;
+    }
+
+    /* Reduce option divider margins */
+    .machine-selection-option .option-divider {
+        margin: var(--spacing-sm) 0;
+    }
+
+    /* Compact action buttons */
+    .machine-selection-option .action-btn {
+        width: 100%;
+        padding: 0.875rem;
+    }
+}
+
+/* Extra small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+    #select-machine-content .container-content {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .machine-selection-option {
+        padding: var(--spacing-xs) 0;
+    }
+
+    .machine-selection-option .machine-input {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .machine-selection-option .option-title {
+        font-size: 1rem;
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
