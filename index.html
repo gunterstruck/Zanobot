@@ -318,8 +318,17 @@
                 <div id="record-reference-content" class="collapsible-content" style="display: none;">
                     <!-- Level 1 (GMIA) Reference Content - State-based UI -->
                     <div class="level1-content" data-detection-mode="STATIONARY">
-                        <!-- State B: No machine selected - Three-way selection tiles -->
+                        <!-- State B: No machine selected - Zero-friction recording enabled -->
                         <div id="reference-no-machine" class="container-content reference-state-content">
+                            <!-- ZERO-FRICTION: Direct record button - machine will be auto-created -->
+                            <div class="zero-friction-record">
+                                <p class="sub-description zero-friction-hint" data-i18n="zeroFriction.noMachineSelected">Keine Maschine ausgewählt – wird automatisch erstellt</p>
+                                <button class="action-btn reference-main-btn zero-friction-btn" id="record-reference-btn" data-i18n="buttons.record">Aufnehmen</button>
+                            </div>
+                            <!-- Alternative: Manual machine selection -->
+                            <div class="reference-or-divider">
+                                <span data-i18n="common.or">oder</span>
+                            </div>
                             <div class="diagnose-tiles">
                                 <!-- Tile 1: Scan QR/Barcode -->
                                 <button class="diagnose-tile" id="reference-scan-btn">

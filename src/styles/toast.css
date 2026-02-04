@@ -126,6 +126,45 @@
   word-wrap: break-word;
 }
 
+/* Toast Action Buttons (Zero-Friction feature) */
+.toast-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.toast-action-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toast-action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast-action-btn:active {
+  transform: scale(0.98);
+}
+
+.toast-action-btn:focus {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.toast-action-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* Toast Close Button */
 .toast-close {
   background: none;
@@ -234,6 +273,17 @@
 [data-theme="light"] .toast-close:hover {
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-primary, #0f172a);
+}
+
+[data-theme="light"] .toast-action-btn {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-primary, #0f172a);
+}
+
+[data-theme="light"] .toast-action-btn:hover {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Accessibility */

@@ -80,12 +80,16 @@ export class Router {
       onCreateRequested: () => this.handleReferenceCreateRequest(),
     });
 
-    // Lock Phase 2 and 3 initially
+    // Lock Phase 3 initially, but keep Phase 2 (Reference) available for zero-friction
     this.lockPhases();
 
     // CRITICAL: Explicitly ensure auto-detect buttons are always enabled
     // This is needed because auto-detection works WITHOUT machine pre-selection
     this.ensureAutoDetectButtonsEnabled();
+
+    // ZERO-FRICTION: Initialize reference phase without machine for zero-friction recording
+    // This allows users to start recording immediately without selecting a machine first
+    this.initializeZeroFrictionReferencePhase();
 
     // Set initial mode visibility
     this.updateModeVisibility(this.modeManager.getMode());
@@ -591,11 +595,86 @@ export class Router {
 
     // Register callback to update UI when reference model is saved
     this.referencePhase.setOnMachineUpdated((updatedMachine) => {
+      // ZERO-FRICTION: Update current machine state when a new machine is auto-created
+      this.currentMachine = updatedMachine;
+
+      // Update card controllers with new machine
+      this.diagnoseCardController.setMachine(updatedMachine);
+      this.referenceCardController.setMachine(updatedMachine);
+
       if (this.diagnosePhase) {
         this.diagnosePhase.setMachine(updatedMachine);
       }
       this.updateMachineDisplay(updatedMachine);
+
+      // ZERO-FRICTION: Unlock diagnosis phase after machine is created/updated
+      this.unlockPhases();
     });
+  }
+
+  /**
+   * ZERO-FRICTION: Initialize reference phase without machine selection
+   * This allows users to start recording immediately without pre-selecting a machine.
+   * A new machine will be auto-created when the recording is saved.
+   */
+  private initializeZeroFrictionReferencePhase(): void {
+    const currentMode = this.modeManager.getMode();
+
+    // Only for Level 1 (STATIONARY) mode
+    if (currentMode !== 'STATIONARY') {
+      return;
+    }
+
+    logger.info('🎯 Initializing zero-friction reference phase (no machine selected)');
+
+    // Get selected microphone device ID
+    const selectedDeviceId = this.identifyPhase.getSelectedDeviceId();
+
+    // Create reference phase without machine (null)
+    this.referencePhase = new ReferencePhase(null, selectedDeviceId);
+    this.referencePhase.init();
+
+    // Register callback to handle machine creation during zero-friction flow
+    this.referencePhase.setOnMachineUpdated((newMachine) => {
+      logger.info(`🤖 Zero-friction: Machine created - ${newMachine.name}`);
+
+      // Update router state with new machine
+      this.currentMachine = newMachine;
+
+      // Update card controllers
+      this.diagnoseCardController.setMachine(newMachine);
+      this.referenceCardController.setMachine(newMachine);
+
+      // Update UI display
+      this.updateMachineDisplay(newMachine);
+
+      // Initialize diagnose phase with new machine
+      this.diagnosePhase = new DiagnosePhase(newMachine, selectedDeviceId);
+      this.diagnosePhase.init();
+
+      // Unlock all phases now that we have a machine
+      this.unlockPhases();
+
+      // Collapse machine selection section
+      this.collapseSection('select-machine-content');
+    });
+
+    // Ensure reference button is always enabled for zero-friction
+    this.ensureReferenceButtonEnabled();
+  }
+
+  /**
+   * ZERO-FRICTION: Ensure reference record button is always enabled
+   */
+  private ensureReferenceButtonEnabled(): void {
+    const recordBtn = document.getElementById('record-reference-btn');
+    if (recordBtn instanceof HTMLButtonElement) {
+      recordBtn.disabled = false;
+      recordBtn.style.opacity = '1';
+      recordBtn.style.cursor = 'pointer';
+      recordBtn.style.pointerEvents = 'auto';
+      logger.debug('[Router] Reference record button explicitly enabled for zero-friction');
+    }
   }
 
   /**
@@ -747,6 +826,10 @@ export class Router {
       }
       // Skip manual selection toggle - always needs to be clickable
       if (btn.classList.contains('manual-selection-toggle')) {
+        return;
+      }
+      // ZERO-FRICTION: Skip reference record button - always enabled for zero-friction recording
+      if (btn.id === 'record-reference-btn') {
         return;
       }
       btn.disabled = !enabled;

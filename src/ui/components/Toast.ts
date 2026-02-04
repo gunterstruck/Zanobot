@@ -13,6 +13,16 @@
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
+/**
+ * Action button for toast notifications (Zero-Friction feature)
+ */
+export interface ToastAction {
+  /** Button label */
+  label: string;
+  /** Click handler */
+  onClick: () => void;
+}
+
 export interface ToastOptions {
   /** Toast message */
   message: string;
@@ -32,6 +42,8 @@ export interface ToastOptions {
     | 'bottom-right'
     | 'bottom-center'
     | 'bottom-left';
+  /** Optional action buttons (Zero-Friction feature) */
+  actions?: ToastAction[];
 }
 
 /**
@@ -88,16 +100,17 @@ export class ToastManager {
    * Show a toast notification
    */
   public show(options: ToastOptions): string {
-    const defaults: Required<ToastOptions> = {
+    const defaults: Required<Omit<ToastOptions, 'actions'>> & { actions: ToastAction[] } = {
       message: '',
       title: '',
       type: 'info',
       duration: 5000,
       dismissible: true,
       position: 'top-right',
+      actions: [],
     };
 
-    const config = { ...defaults, ...options };
+    const config = { ...defaults, ...options, actions: options.actions || [] };
     const toastId = this.createToastId();
 
     if (!this.container) {
@@ -132,7 +145,7 @@ export class ToastManager {
   /**
    * Render a toast in the DOM
    */
-  private renderToast(toastId: string, config: Required<ToastOptions>): void {
+  private renderToast(toastId: string, config: Required<Omit<ToastOptions, 'actions'>> & { actions: ToastAction[] }): void {
     if (!this.container) {
       return;
     }
@@ -204,7 +217,7 @@ export class ToastManager {
   /**
    * Create toast DOM element
    */
-  private createToastElement(toastId: string, config: Required<ToastOptions>): HTMLElement {
+  private createToastElement(toastId: string, config: Required<Omit<ToastOptions, 'actions'>> & { actions: ToastAction[] }): HTMLElement {
     const toast = document.createElement('div');
     toast.id = toastId;
     toast.className = `toast toast-${config.type}`;
@@ -226,12 +239,21 @@ export class ToastManager {
       ? `<button class="toast-close" aria-label="Close notification" data-toast-id="${toastId}">×</button>`
       : '';
 
+    // Action buttons (Zero-Friction feature)
+    const actionsHTML =
+      config.actions.length > 0
+        ? `<div class="toast-actions">${config.actions
+            .map((action, i) => `<button class="toast-action-btn" data-action-index="${i}">${this.escapeHTML(action.label)}</button>`)
+            .join('')}</div>`
+        : '';
+
     // Compose toast
     toast.innerHTML = `
       <div class="toast-icon">${icon}</div>
       <div class="toast-content">
         ${titleHTML}
         ${messageHTML}
+        ${actionsHTML}
       </div>
       ${closeButton}
     `;
@@ -242,6 +264,21 @@ export class ToastManager {
       if (closeBtn) {
         closeBtn.addEventListener('click', () => this.hide(toastId));
       }
+    }
+
+    // Add action button event listeners (Zero-Friction feature)
+    if (config.actions.length > 0) {
+      const actionBtns = toast.querySelectorAll('.toast-action-btn');
+      actionBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt((e.target as HTMLElement).dataset.actionIndex || '0', 10);
+          const action = config.actions[index];
+          if (action && typeof action.onClick === 'function') {
+            action.onClick();
+            this.hide(toastId); // Close toast after action
+          }
+        });
+      });
     }
 
     return toast;
