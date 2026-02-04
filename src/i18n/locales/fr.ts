@@ -366,6 +366,18 @@ export const fr: TranslationDict = {
   },
 
   // ============================================================================
+  // ZERO-FRICTION RECORDING (Auto-Machine Creation)
+  // ============================================================================
+  zeroFriction: {
+    autoMachineName: 'Machine {{number}}',
+    referenceCreatedToast: 'Référence pour {{machineName}} créée',
+    editMachineName: 'Modifier',
+    editMachineNamePrompt: 'Entrez un nouveau nom pour la machine :',
+    machineRenamed: 'Machine renommée en "{{newName}}"',
+    noMachineSelected: 'Aucune machine sélectionnée – sera créée automatiquement',
+  },
+
+  // ============================================================================
   // AUTO-DETECTION (Simplified "Vérifier l'état" Flow)
   // ============================================================================
   autoDetect: {

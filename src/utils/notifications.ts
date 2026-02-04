@@ -12,13 +12,18 @@
  */
 
 import { logger } from './logger.js';
-import { toast } from '@ui/components/Toast.js';
+import { toast, type ToastAction } from '@ui/components/Toast.js';
 import { t } from '../i18n/index.js';
 
 /**
  * Notification types
  */
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
+/**
+ * Notification action (re-export from Toast for convenience)
+ */
+export type NotificationAction = ToastAction;
 
 /**
  * Notification options
@@ -32,6 +37,8 @@ export interface NotificationOptions {
   duration?: number;
   /** Show close button */
   dismissible?: boolean;
+  /** Optional action buttons (Zero-Friction feature) */
+  actions?: NotificationAction[];
 }
 
 /**
@@ -129,6 +136,7 @@ class NotificationManager {
       type,
       duration: options.duration,
       dismissible: options.dismissible,
+      actions: options.actions, // Zero-Friction feature: pass actions to toast
     });
   }
 

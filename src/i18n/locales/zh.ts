@@ -365,6 +365,18 @@ export const zh: TranslationDict = {
   },
 
   // ============================================================================
+  // ZERO-FRICTION RECORDING (Auto-Machine Creation)
+  // ============================================================================
+  zeroFriction: {
+    autoMachineName: '机器 {{number}}',
+    referenceCreatedToast: '已为 {{machineName}} 创建参考',
+    editMachineName: '编辑',
+    editMachineNamePrompt: '输入机器的新名称：',
+    machineRenamed: '机器已重命名为 "{{newName}}"',
+    noMachineSelected: '未选择机器 – 将自动创建',
+  },
+
+  // ============================================================================
   // AUTO-DETECTION (Simplified "检查状态" Flow)
   // ============================================================================
   autoDetect: {

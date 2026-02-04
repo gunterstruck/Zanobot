@@ -31,9 +31,10 @@ import { classifyDiagnosticState } from '@core/ml/scoring.js';
 import { t, getLocale } from '../../i18n/index.js';
 
 export class ReferencePhase {
-  private machine: Machine;
+  private machine: Machine | null;
   private selectedDeviceId: string | undefined; // Selected microphone device ID
   private onMachineUpdated: ((machine: Machine) => void) | null = null; // Callback when machine is updated
+  private wasAutoCreated: boolean = false; // Track if machine was auto-created for zero-friction flow
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private cameraStream: MediaStream | null = null; // VISUAL POSITIONING: Camera stream for reference image
@@ -65,15 +66,31 @@ export class ReferencePhase {
   private capturedReferenceImage: Blob | null = null;
   private reviewImageUrl: string | null = null;
 
-  constructor(machine: Machine, selectedDeviceId?: string) {
-    this.machine = machine;
+  constructor(machine?: Machine | null, selectedDeviceId?: string) {
+    this.machine = machine || null;
     this.selectedDeviceId = selectedDeviceId;
 
     // DEBUG LOGGING: Show which machine is being used for reference recording
-    logger.debug('📝 ReferencePhase Constructor:', {
+    if (machine) {
+      logger.debug('📝 ReferencePhase Constructor:', {
+        machineId: machine.id,
+        machineName: machine.name,
+        numExistingModels: machine.referenceModels?.length || 0,
+      });
+    } else {
+      logger.debug('📝 ReferencePhase Constructor: No machine selected (zero-friction mode)');
+    }
+  }
+
+  /**
+   * Set the machine for this phase (used when machine is selected after init)
+   */
+  public setMachine(machine: Machine): void {
+    this.machine = machine;
+    this.wasAutoCreated = false;
+    logger.debug('📝 ReferencePhase: Machine set:', {
       machineId: machine.id,
       machineName: machine.name,
-      numExistingModels: machine.referenceModels?.length || 0,
     });
   }
 
@@ -89,11 +106,21 @@ export class ReferencePhase {
    */
   public init(): void {
     this.applyAppShellLayout();
+
+    // Store handler reference to enable cleanup in destroy()
+    this.recordButtonClickHandler = () => this.startRecording();
+
+    // Original record button (State A - machine selected)
     const recordBtn = document.getElementById('record-btn');
     if (recordBtn) {
-      // CRITICAL FIX: Store handler reference to enable cleanup in destroy()
-      this.recordButtonClickHandler = () => this.startRecording();
       recordBtn.addEventListener('click', this.recordButtonClickHandler);
+    }
+
+    // ZERO-FRICTION: New record button (State B - no machine, auto-create)
+    const zeroFrictionRecordBtn = document.getElementById('record-reference-btn');
+    if (zeroFrictionRecordBtn) {
+      zeroFrictionRecordBtn.addEventListener('click', this.recordButtonClickHandler);
+      logger.debug('📝 Zero-friction record button initialized');
     }
   }
 
@@ -106,7 +133,8 @@ export class ReferencePhase {
       return;
     }
 
-    const existingModels = this.machine.referenceModels || [];
+    // ZERO-FRICTION: Check for feature mode mismatch only if machine has existing models
+    const existingModels = this.machine?.referenceModels || [];
     const modeSummary = getFeatureModeSummary(existingModels);
     if (modeSummary) {
       const currentConfig = getDeviceInvariantConfig();
@@ -125,6 +153,11 @@ export class ReferencePhase {
 
         applyDeviceInvariantDetails(modeSummary.details);
       }
+    }
+
+    // ZERO-FRICTION: Show info toast if no machine is selected
+    if (!this.machine) {
+      notify.info(t('zeroFriction.noMachineSelected'));
     }
 
     this.isRecordingStarting = true;
@@ -589,9 +622,10 @@ export class ReferencePhase {
 
       // Prepare training data (but don't train yet - wait for user approval)
       // CRITICAL FIX: Store actual DSP config used for feature extraction
+      // ZERO-FRICTION: Use placeholder ID if no machine selected (will be updated when machine is created)
       const trainingData: TrainingData = {
         featureVectors: features.map((f) => f.features),
-        machineId: this.machine.id,
+        machineId: this.machine?.id || 'pending-auto-create',
         recordingId: `ref-${Date.now()}`,
         numSamples: features.length,
         config: dspConfig, // Use actual config with correct sample rate
@@ -641,10 +675,12 @@ export class ReferencePhase {
         extension = 'm4a';
       }
     }
-    const filename = `${this.machine.id}_REF_${timestamp}.${extension}`;
+    const machineId = this.machine?.id || 'unknown';
+    const machineName = this.machine?.name || 'Unknown Machine';
+    const filename = `${machineId}_REF_${timestamp}.${extension}`;
 
     const shouldDownload = confirm(
-      t('reference.success.modelTrained', { name: this.machine.name }) +
+      t('reference.success.modelTrained', { name: machineName }) +
         '\n\n' +
         t('reference.success.downloadPrompt')
     );
@@ -714,18 +750,23 @@ export class ReferencePhase {
     }
 
     // CRITICAL FIX: Update machine name in modal subtitle
-    // This was showing hardcoded "MACHINE 002" from index.html instead of selected machine
+    // ZERO-FRICTION: Show hint if no machine selected
     const machineIdElement = document.getElementById('machine-id');
     if (machineIdElement) {
-      machineIdElement.textContent = `${this.machine.name} (${this.machine.id})`;
-      logger.debug('✅ Modal machine name updated:', this.machine.name);
+      if (this.machine) {
+        machineIdElement.textContent = `${this.machine.name} (${this.machine.id})`;
+        logger.debug('✅ Modal machine name updated:', this.machine.name);
+      } else {
+        machineIdElement.textContent = t('zeroFriction.noMachineSelected');
+        logger.debug('✅ Modal: Zero-friction mode (no machine selected)');
+      }
     }
 
     // Add existing models info and status message
     const modalBody = document.querySelector('#recording-modal .modal-body');
     if (modalBody && !document.getElementById('recording-status')) {
       // Show existing models info
-      const existingModels = this.machine.referenceModels || [];
+      const existingModels = this.machine?.referenceModels || [];
       const existingModelsInfo =
         existingModels.length > 0
           ? existingModels
@@ -1123,6 +1164,12 @@ export class ReferencePhase {
   /**
    * Handle "Save" button click - train model and save to database
    *
+   * ZERO-FRICTION WORKFLOW:
+   * 1. If no machine selected: Auto-create a new machine with generated name
+   * 2. First recording: Always labeled "Baseline" (healthy state) - NO PROMPT
+   * 3. Additional recordings: Ask user for label and type
+   * 4. After save: Show simple toast with optional "Edit" button
+   *
    * MULTICLASS WORKFLOW:
    * 1. First recording: Always labeled "Baseline" (healthy state)
    * 2. Additional recordings: User provides custom label (e.g., "Unwucht", "Lagerschaden")
@@ -1131,27 +1178,49 @@ export class ReferencePhase {
    * IMPORTANT: If quality is BAD, show additional confirmation warning
    */
   private async handleReviewSave(): Promise<void> {
-    // Validate machine data
-    if (!this.machine || !this.machine.id) {
-      logger.error('Cannot save: machine data is invalid or missing');
-      notify.error(t('reference.errors.machineDataMissing'), new Error('Machine ID missing'), {
-        title: t('modals.error'),
-        duration: 0,
-      });
-      return;
-    }
+    const { getMachine, saveMachine, createAutoMachine, getNextAutoMachineNumber } = await import('@data/db.js');
 
-    const { getMachine, saveMachine } = await import('@data/db.js');
-    const machineToUpdate = await getMachine(this.machine.id);
-    if (!machineToUpdate) {
-      logger.error(`Cannot save: machine not found (${this.machine.id})`);
-      notify.error(t('reference.errors.machineDataMissing'), new Error('Machine not found'), {
-        title: t('modals.error'),
-        duration: 0,
-      });
-      return;
+    let machineToUpdate: Machine;
+
+    // ZERO-FRICTION: Auto-create machine if none selected
+    if (!this.machine || !this.machine.id) {
+      logger.info('🤖 Zero-friction: No machine selected, auto-creating...');
+
+      try {
+        // Get next number for auto-generated name
+        const nextNumber = await getNextAutoMachineNumber();
+        const paddedNumber = nextNumber.toString().padStart(2, '0');
+        const autoName = t('zeroFriction.autoMachineName', { number: paddedNumber });
+
+        // Create the machine
+        const newMachine = await createAutoMachine(autoName);
+        this.machine = newMachine;
+        this.wasAutoCreated = true;
+        machineToUpdate = newMachine;
+
+        logger.info(`✅ Auto-created machine: ${newMachine.name} (${newMachine.id})`);
+      } catch (error) {
+        logger.error('Failed to auto-create machine:', error);
+        notify.error(t('reference.errors.machineDataMissing'), error as Error, {
+          title: t('modals.error'),
+          duration: 0,
+        });
+        return;
+      }
+    } else {
+      // Machine exists - fetch latest from DB
+      const existingMachine = await getMachine(this.machine.id);
+      if (!existingMachine) {
+        logger.error(`Cannot save: machine not found (${this.machine.id})`);
+        notify.error(t('reference.errors.machineDataMissing'), new Error('Machine not found'), {
+          title: t('modals.error'),
+          duration: 0,
+        });
+        return;
+      }
+      machineToUpdate = existingMachine;
+      this.machine = existingMachine;
     }
-    this.machine = machineToUpdate;
 
     if (!this.currentTrainingData || !this.currentQualityResult) {
       logger.error('Cannot save: missing training data or quality result');
@@ -1212,15 +1281,15 @@ export class ReferencePhase {
       let type: 'healthy' | 'faulty';
 
       // CRITICAL FIX: Store local reference to prevent race conditions
-      // If this.machine.referenceModels changes between checks, we maintain consistency
-      const existingModels = this.machine.referenceModels;
+      // Use machineToUpdate (freshly fetched or just created) for consistency
+      const existingModels = machineToUpdate.referenceModels || [];
 
-      // CRITICAL FIX: Check if referenceModels exists before accessing length
-      if (!existingModels || existingModels.length === 0) {
-        // First recording: Always baseline (healthy state)
+      // ZERO-FRICTION: First recording is always baseline - no prompt needed
+      if (existingModels.length === 0) {
+        // First recording: Always baseline (healthy state) - SILENT, no user interaction
         label = t('reference.labels.baseline');
         type = 'healthy';
-        logger.info(`First recording - using label: "${label}", type: "healthy"`);
+        logger.info(`🎯 Zero-friction: First recording - using label: "${label}", type: "healthy"`);
       } else {
         // Additional recordings: Ask user for label and type
         const userLabel = prompt(
@@ -1406,11 +1475,15 @@ export class ReferencePhase {
       // Hide review modal
       this.hideReviewModal();
 
-      // Show success with option to download reference audio
-      this.showSuccessWithExport();
-
-      // Show multiclass status (list of trained states + "Train Another" button)
-      this.showMulticlassStatus();
+      // ZERO-FRICTION: Show simple success toast with edit option for auto-created machines
+      if (this.wasAutoCreated) {
+        this.showZeroFrictionSuccess(updatedMachine);
+      } else {
+        // Show success with option to download reference audio
+        this.showSuccessWithExport();
+        // Show multiclass status (list of trained states + "Train Another" button)
+        this.showMulticlassStatus();
+      }
 
       // Clear stored data
       this.currentAudioBuffer = null;
@@ -1424,6 +1497,56 @@ export class ReferencePhase {
         duration: 0,
       });
     }
+  }
+
+  /**
+   * Show zero-friction success message with edit option
+   *
+   * ZERO-FRICTION: After auto-creating a machine and saving the reference,
+   * show a simple toast with the machine name and an optional "Edit" button.
+   */
+  private async showZeroFrictionSuccess(machine: Machine): Promise<void> {
+    const { saveMachine } = await import('@data/db.js');
+
+    // Show simple success toast
+    const toastMessage = t('zeroFriction.referenceCreatedToast', { machineName: machine.name });
+
+    // Create toast with edit action
+    notify.success(toastMessage, {
+      title: t('common.success'),
+      duration: 8000, // 8 seconds to give user time to see and optionally click
+      actions: [
+        {
+          label: t('zeroFriction.editMachineName'),
+          onClick: async () => {
+            // Prompt user for new name
+            const newName = prompt(t('zeroFriction.editMachineNamePrompt'), machine.name);
+            if (newName && newName.trim() !== '' && newName.trim() !== machine.name) {
+              // Update machine name
+              machine.name = newName.trim();
+              await saveMachine(machine);
+              this.machine = machine;
+
+              // Notify other phases
+              if (this.onMachineUpdated) {
+                this.onMachineUpdated(machine);
+              }
+
+              notify.success(t('zeroFriction.machineRenamed', { newName: machine.name }));
+              logger.info(`✏️ Machine renamed to: ${machine.name}`);
+            }
+          },
+        },
+      ],
+    });
+
+    logger.info(`🎉 Zero-friction success: ${machine.name}`);
+
+    // Reset auto-created flag
+    this.wasAutoCreated = false;
+
+    // Also show multiclass status for additional state training
+    this.showMulticlassStatus();
   }
 
   /**
@@ -1464,7 +1587,7 @@ export class ReferencePhase {
 
     // CRITICAL FIX: Store local reference to prevent race conditions
     // This ensures we iterate over the same snapshot even if this.machine.referenceModels changes
-    const models = this.machine.referenceModels;
+    const models = this.machine?.referenceModels;
 
     // CRITICAL FIX: Check if referenceModels exists before iterating
     if (models && models.length > 0) {
@@ -1579,12 +1702,20 @@ export class ReferencePhase {
   public destroy(): void {
     this.cleanup();
 
-    // CRITICAL FIX: Remove event listener to prevent stacking on re-init
+    // CRITICAL FIX: Remove event listeners to prevent stacking on re-init
     if (this.recordButtonClickHandler) {
+      // Original record button
       const recordBtn = document.getElementById('record-btn');
       if (recordBtn) {
         recordBtn.removeEventListener('click', this.recordButtonClickHandler);
       }
+
+      // ZERO-FRICTION: New record button
+      const zeroFrictionRecordBtn = document.getElementById('record-reference-btn');
+      if (zeroFrictionRecordBtn) {
+        zeroFrictionRecordBtn.removeEventListener('click', this.recordButtonClickHandler);
+      }
+
       this.recordButtonClickHandler = null;
     }
 

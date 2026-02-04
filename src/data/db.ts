@@ -342,6 +342,76 @@ export async function getStorageUsage(): Promise<{
 // ============================================================================
 
 /**
+ * Get the next available auto-machine number for zero-friction recording.
+ * Scans existing machines with names matching "Maschine XX" pattern and returns
+ * the next available number (e.g., if "Maschine 01" and "Maschine 03" exist, returns 2).
+ *
+ * @returns Next available machine number (1-based)
+ */
+export async function getNextAutoMachineNumber(): Promise<number> {
+  const db = await initDB();
+  const machines = await db.getAll('machines');
+
+  // Extract numbers from machine names matching the pattern
+  // Matches: "Maschine 01", "Machine 1", "机器 05", etc.
+  const usedNumbers = new Set<number>();
+  const patterns = [
+    /^Maschine\s+(\d+)$/i,    // German
+    /^Machine\s+(\d+)$/i,     // English
+    /^Máquina\s+(\d+)$/i,     // Spanish
+    /^机器\s+(\d+)$/i,         // Chinese
+  ];
+
+  for (const machine of machines) {
+    for (const pattern of patterns) {
+      const match = machine.name.match(pattern);
+      if (match) {
+        usedNumbers.add(parseInt(match[1], 10));
+        break;
+      }
+    }
+  }
+
+  // Find the lowest available number
+  let nextNumber = 1;
+  while (usedNumbers.has(nextNumber)) {
+    nextNumber++;
+  }
+
+  return nextNumber;
+}
+
+/**
+ * Create a new machine with auto-generated name for zero-friction recording.
+ * Uses the pattern "Maschine XX" where XX is the next available number.
+ *
+ * @param machineName - Optional custom name (uses auto-generated if not provided)
+ * @returns The created machine
+ */
+export async function createAutoMachine(machineName?: string): Promise<Machine> {
+  const nextNumber = await getNextAutoMachineNumber();
+  const paddedNumber = nextNumber.toString().padStart(2, '0');
+
+  // Use provided name or generate one
+  const name = machineName || `Maschine ${paddedNumber}`;
+
+  // Generate unique ID
+  const id = `auto-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+  const machine: Machine = {
+    id,
+    name,
+    createdAt: Date.now(),
+    referenceModels: [],
+  };
+
+  await saveMachine(machine);
+  logger.info(`🤖 Auto-created machine: ${name} (${id})`);
+
+  return machine;
+}
+
+/**
  * Save or update a machine
  *
  * Includes quota check for machines with large reference images.

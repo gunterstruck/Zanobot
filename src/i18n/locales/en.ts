@@ -633,6 +633,24 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // ZERO-FRICTION RECORDING (Auto-Machine Creation)
+  // ============================================================================
+  zeroFriction: {
+    // Auto-generated machine names
+    autoMachineName: 'Machine {{number}}',
+    // Success toast after silent save
+    referenceCreatedToast: 'Reference for {{machineName}} created',
+    // Edit button in toast/success screen
+    editMachineName: 'Edit',
+    // Prompt for editing machine name after creation
+    editMachineNamePrompt: 'Enter new name for the machine:',
+    // Success after renaming
+    machineRenamed: 'Machine renamed to "{{newName}}"',
+    // No machine selected hint (for when starting recording without machine)
+    noMachineSelected: 'No machine selected – will be created automatically',
+  },
+
+  // ============================================================================
   // AUTO-DETECTION (Simplified "Check condition" Flow)
   // ============================================================================
   autoDetect: {
