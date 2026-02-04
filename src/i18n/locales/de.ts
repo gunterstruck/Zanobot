@@ -187,6 +187,10 @@ export const de: TranslationDict = {
       noSignal: 'Bitte näher an die Maschine gehen und erneut versuchen.',
       positionImage: '📷 Positionsbild wird automatisch aufgenommen',
       instruction: 'Halten Sie das Mikrofon 10–30 cm vor die Maschine.',
+      // iOS Audio Blocked (watchdog detection)
+      iosAudioBlocked: 'Mikrofon blockiert',
+      iosAudioBlockedMessage: 'Das Mikrofon liefert keine Audiodaten.\n\nMögliche Ursachen:\n• Eine andere App verwendet das Mikrofon\n• iOS blockiert den Mikrofonzugriff\n• Systemlautstärke ist stummgeschaltet\n\nBitte schließen Sie andere Apps und versuchen Sie es erneut.',
+      iosAudioBlockedRetry: 'Erneut versuchen',
     },
 
     quality: {
