@@ -1548,6 +1548,41 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
+/* Highlight animation for navigation feedback */
+.machine-input.input-highlight {
+    animation: input-highlight-pulse 0.5s ease-out 3;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3);
+}
+
+@keyframes input-highlight-pulse {
+    0% {
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3);
+        border-color: var(--primary-color);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(0, 212, 255, 0.15), 0 0 20px rgba(0, 212, 255, 0.2);
+        border-color: var(--primary-color);
+    }
+    100% {
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3);
+        border-color: var(--primary-color);
+    }
+}
+
+/* Theme-specific highlight colors */
+[data-theme="light"] .machine-input.input-highlight {
+    box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="brand"] .machine-input.input-highlight {
+    box-shadow: 0 0 0 4px rgba(0, 184, 217, 0.25);
+}
+
+[data-theme="focus"] .machine-input.input-highlight {
+    box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.25);
+}
+
 /* Action button with icon */
 .action-btn svg {
     margin-right: 0.25rem;

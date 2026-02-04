@@ -192,13 +192,7 @@ export class Router {
    */
   private handleDiagnoseCreateRequest(): void {
     logger.info('➕ Create machine requested from diagnose card');
-    // Expand the machine selection section
-    this.expandSection('select-machine-content');
-    // Focus on the name input
-    const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
-    if (nameInput) {
-      nameInput.focus();
-    }
+    this.navigateToNewMachineInput();
   }
 
   /**
@@ -255,13 +249,7 @@ export class Router {
    */
   private handleReferenceCreateRequest(): void {
     logger.info('➕ Create machine requested from reference card');
-    // Expand the machine selection section
-    this.expandSection('select-machine-content');
-    // Focus on the name input
-    const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
-    if (nameInput) {
-      nameInput.focus();
-    }
+    this.navigateToNewMachineInput();
   }
 
   /**
@@ -283,6 +271,44 @@ export class Router {
     if (icon) {
       icon.classList.add('rotated');
     }
+  }
+
+  /**
+   * Navigate to new machine input field
+   * Expands the section, scrolls smoothly, focuses input, and adds visual feedback
+   */
+  private navigateToNewMachineInput(): void {
+    // Step 1: Expand the machine selection section
+    this.expandSection('select-machine-content');
+
+    // Step 2: Wait for DOM update, then scroll and focus
+    requestAnimationFrame(() => {
+      const nameInput = document.getElementById('machine-name-input') as HTMLInputElement;
+      if (!nameInput) {
+        logger.warn('machine-name-input element not found');
+        return;
+      }
+
+      // Step 3: Scroll the input into view with smooth animation
+      nameInput.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+
+      // Step 4: After scroll completes (~300ms), focus and add highlight animation
+      setTimeout(() => {
+        // Focus the input to open keyboard on mobile
+        nameInput.focus();
+
+        // Add highlight animation class
+        nameInput.classList.add('input-highlight');
+
+        // Remove the animation class after it completes
+        setTimeout(() => {
+          nameInput.classList.remove('input-highlight');
+        }, 1500);
+      }, 350);
+    });
   }
 
   // ============================================================================
