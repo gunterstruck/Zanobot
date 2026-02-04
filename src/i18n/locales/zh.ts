@@ -562,6 +562,12 @@ export const zh: TranslationDict = {
     microphoneAdvice: '选择最佳麦克风进行机器诊断。避免使用耳机和蓝牙设备，因为它们针对语音进行了优化。',
     manualInput: '手动输入', machineIdInput: '输入机器ID', continue: '继续',
     qrHint: '将二维码或条形码放入框内', codeRecognized: '识别成功！',
+    // 横幅设置
+    bannerTitle: '横幅图片',
+    bannerDescription: '自定义首页横幅图片。每个主题可以有自己的横幅。',
+    bannerUpload: '上传横幅',
+    bannerReset: '恢复默认',
+    bannerHint: '推荐：1024×400 或 1024×500 像素，PNG 格式。左侧三分之一保留用于文字。',
   },
   nfc: {
     title: '写入 NFC 标签',

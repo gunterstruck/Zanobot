@@ -5042,6 +5042,53 @@ select:focus-visible {
     }
 }
 
+/* Small displays (mobile): Better text wrapping for hardware info */
+@media (max-width: 400px) {
+    .hardware-device {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+        hyphens: auto;
+    }
+
+    .hardware-message {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .hardware-info-card .action-btn {
+        font-size: 0.75rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    /* Compact expert settings on small screens */
+    .device-invariant-setting {
+        padding: var(--spacing-sm);
+    }
+
+    .device-invariant-help {
+        font-size: 0.75rem;
+    }
+
+    .device-invariant-details {
+        padding: var(--spacing-xs);
+    }
+
+    .device-invariant-row {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .device-invariant-row label {
+        font-size: 0.75rem;
+    }
+
+    .device-invariant-row select {
+        font-size: 0.8rem;
+    }
+}
+
 /* ===================================
    VIEW LEVEL SYSTEM
    Controls UI complexity for different user types:
@@ -5233,6 +5280,13 @@ html[data-view-level="expert"] .result-confidence[data-view-level="expert"] {
 }
 
 html[data-view-level="expert"] .debug-info[data-view-level="expert"] {
+    display: block !important;
+}
+
+/* Settings dividers with view-level visibility */
+html[data-view-level="advanced"] .settings-divider[data-view-level="advanced"],
+html[data-view-level="expert"] .settings-divider[data-view-level="advanced"],
+html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     display: block !important;
 }
 
