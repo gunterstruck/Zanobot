@@ -23,12 +23,6 @@
 // reduce signal strength. The threshold is kept low to accommodate this.
 const SIGNAL_THRESHOLD_RMS = 0.002;
 
-// iOS WATCHDOG: Minimum non-zero samples required during warmup
-// If we receive fewer non-zero samples than this ratio during warmup,
-// iOS is likely blocking/muting the microphone at OS level.
-const IOS_MIN_NONZERO_SAMPLE_RATIO = 0.1; // At least 10% of samples should have signal
-const IOS_NOISE_FLOOR = 0.0001; // Below this is considered "silence"
-
 // Maximum wait time for signal detection (30 seconds)
 const MAX_WAIT_TIME_SECONDS = 30;
 
@@ -57,12 +51,6 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.waitStartSample = 0;
     this.phase = 'idle'; // idle, warmup, waiting, recording
     this.currentSampleCount = 0; // Track total samples processed
-
-    // iOS WATCHDOG: Track audio data quality during warmup
-    // iOS may deliver all-zero samples if mic is blocked/muted at OS level
-    this.warmupSamplesProcessed = 0;
-    this.warmupNonZeroSamples = 0;
-    this.hasReportedAudioBlocked = false;
 
     // Dynamic chunk size based on actual sample rate
     // Will be set via 'init' message from manager
@@ -158,11 +146,6 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
     this.samplesWritten = 0;
     this.ringBuffer.fill(0);
 
-    // iOS WATCHDOG: Reset counters for new warmup cycle
-    this.warmupSamplesProcessed = 0;
-    this.warmupNonZeroSamples = 0;
-    this.hasReportedAudioBlocked = false;
-
     this.port.postMessage({
       type: 'smart-start-state',
       phase: 'warmup',
@@ -223,36 +206,6 @@ class ZanobotAudioProcessor extends AudioWorkletProcessor {
         const elapsedSamples = this.currentSampleCount - this.warmUpStartSample;
         const remainingSamples = Math.max(0, this.warmUpDurationSamples - elapsedSamples);
         const remainingMs = Math.floor((remainingSamples / this.sampleRate) * 1000);
-
-        // iOS WATCHDOG: Track audio data quality
-        // Count how many samples have actual signal vs silence
-        for (let i = 0; i < inputChannel.length; i++) {
-          this.warmupSamplesProcessed++;
-          if (Math.abs(inputChannel[i]) > IOS_NOISE_FLOOR) {
-            this.warmupNonZeroSamples++;
-          }
-        }
-
-        // iOS WATCHDOG: Check for blocked audio after 2 seconds of warmup
-        // If we've processed 2 seconds worth of samples but have < 10% non-zero,
-        // iOS is likely blocking the microphone.
-        const twoSecondsInSamples = this.sampleRate * 2;
-        if (
-          !this.hasReportedAudioBlocked &&
-          this.warmupSamplesProcessed >= twoSecondsInSamples
-        ) {
-          const nonZeroRatio = this.warmupNonZeroSamples / this.warmupSamplesProcessed;
-          if (nonZeroRatio < IOS_MIN_NONZERO_SAMPLE_RATIO) {
-            // Report potential iOS audio block
-            this.hasReportedAudioBlocked = true;
-            this.port.postMessage({
-              type: 'ios-audio-blocked',
-              samplesProcessed: this.warmupSamplesProcessed,
-              nonZeroSamples: this.warmupNonZeroSamples,
-              nonZeroRatio: nonZeroRatio
-            });
-          }
-        }
 
         // Send status update (throttled - approximately every 100ms worth of samples)
         const samplesPerUpdate = Math.floor(0.1 * this.sampleRate); // ~100ms in samples
