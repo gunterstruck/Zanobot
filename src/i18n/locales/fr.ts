@@ -622,8 +622,8 @@ export const fr: TranslationDict = {
     brandDescription: 'Clair, convivial, fiable. Une IA de confiance.',
     brandDesc: 'Clair, convivial, fiable. Une IA de confiance.',
     neonTitle: 'Neon Industrial',
-    neonDescription: 'Palette néon très contrastée pour environnements sombres. Les accents guident l'attention vers les actions clés.',
-    neonDesc: 'Palette néon très contrastée pour environnements sombres. Les accents guident l'attention vers les actions clés.',
+    neonDescription: 'Palette néon très contrastée pour environnements sombres. Les accents guident l\'attention vers les actions clés.',
+    neonDesc: 'Palette néon très contrastée pour environnements sombres. Les accents guident l\'attention vers les actions clés.',
   },
   level2Default: {
     referenceTitle: 'Enregistrement de référence ML',
