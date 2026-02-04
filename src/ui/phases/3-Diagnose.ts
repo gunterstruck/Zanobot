@@ -46,7 +46,7 @@ import type { Machine, DiagnosisResult, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT, MODAL_TITLE } from '@ui/constants.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
-import { t, getLanguage } from '../../i18n/index.js';
+import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 
@@ -1247,7 +1247,7 @@ export class DiagnosePhase {
     // Expert mode: Full technical details for debugging and analysis
     const currentViewLevel = getViewLevel();
     if (currentViewLevel === 'expert') {
-      const dateLocale = getLanguage() === 'de' ? 'de-DE' : getLanguage() === 'fr' ? 'fr-FR' : getLanguage() === 'es' ? 'es-ES' : getLanguage() === 'zh' ? 'zh-CN' : 'en-US';
+      const dateLocale = getLocale();
       const refModelInfo = this.activeModels.length > 0
         ? this.activeModels.map(m => {
             const trainingDate = new Date(m.trainingDate).toLocaleString(dateLocale, {

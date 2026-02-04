@@ -16,7 +16,7 @@
 
 import { importData, getDBStats } from './db.js';
 import { logger } from '@utils/logger.js';
-import { t } from '../i18n/index.js';
+import { t, getLocale } from '../i18n/index.js';
 
 /**
  * Result of the NFC import check
@@ -276,8 +276,8 @@ export class NfcImportService {
       modal.style.display = 'flex';
 
       const exportDateStr = metadata.exportDate
-        ? new Date(metadata.exportDate).toLocaleString('de-DE')
-        : 'Unbekannt';
+        ? new Date(metadata.exportDate).toLocaleString(getLocale())
+        : t('common.unknown');
 
       modal.innerHTML = `
         <div class="modal-content">

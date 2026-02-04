@@ -28,7 +28,7 @@ import { logger } from '@utils/logger.js';
 import { BUTTON_TEXT } from '@ui/constants.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
-import { t, getLanguage } from '../../i18n/index.js';
+import { t, getLocale } from '../../i18n/index.js';
 
 export class ReferencePhase {
   private machine: Machine;
@@ -730,7 +730,7 @@ export class ReferencePhase {
         existingModels.length > 0
           ? existingModels
               .map((m) => {
-                const trainingDate = new Date(m.trainingDate).toLocaleString(getLanguage(), {
+                const trainingDate = new Date(m.trainingDate).toLocaleString(getLocale(), {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -1473,7 +1473,7 @@ export class ReferencePhase {
         li.className = 'state-item';
 
         const dateStr = model.trainingDate
-          ? new Date(model.trainingDate).toLocaleString(getLanguage(), {
+          ? new Date(model.trainingDate).toLocaleString(getLocale(), {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric',

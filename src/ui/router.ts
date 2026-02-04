@@ -27,7 +27,7 @@ import type { DetectionMode, AutoDetectionResult, MachineMatchResult } from '@da
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { notify } from '@utils/notifications.js';
-import { t } from '../i18n/index.js';
+import { t, getLocale } from '../i18n/index.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -780,7 +780,7 @@ export class Router {
           // CRITICAL FIX: Use toLocaleString() instead of toLocaleDateString() to include time
           const latestTimestamp = sortedModels[0]?.trainingDate;
           const latestDate = latestTimestamp
-            ? new Date(latestTimestamp).toLocaleString('de-DE', {
+            ? new Date(latestTimestamp).toLocaleString(getLocale(), {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',

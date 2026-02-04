@@ -49,6 +49,22 @@ const translations: Record<SupportedLanguage, TranslationDict> = {
 let currentLanguage: SupportedLanguage = 'en';
 
 /**
+ * Custom event name for language change notifications
+ * Components can listen to this event to react to language changes
+ */
+export const LANGUAGE_CHANGE_EVENT = 'i18n:languagechange';
+
+/**
+ * Callback type for language change listeners
+ */
+export type LanguageChangeCallback = (newLang: SupportedLanguage, oldLang: SupportedLanguage) => void;
+
+/**
+ * Registered language change listeners
+ */
+const languageChangeListeners: Set<LanguageChangeCallback> = new Set();
+
+/**
  * Detect browser language and set appropriate app language
  *
  * @returns Detected/selected language code
@@ -74,6 +90,10 @@ export function detectLanguage(): SupportedLanguage {
 /**
  * Initialize i18n system
  * Call this once at app startup
+ *
+ * Sets up:
+ * - Initial language detection
+ * - System language change listener (for when user changes device language)
  */
 export function initI18n(): SupportedLanguage {
   currentLanguage = detectLanguage();
@@ -81,9 +101,26 @@ export function initI18n(): SupportedLanguage {
   // Update HTML lang attribute
   document.documentElement.lang = currentLanguage;
 
+  // Listen for system language changes (e.g., user changes device language)
+  // Note: 'languagechange' event is fired when navigator.language changes
+  window.addEventListener('languagechange', handleSystemLanguageChange);
+
   console.log(`🌐 Language initialized: ${currentLanguage}`);
 
   return currentLanguage;
+}
+
+/**
+ * Handle system language change event
+ * Called when the user changes the device/browser language
+ */
+function handleSystemLanguageChange(): void {
+  const newLang = detectLanguage();
+
+  if (newLang !== currentLanguage) {
+    console.log(`🌐 System language changed, updating app: ${currentLanguage} → ${newLang}`);
+    setLanguage(newLang, true);
+  }
 }
 
 /**
@@ -95,10 +132,60 @@ export function getLanguage(): SupportedLanguage {
 
 /**
  * Set language manually (for testing or user preference)
+ * Triggers UI update and notifies listeners
+ *
+ * @param lang - Language code to set
+ * @param updateUI - Whether to update DOM (default: true)
  */
-export function setLanguage(lang: SupportedLanguage): void {
+export function setLanguage(lang: SupportedLanguage, updateUI: boolean = true): void {
+  const oldLang = currentLanguage;
+
+  // Skip if language hasn't changed
+  if (oldLang === lang) {
+    return;
+  }
+
   currentLanguage = lang;
   document.documentElement.lang = lang;
+
+  console.log(`🌐 Language changed: ${oldLang} → ${lang}`);
+
+  // Notify registered listeners
+  notifyLanguageChange(oldLang, lang);
+
+  // Update DOM elements with data-i18n attributes
+  if (updateUI) {
+    translateDOM();
+
+    // Dispatch custom event for components that need to re-render
+    window.dispatchEvent(new CustomEvent(LANGUAGE_CHANGE_EVENT, {
+      detail: { newLang: lang, oldLang }
+    }));
+  }
+}
+
+/**
+ * Notify all registered language change listeners
+ */
+function notifyLanguageChange(oldLang: SupportedLanguage, newLang: SupportedLanguage): void {
+  languageChangeListeners.forEach(callback => {
+    try {
+      callback(newLang, oldLang);
+    } catch (error) {
+      console.error('Error in language change listener:', error);
+    }
+  });
+}
+
+/**
+ * Register a callback to be called when language changes
+ *
+ * @param callback - Function to call when language changes
+ * @returns Unsubscribe function
+ */
+export function onLanguageChange(callback: LanguageChangeCallback): () => void {
+  languageChangeListeners.add(callback);
+  return () => languageChangeListeners.delete(callback);
 }
 
 /**
