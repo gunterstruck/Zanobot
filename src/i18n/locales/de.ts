@@ -784,18 +784,18 @@ export const de: TranslationDict = {
   // THEME DESCRIPTIONS
   // ============================================================================
   themes: {
-    neonTitle: 'Neon Industrial',
-    neonDescription: 'Kontrastreiches Neon-Design für dunkle Umgebungen. Akzente führen den Blick zu wichtigen Aktionen.',
-    neonDesc: 'Kontrastreiches Neon-Design für dunkle Umgebungen. Akzente führen den Blick zu wichtigen Aktionen.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'Eine Aktion. Kein Rauschen. Das Wesentliche im Fokus – alles andere tritt zurück.',
+    focusDesc: 'Eine Aktion. Kein Rauschen. Klarheit, die funktioniert.',
     daylightTitle: 'Daylight',
     daylightDescription: 'Helles, blendarmes Design für den Außeneinsatz. Klare Kontraste bleiben in der Sonne lesbar.',
     daylightDesc: 'Helles, blendarmes Design für den Außeneinsatz. Klare Kontraste bleiben in der Sonne lesbar.',
     brandTitle: 'Zanobo',
     brandDescription: 'Hell, freundlich, vertrauenswürdig. KI, der man vertraut.',
     brandDesc: 'Hell, freundlich, vertrauenswürdig. KI, der man vertraut.',
-    focusTitle: 'Steve Jobs',
-    focusDescription: 'Eine Aktion. Kein Rauschen. Das Wesentliche im Fokus – alles andere tritt zurück.',
-    focusDesc: 'Eine Aktion. Kein Rauschen. Klarheit, die funktioniert.',
+    neonTitle: 'Neon Industrial',
+    neonDescription: 'Kontrastreiches Neon-Design für dunkle Umgebungen. Akzente führen den Blick zu wichtigen Aktionen.',
+    neonDesc: 'Kontrastreiches Neon-Design für dunkle Umgebungen. Akzente führen den Blick zu wichtigen Aktionen.',
   },
 
   // ============================================================================
