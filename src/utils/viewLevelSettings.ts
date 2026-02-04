@@ -10,6 +10,7 @@
  */
 
 import { t } from '../i18n/index.js';
+import { logger } from './logger.js';
 
 export type ViewLevel = 'basic' | 'advanced' | 'expert';
 
@@ -108,11 +109,12 @@ export const setViewLevel = (level: ViewLevel): ViewLevel => {
     level = defaultLevel;
   }
 
-  // Persist to localStorage
+  // Persist to localStorage with quota check
   try {
     localStorage.setItem(STORAGE_KEY, level);
-  } catch {
-    // Ignore storage errors (e.g., private mode)
+  } catch (error) {
+    // Handle storage errors (e.g., private mode, quota exceeded)
+    logger.warn('⚠️ Failed to persist view level to localStorage:', error);
   }
 
   // Update the data attribute on the HTML element
@@ -176,7 +178,7 @@ export const setViewLevelTemporary = (level: ViewLevel, reason?: string): ViewLe
 
   // Log for debugging
   if (reason) {
-    console.debug(`[ViewLevel] Temporary set to "${level}" (reason: ${reason})`);
+    logger.debug(`[ViewLevel] Temporary set to "${level}" (reason: ${reason})`);
   }
 
   return level;
@@ -199,7 +201,7 @@ export const restoreViewLevel = (): ViewLevel => {
     new CustomEvent<ViewLevel>(VIEW_LEVEL_EVENT, { detail: savedLevel })
   );
 
-  console.debug(`[ViewLevel] Restored to saved preference: "${savedLevel}"`);
+  logger.debug(`[ViewLevel] Restored to saved preference: "${savedLevel}"`);
 
   return savedLevel;
 };
