@@ -658,6 +658,12 @@ export const de: TranslationDict = {
     continue: 'Weiter',
     qrHint: 'QR-Code oder Barcode in den Rahmen halten',
     codeRecognized: 'Code erkannt!',
+    // Banner-Einstellungen
+    bannerTitle: 'Banner-Bild',
+    bannerDescription: 'Passen Sie das Banner-Bild der Startseite an. Jedes Theme kann ein eigenes Banner haben.',
+    bannerUpload: 'Banner hochladen',
+    bannerReset: 'Auf Standard zurücksetzen',
+    bannerHint: 'Empfohlen: 1024×400 oder 1024×500 Pixel, PNG-Format. Das linke Drittel bleibt für Text frei.',
   },
 
   // ============================================================================

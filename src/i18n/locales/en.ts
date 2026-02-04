@@ -624,6 +624,12 @@ export const en: TranslationDict = {
     continue: 'Continue',
     qrHint: 'Hold QR code or barcode in the frame',
     codeRecognized: 'Code recognized!',
+    // Banner settings
+    bannerTitle: 'Banner Image',
+    bannerDescription: 'Customize the banner image on the home screen. Each theme can have its own banner.',
+    bannerUpload: 'Upload Banner',
+    bannerReset: 'Reset to Default',
+    bannerHint: 'Recommended: 1024×400 or 1024×500 pixels, PNG format. The left third remains free for text.',
   },
 
   // ============================================================================

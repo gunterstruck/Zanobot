@@ -563,6 +563,12 @@ export const fr: TranslationDict = {
     microphoneAdvice: 'Sélectionnez le meilleur microphone pour le diagnostic machine. Évitez les casques et appareils Bluetooth car ils sont optimisés pour la parole.',
     manualInput: 'Saisir manuellement', machineIdInput: 'Entrer l\'ID de la machine', continue: 'Continuer',
     qrHint: 'Placez le code QR ou le code-barres dans le cadre', codeRecognized: 'Code reconnu !',
+    // Paramètres du banner
+    bannerTitle: 'Image de bannière',
+    bannerDescription: 'Personnalisez l\'image de bannière de la page d\'accueil. Chaque thème peut avoir sa propre bannière.',
+    bannerUpload: 'Télécharger la bannière',
+    bannerReset: 'Réinitialiser par défaut',
+    bannerHint: 'Recommandé : 1024×400 ou 1024×500 pixels, format PNG. Le tiers gauche reste libre pour le texte.',
   },
   nfc: {
     title: 'Écrire un tag NFC',
