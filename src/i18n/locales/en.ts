@@ -739,18 +739,18 @@ export const en: TranslationDict = {
   },
 
   themes: {
-    neonTitle: 'Neon Industrial',
-    neonDescription: 'High-contrast neon palette for low-light environments. Accents guide attention to critical actions.',
-    neonDesc: 'High-contrast neon palette for low-light environments. Accents guide attention to critical actions.',
+    focusTitle: 'Steve Jobs',
+    focusDescription: 'One action. No noise. Focus on what matters – everything else fades away.',
+    focusDesc: 'One action. No noise. Clarity that works.',
     daylightTitle: 'Daylight',
     daylightDescription: 'Bright, glare-friendly theme for outdoor use. Clear contrast improves readability in sunlight.',
     daylightDesc: 'Bright, glare-friendly theme for outdoor use. Clear contrast improves readability in sunlight.',
     brandTitle: 'Zanobo',
     brandDescription: 'Light, friendly, trustworthy. AI you can trust.',
     brandDesc: 'Light, friendly, trustworthy. AI you can trust.',
-    focusTitle: 'Steve Jobs',
-    focusDescription: 'One action. No noise. Focus on what matters – everything else fades away.',
-    focusDesc: 'One action. No noise. Clarity that works.',
+    neonTitle: 'Neon Industrial',
+    neonDescription: 'High-contrast neon palette for low-light environments. Accents guide attention to critical actions.',
+    neonDesc: 'High-contrast neon palette for low-light environments. Accents guide attention to critical actions.',
   },
 
   level2Default: {
