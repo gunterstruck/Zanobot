@@ -1079,91 +1079,64 @@
                 </button>
             </div>
             <div class="modal-body legal-modal-body">
-                <h4>1. Datenschutz auf einen Blick</h4>
-                <h5>Allgemeine Hinweise</h5>
+                <h4>1. Das Wichtigste in Kürze</h4>
                 <p>
-                    Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Progressive Web App (PWA) nutzen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.
+                    <strong>Dein Gerät ist der Server.</strong><br>
+                    Zanobo ist eine "Offline-First" Progressive Web App. Das bedeutet: Alle Analysen, Audio-Daten und Datenbank-Einträge werden <strong>ausschließlich lokal</strong> in deinem Browser gespeichert. Es findet keinerlei Übertragung deiner sensiblen Messdaten an uns oder Dritte statt.
                 </p>
 
-                <h4>2. Datenverarbeitung in Zanobo</h4>
-                <h5>Lokale Datenspeicherung (Offline-First)</h5>
+                <h4>2. Verantwortlicher</h4>
                 <p>
-                    Zanobo ist eine <strong>Offline-First Progressive Web App</strong>. Alle Ihre Daten werden ausschließlich <strong>lokal in Ihrem Browser</strong> gespeichert und verarbeitet:
+                    Verantwortlich für den technischen Betrieb dieser privaten Webseite:<br>
+                    <strong>Günter Struck</strong><br>
+                    Lönsberg 8<br>
+                    45136 Essen<br>
+                    E-Mail: <a href="mailto:zanopo@online.de">zanopo@online.de</a>
+                </p>
+
+                <h4>3. Hosting &amp; Technische Logfiles</h4>
+                <p>
+                    Diese PWA wird über <strong>GitHub Pages</strong> (ein Dienst von GitHub Inc., USA) bereitgestellt. Wenn du die Seite aufrufst, muss dein Browser technisch bedingt eine Verbindung zu den Servern von GitHub aufbauen.
+                </p>
+                <p>
+                    Dabei werden standardmäßig technische Daten (sog. Server-Logfiles) erfasst, z. B. deine IP-Adresse, Browser-Version und Zeit des Zugriffs. Dies dient der Sicherheit und Stabilität des Betriebs (Art. 6 Abs. 1 lit. f DSGVO). Wir als Betreiber haben keinen direkten Zugriff auf diese Daten und führen sie nicht mit anderen Daten zusammen.
+                </p>
+
+                <h4>4. Lokale Datenverarbeitung in der App</h4>
+                <h5>Mikrofon &amp; Audio-Analyse</h5>
+                <p>
+                    Der Zugriff auf dein Mikrofon erfolgt nur, wenn du aktiv auf "Aufnehmen" oder "Analysieren" klickst. Die Audio-Daten werden in Echtzeit im Arbeitsspeicher (RAM) deines Geräts verarbeitet (via Web Audio API / AudioWorklets).
                 </p>
                 <ul>
-                    <li><strong>IndexedDB</strong>: Speicherung von Maschinenreferenzen, Aufnahmen und Diagnosehistorie</li>
-                    <li><strong>Web Audio API</strong>: Lokale Audioverarbeitung ohne Serverübertragung</li>
-                    <li><strong>Service Worker</strong>: Offline-Funktionalität und Caching</li>
+                    <li><strong>Kein Upload:</strong> Es werden keine Audio-Streams ins Internet gesendet.</li>
+                    <li><strong>Speicherung:</strong> Referenzaufnahmen werden in der lokalen Datenbank (IndexedDB) deines Browsers abgelegt.</li>
                 </ul>
+
+                <h5>Kamera (QR-Code &amp; Position)</h5>
                 <p>
-                    <strong>Es werden keine Daten an externe Server übertragen.</strong> Die gesamte Verarbeitung (FFT-Analyse, GMIA-Algorithmus, Gesundheitsscoring) erfolgt vollständig in Ihrem Browser.
+                    Der Kamerazugriff ist optional. Er dient ausschließlich dazu, QR-Codes von Maschinen zu scannen oder (auf Wunsch) ein Foto der Mikrofonposition lokal zu speichern. Auch diese Bilddaten verlassen dein Gerät nicht.
                 </p>
 
-                <h5>Audioaufnahmen</h5>
+                <h4>5. Cookies &amp; Tracking</h4>
                 <p>
-                    Die App erfasst Audioaufnahmen über Ihr Mikrofon zur akustischen Maschinenanalyse. Diese Aufnahmen:
+                    <strong>Wir verwenden keine Tracking-Cookies.</strong><br>
+                    Es gibt keine Google Analytics, kein Facebook Pixel und keine Werbetracker in dieser App. Die einzigen "Daten", die wir speichern, sind deine technischen Einstellungen (z. B. gewähltes Theme "Steve Jobs" oder "Neon"), damit die App beim nächsten Start so aussieht, wie du sie verlassen hast. Diese werden im <code>localStorage</code> deines Browsers notiert.
+                </p>
+
+                <h4>6. Deine Rechte &amp; Datenlöschung</h4>
+                <p>
+                    Da alle Daten lokal bei dir liegen, hast du die volle Kontrolle:
                 </p>
                 <ul>
-                    <li>Werden nur mit Ihrer expliziten Zustimmung aufgezeichnet (Browser-Mikrofonberechtigung)</li>
-                    <li>Bleiben ausschließlich lokal auf Ihrem Gerät gespeichert</li>
-                    <li>Werden nicht übertragen, hochgeladen oder mit Dritten geteilt</li>
-                    <li>Können jederzeit über die Einstellungen gelöscht werden</li>
+                    <li><strong>Daten löschen:</strong> Du kannst jederzeit in den Einstellungen unter "Datenverwaltung" auf <em>"Alle Daten löschen"</em> klicken. Damit wird die lokale Datenbank restlos geleert.</li>
+                    <li><strong>Browser-Daten:</strong> Wenn du deine Browser-Cookies/Cache leerst, sind die App-Daten ebenfalls weg.</li>
+                    <li><strong>Export:</strong> Du hast das Recht, deine Daten jederzeit über die "Export"-Funktion als JSON-Datei herunterzuladen (Recht auf Datenübertragbarkeit).</li>
                 </ul>
 
-                <h4>3. Keine Cookies oder Tracking</h4>
+                <h4>7. Stand der Erklärung</h4>
                 <p>
-                    Zanobo verwendet <strong>keine Cookies</strong> und führt <strong>kein Tracking</strong> durch. Es gibt:
-                </p>
-                <ul>
-                    <li>Keine Webanalyse (z.B. Google Analytics)</li>
-                    <li>Keine Werbe-Tracker</li>
-                    <li>Keine Verbindung zu externen Diensten</li>
-                    <li>Keine Benutzerkonten oder Cloud-Synchronisierung</li>
-                </ul>
-
-                <h4>4. Ihre Rechte</h4>
-                <p>
-                    Da alle Daten lokal gespeichert werden, haben Sie vollständige Kontrolle:
-                </p>
-                <ul>
-                    <li><strong>Recht auf Auskunft</strong>: Alle Daten sind in Ihrem Browser einsehbar</li>
-                    <li><strong>Recht auf Löschung</strong>: Nutzen Sie die Funktion "Alle Daten löschen" in den Einstellungen</li>
-                    <li><strong>Recht auf Datenübertragbarkeit</strong>: Exportieren Sie Ihre Daten als JSON-Datei</li>
-                </ul>
-
-                <h4>5. Mikrofonzugriff</h4>
-                <p>
-                    Die App benötigt Zugriff auf Ihr Mikrofon für die akustische Analyse. Der Mikrofonzugriff:
-                </p>
-                <ul>
-                    <li>Wird über die standardmäßige Browser-Berechtigung angefordert</li>
-                    <li>Kann jederzeit in den Browser-Einstellungen widerrufen werden</li>
-                    <li>Erfolgt nur während aktiver Aufnahmen (nicht kontinuierlich)</li>
-                    <li>Wird durch ein Status-Badge visuell angezeigt</li>
-                </ul>
-
-                <h4>6. Kamerazugriff (QR-Scanner)</h4>
-                <p>
-                    Der optionale QR-Code-Scanner benötigt Kamerazugriff zur Maschinenidentifikation:
-                </p>
-                <ul>
-                    <li>Wird nur bei Nutzung der Scan-Funktion angefordert</li>
-                    <li>Kann jederzeit abgebrochen werden</li>
-                    <li>QR-Codes werden lokal verarbeitet, nicht übertragen</li>
-                </ul>
-
-                <h4>7. Datensicherheit</h4>
-                <p>
-                    Durch die rein lokale Speicherung gibt es keine Übertragungsrisiken. Die Daten sind durch die Sicherheitsmechanismen Ihres Browsers und Betriebssystems geschützt.
-                </p>
-
-                <h4>8. Änderungen der Datenschutzerklärung</h4>
-                <p>
-                    Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen rechtlichen Anforderungen entspricht.
-                </p>
-
-                <p class="legal-footer">
-                    <strong>Stand:</strong> Januar 2026
+                    Januar 2026<br>
+                    <em>Diese Datenschutzerklärung wurde speziell für den privaten Betrieb ohne Gewinnerzielungsabsicht erstellt.</em>
                 </p>
             </div>
             <div class="modal-actions">
