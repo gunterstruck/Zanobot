@@ -8,6 +8,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
+import { t } from '../../../i18n/index.js';
 
 /**
  * Health status classification
@@ -132,21 +133,21 @@ export class SimilarityCalculator {
       return {
         status: 'HEALTHY',
         color: '#10b981', // Green
-        message: 'Maschine läuft normal',
+        message: t('level2Diagnose.machineNormal'),
         icon: '✅',
       };
     } else if (clampedSimilarity >= 0.7) {
       return {
         status: 'WARNING',
         color: '#f59e0b', // Yellow/Orange
-        message: 'Leichte Abweichung erkannt - Beobachten empfohlen',
+        message: t('level2Diagnose.warningDeviation'),
         icon: '⚠️',
       };
     } else {
       return {
         status: 'CRITICAL',
         color: '#ef4444', // Red
-        message: 'Signifikante Abweichung - Wartung dringend empfohlen!',
+        message: t('level2Diagnose.criticalDeviation'),
         icon: '🚨',
       };
     }
@@ -170,21 +171,21 @@ export class SimilarityCalculator {
       return {
         status: 'HEALTHY',
         color: '#10b981',
-        message: 'Maschine läuft normal',
+        message: t('level2Diagnose.machineNormal'),
         icon: '✅',
       };
     } else if (clampedSimilarity >= warningThreshold) {
       return {
         status: 'WARNING',
         color: '#f59e0b',
-        message: 'Leichte Abweichung erkannt - Beobachten empfohlen',
+        message: t('level2Diagnose.warningDeviation'),
         icon: '⚠️',
       };
     } else {
       return {
         status: 'CRITICAL',
         color: '#ef4444',
-        message: 'Signifikante Abweichung - Wartung dringend empfohlen!',
+        message: t('level2Diagnose.criticalDeviation'),
         icon: '🚨',
       };
     }
