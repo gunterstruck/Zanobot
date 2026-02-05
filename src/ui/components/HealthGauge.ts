@@ -220,23 +220,47 @@ export class HealthGauge {
   }
 
   private drawText(x: number, y: number, score: number): void {
-    // Draw score value (theme-aware text color)
+    const scoreText = Math.round(score).toString();
+
+    // Draw score value centered (theme-aware text color)
     this.ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
     this.ctx.fillStyle = this.colors.text;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(Math.round(score).toString(), x, y - 10);
+    this.ctx.fillText(scoreText, x, y - 10);
 
-    // Draw percentage symbol (theme-aware muted color)
+    // Draw percentage symbol beside the number, without affecting centering
+    // Measure the score text width to position % just to its right
+    const scoreWidth = this.ctx.measureText(scoreText).width;
     this.ctx.font = '24px system-ui, -apple-system, sans-serif';
     this.ctx.fillStyle = this.colors.textMuted;
-    this.ctx.fillText('%', x, y + 30);
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText('%', x + scoreWidth / 2 + 2, y - 10);
 
     // Draw status label (use custom status if provided, otherwise auto-calculate)
-    const status = this.customStatus !== undefined ? this.customStatus : this.getStatusLabel(score);
+    // Translate technical status values to localized display text
+    let status: string;
+    if (this.customStatus !== undefined) {
+      const normalized = this.customStatus.toLowerCase();
+      if (normalized === 'healthy') {
+        status = t('status.healthy');
+      } else if (normalized === 'uncertain') {
+        status = t('status.uncertain');
+      } else if (normalized === 'faulty') {
+        status = t('status.faulty');
+      } else if (normalized === 'unknown') {
+        status = t('status.unknown');
+      } else {
+        status = this.customStatus;
+      }
+    } else {
+      status = this.getStatusLabel(score);
+    }
     this.ctx.font = '16px system-ui, -apple-system, sans-serif';
+    this.ctx.textAlign = 'center';
     this.ctx.fillStyle = this.getScoreColor(score);
-    this.ctx.fillText(status, x, y + 60);
+    this.ctx.fillText(status, x, y + 35);
   }
 
   private getScoreColor(score: number): string {

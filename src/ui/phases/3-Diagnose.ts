@@ -1417,14 +1417,26 @@ export class DiagnosePhase {
     // Update status
     const resultStatus = document.getElementById('result-status');
     if (resultStatus) {
+      // Translate technical status to localized display text
+      const normalizedStatus = diagnosis.status.toLowerCase();
+      const localizedStatus = normalizedStatus === 'healthy'
+        ? t('status.healthy')
+        : normalizedStatus === 'uncertain'
+          ? t('status.uncertain')
+          : normalizedStatus === 'faulty'
+            ? t('status.faulty')
+            : t('status.unknown');
+
       // MULTICLASS: Show detected state if available
       const detectedState = diagnosis.metadata?.detectedState;
       if (detectedState && detectedState !== 'UNKNOWN') {
-        resultStatus.textContent = `${diagnosis.status} | ${detectedState}`;
+        const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
+        resultStatus.textContent = `${localizedStatus} | ${displayState}`;
       } else {
-        resultStatus.textContent = diagnosis.status;
+        resultStatus.textContent = localizedStatus;
       }
-      resultStatus.className = `result-status status-${diagnosis.status.toLowerCase()}`;
+      // CSS classes use technical terms for correct color styling
+      resultStatus.className = `result-status status-${normalizedStatus}`;
     }
 
     // Update confidence
