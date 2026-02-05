@@ -943,4 +943,13 @@ export const en: TranslationDict = {
     recommended: 'Recommended',
     nextStep: 'Next Step',
   },
+
+  // ============================================================================
+  // DATABASE MIGRATION
+  // ============================================================================
+  migration: {
+    title: 'Database Update',
+    dataCleared:
+      'The database was reset due to an update. All machines, recordings and diagnoses have been deleted.',
+  },
 };

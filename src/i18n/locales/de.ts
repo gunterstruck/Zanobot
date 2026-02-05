@@ -994,4 +994,13 @@ export const de: TranslationDict = {
     recommended: 'Empfohlen',
     nextStep: 'Nächster Schritt',
   },
+
+  // ============================================================================
+  // DATABASE MIGRATION
+  // ============================================================================
+  migration: {
+    title: 'Datenbank-Update',
+    dataCleared:
+      'Die Datenbank wurde aufgrund eines Updates zurückgesetzt. Alle Maschinen, Aufnahmen und Diagnosen wurden gelöscht.',
+  },
 };

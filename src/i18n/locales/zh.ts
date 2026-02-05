@@ -681,4 +681,11 @@ export const zh: TranslationDict = {
     recommended: '推荐',
     nextStep: '下一步',
   },
+
+  // DATABASE MIGRATION
+  migration: {
+    title: '数据库更新',
+    dataCleared:
+      '由于更新，数据库已被重置。所有机器、录音和诊断都已删除。',
+  },
 };

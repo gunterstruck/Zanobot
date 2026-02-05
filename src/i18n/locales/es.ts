@@ -682,4 +682,11 @@ export const es: TranslationDict = {
     recommended: 'Recomendado',
     nextStep: 'Siguiente paso',
   },
+
+  // DATABASE MIGRATION
+  migration: {
+    title: 'Actualización de base de datos',
+    dataCleared:
+      'La base de datos se ha restablecido debido a una actualización. Se han eliminado todas las máquinas, grabaciones y diagnósticos.',
+  },
 };
