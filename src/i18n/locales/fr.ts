@@ -87,6 +87,7 @@ export const fr: TranslationDict = {
     machineName: 'Nom de la machine',
     machineId: 'ID de la machine (optionnel)',
     quickAccess: 'Accès rapide',
+    quickAccessDescription: 'Accès rapide aux machines récemment utilisées',
     recentlyUsed: 'Récemment utilisé',
     overview: 'Aperçu',
     machineOverview: 'Aperçu des machines',
@@ -343,10 +344,12 @@ export const fr: TranslationDict = {
     suitable: 'Matériel adapté au diagnostic de machine',
     voiceOptimized: 'Le matériel optimisé pour la voix filtre les sons de machine.',
     useStudioMic: 'Utilisez un microphone de studio ou le microphone intégré de l\'appareil',
+    headsetsOptimized: 'Les casques sont optimisés pour les fréquences vocales',
     mayFilter: 'Les sons de machine peuvent être filtrés ou supprimés',
     lowSampleRate: 'Les fréquences d\'échantillonnage basses ne peuvent pas capturer les signaux machine haute fréquence',
     microphoneDenied: 'Accès au microphone refusé ou non disponible',
     iphoneBackMic: 'Microphone arrière iPhone',
+    micReady: 'Microphone prêt',
   },
 
   // ============================================================================
@@ -534,7 +537,7 @@ export const fr: TranslationDict = {
   settingsUI: {
     title: 'Paramètres', nfcWriterTitle: 'Tags NFC', nfcWriterDescription: 'Écrivez des tags NFC pour l’accès à l’app ou une machine sélectionnée.', appearance: 'Apparence',
     audioSettings: 'Paramètres audio', audioHardware: 'Matériel audio',
-    detectingMic: 'Détection du microphone...', initHardwareCheck: 'Initialisation du test matériel',
+    detectingMic: 'Détection du microphone...', detectingMicrophone: 'Détection du microphone...', initHardwareCheck: 'Initialisation du test matériel',
     changeMicrophone: 'Changer de microphone', confidenceThreshold: 'Seuil de confiance',
     recordingDuration: 'Durée d\'enregistrement', seconds5: '5 secondes', seconds10: '10 secondes', seconds15: '15 secondes', seconds: 'secondes',
     frequencyAxis: 'Axe des fréquences', frequencyAxisDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)', frequencyLogDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)',
@@ -610,6 +613,7 @@ export const fr: TranslationDict = {
     browserNoAudio: 'Votre navigateur ne prend pas en charge la lecture audio.',
     recordingInfo: '15 secondes d\'enregistrement (5s stabilisation + 10s entraînement)',
     positionImageTitle: 'Image de position sauvegardée',
+    savedPositionImage: 'Image de position sauvegardée',
     positionImageCheck: 'Vérifiez si l\'image montre la position correcte.',
     qualityTitle: 'Évaluation de la qualité', quality: 'Qualité',
     issuesTitle: 'Problèmes détectés :', discardNew: 'Rejeter / Nouveau',
