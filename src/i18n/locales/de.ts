@@ -89,6 +89,7 @@ export const de: TranslationDict = {
     machineName: 'Maschinenname',
     machineId: 'Maschinen-ID (optional)',
     quickAccess: 'Schnellwahl',
+    quickAccessDescription: 'Schneller Zugriff auf kürzlich verwendete Maschinen',
     recentlyUsed: 'Zuletzt verwendet',
     overview: 'Übersicht',
     machineOverview: 'Maschinenübersicht',
@@ -360,10 +361,12 @@ export const de: TranslationDict = {
     suitable: 'Hardware geeignet für Maschinendiagnose',
     voiceOptimized: 'Sprach-optimierte Hardware filtert Maschinengeräusche.',
     useStudioMic: 'Verwenden Sie ein Studio-Mikrofon oder das eingebaute Geräte-Mikrofon',
+    headsetsOptimized: 'Headsets sind für Sprachfrequenzen optimiert',
     mayFilter: 'Maschinengeräusche könnten gefiltert oder unterdrückt werden',
     lowSampleRate: 'Niedrige Sample Rates können hochfrequente Maschinensignale nicht erfassen',
     microphoneDenied: 'Mikrofonzugriff verweigert oder nicht verfügbar',
     iphoneBackMic: 'iPhone Rückseiten-Mikrofon',
+    micReady: 'Mikrofon bereit',
   },
 
   // ============================================================================
@@ -601,6 +604,7 @@ export const de: TranslationDict = {
     audioSettings: 'Audioeinstellungen',
     audioHardware: 'Audio Hardware',
     detectingMic: 'Erkenne Mikrofon...',
+    detectingMicrophone: 'Erkenne Mikrofon...',
     initHardwareCheck: 'Initialisiere Hardware-Check',
     changeMicrophone: 'Anderes Mikrofon wählen',
     confidenceThreshold: 'Vertrauensschwelle',
@@ -765,6 +769,7 @@ export const de: TranslationDict = {
     browserNoAudio: 'Ihr Browser unterstützt keine Audio-Wiedergabe.',
     recordingInfo: '15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)',
     positionImageTitle: 'Gespeichertes Positionsbild',
+    savedPositionImage: 'Gespeichertes Positionsbild',
     positionImageCheck: 'Prüfen Sie, ob das Bild die korrekte Position zeigt.',
     qualityTitle: 'Qualitätsbewertung',
     quality: 'Qualität',
@@ -993,5 +998,14 @@ export const de: TranslationDict = {
   badges: {
     recommended: 'Empfohlen',
     nextStep: 'Nächster Schritt',
+  },
+
+  // ============================================================================
+  // DATABASE MIGRATION
+  // ============================================================================
+  migration: {
+    title: 'Datenbank-Update',
+    dataCleared:
+      'Die Datenbank wurde aufgrund eines Updates zurückgesetzt. Alle Maschinen, Aufnahmen und Diagnosen wurden gelöscht.',
   },
 };

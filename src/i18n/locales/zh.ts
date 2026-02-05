@@ -87,6 +87,7 @@ export const zh: TranslationDict = {
     machineName: '机器名称',
     machineId: '机器ID（可选）',
     quickAccess: '快速访问',
+    quickAccessDescription: '快速访问最近使用的机器',
     recentlyUsed: '最近使用',
     overview: '概览',
     machineOverview: '机器概览',
@@ -342,10 +343,12 @@ export const zh: TranslationDict = {
     suitable: '硬件适合机器诊断',
     voiceOptimized: '语音优化的硬件会过滤机器声音。',
     useStudioMic: '使用录音室麦克风或设备内置麦克风',
+    headsetsOptimized: '耳机针对语音频率进行了优化',
     mayFilter: '机器声音可能被过滤或抑制',
     lowSampleRate: '低采样率无法捕获高频机器信号',
     microphoneDenied: '麦克风访问被拒绝或不可用',
     iphoneBackMic: 'iPhone后置麦克风',
+    micReady: '麦克风就绪',
   },
 
   // ============================================================================
@@ -533,7 +536,7 @@ export const zh: TranslationDict = {
   settingsUI: {
     title: '设置', nfcWriterTitle: 'NFC 标签', nfcWriterDescription: '为应用入口或选定机器写入 NFC 标签。', appearance: '外观',
     audioSettings: '音频设置', audioHardware: '音频硬件',
-    detectingMic: '正在检测麦克风...', initHardwareCheck: '初始化硬件检查',
+    detectingMic: '正在检测麦克风...', detectingMicrophone: '正在检测麦克风...', initHardwareCheck: '初始化硬件检查',
     changeMicrophone: '更换麦克风', confidenceThreshold: '置信度阈值',
     recordingDuration: '录制时长', seconds5: '5秒', seconds10: '10秒', seconds15: '15秒', seconds: '秒',
     frequencyAxis: '频率轴', frequencyAxisDesc: '对数（20-500 Hz范围更多细节）', frequencyLogDesc: '对数（20-500 Hz范围更多细节）',
@@ -609,6 +612,7 @@ export const zh: TranslationDict = {
     browserNoAudio: '您的浏览器不支持音频播放。',
     recordingInfo: '15秒录制（5秒稳定 + 10秒训练）',
     positionImageTitle: '已保存的位置图像',
+    savedPositionImage: '已保存的位置图像',
     positionImageCheck: '检查图像是否显示正确的位置。',
     qualityTitle: '质量评估', quality: '质量',
     issuesTitle: '检测到的问题：', discardNew: '丢弃/重新',
@@ -680,5 +684,12 @@ export const zh: TranslationDict = {
   badges: {
     recommended: '推荐',
     nextStep: '下一步',
+  },
+
+  // DATABASE MIGRATION
+  migration: {
+    title: '数据库更新',
+    dataCleared:
+      '由于更新，数据库已被重置。所有机器、录音和诊断都已删除。',
   },
 };

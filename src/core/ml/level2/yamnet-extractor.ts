@@ -11,6 +11,7 @@
 
 import * as tf from '@tensorflow/tfjs';
 import type { GraphModel } from '@tensorflow/tfjs';
+import { logger } from '@utils/logger.js';
 
 /**
  * YAMNet model URL from TensorFlow Hub
@@ -72,7 +73,7 @@ export class YAMNetExtractor {
   private async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    console.log('🚀 Initializing YAMNet Extractor...');
+    logger.info('🚀 Initializing YAMNet Extractor...');
 
     // CRITICAL: Robust backend fallback chain
     await this.initializeBackend();
@@ -81,7 +82,7 @@ export class YAMNetExtractor {
     await this.loadModel();
 
     this.isInitialized = true;
-    console.log(`✅ YAMNet initialized with ${this.backendUsed} backend`);
+    logger.info(`✅ YAMNet initialized with ${this.backendUsed} backend`);
   }
 
   /**
@@ -94,10 +95,10 @@ export class YAMNetExtractor {
       await tf.setBackend('webgpu');
       await tf.ready();
       this.backendUsed = 'webgpu';
-      console.log('✅ Using WebGPU backend (fastest)');
+      logger.info('✅ Using WebGPU backend (fastest)');
       return;
     } catch (error) {
-      console.warn('⚠️ WebGPU not available:', (error as Error).message);
+      logger.warn('⚠️ WebGPU not available:', (error as Error).message);
     }
 
     // Fallback to WebGL (widely supported)
@@ -105,10 +106,10 @@ export class YAMNetExtractor {
       await tf.setBackend('webgl');
       await tf.ready();
       this.backendUsed = 'webgl';
-      console.log('✅ Using WebGL backend');
+      logger.info('✅ Using WebGL backend');
       return;
     } catch (error) {
-      console.warn('⚠️ WebGL not available:', (error as Error).message);
+      logger.warn('⚠️ WebGL not available:', (error as Error).message);
     }
 
     // Last resort: CPU (slow but works everywhere)
@@ -116,7 +117,7 @@ export class YAMNetExtractor {
       await tf.setBackend('cpu');
       await tf.ready();
       this.backendUsed = 'cpu';
-      console.warn('⚠️ Using CPU backend (slow - consider upgrading browser)');
+      logger.warn('⚠️ Using CPU backend (slow - consider upgrading browser)');
     } catch (error) {
       throw new Error('Failed to initialize any TensorFlow.js backend');
     }
@@ -129,22 +130,22 @@ export class YAMNetExtractor {
    * fallback approach with custom feature extraction.
    */
   private async loadModel(): Promise<void> {
-    console.log('📦 Loading YAMNet model from TensorFlow Hub...');
+    logger.info('📦 Loading YAMNet model from TensorFlow Hub...');
 
     try {
       // Try loading from TensorFlow Hub
       this.model = await tf.loadGraphModel(YAMNET_TFHUB_URL, {
         fromTFHub: true,
       });
-      console.log('✅ YAMNet model loaded from TensorFlow Hub');
+      logger.info('✅ YAMNet model loaded from TensorFlow Hub');
     } catch (hubError) {
-      console.warn('⚠️ TensorFlow Hub model not available, using fallback');
-      console.warn('Error:', (hubError as Error).message);
+      logger.warn('⚠️ TensorFlow Hub model not available, using fallback');
+      logger.warn('Error:', (hubError as Error).message);
 
       // Fallback: We'll use a custom embedding approach
       // This generates embeddings using spectral analysis
       this.model = null;
-      console.log('✅ Using fallback spectral embedding extractor');
+      logger.info('✅ Using fallback spectral embedding extractor');
     }
   }
 
@@ -160,7 +161,8 @@ export class YAMNetExtractor {
    * @returns Float32Array with 1024 values (mean embedding over time)
    */
   async extractEmbeddings(audioBuffer: AudioBuffer): Promise<Float32Array> {
-    console.time('⏱️ Feature Extraction');
+    const startTime = performance.now();
+    logger.debug('⏱️ Feature Extraction starting...');
 
     // STEP 1: Resample to 16kHz (standard for audio ML models)
     const resampled = await this.resampleTo16kHz(audioBuffer);
@@ -175,7 +177,8 @@ export class YAMNetExtractor {
       embeddings = this.extractSpectralEmbeddings(resampled);
     }
 
-    console.timeEnd('⏱️ Feature Extraction');
+    const elapsed = performance.now() - startTime;
+    logger.debug(`⏱️ Feature Extraction completed in ${elapsed.toFixed(1)}ms`);
 
     return embeddings;
   }
@@ -187,13 +190,20 @@ export class YAMNetExtractor {
    * SAFETY: Validates YAMNet output structure before accessing
    */
   private extractWithYAMNet(audioData: Float32Array): Float32Array {
+    // CRITICAL FIX: Explicit null check before using model
+    if (!this.model) {
+      throw new Error('YAMNet model not initialized. Cannot extract embeddings.');
+    }
+
+    const model = this.model; // TypeScript now knows this is non-null
+
     return tf.tidy(() => {
       // Prepare input tensor (YAMNet expects [batch, samples] or [samples])
       // PERFORMANCE FIX: Pass Float32Array directly - no Array.from() needed
       const inputTensor = tf.tensor1d(audioData);
 
       // Run inference
-      const output = this.model!.predict(inputTensor) as tf.Tensor | tf.Tensor[];
+      const output = model.predict(inputTensor) as tf.Tensor | tf.Tensor[];
 
       // Get embeddings (may need to select correct output)
       let embeddings: tf.Tensor;
@@ -310,7 +320,7 @@ export class YAMNetExtractor {
       return buffer.getChannelData(0);
     }
 
-    console.log(`🔄 Resampling: ${buffer.sampleRate}Hz → ${targetSampleRate}Hz`);
+    logger.debug(`🔄 Resampling: ${buffer.sampleRate}Hz → ${targetSampleRate}Hz`);
 
     // OfflineAudioContext = Native C++ Resampling = FAST
     const offlineCtx = new OfflineAudioContext(
@@ -367,7 +377,7 @@ export class YAMNetExtractor {
     this.isInitialized = false;
     YAMNetExtractor.instance = null;
     YAMNetExtractor.initPromise = null; // Reset promise to allow re-initialization
-    console.log('🧹 YAMNet resources disposed');
+    logger.info('🧹 YAMNet resources disposed');
   }
 
   /**

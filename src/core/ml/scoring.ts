@@ -78,8 +78,16 @@ export function calculateHealthScore(cosineSimilarity: number, scalingConstant: 
  *
  * @param score - Health score [0, 100]
  * @returns Status category
+ * @throws Error if score is NaN or Infinity
  */
 export function classifyHealthStatus(score: number): 'healthy' | 'uncertain' | 'faulty' {
+  // CRITICAL FIX: Validate input to prevent NaN propagation
+  // NaN comparisons always return false, causing silent misclassification as 'faulty'
+  if (!isFinite(score)) {
+    logger.error(`❌ Invalid health score received: ${score}`);
+    throw new Error(`Invalid health score: ${score}. Score must be a finite number.`);
+  }
+
   if (score >= HEALTH_THRESHOLDS.healthy) {
     return 'healthy';
   } else if (score >= HEALTH_THRESHOLDS.uncertain) {

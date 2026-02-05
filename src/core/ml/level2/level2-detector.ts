@@ -12,6 +12,7 @@ import { get, set, del, keys } from 'idb-keyval';
 import { YAMNetExtractor } from './yamnet-extractor.js';
 import { SimilarityCalculator } from './similarity-calculator.js';
 import { MelSpectrogramGenerator } from '../../audio/mel-spectrogram.js';
+import { logger } from '@utils/logger.js';
 import type {
   Level2Reference,
   Level2ReferenceStored,
@@ -71,7 +72,7 @@ export class Level2Detector {
       this.emitProgress(100, 'Bereit');
       this.setState('ready');
 
-      console.log('✅ Level 2 Detector initialized');
+      logger.info('✅ Level 2 Detector initialized');
     } catch (error) {
       this.setState('error');
       this.emitError(error as Error);
@@ -100,7 +101,7 @@ export class Level2Detector {
       throw new Error('Detector not initialized. Call initialize() first.');
     }
 
-    console.log(`📝 Creating reference for machine: ${machineId}`);
+    logger.info(`📝 Creating reference for machine: ${machineId}`);
     this.setState('analyzing');
     this.emitProgress(10, 'Extrahiere Audio-Features...');
 
@@ -136,7 +137,7 @@ export class Level2Detector {
       // Emit event
       this.events.onReferenceCreated?.(reference);
 
-      console.log('✅ Reference saved successfully');
+      logger.info('✅ Reference saved successfully');
       return reference;
     } catch (error) {
       this.setState('error');
@@ -166,7 +167,7 @@ export class Level2Detector {
       throw new Error('No reference available. Create reference first.');
     }
 
-    console.log('🔍 Analyzing audio...');
+    logger.info('🔍 Analyzing audio...');
     this.setState('analyzing');
     this.emitProgress(10, 'Extrahiere Audio-Features...');
 
@@ -213,7 +214,7 @@ export class Level2Detector {
       // Emit event
       this.events.onAnalysisComplete?.(result);
 
-      console.log(`✅ Analysis complete: ${result.percentage}% (${status.status})`);
+      logger.info(`✅ Analysis complete: ${result.percentage}% (${status.status})`);
       return result;
     } catch (error) {
       this.setState('error');
@@ -237,7 +238,7 @@ export class Level2Detector {
         const reference = deserializeReference(stored);
         this.referenceEmbedding = reference.embedding;
         this.currentMachineId = machineId;
-        console.log(
+        logger.info(
           `✅ Loaded reference for ${machineId} (from ${new Date(reference.createdAt).toLocaleString()})`
         );
         return true;
@@ -245,7 +246,7 @@ export class Level2Detector {
 
       return false;
     } catch (error) {
-      console.error('Failed to load reference:', error);
+      logger.error('Failed to load reference:', error);
       return false;
     }
   }
@@ -271,7 +272,7 @@ export class Level2Detector {
       this.currentMachineId = null;
     }
 
-    console.log(`🗑️ Deleted reference for ${machineId}`);
+    logger.info(`🗑️ Deleted reference for ${machineId}`);
   }
 
   /**
@@ -373,7 +374,7 @@ export class Level2Detector {
     this.currentMachineId = null;
     this.state = 'uninitialized';
     // Note: YAMNet singleton is not disposed to allow reuse
-    console.log('🧹 Level 2 Detector disposed (YAMNet singleton preserved)');
+    logger.info('🧹 Level 2 Detector disposed (YAMNet singleton preserved)');
   }
 
   /**
@@ -383,7 +384,7 @@ export class Level2Detector {
     this.dispose();
     this.yamnet?.dispose();
     this.yamnet = null;
-    console.log('🧹 Level 2 Detector fully disposed (including YAMNet)');
+    logger.info('🧹 Level 2 Detector fully disposed (including YAMNet)');
   }
 
   // Private helper methods

@@ -13,6 +13,7 @@ import './styles/style.css';
 import './styles/toast.css';
 
 import { initDB, getDBStats } from '@data/db.js';
+import { toast } from '@ui/components/Toast.js';
 import { nfcImportService } from '@data/NfcImportService.js';
 import { Router } from '@ui/router.js';
 import { BannerManager } from '@ui/BannerManager.js';
@@ -191,6 +192,9 @@ class ZanobotApp {
       logger.info(`   Recordings: ${stats.recordings}`);
       logger.info(`   Diagnoses: ${stats.diagnoses}`);
       dbAvailable = true;
+
+      // Check for database migration notification
+      this.checkMigrationNotification();
     } catch (error) {
       logger.error('❌ Database initialization failed:', error);
       logger.warn('⚠️ Continuing without database - functionality will be limited');
@@ -246,6 +250,54 @@ class ZanobotApp {
         title: t('app.fatalError'),
         duration: 0,
       });
+    }
+  }
+
+  /**
+   * Check for database migration notification
+   *
+   * If a breaking migration occurred (v3), show a warning toast to inform
+   * the user that their data was cleared.
+   */
+  private checkMigrationNotification(): void {
+    const MIGRATION_KEY = 'zanobot-migration-v3-occurred';
+
+    try {
+      const migrationInfo = localStorage.getItem(MIGRATION_KEY);
+      if (!migrationInfo) {
+        return;
+      }
+
+      // Parse and validate migration info
+      const info = JSON.parse(migrationInfo) as {
+        timestamp: number;
+        oldVersion: number;
+        newVersion: number;
+        dataCleared: boolean;
+      };
+
+      // Clear the flag so we don't show the notification again
+      localStorage.removeItem(MIGRATION_KEY);
+
+      if (info.dataCleared) {
+        logger.warn('⚠️ Database migration v3 notification shown to user');
+
+        // Show warning toast (persistent until dismissed)
+        toast.warning(
+          t('migration.dataCleared') ||
+            'Die Datenbank wurde aufgrund eines Updates zurückgesetzt. Alle Maschinen, Aufnahmen und Diagnosen wurden gelöscht.',
+          t('migration.title') || 'Datenbank-Update',
+          0 // 0 = permanent, requires manual close
+        );
+      }
+    } catch (error) {
+      // If we can't parse the migration info, just clear it
+      logger.warn('⚠️ Could not parse migration info:', error);
+      try {
+        localStorage.removeItem(MIGRATION_KEY);
+      } catch {
+        // Ignore localStorage errors
+      }
     }
   }
 

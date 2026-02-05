@@ -87,6 +87,7 @@ export const es: TranslationDict = {
     machineName: 'Nombre de la máquina',
     machineId: 'ID de la máquina (opcional)',
     quickAccess: 'Acceso rápido',
+    quickAccessDescription: 'Acceso rápido a máquinas usadas recientemente',
     recentlyUsed: 'Usado recientemente',
     overview: 'Vista general',
     machineOverview: 'Vista general de máquinas',
@@ -343,10 +344,12 @@ export const es: TranslationDict = {
     suitable: 'Hardware adecuado para diagnóstico de máquinas',
     voiceOptimized: 'El hardware optimizado para voz filtra los sonidos de la máquina.',
     useStudioMic: 'Use un micrófono de estudio o el micrófono integrado del dispositivo',
+    headsetsOptimized: 'Los auriculares están optimizados para frecuencias de voz',
     mayFilter: 'Los sonidos de la máquina podrían ser filtrados o suprimidos',
     lowSampleRate: 'Las frecuencias de muestreo bajas no pueden capturar señales de máquina de alta frecuencia',
     microphoneDenied: 'Acceso al micrófono denegado o no disponible',
     iphoneBackMic: 'Micrófono trasero de iPhone',
+    micReady: 'Micrófono listo',
   },
 
   // ============================================================================
@@ -534,7 +537,7 @@ export const es: TranslationDict = {
   settingsUI: {
     title: 'Configuración', nfcWriterTitle: 'Etiquetas NFC', nfcWriterDescription: 'Escribe etiquetas NFC para acceder a la app o a una máquina seleccionada.', appearance: 'Apariencia',
     audioSettings: 'Configuración de audio', audioHardware: 'Hardware de audio',
-    detectingMic: 'Detectando micrófono...', initHardwareCheck: 'Inicializando verificación de hardware',
+    detectingMic: 'Detectando micrófono...', detectingMicrophone: 'Detectando micrófono...', initHardwareCheck: 'Inicializando verificación de hardware',
     changeMicrophone: 'Cambiar micrófono', confidenceThreshold: 'Umbral de confianza',
     recordingDuration: 'Duración de grabación', seconds5: '5 segundos', seconds10: '10 segundos', seconds15: '15 segundos', seconds: 'segundos',
     frequencyAxis: 'Eje de frecuencia', frequencyAxisDesc: 'Logarítmico (más detalle en rango 20-500 Hz)', frequencyLogDesc: 'Logarítmico (más detalle en rango 20-500 Hz)',
@@ -610,6 +613,7 @@ export const es: TranslationDict = {
     browserNoAudio: 'Su navegador no admite reproducción de audio.',
     recordingInfo: '15 segundos de grabación (5s estabilización + 10s entrenamiento)',
     positionImageTitle: 'Imagen de posición guardada',
+    savedPositionImage: 'Imagen de posición guardada',
     positionImageCheck: 'Verifique si la imagen muestra la posición correcta.',
     qualityTitle: 'Evaluación de calidad', quality: 'Calidad',
     issuesTitle: 'Problemas detectados:', discardNew: 'Descartar / Nuevo',
@@ -681,5 +685,12 @@ export const es: TranslationDict = {
   badges: {
     recommended: 'Recomendado',
     nextStep: 'Siguiente paso',
+  },
+
+  // DATABASE MIGRATION
+  migration: {
+    title: 'Actualización de base de datos',
+    dataCleared:
+      'La base de datos se ha restablecido debido a una actualización. Se han eliminado todas las máquinas, grabaciones y diagnósticos.',
   },
 };

@@ -59,6 +59,12 @@ interface ImportData {
 }
 
 /**
+ * Maximum allowed import file size (50 MB)
+ * Prevents memory exhaustion from maliciously large files
+ */
+const MAX_IMPORT_SIZE_BYTES = 50 * 1024 * 1024;
+
+/**
  * NFC Import Service
  * Handles the entire NFC deep link import workflow
  */
@@ -138,6 +144,23 @@ export class NfcImportService {
           errorMessage: t('nfcImport.errorFetchFailed') ||
             `Download fehlgeschlagen (HTTP ${response.status}). Bitte prüfen Sie die URL.`,
         };
+      }
+
+      // SECURITY: Check Content-Length to prevent memory exhaustion
+      const contentLength = response.headers.get('content-length');
+      if (contentLength) {
+        const size = parseInt(contentLength, 10);
+        if (size > MAX_IMPORT_SIZE_BYTES) {
+          const sizeMB = (size / (1024 * 1024)).toFixed(1);
+          const maxMB = (MAX_IMPORT_SIZE_BYTES / (1024 * 1024)).toFixed(0);
+          logger.error(`❌ Import file too large: ${sizeMB} MB (max: ${maxMB} MB)`);
+          return {
+            success: false,
+            error: 'fetch_failed',
+            errorMessage: t('nfcImport.errorFileTooLarge') ||
+              `Datei zu groß (${sizeMB} MB). Maximale Größe: ${maxMB} MB.`,
+          };
+        }
       }
 
       // Check content-type header
