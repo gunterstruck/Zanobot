@@ -73,6 +73,7 @@ export const en: TranslationDict = {
     databaseCleared: 'Database Cleared',
     nfcDiagnosisTitle: 'Check status?',
     nfcDiagnosisPrompt: 'Machine detected. Check status now?',
+    closeDialog: 'Close dialog',
   },
 
   // ============================================================================
@@ -316,6 +317,7 @@ export const en: TranslationDict = {
       text: 'Database backup: {{filename}}',
       success: 'Backup shared: {{filename}}',
       fallback: 'Sharing not available. Downloaded {{filename}} instead.',
+      preparing: 'Export is being prepared... please wait a moment and try again.',
     },
   },
 
@@ -427,6 +429,7 @@ export const en: TranslationDict = {
 
   notifications: {
     confirmRequired: 'Confirmation required',
+    closeNotification: 'Close notification',
   },
 
   errorBoundary: {
@@ -638,6 +641,13 @@ export const en: TranslationDict = {
     bannerUpload: 'Upload Banner',
     bannerReset: 'Reset to Default',
     bannerHint: 'Recommended: 1024×400 or 1024×500 pixels, PNG format. The left third remains free for text.',
+    bannerFormatError: 'Format must be 1024×400 or 1024×500 PNG.',
+    bannerUpdated: 'Banner has been updated.',
+    bannerSaveError: 'Banner could not be saved.',
+    bannerResetSuccess: 'Default banner restored.',
+    bannerResetError: 'Error resetting the banner.',
+    themeToggle: 'Toggle theme',
+    closeSettings: 'Close settings',
   },
 
   // ============================================================================
@@ -723,6 +733,7 @@ export const en: TranslationDict = {
     customerIdPlaceholder: 'e.g. Customer_ID_1',
     customerIdRequired: 'Please enter a customer ID.',
     dbUrlPreview: 'Loaded DB URL: {{url}}',
+    closeDialog: 'Close NFC dialog',
   },
 
   review: {
@@ -754,6 +765,7 @@ export const en: TranslationDict = {
     referenceQualityStatusGood: 'GOOD',
     referenceQualityDescription: 'Reference recording meets recommended conditions',
     viewHistory: 'View History',
+    closeDialog: 'Close diagnosis',
   },
 
   // Work Point Ranking (Probability Distribution View)
@@ -847,6 +859,9 @@ export const en: TranslationDict = {
     privacy: 'Privacy Policy',
     about: 'About Zanobo',
     settings: 'Settings',
+    closeImpressum: 'Close legal notice',
+    closePrivacy: 'Close privacy policy',
+    closeAbout: 'Close about Zanobo',
   },
 
   // ============================================================================

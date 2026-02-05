@@ -198,11 +198,11 @@
                             <p class="option-description" data-i18n="identify.manualEntryDescription">Neue Maschine mit Namen erstellen</p>
                             <div class="input-group">
                                 <label for="machine-name-input" data-i18n="identify.machineName">Maschinenname</label>
-                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" />
+                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" data-i18n-placeholder="identify.machineName" />
                             </div>
                             <div class="input-group" data-view-level="advanced">
                                 <label for="machine-id-input" data-i18n="identify.machineId">Maschinen-ID (optional)</label>
-                                <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" />
+                                <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" data-i18n-placeholder="identify.machineId" />
                             </div>
 
                             <button class="action-btn" id="create-machine-btn">
@@ -675,7 +675,7 @@
                 <h3 data-i18n="review.title">Aufnahme prüfen</h3>
                 <p class="modal-subtitle" data-i18n="review.subtitle">Qualitätskontrolle</p>
                 <div class="modal-header-actions">
-                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln" data-i18n-aria="settingsUI.themeToggle">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="5"></circle>
                             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
@@ -687,7 +687,7 @@
                 <!-- Audio Player -->
                 <div class="review-audio-player">
                     <h4 class="review-section-title" data-i18n="review.listenTitle">Aufnahme anhören</h4>
-                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;">
+                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;" data-i18n="review.browserNoAudio">
                         <source id="review-audio-source" type="audio/webm">
                         Ihr Browser unterstützt keine Audio-Wiedergabe.
                     </audio>
@@ -712,7 +712,7 @@
                             <!-- Icon will be set dynamically -->
                         </div>
                         <div class="quality-details">
-                            <p class="quality-score">
+                            <p class="quality-score" data-i18n="review.quality">
                                 Qualität: <strong id="quality-score">--</strong>%
                             </p>
                             <p class="quality-rating" id="quality-rating-text">
@@ -723,7 +723,7 @@
 
                     <!-- Quality Issues (if any) -->
                     <div class="quality-issues" id="quality-issues" style="display: none;">
-                        <h5>Erkannte Probleme:</h5>
+                        <h5 data-i18n="review.issuesTitle">Erkannte Probleme:</h5>
                         <ul id="quality-issues-list">
                             <!-- Issues will be added dynamically -->
                         </ul>
@@ -732,14 +732,14 @@
             </div>
 
             <div class="modal-actions shell-footer">
-                <button class="modal-btn btn-secondary" id="review-discard-btn">
+                <button class="modal-btn btn-secondary" id="review-discard-btn" data-i18n="review.discardNew">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
                     Verwerfen / Neu
                 </button>
-                <button class="modal-btn btn-primary" id="review-save-btn">
+                <button class="modal-btn btn-primary" id="review-save-btn" data-i18n="review.saveAsReference">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                         <polyline points="17 21 17 13 7 13 7 21"/>
@@ -782,7 +782,7 @@
                             <div class="scanner-corner corner-bl"></div>
                             <div class="scanner-corner corner-br"></div>
                         </div>
-                        <p class="scanner-hint">QR-Code oder Barcode in den Rahmen halten</p>
+                        <p class="scanner-hint" data-i18n="settingsUI.qrHint">QR-Code oder Barcode in den Rahmen halten</p>
                     </div>
                 </div>
 
@@ -803,11 +803,11 @@
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                         <polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
-                    <p id="scanner-success-message">Code erkannt!</p>
+                    <p id="scanner-success-message" data-i18n="settingsUI.codeRecognized">Code erkannt!</p>
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn btn-secondary" id="manual-input-btn">
+                <button class="modal-btn btn-secondary" id="manual-input-btn" data-i18n="settingsUI.manualInput">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -823,7 +823,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="nfc-writer-title" data-i18n="nfc.title">NFC-Tag beschreiben</h3>
-                <button class="close-modal-btn" id="close-nfc-writer-modal" aria-label="NFC-Dialog schließen">
+                <button class="close-modal-btn" id="close-nfc-writer-modal" aria-label="NFC-Dialog schließen" data-i18n-aria="nfc.closeDialog">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -859,6 +859,7 @@
                         id="nfc-customer-id-input"
                         class="nfc-customer-id-input"
                         placeholder="z.B. Kundenkennung_nr1"
+                        data-i18n-placeholder="nfc.customerIdPlaceholder"
                         autocomplete="off"
                         spellcheck="false"
                     >
@@ -880,7 +881,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="nfc-diagnosis-title" data-i18n="modals.nfcDiagnosisTitle">Zustand prüfen?</h3>
-                <button class="close-modal-btn" id="close-nfc-diagnosis-modal" aria-label="Dialog schließen">
+                <button class="close-modal-btn" id="close-nfc-diagnosis-modal" aria-label="Dialog schließen" data-i18n-aria="modals.closeDialog">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -901,7 +902,7 @@
     <div id="manual-input-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Maschinen-ID eingeben</h3>
+                <h3 data-i18n="settingsUI.machineIdInput">Maschinen-ID eingeben</h3>
                 <button class="close-modal-btn" id="close-manual-input-modal">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -910,17 +911,18 @@
                 </button>
             </div>
             <div class="modal-body">
-                <label for="manual-machine-id-input">Maschinen-ID</label>
+                <label for="manual-machine-id-input" data-i18n="identify.machineId">Maschinen-ID</label>
                 <input
                     type="text"
                     id="manual-machine-id-input"
                     class="machine-input"
                     placeholder="z.B. 1GB4-636A0-Ba1"
+                    data-i18n-placeholder="settingsUI.machineIdInput"
                 />
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-secondary" id="manual-input-cancel" data-i18n="buttons.cancel">Abbrechen</button>
-                <button class="modal-btn btn-primary" id="manual-input-confirm">Weiter</button>
+                <button class="modal-btn btn-primary" id="manual-input-confirm" data-i18n="settingsUI.continue">Weiter</button>
             </div>
         </div>
     </div>
@@ -929,15 +931,15 @@
     <div id="diagnosis-modal" class="modal" style="display: none;">
         <div class="modal-content app-shell-container">
             <div class="modal-header shell-header">
-                <h3>Diagnoseergebnisse</h3>
+                <h3 data-i18n="diagnosisResults.title">Diagnoseergebnisse</h3>
                 <div class="modal-header-actions">
-                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln">
+                    <button class="theme-switcher quick-theme-toggle" type="button" aria-label="Theme wechseln" data-i18n-aria="settingsUI.themeToggle">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="5"></circle>
                             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
                         </svg>
                     </button>
-                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Diagnose schließen">
+                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Diagnose schließen" data-i18n-aria="diagnosisResults.closeDialog">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18"/>
                             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -995,7 +997,7 @@
     <div id="microphone-selection-modal" class="modal" style="display: none;">
         <div class="modal-content microphone-modal-content">
             <div class="modal-header">
-                <h3>Mikrofon auswählen</h3>
+                <h3 data-i18n="settingsUI.selectMicrophone">Mikrofon auswählen</h3>
                 <button class="close-modal-btn" id="close-microphone-modal">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -1004,7 +1006,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p class="modal-description">
+                <p class="modal-description" data-i18n="settingsUI.microphoneAdvice">
                     Wählen Sie das beste Mikrofon für die Maschinendiagnose.
                     Vermeiden Sie Headsets und Bluetooth-Geräte, da diese für Sprache optimiert sind.
                 </p>
@@ -1020,7 +1022,7 @@
         <div class="modal-content legal-modal-content">
             <div class="modal-header">
                 <h3 id="impressum-title">Impressum</h3>
-                <button class="close-modal-btn" id="close-impressum-modal" aria-label="Impressum schließen">
+                <button class="close-modal-btn" id="close-impressum-modal" aria-label="Impressum schließen" data-i18n-aria="footer.closeImpressum">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1071,7 +1073,7 @@
         <div class="modal-content legal-modal-content">
             <div class="modal-header">
                 <h3 id="datenschutz-title">Datenschutzerklärung</h3>
-                <button class="close-modal-btn" id="close-datenschutz-modal" aria-label="Datenschutzerklärung schließen">
+                <button class="close-modal-btn" id="close-datenschutz-modal" aria-label="Datenschutzerklärung schließen" data-i18n-aria="footer.closePrivacy">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1150,7 +1152,7 @@
         <div class="modal-content legal-modal-content">
             <div class="modal-header">
                 <h3 id="settings-title" data-i18n="settingsUI.title">Einstellungen</h3>
-                <button class="close-modal-btn" id="close-settings-modal" aria-label="Einstellungen schließen">
+                <button class="close-modal-btn" id="close-settings-modal" aria-label="Einstellungen schließen" data-i18n-aria="settingsUI.closeSettings">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1365,7 +1367,7 @@
                                     <line x1="12" y1="19" x2="12" y2="22"/>
                                     <line x1="8" y1="22" x2="16" y2="22"/>
                                 </svg>
-                                <h5 class="hardware-title">Audio Hardware</h5>
+                                <h5 class="hardware-title" data-i18n="settingsUI.audioHardware">Audio Hardware</h5>
                             </div>
                             <div class="hardware-content">
                                 <div class="hardware-status">
@@ -1574,7 +1576,7 @@
         <div class="modal-content legal-modal-content">
             <div class="modal-header">
                 <h3 id="about-title">Über Zanobo</h3>
-                <button class="close-modal-btn" id="close-about-modal" aria-label="Über Zanobo schließen">
+                <button class="close-modal-btn" id="close-about-modal" aria-label="Über Zanobo schließen" data-i18n-aria="footer.closeAbout">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>

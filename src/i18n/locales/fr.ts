@@ -73,6 +73,7 @@ export const fr: TranslationDict = {
     databaseCleared: 'Base de données effacée',
     nfcDiagnosisTitle: 'Vérifier l\'état ?',
     nfcDiagnosisPrompt: 'Machine détectée. Vérifier l\'état maintenant ?',
+    closeDialog: 'Fermer le dialogue',
   },
 
   // ============================================================================
@@ -186,6 +187,10 @@ export const fr: TranslationDict = {
       noSignal: 'Veuillez vous rapprocher de la machine et réessayer.',
       positionImage: '📷 L\'image de position sera capturée automatiquement',
       instruction: 'Tenez le microphone à 10-30 cm devant la machine.',
+      // iOS Audio Blocked (watchdog detection)
+      iosAudioBlocked: 'Microphone bloqué',
+      iosAudioBlockedMessage: 'Le microphone ne fournit pas de données audio.\n\nCauses possibles :\n• Une autre application utilise le microphone\n• iOS bloque l\'accès au microphone\n• Le volume du système est coupé\n\nVeuillez fermer les autres applications et réessayer.',
+      iosAudioBlockedRetry: 'Réessayer',
     },
 
     quality: {
@@ -243,6 +248,7 @@ export const fr: TranslationDict = {
       signalHint: 'Rapprochez le téléphone de la machine pour un signal optimal',
       match: 'Correspondance',
       ghostHint: '👻 Déplacez le téléphone jusqu\'à ce que l\'image en direct et l\'image de référence correspondent',
+      noCameraAvailable: 'Aucune image de position disponible',
     },
 
     smartStart: {
@@ -265,6 +271,16 @@ export const fr: TranslationDict = {
       healthyMatch: 'La signature acoustique correspond à l\'état de référence "{{state}}" ({{score}}%). Aucune anomalie.',
       faultyMatch: 'Anomalie détectée : La signature correspond au motif entraîné "{{state}}" ({{score}}%). Inspection recommandée.',
     },
+
+    // State-based card UI (horizontal tiles)
+    scanCode: 'Scanner QR',
+    selectExisting: 'Sélectionner une machine',
+    createNew: 'Nouvelle machine',
+    statesReady: '{{count}} état entraîné',
+    noReference: 'Pas encore de référence',
+    changeMachine: 'Changer de machine',
+    noMachinesYet: 'Aucune machine créée.',
+    noMachinesHint: 'Veuillez d\'abord créer une nouvelle machine.',
   },
 
   // ============================================================================
@@ -301,6 +317,7 @@ export const fr: TranslationDict = {
       text: 'Sauvegarde de la base de données : {{filename}}',
       success: 'Sauvegarde partagée : {{filename}}',
       fallback: 'Partage indisponible. {{filename}} a été téléchargé à la place.',
+      preparing: 'L\'exportation est en cours de préparation... veuillez patienter un instant et réessayer.',
     },
   },
 
@@ -438,7 +455,10 @@ export const fr: TranslationDict = {
     viewModeTitle: 'Mode d\'affichage',
     viewModeDescription: 'Adaptez la complexité de l\'interface à vos besoins.',
   },
-  notifications: { confirmRequired: 'Confirmation requise' },
+  notifications: {
+    confirmRequired: 'Confirmation requise',
+    closeNotification: 'Fermer la notification',
+  },
   errorBoundary: {
     storageFull: 'Veuillez supprimer d\'anciens diagnostics ou enregistrements de référence.',
     networkError: 'Veuillez vérifier votre connexion internet.',
@@ -584,6 +604,13 @@ export const fr: TranslationDict = {
     bannerUpload: 'Télécharger la bannière',
     bannerReset: 'Réinitialiser par défaut',
     bannerHint: 'Recommandé : 1024×400 ou 1024×500 pixels, format PNG. Le tiers gauche reste libre pour le texte.',
+    bannerFormatError: 'Le format doit être 1024×400 ou 1024×500 PNG.',
+    bannerUpdated: 'La bannière a été mise à jour.',
+    bannerSaveError: 'La bannière n\'a pas pu être sauvegardée.',
+    bannerResetSuccess: 'Bannière par défaut restaurée.',
+    bannerResetError: 'Erreur lors de la réinitialisation de la bannière.',
+    themeToggle: 'Changer de thème',
+    closeSettings: 'Fermer les paramètres',
   },
   nfc: {
     title: 'Écrire un tag NFC',
@@ -605,7 +632,14 @@ export const fr: TranslationDict = {
     statusError: 'Impossible d’écrire le tag NFC.',
     unsupported: 'L’écriture NFC n’est pas prise en charge sur cet appareil.',
     requiresSecureContext: 'L’écriture NFC nécessite une connexion sécurisée (HTTPS).',
-    unsupportedBrowser: 'L’écriture NFC nécessite Chrome sur Android.',
+    unsupportedBrowser: 'L\'écriture NFC nécessite Chrome sur Android.',
+    // Customer ID (Variant B)
+    customerIdLabel: 'Identifiant client (c)',
+    customerIdDescription: 'Cet identifiant détermine quelles données de référence sont chargées lors du scan du tag NFC. L\'application charge automatiquement : https://gunterstruck.github.io/<IdentifiantClient>/db-latest.json',
+    customerIdPlaceholder: 'ex. Identifiant_Client_1',
+    customerIdRequired: 'Veuillez entrer un identifiant client.',
+    dbUrlPreview: 'URL de la BD chargée : {{url}}',
+    closeDialog: 'Fermer le dialogue NFC',
   },
   review: {
     title: 'Vérifier l\'enregistrement', subtitle: 'Contrôle qualité',
@@ -632,6 +666,7 @@ export const fr: TranslationDict = {
     referenceQualityStatusGood: 'BON',
     referenceQualityDescription: 'L\'enregistrement de référence respecte les conditions recommandées',
     viewHistory: 'Voir l\'historique',
+    closeDialog: 'Fermer le diagnostic',
   },
   themes: {
     focusTitle: 'Steve Jobs',
@@ -659,7 +694,15 @@ export const fr: TranslationDict = {
     featureTrafficLight: 'Affichage état feux tricolores',
     refSubDesc: 'Enregistrement de référence de 10 secondes', diagSubDesc: 'Effectuer une analyse en direct', analyzeBtn: 'Analyser',
   },
-  footer: { impressum: 'Mentions légales', privacy: 'Politique de confidentialité', about: 'À propos de Zanobo', settings: 'Paramètres' },
+  footer: {
+    impressum: 'Mentions légales',
+    privacy: 'Politique de confidentialité',
+    about: 'À propos de Zanobo',
+    settings: 'Paramètres',
+    closeImpressum: 'Fermer les mentions légales',
+    closePrivacy: 'Fermer la politique de confidentialité',
+    closeAbout: 'Fermer à propos de Zanobo',
+  },
 
   // NFC IMPORT (Deep Link Import via ?importUrl=)
   nfcImport: {
@@ -699,6 +742,133 @@ export const fr: TranslationDict = {
     probability: 'Probabilité',
     topMatch: 'Meilleure correspondance',
     sectionTitle: 'Distribution détaillée des états',
+    sectionDescription: 'Distribution de probabilité de tous les états de machine entraînés',
+  },
+
+  // ============================================================================
+  // INSPECTION VIEW (Simplified PWA)
+  // ============================================================================
+  inspection: {
+    // Header
+    mainQuestion: 'La machine sonne-t-elle normal ?',
+    subtitle: 'Inspection en cours – veuillez rester près de la machine',
+    subtitleInitializing: 'Préparation – veuillez patienter',
+    // Status words (simple, non-technical)
+    statusNormal: 'Normal',
+    statusUncertain: 'Incertain',
+    statusDeviation: 'Déviation',
+    // Reference info
+    referenceState: 'État de référence',
+    referenceDefault: 'Fonctionnement normal',
+    // Dynamic hints for poor signal quality
+    hintMoveCloser: 'Veuillez vous rapprocher de la machine',
+    hintChangePosition: 'Changez légèrement de position',
+    hintHoldSteady: 'Maintenez l\'appareil stable',
+    hintWaiting: 'En attente du signal de la machine...',
+    // Button
+    stopButton: 'STOP',
+  },
+
+  // ============================================================================
+  // MACHINE SETUP (NFC Deep Link - Status/Error Messages)
+  // ============================================================================
+  machineSetup: {
+    // Validation errors
+    urlEmpty: 'Veuillez entrer un lien vers la BD de référence.',
+    urlInvalid: 'Le lien ne semble pas être une URL valide.',
+    urlNotHttps: 'Le lien doit commencer par https://.',
+    urlNotOfficialSource: 'Seules les sources de données officielles (gunterstruck.github.io) sont acceptées.',
+
+    // Download status
+    downloadingReference: 'Chargement des données de référence...',
+    statusDownloading: 'Téléchargement des données de référence...',
+    statusParsing: 'Traitement des données...',
+    statusValidating: 'Validation du format...',
+    statusSaving: 'Sauvegarde locale...',
+    statusComplete: 'Terminé !',
+
+    // Download errors
+    errorMachineNotFound: 'Machine non configurée. Veuillez contacter le technicien de service.',
+    errorNoReferenceUrl: 'Aucune donnée de référence configurée. Veuillez contacter le technicien de service.',
+    errorDownloadFailed: 'Échec du téléchargement. Veuillez vérifier votre connexion internet.',
+    errorInvalidFormat: 'Les données de référence ont un format invalide.',
+    errorInvalidStructure: 'La structure des données est corrompue.',
+    errorNoModels: 'Aucun modèle de référence trouvé dans les données.',
+    errorInvalidModel: 'Un ou plusieurs modèles de référence sont corrompus.',
+    errorUnknown: 'Une erreur inconnue est survenue.',
+
+    // Success messages
+    referenceLoaded: 'Données de référence chargées avec succès !',
+
+    // Loading overlay
+    loadingTitle: 'Chargement de la référence',
+    loadingSubtitle: 'Veuillez patienter...',
+    testingBlocked: 'Le test n\'est disponible qu\'après le chargement des données de référence.',
+  },
+
+  // ============================================================================
+  // ONBOARDING TRACE (Debug Protocol)
+  // ============================================================================
+  trace: {
+    // UI
+    title: 'Protocole de débogage',
+    toggle: 'Afficher/masquer le protocole',
+    copyToClipboard: 'Copier le protocole',
+    copy: 'Copier',
+    copied: 'Copié !',
+    copyFailed: 'Erreur',
+    noEntries: 'Aucune entrée',
+
+    // Status
+    statusRunning: 'En cours...',
+    statusComplete: 'Terminé',
+    statusFailed: 'Échoué',
+
+    // Step labels - these map to TraceStepId
+    steps: {
+      // Deep Link Processing
+      deep_link_detected: 'Deep link détecté',
+      hash_parsed: 'Hash analysé',
+      machine_id_extracted: 'ID de machine extrait',
+      customer_id_extracted: 'ID client extrait',
+      db_url_derived: 'URL de BD dérivée',
+
+      // Download Process
+      download_started: 'Téléchargement démarré',
+      download_complete: 'Téléchargement terminé',
+      download_failed: 'Échec du téléchargement',
+
+      // JSON Processing
+      json_parse_started: 'Analyse JSON démarrée',
+      json_parse_complete: 'Analyse JSON réussie',
+      json_parse_failed: 'Échec de l\'analyse JSON',
+
+      // Validation
+      schema_validation_started: 'Validation du schéma démarrée',
+      schema_validation_complete: 'Validation du schéma réussie',
+      schema_validation_failed: 'Échec de la validation du schéma',
+
+      // Database Operations
+      db_reset_started: 'Réinitialisation de la BD démarrée',
+      db_import_started: 'Importation de la BD démarrée',
+      db_import_complete: 'Importation de la BD terminée',
+      db_import_failed: 'Échec de l\'importation de la BD',
+
+      // App State
+      app_state_reload: 'État de l\'application rechargé',
+
+      // Machine Operations
+      machine_lookup: 'Recherche de la machine',
+      machine_found: 'Machine trouvée',
+      machine_not_found: 'Machine non trouvée',
+      machine_created: 'Machine créée',
+      machine_selected: 'Machine sélectionnée',
+
+      // Final Steps
+      test_dialog_shown: 'Dialogue de test affiché',
+      process_complete: 'Processus terminé',
+      process_failed: 'Échec du processus',
+    },
   },
 
   // DATABASE MIGRATION

@@ -73,6 +73,7 @@ export const zh: TranslationDict = {
     databaseCleared: '数据库已清空',
     nfcDiagnosisTitle: '检查状态？',
     nfcDiagnosisPrompt: '检测到机器。现在检查状态吗？',
+    closeDialog: '关闭对话框',
   },
 
   // ============================================================================
@@ -185,6 +186,10 @@ export const zh: TranslationDict = {
       noSignal: '请靠近机器并重试。',
       positionImage: '📷 位置图像将自动捕获',
       instruction: '将麦克风保持在机器前10-30厘米处。',
+      // iOS Audio Blocked (watchdog detection)
+      iosAudioBlocked: '麦克风被阻止',
+      iosAudioBlockedMessage: '麦克风未提供音频数据。\n\n可能原因：\n• 其他应用正在使用麦克风\n• iOS 阻止了麦克风访问\n• 系统音量已静音\n\n请关闭其他应用并重试。',
+      iosAudioBlockedRetry: '重试',
     },
 
     quality: {
@@ -242,6 +247,7 @@ export const zh: TranslationDict = {
       signalHint: '将手机靠近机器以获得最佳信号',
       match: '匹配度',
       ghostHint: '👻 移动手机直到实时图像与参考图像对齐',
+      noCameraAvailable: '无可用的位置图像',
     },
 
     smartStart: {
@@ -264,6 +270,16 @@ export const zh: TranslationDict = {
       healthyMatch: '声学特征与参考状态"{{state}}"匹配（{{score}}%）。无异常。',
       faultyMatch: '检测到异常：特征与训练模式"{{state}}"匹配（{{score}}%）。建议检查。',
     },
+
+    // State-based card UI (horizontal tiles)
+    scanCode: '扫描二维码',
+    selectExisting: '选择机器',
+    createNew: '新建机器',
+    statesReady: '{{count}} 个状态已训练',
+    noReference: '尚无参考',
+    changeMachine: '更换机器',
+    noMachinesYet: '尚未创建机器。',
+    noMachinesHint: '请先创建一台新机器。',
   },
 
   // ============================================================================
@@ -300,6 +316,7 @@ export const zh: TranslationDict = {
       text: '数据库备份：{{filename}}',
       success: '备份已分享：{{filename}}',
       fallback: '无法分享，已改为下载 {{filename}}。',
+      preparing: '正在准备导出...请稍候再试。',
     },
   },
 
@@ -437,7 +454,7 @@ export const zh: TranslationDict = {
     viewModeTitle: '显示模式',
     viewModeDescription: '根据您的需求调整界面复杂度。',
   },
-  notifications: { confirmRequired: '需要确认' },
+  notifications: { confirmRequired: '需要确认', closeNotification: '关闭通知' },
   errorBoundary: {
     storageFull: '请删除旧的诊断或参考录制。',
     networkError: '请检查您的网络连接。',
@@ -583,6 +600,13 @@ export const zh: TranslationDict = {
     bannerUpload: '上传横幅',
     bannerReset: '恢复默认',
     bannerHint: '推荐：1024×400 或 1024×500 像素，PNG 格式。左侧三分之一保留用于文字。',
+    bannerFormatError: '格式必须为 1024×400 或 1024×500 的 PNG。',
+    bannerUpdated: '横幅已更新。',
+    bannerSaveError: '无法保存横幅。',
+    bannerResetSuccess: '已恢复默认横幅。',
+    bannerResetError: '重置横幅时出错。',
+    themeToggle: '切换主题',
+    closeSettings: '关闭设置',
   },
   nfc: {
     title: '写入 NFC 标签',
@@ -605,6 +629,13 @@ export const zh: TranslationDict = {
     unsupported: '此设备不支持 NFC 写入。',
     requiresSecureContext: 'NFC 写入需要安全（HTTPS）连接。',
     unsupportedBrowser: 'NFC 写入需要 Android 上的 Chrome。',
+    // Customer ID (Variant B)
+    customerIdLabel: '客户 ID (c)',
+    customerIdDescription: '此 ID 决定扫描 NFC 标签时加载哪些参考数据。应用自动加载：https://gunterstruck.github.io/<CustomerID>/db-latest.json',
+    customerIdPlaceholder: '例如 Customer_ID_1',
+    customerIdRequired: '请输入客户 ID。',
+    dbUrlPreview: '加载的数据库 URL：{{url}}',
+    closeDialog: '关闭 NFC 对话框',
   },
   review: {
     title: '检查录制', subtitle: '质量控制',
@@ -631,6 +662,7 @@ export const zh: TranslationDict = {
     referenceQualityStatusGood: '良好',
     referenceQualityDescription: '参考录制符合推荐条件',
     viewHistory: '查看历史',
+    closeDialog: '关闭诊断',
   },
   themes: {
     focusTitle: 'Steve Jobs',
@@ -658,7 +690,15 @@ export const zh: TranslationDict = {
     featureTrafficLight: '交通灯状态显示',
     refSubDesc: '10秒参考录制', diagSubDesc: '执行实时分析', analyzeBtn: '分析',
   },
-  footer: { impressum: '法律声明', privacy: '隐私政策', about: '关于Zanobo', settings: '设置' },
+  footer: {
+    impressum: '法律声明',
+    privacy: '隐私政策',
+    about: '关于Zanobo',
+    settings: '设置',
+    closeImpressum: '关闭法律声明',
+    closePrivacy: '关闭隐私政策',
+    closeAbout: '关闭关于Zanobo',
+  },
 
   // NFC IMPORT (Deep Link Import via ?importUrl=)
   nfcImport: {
@@ -698,6 +738,7 @@ export const zh: TranslationDict = {
     probability: '概率',
     topMatch: '最佳匹配',
     sectionTitle: '详细状态分布',
+    sectionDescription: '所有已训练机器状态的概率分布',
   },
 
   // DATABASE MIGRATION
@@ -705,5 +746,131 @@ export const zh: TranslationDict = {
     title: '数据库更新',
     dataCleared:
       '由于更新，数据库已被重置。所有机器、录音和诊断都已删除。',
+  },
+
+  // ============================================================================
+  // INSPECTION VIEW (Simplified PWA)
+  // ============================================================================
+  inspection: {
+    // Header
+    mainQuestion: '机器听起来正常吗？',
+    subtitle: '检查运行中 – 请保持靠近机器',
+    subtitleInitializing: '准备中 – 请稍候',
+    // Status words (simple, non-technical)
+    statusNormal: '正常',
+    statusUncertain: '不确定',
+    statusDeviation: '偏差',
+    // Reference info
+    referenceState: '参考状态',
+    referenceDefault: '正常运行',
+    // Dynamic hints for poor signal quality
+    hintMoveCloser: '请靠近机器',
+    hintChangePosition: '稍微改变位置',
+    hintHoldSteady: '保持设备稳定',
+    hintWaiting: '等待机器信号...',
+    // Button
+    stopButton: '停止',
+  },
+
+  // ============================================================================
+  // MACHINE SETUP (NFC Deep Link - Status/Error Messages)
+  // ============================================================================
+  machineSetup: {
+    // Validation errors
+    urlEmpty: '请输入参考数据库链接。',
+    urlInvalid: '该链接似乎不是有效的 URL。',
+    urlNotHttps: '链接必须以 https:// 开头。',
+    urlNotOfficialSource: '仅接受官方数据源（gunterstruck.github.io）。',
+
+    // Download status
+    downloadingReference: '正在加载参考数据...',
+    statusDownloading: '正在下载参考数据...',
+    statusParsing: '正在处理数据...',
+    statusValidating: '正在验证格式...',
+    statusSaving: '正在本地保存...',
+    statusComplete: '完成！',
+
+    // Download errors
+    errorMachineNotFound: '机器未设置。请联系服务技术人员。',
+    errorNoReferenceUrl: '未配置参考数据。请联系服务技术人员。',
+    errorDownloadFailed: '下载失败。请检查您的网络连接。',
+    errorInvalidFormat: '参考数据格式无效。',
+    errorInvalidStructure: '数据结构已损坏。',
+    errorNoModels: '数据中未找到参考模型。',
+    errorInvalidModel: '一个或多个参考模型已损坏。',
+    errorUnknown: '发生了未知错误。',
+
+    // Success messages
+    referenceLoaded: '参考数据加载成功！',
+
+    // Loading overlay
+    loadingTitle: '正在加载参考',
+    loadingSubtitle: '请稍候...',
+    testingBlocked: '只有在加载参考数据后才能进行测试。',
+  },
+
+  // ============================================================================
+  // ONBOARDING TRACE (Debug Protocol)
+  // ============================================================================
+  trace: {
+    // UI
+    title: '调试协议',
+    toggle: '切换协议',
+    copyToClipboard: '复制协议',
+    copy: '复制',
+    copied: '已复制！',
+    copyFailed: '错误',
+    noEntries: '暂无条目',
+
+    // Status
+    statusRunning: '运行中...',
+    statusComplete: '完成',
+    statusFailed: '失败',
+
+    // Step labels - these map to TraceStepId
+    steps: {
+      // Deep Link Processing
+      deep_link_detected: '检测到深层链接',
+      hash_parsed: '哈希已解析',
+      machine_id_extracted: '已提取机器 ID',
+      customer_id_extracted: '已提取客户 ID',
+      db_url_derived: '已派生数据库 URL',
+
+      // Download Process
+      download_started: '下载已开始',
+      download_complete: '下载完成',
+      download_failed: '下载失败',
+
+      // JSON Processing
+      json_parse_started: 'JSON 解析已开始',
+      json_parse_complete: 'JSON 解析成功',
+      json_parse_failed: 'JSON 解析失败',
+
+      // Validation
+      schema_validation_started: '架构验证已开始',
+      schema_validation_complete: '架构验证成功',
+      schema_validation_failed: '架构验证失败',
+
+      // Database Operations
+      db_reset_started: '数据库重置已开始',
+      db_import_started: '数据库导入已开始',
+      db_import_complete: '数据库导入完成',
+      db_import_failed: '数据库导入失败',
+
+      // App State
+      app_state_reload: '应用状态已重新加载',
+
+      // Machine Operations
+      machine_lookup: '正在查找机器',
+      machine_found: '已找到机器',
+      machine_not_found: '未找到机器',
+      machine_created: '机器已创建',
+      machine_selected: '机器已选择',
+
+      // Final Steps
+      test_dialog_shown: '测试对话框已显示',
+      process_complete: '流程完成',
+      process_failed: '流程失败',
+    },
   },
 };

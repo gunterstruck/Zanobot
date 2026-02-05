@@ -1,5 +1,5 @@
 import { getAppSetting, saveAppSetting, deleteAppSetting } from '@data/db.js';
-import { getLanguage } from '../i18n/index.js';
+import { getLanguage, t } from '../i18n/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
 
@@ -75,7 +75,7 @@ export class BannerManager {
    */
   public async uploadBanner(file: File): Promise<boolean> {
     if (file.type !== 'image/png') {
-      notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+      notify.error(t('settingsUI.bannerFormatError'));
       return false;
     }
 
@@ -89,7 +89,7 @@ export class BannerManager {
 
         if (!isValidSize) {
           URL.revokeObjectURL(objectUrl);
-          notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+          notify.error(t('settingsUI.bannerFormatError'));
           resolve(false);
           return;
         }
@@ -100,19 +100,19 @@ export class BannerManager {
           await saveAppSetting(key, file);
           this.setHeroImage(objectUrl);
           this.hasCustomBanner = true;
-          notify.success('Banner wurde aktualisiert.');
+          notify.success(t('settingsUI.bannerUpdated'));
           resolve(true);
         } catch (error) {
           URL.revokeObjectURL(objectUrl);
           logger.error('❌ Failed to save hero banner', error);
-          notify.error('Banner konnte nicht gespeichert werden.', error as Error);
+          notify.error(t('settingsUI.bannerSaveError'), error as Error);
           resolve(false);
         }
       };
 
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        notify.error('Format muss 1024×400 oder 1024×500 PNG sein.');
+        notify.error(t('settingsUI.bannerFormatError'));
         resolve(false);
       };
 
@@ -136,11 +136,11 @@ export class BannerManager {
       this.hasCustomBanner = false;
       this.applyDefaultBanner();
 
-      notify.success('Standardbanner wiederhergestellt.');
+      notify.success(t('settingsUI.bannerResetSuccess'));
       logger.info(`✅ Reset banner for theme: ${theme}`);
     } catch (error) {
       logger.error('❌ Failed to reset banner', error);
-      notify.error('Fehler beim Zurücksetzen des Banners.', error as Error);
+      notify.error(t('settingsUI.bannerResetError'), error as Error);
     }
   }
 
