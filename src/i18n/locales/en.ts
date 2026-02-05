@@ -433,6 +433,14 @@ export const en: TranslationDict = {
   },
 
   errorBoundary: {
+    unexpectedError: 'An unexpected error has occurred.',
+    unexpectedErrorTitle: 'Unexpected Error',
+    permissionDenied: 'Access denied',
+    permissionHint: 'Please allow access to microphone/camera in your browser settings.',
+    hardwareNotFound: 'Hardware not found',
+    hardwareHint: 'Please make sure your microphone/camera is connected.',
+    audioSystemError: 'Audio system error',
+    audioSystemHint: 'Please reload the page. If the problem persists, use an up-to-date browser.',
     storageFull: 'Please delete old diagnoses or reference recordings.',
     networkError: 'Please check your internet connection.',
     technicalDetails: 'Technical details',

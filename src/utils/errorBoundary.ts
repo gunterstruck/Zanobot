@@ -120,16 +120,16 @@ class ErrorBoundary {
    * Show user-friendly error message
    */
   private showErrorMessage(error: Error): void {
-    let message = 'Ein unerwarteter Fehler ist aufgetreten.';
+    let message = t('errorBoundary.unexpectedError');
     let hint = '';
 
     // Check for common error types and provide helpful messages
     if (error.name === 'NotAllowedError' || error.message.includes('Permission')) {
-      message = 'Zugriff verweigert';
-      hint = 'Bitte erlauben Sie den Zugriff auf Mikrofon/Kamera in Ihren Browser-Einstellungen.';
+      message = t('errorBoundary.permissionDenied');
+      hint = t('errorBoundary.permissionHint');
     } else if (error.name === 'NotFoundError') {
-      message = 'Hardware nicht gefunden';
-      hint = 'Bitte stellen Sie sicher, dass Ihr Mikrofon/Kamera angeschlossen ist.';
+      message = t('errorBoundary.hardwareNotFound');
+      hint = t('errorBoundary.hardwareHint');
     } else if (error.name === 'QuotaExceededError') {
       message = t('errorBoundary.storageFull');
       hint = t('errorBoundary.storageFull');
@@ -137,8 +137,8 @@ class ErrorBoundary {
       message = t('errorBoundary.networkError');
       hint = t('errorBoundary.networkError');
     } else if (error.message.includes('AudioContext')) {
-      message = 'Audio-System-Fehler';
-      hint = 'Bitte laden Sie die Seite neu. Falls das Problem weiterhin besteht, verwenden Sie einen aktuellen Browser.';
+      message = t('errorBoundary.audioSystemError');
+      hint = t('errorBoundary.audioSystemHint');
     }
 
     // Prepare error details for development mode
@@ -151,7 +151,7 @@ class ErrorBoundary {
       `${message}\n\n${hint}${details}`,
       error,
       {
-        title: 'Unerwarteter Fehler',
+        title: t('errorBoundary.unexpectedErrorTitle'),
         duration: 0, // Don't auto-dismiss
       }
     );

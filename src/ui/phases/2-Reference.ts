@@ -1308,9 +1308,11 @@ export class ReferencePhase {
         // - Remove control characters and excessive whitespace
         // - Validate against empty result after sanitization
         const MAX_LABEL_LENGTH = 50;
+        // eslint-disable-next-line no-control-regex
+        const controlCharsRegex = /[\u0000-\u001F\u007F]/g;
         let sanitizedLabel = userLabel
           .trim()
-          .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+          .replace(controlCharsRegex, '') // Remove control characters
           .replace(/\s+/g, ' '); // Normalize whitespace
 
         if (sanitizedLabel.length > MAX_LABEL_LENGTH) {

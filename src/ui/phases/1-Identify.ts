@@ -266,7 +266,7 @@ export class IdentifyPhase {
   /**
    * Handle successful scan
    */
-  private async onScanSuccess(decodedText: string, decodedResult: unknown): Promise<void> {
+  private async onScanSuccess(decodedText: string, _decodedResult: unknown): Promise<void> {
     logger.info('Code detected:', decodedText);
 
     // Stop scanner immediately

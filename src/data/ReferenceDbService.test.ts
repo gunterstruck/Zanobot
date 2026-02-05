@@ -26,7 +26,7 @@ describe('ReferenceDbService', () => {
   beforeEach(async () => {
     try {
       await clearAllData();
-    } catch (error) {
+    } catch {
       // Ignore errors if DB doesn't exist yet
     }
     await initDB();
@@ -35,7 +35,7 @@ describe('ReferenceDbService', () => {
   afterEach(async () => {
     try {
       await clearAllData();
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
     vi.restoreAllMocks();

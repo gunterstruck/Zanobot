@@ -364,50 +364,6 @@ function calculateQualityScore(
 }
 
 /**
- * Calculate signal magnitude (L2 norm of mean ABSOLUTE feature vector)
- *
- * CRITICAL: This function should receive the ABSOLUTE features, not normalized features!
- * Normalized features always sum to 1, losing amplitude information.
- *
- * This measures the overall spectral energy concentration:
- * - High magnitude (>15): Strong tonal components (typical machines)
- * - Medium magnitude (5-15): Moderate signal with some noise
- * - Low magnitude (<5): Very weak/diffuse signal (background noise, distant mic)
- *
- * Note: Magnitudes depend on feature extraction parameters (FFT size, binning, etc.)
- *
- * @param featureMatrix - Matrix of ABSOLUTE feature vectors [frames x bins]
- * @returns L2 norm of mean absolute feature vector
- */
-function calculateSignalMagnitude(featureMatrix: number[][]): number {
-  const numFrames = featureMatrix.length;
-  const numBins = featureMatrix[0].length;
-
-  if (numFrames === 0 || numBins === 0) {
-    return 0;
-  }
-
-  // Calculate mean feature vector (average across time)
-  const meanVector = new Array(numBins).fill(0);
-
-  for (let bin = 0; bin < numBins; bin++) {
-    let sum = 0;
-    for (let frame = 0; frame < numFrames; frame++) {
-      sum += featureMatrix[frame][bin];
-    }
-    meanVector[bin] = sum / numFrames;
-  }
-
-  // Calculate L2 norm (magnitude)
-  let sumSquares = 0;
-  for (let bin = 0; bin < numBins; bin++) {
-    sumSquares += meanVector[bin] * meanVector[bin];
-  }
-
-  return Math.sqrt(sumSquares);
-}
-
-/**
  * Calculate signal magnitude from pre-standardization RMS amplitudes
  *
  * CRITICAL: This is the TRUE amplitude measure!

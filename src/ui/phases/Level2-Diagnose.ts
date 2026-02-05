@@ -19,7 +19,7 @@ import { MelSpectrogramGenerator } from '@core/audio/mel-spectrogram.js';
 import type { Level2AnalysisResult, HealthStatusResult } from '@core/ml/level2/index.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
-import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
+import { stopMediaStream } from '@utils/streamHelper.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { getMachine, saveDiagnosis } from '@data/db.js';
 import { t } from '../../i18n/index.js';
@@ -304,7 +304,7 @@ export class Level2DiagnosePhase {
         });
         logger.info('📷 Camera access granted for ghost overlay');
         this.setupGhostOverlay();
-      } catch (cameraError) {
+      } catch {
         logger.warn('⚠️ Camera access denied - continuing without ghost overlay');
         this.cameraStream = null;
       }
