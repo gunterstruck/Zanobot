@@ -76,7 +76,7 @@ export class Level2ReferencePhase {
   async initialize(): Promise<void> {
     try {
       this.setState('processing');
-      this.updateProgress(0, 'Initialisiere ML-Modell...');
+      this.updateProgress(0, t('level2Reference.initializingModel'));
       await this.detector.initialize();
       this.setState('idle');
     } catch (error) {
@@ -106,21 +106,20 @@ export class Level2ReferencePhase {
     return `
       <div class="level2-reference-phase">
         <div class="phase-header">
-          <h2>🔄 Level 2: Referenzlauf (ML)</h2>
+          <h2>${t('level2Reference.title')}</h2>
           <p class="phase-description">
-            Nehmen Sie einen Referenzlauf Ihrer Maschine im Normalzustand auf.
-            Diese Aufnahme wird verwendet, um zukünftige Abweichungen zu erkennen.
+            ${t('level2Reference.fullDescription')}
           </p>
         </div>
 
         <div class="machine-info">
-          <span class="machine-label">Maschine:</span>
+          <span class="machine-label">${t('level2Reference.machineLabel')}</span>
           <span class="machine-name">${this.machine.name}</span>
         </div>
 
         <div class="recording-status" id="level2-status">
           <div class="status-icon">🎤</div>
-          <div class="status-text">Bereit für Aufnahme</div>
+          <div class="status-text">${t('level2Reference.readyForRecording')}</div>
         </div>
 
         <div class="progress-container" id="level2-progress" style="display: none;">
@@ -132,28 +131,28 @@ export class Level2ReferencePhase {
 
         <div class="timer-display" id="level2-timer" style="display: none;">
           <span class="timer-value">10</span>
-          <span class="timer-unit">Sekunden</span>
+          <span class="timer-unit">${t('level2Reference.seconds')}</span>
         </div>
 
         <!-- VISUAL POSITIONING: Camera preview for reference image -->
         <div class="camera-preview-container" id="level2-camera-container" style="display: none;">
           <video id="level2-camera-preview" autoplay playsinline muted></video>
-          <p class="camera-hint">📷 Position für Referenzbild - halten Sie das Gerät ruhig</p>
+          <p class="camera-hint">${t('level2Reference.cameraHint')}</p>
         </div>
 
         <div class="action-buttons">
           <button id="level2-start-btn" class="btn btn-primary btn-large">
-            🎤 Referenz aufnehmen
+            ${t('level2Reference.recordButton')}
           </button>
         </div>
 
         <div class="info-box">
-          <h4>ℹ️ Hinweise für gute Aufnahmen:</h4>
+          <h4>${t('level2Reference.tipsTitle')}</h4>
           <ul>
-            <li>Stellen Sie sicher, dass die Maschine im Normalzustand läuft</li>
-            <li>Halten Sie das Mikrofon konstant in Position</li>
-            <li>Vermeiden Sie Störgeräusche während der Aufnahme</li>
-            <li>Die Aufnahme dauert 10 Sekunden</li>
+            <li>${t('level2Reference.tipNormalState')}</li>
+            <li>${t('level2Reference.tipMicPosition')}</li>
+            <li>${t('level2Reference.tipNoNoise')}</li>
+            <li>${t('level2Reference.tipDuration')}</li>
           </ul>
         </div>
 
@@ -176,7 +175,7 @@ export class Level2ReferencePhase {
     if (backendInfo && this.detector.isReady()) {
       const info = this.detector.getBackendInfo();
       backendInfo.innerHTML = `
-        <small>Backend: ${info?.backend || 'nicht geladen'} ${info?.isGPU ? '(GPU)' : '(CPU)'}</small>
+        <small>Backend: ${info?.backend || t('level2Reference.notLoaded')} ${info?.isGPU ? '(GPU)' : '(CPU)'}</small>
       `;
     }
   }
@@ -196,7 +195,7 @@ export class Level2ReferencePhase {
 
     try {
       this.setState('countdown');
-      this.updateStatus('🎤 Aufnahme startet...', 'info');
+      this.updateStatus(t('level2Reference.recordingStarting'), 'info');
 
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -251,7 +250,7 @@ export class Level2ReferencePhase {
 
       // Start recording
       this.mediaRecorder.start();
-      this.updateStatus('🔴 Aufnahme läuft...', 'recording');
+      this.updateStatus(t('level2Reference.recordingRunning'), 'recording');
 
       // VISUAL POSITIONING: Capture snapshot halfway through recording
       const snapshotDelay = (this.recordingDuration / 2);
@@ -348,7 +347,7 @@ export class Level2ReferencePhase {
    */
   private async countdown(seconds: number): Promise<void> {
     for (let i = seconds; i > 0; i--) {
-      this.updateStatus(`⏱️ Aufnahme startet in ${i}...`, 'countdown');
+      this.updateStatus(t('level2Reference.countdownText', { seconds: i }), 'countdown');
       await this.sleep(1000);
     }
   }
@@ -381,7 +380,7 @@ export class Level2ReferencePhase {
    */
   private async processRecording(): Promise<void> {
     this.setState('processing');
-    this.updateStatus('🔄 Verarbeite Aufnahme...', 'processing');
+    this.updateStatus(t('level2Reference.processingRecording'), 'processing');
     this.showProgress();
 
     try {
@@ -412,17 +411,17 @@ export class Level2ReferencePhase {
    */
   private async handleReferenceCreated(reference: Level2Reference): Promise<void> {
     this.setState('complete');
-    this.updateStatus('✅ Referenz erfolgreich erstellt!', 'success');
+    this.updateStatus(t('level2Reference.referenceCreated'), 'success');
     this.hideProgress();
 
     // VISUAL POSITIONING: Save reference image to machine
     await this.saveReferenceImage();
 
-    notify.success('Level 2 Referenz wurde gespeichert');
+    notify.success(t('level2Reference.referenceSaved'));
 
     // Update button
     if (this.startButton) {
-      this.startButton.textContent = '✅ Referenz erstellt';
+      this.startButton.textContent = t('level2Reference.referenceCreatedBtn');
       this.startButton.disabled = true;
     }
 
@@ -472,14 +471,14 @@ export class Level2ReferencePhase {
    */
   private handleError(error: Error): void {
     this.setState('error');
-    this.updateStatus(`❌ Fehler: ${error.message}`, 'error');
+    this.updateStatus(t('level2Reference.errorPrefix') + ' ' + error.message, 'error');
     this.hideProgress();
 
     notify.error(error.message, error);
 
     // Reset button
     if (this.startButton) {
-      this.startButton.textContent = '🎤 Referenz aufnehmen';
+      this.startButton.textContent = t('level2Reference.recordButton');
       this.startButton.disabled = false;
     }
 

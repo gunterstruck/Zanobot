@@ -420,7 +420,7 @@ export class SettingsPhase {
     // If payload not ready yet, we have to build it now (will likely fail on Android)
     if (!payload) {
       if (this.isPreparingPayload) {
-        notify.info('Export wird vorbereitet... bitte kurz warten und erneut versuchen.');
+        notify.info(t('settings.share.preparing'));
         return;
       }
 

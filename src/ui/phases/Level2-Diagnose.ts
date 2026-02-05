@@ -22,6 +22,7 @@ import { logger } from '@utils/logger.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { getMachine, saveDiagnosis } from '@data/db.js';
+import { t } from '../../i18n/index.js';
 
 /**
  * Diagnosis state
@@ -101,10 +102,10 @@ export class Level2DiagnosePhase {
 
       if (!hasReference) {
         this.setState('no-reference');
-        this.updateStatus('⚠️ Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.', 'warning');
+        this.updateStatus(t('level2Diagnose.noReference'), 'warning');
       } else {
         this.setState('idle');
-        this.updateStatus('✅ Referenz geladen. Bereit für Diagnose.', 'ready');
+        this.updateStatus(t('level2Diagnose.referenceLoaded'), 'ready');
       }
     } catch (error) {
       this.handleError(error as Error);
@@ -133,20 +134,20 @@ export class Level2DiagnosePhase {
     return `
       <div class="level2-diagnose-phase">
         <div class="phase-header">
-          <h2>🔍 Level 2: Maschine prüfen (ML)</h2>
+          <h2>${t('level2Diagnose.title')}</h2>
           <p class="phase-description">
-            Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz.
+            ${t('level2Diagnose.description')}
           </p>
         </div>
 
         <div class="machine-info">
-          <span class="machine-label">Maschine:</span>
+          <span class="machine-label">${t('level2Diagnose.machineLabel')}</span>
           <span class="machine-name">${this.machine.name}</span>
         </div>
 
         <div class="diagnosis-status" id="level2-diag-status">
           <div class="status-icon">🔍</div>
-          <div class="status-text">Initialisiere...</div>
+          <div class="status-text">${t('level2Diagnose.initializing')}</div>
         </div>
 
         <!-- VISUAL POSITIONING: Ghost overlay container (hidden initially) -->
@@ -155,12 +156,12 @@ export class Level2DiagnosePhase {
             <video id="level2-live-video" autoplay playsinline muted></video>
             <img id="level2-ghost-image" class="ghost-overlay-image" alt="Reference position" />
           </div>
-          <p class="ghost-hint">👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen</p>
+          <p class="ghost-hint">${t('level2Diagnose.ghostHint')}</p>
         </div>
 
         <!-- LIVE WATERFALL: Real-time spectrogram during recording -->
         <div class="waterfall-container" id="level2-waterfall-container" style="display: none;">
-          <h4>🌊 Live-Aufnahme</h4>
+          <h4>${t('level2Diagnose.liveRecording')}</h4>
           <canvas id="level2-waterfall-canvas" width="400" height="150"></canvas>
           <div class="waterfall-time-indicator">
             <span id="waterfall-elapsed">0</span>s / 10s
@@ -168,7 +169,7 @@ export class Level2DiagnosePhase {
         </div>
 
         <div class="similarity-container" id="level2-similarity" style="display: none;">
-          <div class="similarity-label">Übereinstimmung mit Referenz</div>
+          <div class="similarity-label">${t('level2Diagnose.similarityLabel')}</div>
           <div class="similarity-meter">
             <div class="meter-bar">
               <div class="meter-fill" id="similarity-fill" style="width: 0%"></div>
@@ -196,29 +197,29 @@ export class Level2DiagnosePhase {
         </div>
 
         <div class="spectrogram-container" id="level2-spectrogram" style="display: none;">
-          <h4>📊 Spektrogramm (Analyse)</h4>
+          <h4>${t('level2Diagnose.spectrogramTitle')}</h4>
           <canvas id="spectrogram-canvas" width="600" height="200"></canvas>
         </div>
 
         <div class="action-buttons">
           <button id="level2-diag-btn" class="btn btn-primary btn-large" disabled>
-            🔍 Maschine prüfen
+            ${t('level2Diagnose.checkMachine')}
           </button>
         </div>
 
         <div class="result-details" id="level2-result-details" style="display: none;">
-          <h4>📊 Analyseergebnis</h4>
+          <h4>${t('level2Diagnose.analysisResult')}</h4>
           <div class="details-grid">
             <div class="detail-item">
-              <span class="detail-label">Ähnlichkeit:</span>
+              <span class="detail-label">${t('level2Diagnose.similarityDetail')}</span>
               <span class="detail-value" id="detail-similarity">-</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Status:</span>
+              <span class="detail-label">${t('level2Diagnose.statusLabel')}</span>
               <span class="detail-value" id="detail-status">-</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Analysezeit:</span>
+              <span class="detail-label">${t('level2Diagnose.analysisTime')}</span>
               <span class="detail-value" id="detail-time">-</span>
             </div>
           </div>
@@ -250,7 +251,7 @@ export class Level2DiagnosePhase {
     if (backendInfo && this.detector.isReady()) {
       const info = this.detector.getBackendInfo();
       backendInfo.innerHTML = `
-        <small>Backend: ${info?.backend || 'nicht geladen'} ${info?.isGPU ? '(GPU)' : '(CPU)'}</small>
+        <small>Backend: ${info?.backend || t('level2Diagnose.notLoaded')} ${info?.isGPU ? '(GPU)' : '(CPU)'}</small>
       `;
     }
   }
@@ -270,13 +271,13 @@ export class Level2DiagnosePhase {
     if (this.state !== 'idle' && this.state !== 'complete') return;
 
     if (!this.detector.hasLoadedReference()) {
-      notify.error('Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.');
+      notify.error(t('level2Diagnose.noReferenceError'));
       return;
     }
 
     try {
       this.setState('recording');
-      this.updateStatus('🎤 Aufnahme läuft...', 'recording');
+      this.updateStatus(t('level2Diagnose.recordingRunning'), 'recording');
 
       // Refresh machine data for reference image
       const latestMachine = await getMachine(this.machine.id);
@@ -573,7 +574,7 @@ export class Level2DiagnosePhase {
     let remaining = seconds;
     const interval = setInterval(() => {
       remaining--;
-      this.updateStatus(`🔴 Aufnahme läuft... (${remaining}s)`, 'recording');
+      this.updateStatus(t('level2Diagnose.recordingCountdown', { seconds: remaining }), 'recording');
 
       if (remaining <= 0) {
         clearInterval(interval);
@@ -586,7 +587,7 @@ export class Level2DiagnosePhase {
    */
   private async processRecording(): Promise<void> {
     this.setState('analyzing');
-    this.updateStatus('🔄 Analysiere Aufnahme...', 'analyzing');
+    this.updateStatus(t('level2Diagnose.analyzingRecording'), 'analyzing');
 
     try {
       // Convert chunks to AudioBuffer
@@ -619,7 +620,7 @@ export class Level2DiagnosePhase {
     this.renderSpectrogram(result.spectrogram);
     this.showResultDetails(result);
 
-    this.updateStatus(`✅ Analyse abgeschlossen: ${result.percentage.toFixed(1)}%`, 'complete');
+    this.updateStatus(t('level2Diagnose.analysisComplete', { percentage: result.percentage.toFixed(1) }), 'complete');
 
     // Notification based on status
     if (result.status.status === 'HEALTHY') {
@@ -678,10 +679,10 @@ export class Level2DiagnosePhase {
 
       await saveDiagnosis(diagnosis);
       logger.info('💾 Level 2 diagnosis saved to database');
-      notify.info('Diagnose gespeichert');
+      notify.info(t('level2Diagnose.diagnosisSaved'));
     } catch (error) {
       logger.error('❌ Failed to save diagnosis:', error);
-      notify.error('Diagnose konnte nicht gespeichert werden');
+      notify.error(t('level2Diagnose.diagnosisSaveFailed'));
     }
   }
 
@@ -715,19 +716,19 @@ export class Level2DiagnosePhase {
     if (status.status === 'HEALTHY') {
       greenLight?.classList.add('active');
       if (label) {
-        label.textContent = 'GESUND';
+        label.textContent = t('level2Diagnose.healthyLabel');
         label.style.color = '#10b981';
       }
     } else if (status.status === 'WARNING') {
       yellowLight?.classList.add('active');
       if (label) {
-        label.textContent = 'WARNUNG';
+        label.textContent = t('level2Diagnose.warningLabel');
         label.style.color = '#f59e0b';
       }
     } else {
       redLight?.classList.add('active');
       if (label) {
-        label.textContent = 'KRITISCH';
+        label.textContent = t('level2Diagnose.criticalLabel');
         label.style.color = '#ef4444';
       }
     }
@@ -857,13 +858,13 @@ export class Level2DiagnosePhase {
    */
   private handleError(error: Error): void {
     this.setState('error');
-    this.updateStatus(`❌ Fehler: ${error.message}`, 'error');
+    this.updateStatus(t('level2Diagnose.errorPrefix') + ' ' + error.message, 'error');
 
     notify.error(error.message, error);
 
     // Reset button
     if (this.startButton) {
-      this.startButton.textContent = '🔍 Maschine prüfen';
+      this.startButton.textContent = t('level2Diagnose.checkMachine');
       this.startButton.disabled = false;
     }
 
@@ -881,7 +882,7 @@ export class Level2DiagnosePhase {
       this.startButton.disabled = state !== 'idle';
 
       if (state === 'complete') {
-        this.startButton.textContent = '🔍 Erneut prüfen';
+        this.startButton.textContent = t('level2Diagnose.recheckMachine');
         this.startButton.disabled = false;
       }
     }
@@ -894,18 +895,18 @@ export class Level2DiagnosePhase {
   async reloadReference(): Promise<boolean> {
     try {
       this.setState('loading-reference');
-      this.updateStatus('🔄 Lade neue Referenz...', 'loading');
+      this.updateStatus(t('level2Diagnose.loadingNewReference'), 'loading');
 
       const hasReference = await this.detector.loadReferenceFromStorage(this.machine.id);
 
       if (hasReference) {
         this.setState('idle');
-        this.updateStatus('✅ Neue Referenz geladen. Bereit für Diagnose.', 'ready');
+        this.updateStatus(t('level2Diagnose.newReferenceLoaded'), 'ready');
         logger.info('✅ Level2DiagnosePhase: Reference reloaded successfully');
         return true;
       } else {
         this.setState('no-reference');
-        this.updateStatus('⚠️ Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.', 'warning');
+        this.updateStatus(t('level2Diagnose.noReference'), 'warning');
         return false;
       }
     } catch (error) {

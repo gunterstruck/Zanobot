@@ -75,6 +75,7 @@ export const de: TranslationDict = {
     databaseCleared: 'Datenbank geleert',
     nfcDiagnosisTitle: 'Zustand prüfen?',
     nfcDiagnosisPrompt: 'Maschine erkannt. Zustand jetzt prüfen?',
+    closeDialog: 'Dialog schließen',
   },
 
   // ============================================================================
@@ -318,6 +319,7 @@ export const de: TranslationDict = {
       text: 'Datenbank-Backup: {{filename}}',
       success: 'Backup versendet: {{filename}}',
       fallback: 'Teilen nicht verfügbar. {{filename}} wurde stattdessen heruntergeladen.',
+      preparing: 'Export wird vorbereitet... bitte kurz warten und erneut versuchen.',
     },
   },
 
@@ -435,6 +437,7 @@ export const de: TranslationDict = {
   // ============================================================================
   notifications: {
     confirmRequired: 'Bestätigung erforderlich',
+    closeNotification: 'Benachrichtigung schließen',
   },
 
   // ============================================================================
@@ -672,6 +675,13 @@ export const de: TranslationDict = {
     bannerUpload: 'Banner hochladen',
     bannerReset: 'Auf Standard zurücksetzen',
     bannerHint: 'Empfohlen: 1024×400 oder 1024×500 Pixel, PNG-Format. Das linke Drittel bleibt für Text frei.',
+    bannerFormatError: 'Format muss 1024×400 oder 1024×500 PNG sein.',
+    bannerUpdated: 'Banner wurde aktualisiert.',
+    bannerSaveError: 'Banner konnte nicht gespeichert werden.',
+    bannerResetSuccess: 'Standardbanner wiederhergestellt.',
+    bannerResetError: 'Fehler beim Zurücksetzen des Banners.',
+    themeToggle: 'Theme wechseln',
+    closeSettings: 'Einstellungen schließen',
   },
 
   // ============================================================================
@@ -751,6 +761,7 @@ export const de: TranslationDict = {
     unsupported: 'NFC-Schreiben wird auf diesem Gerät nicht unterstützt.',
     requiresSecureContext: 'NFC-Schreiben erfordert eine sichere (HTTPS) Verbindung.',
     unsupportedBrowser: 'NFC-Schreiben erfordert Chrome auf Android.',
+    closeDialog: 'NFC-Dialog schließen',
     // Customer ID (Variante B)
     customerIdLabel: 'Kundenkennung (c)',
     customerIdDescription: 'Diese Kennung bestimmt, welche Referenzdaten beim NFC-Scan geladen werden. Die App lädt automatisch: https://gunterstruck.github.io/<Kundenkennung>/db-latest.json',
@@ -794,6 +805,7 @@ export const de: TranslationDict = {
     referenceQualityStatusGood: 'GUT',
     referenceQualityDescription: 'Referenzaufnahme erfüllt empfohlene Bedingungen',
     viewHistory: 'Verlauf anzeigen',
+    closeDialog: 'Diagnose schließen',
   },
 
   // ============================================================================
@@ -898,6 +910,9 @@ export const de: TranslationDict = {
     privacy: 'Datenschutz',
     about: 'Über Zanobo',
     settings: 'Einstellungen',
+    closeImpressum: 'Impressum schließen',
+    closePrivacy: 'Datenschutzerklärung schließen',
+    closeAbout: 'Über Zanobo schließen',
   },
 
   // ============================================================================

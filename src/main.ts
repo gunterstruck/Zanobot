@@ -284,9 +284,8 @@ class ZanobotApp {
 
         // Show warning toast (persistent until dismissed)
         toast.warning(
-          t('migration.dataCleared') ||
-            'Die Datenbank wurde aufgrund eines Updates zurückgesetzt. Alle Maschinen, Aufnahmen und Diagnosen wurden gelöscht.',
-          t('migration.title') || 'Datenbank-Update',
+          t('migration.dataCleared'),
+          t('migration.title'),
           0 // 0 = permanent, requires manual close
         );
       }
@@ -326,7 +325,7 @@ class ZanobotApp {
 
     if (!fetchResult.success) {
       logger.error(`❌ NFC import validation failed: ${fetchResult.error}`);
-      nfcImportService.showErrorModal(fetchResult.errorMessage || 'Import fehlgeschlagen');
+      nfcImportService.showErrorModal(fetchResult.errorMessage || t('nfcImport.error'));
       return;
     }
 
@@ -337,8 +336,8 @@ class ZanobotApp {
       if (imported) {
         logger.info('✅ NFC import completed successfully');
         notify.success(
-          t('nfcImport.success') || 'Datenbank erfolgreich importiert!',
-          { title: t('nfcImport.successTitle') || 'Import abgeschlossen' }
+          t('nfcImport.success'),
+          { title: t('nfcImport.successTitle') }
         );
 
         // Reload the page to reflect imported data
@@ -350,9 +349,9 @@ class ZanobotApp {
     } catch (error) {
       logger.error('❌ NFC import failed:', error);
       notify.error(
-        t('nfcImport.error') || 'Import fehlgeschlagen',
+        t('nfcImport.error'),
         error as Error,
-        { title: t('nfcImport.errorTitle') || 'Fehler' }
+        { title: t('nfcImport.errorTitle') }
       );
     }
   }

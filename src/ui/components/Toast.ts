@@ -11,6 +11,8 @@
  * - Accessible (ARIA attributes)
  */
 
+import { t } from '../../i18n/index.js';
+
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 /**
@@ -236,7 +238,7 @@ export class ToastManager {
 
     // Close button
     const closeButton = config.dismissible
-      ? `<button class="toast-close" aria-label="Close notification" data-toast-id="${toastId}">×</button>`
+      ? `<button class="toast-close" aria-label="${t('notifications.closeNotification')}" data-toast-id="${toastId}">×</button>`
       : '';
 
     // Action buttons (Zero-Friction feature)
