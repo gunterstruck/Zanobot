@@ -345,12 +345,12 @@ export class DiagnosePhase {
         document.body.removeAttribute('data-nfc-diagnosis');
       }
 
-      // Level 1 always uses simplified view regardless of user settings
-      // This ensures consistent "Schnelltest" experience
-      this.useSimplifiedView = true;
-
+      // Determine view mode based on user's view level setting
+      // basic → simplified (percentage only), advanced/expert → full recording modal
       const currentViewLevel = getViewLevel();
-      logger.info(`📊 Level 1 (Schnelltest): View level setting is '${currentViewLevel}' but forcing simplified view${isNfcDiagnosis ? ' (NFC initiated)' : ''}`);
+      this.useSimplifiedView = currentViewLevel === 'basic';
+
+      logger.info(`📊 Level 1 (Schnelltest): View level='${currentViewLevel}', useSimplifiedView=${this.useSimplifiedView}${isNfcDiagnosis ? ' (NFC initiated)' : ''}`);
 
       // Show recording modal (uses pre-calculated useSimplifiedView)
       this.showRecordingModal();
