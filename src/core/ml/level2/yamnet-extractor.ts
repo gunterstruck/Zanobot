@@ -17,10 +17,6 @@ import { logger } from '@utils/logger.js';
  * YAMNet model URL from TensorFlow Hub
  * This model outputs 1024-dimensional embeddings
  */
-const YAMNET_MODEL_URL =
-  'https://www.kaggle.com/models/google/yamnet/TfJs/classification-tflite/1';
-
-// Alternative URL from tfhub.dev (may have different format)
 const YAMNET_TFHUB_URL =
   'https://tfhub.dev/google/tfjs-model/yamnet/classification/1/default/1';
 
@@ -118,7 +114,7 @@ export class YAMNetExtractor {
       await tf.ready();
       this.backendUsed = 'cpu';
       logger.warn('⚠️ Using CPU backend (slow - consider upgrading browser)');
-    } catch (error) {
+    } catch {
       throw new Error('Failed to initialize any TensorFlow.js backend');
     }
   }
@@ -247,7 +243,6 @@ export class YAMNetExtractor {
       // Parameters
       const fftSize = 2048;
       const hopSize = 512;
-      const numMelBins = 128;
 
       // STFT
       const stft = tf.signal.stft(signal, fftSize, hopSize, fftSize, tf.signal.hannWindow);

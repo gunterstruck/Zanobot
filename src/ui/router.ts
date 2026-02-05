@@ -453,7 +453,7 @@ export class Router {
   /**
    * Show modal for Fall B: Uncertain match with candidate selection
    */
-  private showCandidateSelectionModal(candidates: MachineMatchResult[], result: AutoDetectionResult): void {
+  private showCandidateSelectionModal(candidates: MachineMatchResult[], _result: AutoDetectionResult): void {
     const modal = document.getElementById('candidate-selection-modal');
     if (!modal) return;
 
@@ -462,7 +462,7 @@ export class Router {
     if (listEl) {
       listEl.innerHTML = '';
 
-      candidates.forEach((candidate, index) => {
+      candidates.forEach((candidate) => {
         const item = document.createElement('button');
         item.className = 'candidate-item';
         item.innerHTML = `
@@ -519,7 +519,7 @@ export class Router {
   /**
    * Show modal for Fall C: No match found
    */
-  private showNoMatchModal(result: AutoDetectionResult): void {
+  private showNoMatchModal(_result: AutoDetectionResult): void {
     const modal = document.getElementById('no-match-modal');
     if (!modal) return;
 

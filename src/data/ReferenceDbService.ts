@@ -438,7 +438,6 @@ export class ReferenceDbService {
 
       // Get response metadata for trace
       const contentType = response.headers.get('content-type') || 'unknown';
-      const contentLength = response.headers.get('content-length');
 
       // Clone response so we can read body twice (once for size, once for JSON)
       const responseClone = response.clone();

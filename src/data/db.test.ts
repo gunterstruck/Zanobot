@@ -13,7 +13,7 @@
  * - Edge cases and error handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   initDB,
   saveMachine,
@@ -37,7 +37,7 @@ describe('Database Operations', () => {
     // Clear database before each test
     try {
       await clearAllData();
-    } catch (error) {
+    } catch {
       // Ignore errors if DB doesn't exist yet
     }
 
@@ -49,7 +49,7 @@ describe('Database Operations', () => {
     // Cleanup after each test
     try {
       await clearAllData();
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
   });

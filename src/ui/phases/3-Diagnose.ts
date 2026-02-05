@@ -14,9 +14,7 @@
  */
 
 import { extractFeaturesFromChunk, DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
-import { inferGMIA } from '@core/ml/gmia.js';
 import {
-  calculateHealthScore,
   ScoreHistory,
   LabelHistory,
   getClassificationDetails,

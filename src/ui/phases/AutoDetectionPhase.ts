@@ -22,9 +22,8 @@ import { extractFeaturesFromChunk, DEFAULT_DSP_CONFIG } from '@core/dsp/features
 import {
   classifyAcrossAllMachines,
   getTopCandidates,
-  classifyHealthStatus,
 } from '@core/ml/scoring.js';
-import { getAllMachines, getMachine } from '@data/db.js';
+import { getAllMachines } from '@data/db.js';
 import {
   getRawAudioStream,
   getSmartStartStatusMessage,
@@ -38,7 +37,6 @@ import type {
   MachineMatchResult,
   FeatureVector,
 } from '@data/types.js';
-import { AUTO_DETECTION_THRESHOLDS } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t } from '../../i18n/index.js';
@@ -255,12 +253,13 @@ export class AutoDetectionPhase {
         }
         break;
 
-      case 'uncertain':
+      case 'uncertain': {
         // Fall B: Uncertain match, show candidates to user
         const candidates = getTopCandidates(result);
         logger.info(`⚠️ Uncertain match. ${candidates.length} candidates above threshold`);
         this.callbacks.onUncertainMatch(candidates, result);
         break;
+      }
 
       case 'no_match':
         // Fall C: No match found

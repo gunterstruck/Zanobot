@@ -23,7 +23,6 @@ import { initErrorBoundary } from '@utils/errorBoundary.js';
 import {
   applyViewLevel,
   setViewLevel,
-  getViewLevel,
   type ViewLevel,
 } from '@utils/viewLevelSettings.js';
 import { initI18n, t, translateDOM } from './i18n/index.js';
@@ -143,7 +142,7 @@ class ZanobotApp {
       if (typeof AudioContext !== 'undefined' && !('audioWorklet' in AudioContext.prototype)) {
         missing.push('- AudioWorklet (required for real-time diagnosis)');
       }
-    } catch (e) {
+    } catch {
       // AudioContext might not be available, already caught above
     }
 

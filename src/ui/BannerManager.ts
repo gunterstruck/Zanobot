@@ -47,6 +47,10 @@ export class BannerManager {
   private hasCustomBanner: boolean = false;
   private currentTheme: string = 'brand';
 
+  static registerInstance(instance: BannerManager): void {
+    bannerManagerInstance = instance;
+  }
+
   constructor() {
     this.heroHeader = document.querySelector('.hero-header');
     this.heroImage = document.querySelector('.hero-header img');
@@ -57,7 +61,7 @@ export class BannerManager {
     }
 
     // Store global instance for Settings access
-    bannerManagerInstance = this;
+    BannerManager.registerInstance(this);
 
     void this.restoreBannerFromStorage();
   }

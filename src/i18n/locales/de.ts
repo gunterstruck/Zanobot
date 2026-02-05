@@ -444,6 +444,14 @@ export const de: TranslationDict = {
   // ERROR BOUNDARY
   // ============================================================================
   errorBoundary: {
+    unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten.',
+    unexpectedErrorTitle: 'Unerwarteter Fehler',
+    permissionDenied: 'Zugriff verweigert',
+    permissionHint: 'Bitte erlauben Sie den Zugriff auf Mikrofon/Kamera in Ihren Browser-Einstellungen.',
+    hardwareNotFound: 'Hardware nicht gefunden',
+    hardwareHint: 'Bitte stellen Sie sicher, dass Ihr Mikrofon/Kamera angeschlossen ist.',
+    audioSystemError: 'Audio-System-Fehler',
+    audioSystemHint: 'Bitte laden Sie die Seite neu. Falls das Problem weiterhin besteht, verwenden Sie einen aktuellen Browser.',
     storageFull: 'Bitte löschen Sie alte Diagnosen oder Referenzaufnahmen.',
     networkError: 'Bitte überprüfen Sie Ihre Internetverbindung.',
     technicalDetails: 'Technische Details',
