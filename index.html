@@ -1589,92 +1589,65 @@
                         <path d="M12 1v6m0 6v10M1 12h6m6 0h10"/>
                     </svg>
                     <h4>ZANOBO 2.0</h4>
-                    <p class="about-subtitle">AI Assistant für akustische Maschinenüberwachung</p>
+                    <p class="about-subtitle">Assistent für akustische Zustandsanalyse</p>
                 </div>
 
                 <h4>Was ist Zanobo?</h4>
                 <p>
-                    Zanobo ist eine <strong>Progressive Web App (PWA)</strong> für industrielle Maschinendiagnose mittels akustischer Analyse. Die App ermöglicht es, den Gesundheitszustand von Maschinen durch ihre Geräuschsignatur zu bewerten und Anomalien frühzeitig zu erkennen.
+                    Zanobo ist eine <strong>Offline-First Progressive Web App (PWA)</strong> zur Überprüfung von Maschinen durch akustischen Vergleich. Die App ermöglicht es, den aktuellen akustischen Fingerabdruck einer Maschine mit einer Referenzaufnahme zu vergleichen, um Abweichungen frühzeitig zu erkennen.
                 </p>
 
                 <h4>Kernfunktionen</h4>
                 <ul>
-                    <li><strong>Offline-First</strong>: Alle Berechnungen erfolgen lokal im Browser - keine Internetverbindung erforderlich</li>
-                    <li><strong>GMIA-Algorithmus</strong>: Wissenschaftlich fundierte Anomalieerkennung basierend auf Gaussian Model Independent Attributes</li>
-                    <li><strong>Echtzeit-Analyse</strong>: Live-Audioverarbeitung mit FFT und spektraler Frequenzanalyse</li>
-                    <li><strong>Health Scoring</strong>: Nicht-lineare Tanh-Skalierung für intuitive Gesundheitsbewertung (0-100%)</li>
-                    <li><strong>Persistente Speicherung</strong>: IndexedDB für dauerhafte Speicherung von Maschinenmodellen und Diagnosehistorie</li>
-                    <li><strong>QR-Code Integration</strong>: Schnelle Maschinenidentifikation per Scan</li>
+                    <li><strong>Offline-First:</strong> Alle Berechnungen erfolgen lokal im Browser – keine Internetverbindung erforderlich, keine Cloud-Übertragung.</li>
+                    <li><strong>GMIA-Algorithmus:</strong> Robuste Anomalieerkennung basierend auf "Gaussian Model Independent Attributes".</li>
+                    <li><strong>Echtzeit-Analyse:</strong> Live-Visualisierung des Frequenzspektrums.</li>
+                    <li><strong>Übereinstimmungs-Score:</strong> Prozentuale Bewertung der Ähnlichkeit zur Referenz (0–100%).</li>
+                    <li><strong>Privatsphäre:</strong> Alle Daten (Aufnahmen, Referenzen) bleiben in der Datenbank deines Geräts.</li>
                 </ul>
 
                 <h4>Technologie</h4>
                 <p>
-                    Zanobo wurde mit modernsten Web-Technologien entwickelt:
+                    Zanobo demonstriert die Leistungsfähigkeit moderner Web-Technologien:
                 </p>
                 <ul>
-                    <li><strong>Vanilla TypeScript</strong>: Keine externen ML-Bibliotheken, reine mathematische Implementierung</li>
-                    <li><strong>Web Audio API</strong>: Hochwertige Audioerfassung mit 48 kHz Abtastrate</li>
-                    <li><strong>DSP-Algorithmen</strong>: FFT, spektrale Merkmalsextraktion, Cosinus-Similarity</li>
-                    <li><strong>PWA-Standard</strong>: Installierbar auf Mobilgeräten und Desktop</li>
-                    <li><strong>Service Worker</strong>: Zuverlässige Offline-Funktionalität</li>
+                    <li><strong>Vanilla TypeScript:</strong> Effiziente Umsetzung ohne schwere Frameworks.</li>
+                    <li><strong>Web Audio API & AudioWorklets:</strong> Hochpräzise Signalverarbeitung im Nanosekunden-Bereich.</li>
+                    <li><strong>PWA:</strong> Installierbar wie eine native App, läuft überall.</li>
                 </ul>
 
-                <h4>GMIA-Algorithmus</h4>
+                <h4>Der GMIA-Algorithmus</h4>
                 <p>
-                    Der Kern von Zanobo ist der <strong>GMIA (Gaussian Model Independent Attributes)</strong> Algorithmus. Der Algorithmus:
+                    Im Kern arbeitet der <strong>GMIA</strong>-Algorithmus (Gaussian Model Independent Attributes). Er erstellt aus deiner Referenzaufnahme ein mathematisches Modell des "Normalzustands". Bei der Prüfung vergleicht er das Live-Signal statistisch mit diesem Modell und berechnet die Abweichung (Cosinus-Ähnlichkeit), ohne auf vortrainierte KI-Black-Boxes angewiesen zu sein.
                 </p>
-                <ul>
-                    <li>Erstellt spektrale Fingerprints aus Referenzaufnahmen (10 Sekunden)</li>
-                    <li>Berechnet Modelgewichte durch regularisierte Least-Squares (λ = 10⁹)</li>
-                    <li>Vergleicht Live-Diagnosen mit dem Referenzmodell</li>
-                    <li>Bewertet Abweichungen mittels Cosinus-Ähnlichkeit und nicht-linearer Skalierung</li>
-                </ul>
 
                 <h4>Workflow</h4>
-                <p>
-                    Zanobo folgt einem einfachen 3-Phasen-Prozess:
-                </p>
                 <ol>
-                    <li><strong>Identifizieren</strong>: Maschine per QR-Code scannen oder manuell anlegen</li>
-                    <li><strong>Referenz</strong>: 10-Sekunden-Aufnahme der Maschine im gesunden Zustand</li>
-                    <li><strong>Diagnose</strong>: Live-Analyse und Vergleich mit der Referenz</li>
+                    <li><strong>Identifizieren:</strong> Maschine anlegen oder per QR-Code scannen.</li>
+                    <li><strong>Referenz:</strong> 10-Sekunden-Aufnahme im unauffälligen Normalbetrieb erstellen.</li>
+                    <li><strong>Prüfung:</strong> Live-Vergleich durchführen. Die App zeigt an, ob das Geräuschmuster der Referenz entspricht ("Unauffällig") oder abweicht ("Auffällig").</li>
                 </ol>
-
-                <h4>Anwendungsfälle</h4>
-                <ul>
-                    <li>Predictive Maintenance in der Industrie 4.0</li>
-                    <li>Qualitätssicherung in der Produktion</li>
-                    <li>Früherkennung von Lagerschäden und Unwuchten</li>
-                    <li>Überwachung von Pumpen, Motoren und Lüftern</li>
-                    <li>Dokumentation des Maschinenzustands</li>
-                </ul>
 
                 <h4>Open Source & Lizenz</h4>
                 <p>
-                    Zanobo ist unter der <strong>MIT-Lizenz</strong> veröffentlicht und steht als Open-Source-Projekt zur Verfügung. Der Quellcode demonstriert die praktische Umsetzung des GMIA-Algorithmus ohne Abhängigkeit von externen Machine-Learning-Frameworks.
+                    Zanobo ist ein privates Open-Source-Projekt unter der <strong>MIT-Lizenz</strong>. Der Quellcode ist frei verfügbar und dient Bildungszwecken sowie dem technischen Austausch.
                 </p>
 
-                <h4>Rechtlicher Hinweis / Legal Disclosure</h4>
+                <h4>Rechtlicher Hinweis (Disclaimer)</h4>
                 <p>
-                    Zanobo dient ausschließlich der lokalen, vergleichsbasierten Analyse von akustischen Maschinensignalen zur Visualisierung möglicher Abweichungen. Es erfolgt keine Klassifikation oder Diagnose im medizinischen oder technischen Sinne. Alle Daten werden ausschließlich offline auf dem Gerät verarbeitet, es findet keine Übertragung in die Cloud oder an Dritte statt.
+                    Zanobo dient ausschließlich dem vergleichenden Monitoring von akustischen Signalen. <strong>Die App ist kein zertifiziertes Messgerät.</strong> Die angezeigten Werte (Übereinstimmung/Score) sind mathematische Indikatoren, keine technischen Garantien.
                 </p>
                 <p>
-                    Die Software nutzt ausschließlich das integrierte Mikrofon handelsüblicher Endgeräte und verzichtet auf externe Sensorik oder proprietäre Hardware. Es kommen keine trainierten Machine-Learning-Modelle, sondern ausschließlich mathematische Signalvergleiche (z. B. Cosinus-Ähnlichkeit) zum Einsatz.
+                    Die Nutzung erfolgt auf eigene Verantwortung. Der Entwickler übernimmt keine Haftung für Fehlinterpretationen, übersehene Maschinenschäden oder Entscheidungen, die auf Basis der App-Anzeige getroffen werden. Eine professionelle Wartung ersetzt diese App nicht.
                 </p>
                 <p>
-                    Die dargestellte Funktionalität ist kein Ersatz für professionelle Zustandsdiagnose, sondern ein Werkzeug zur einfachen, manuellen Orientierung.
-                </p>
-                <p>
-                    Zanobo wurde mit größter Sorgfalt so konzipiert, dass keine bestehenden Schutzrechte (z. B. Patente) verletzt werden. Sollte dennoch ein möglicher Konflikt mit bestehenden Schutzrechten bekannt werden, bittet das Team um einen entsprechenden Hinweis zur Prüfung.
-                </p>
-                <p>
-                    <em>Zanobo ist ein MIT-lizenziertes Projekt. Die Nutzung erfolgt auf eigene Verantwortung.</em>
+                    Zanobo respektiert Rechte Dritter. Sollten Inhalte Schutzrechte verletzen, wird um einen entsprechenden Hinweis gebeten.
                 </p>
 
                 <div class="about-version">
-                    <p><strong>Version:</strong> 2.0.0</p>
-                    <p><strong>Entwickelt von:</strong> Zanobo Team</p>
-                    <p><strong>Technologie:</strong> TypeScript 5.7, Vite, Web Audio API</p>
+                    <p><strong>Version:</strong> 2.0.0 (2026)</p>
+                    <p><strong>Entwickelt von:</strong> Günter Struck</p>
+                    <p><strong>Stack:</strong> TypeScript, Vite, Web Audio API</p>
                 </div>
             </div>
             <div class="modal-actions">
