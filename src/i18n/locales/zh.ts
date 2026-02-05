@@ -686,6 +686,20 @@ export const zh: TranslationDict = {
     nextStep: '下一步',
   },
 
+  // WORK POINT RANKING
+  workPointRanking: {
+    title: '状态分析',
+    states: '状态',
+    ariaLabel: '检测到的机器状态排名',
+    statusHealthy: '正常',
+    statusFaulty: '故障',
+    noData: '没有可用的分析数据',
+    rank: '排名',
+    probability: '概率',
+    topMatch: '最佳匹配',
+    sectionTitle: '详细状态分布',
+  },
+
   // DATABASE MIGRATION
   migration: {
     title: '数据库更新',

@@ -687,6 +687,20 @@ export const fr: TranslationDict = {
     nextStep: 'Prochaine étape',
   },
 
+  // WORK POINT RANKING
+  workPointRanking: {
+    title: 'Analyse des états',
+    states: 'États',
+    ariaLabel: 'Classement des états détectés de la machine',
+    statusHealthy: 'Normal',
+    statusFaulty: 'Défaut',
+    noData: "Aucune donnée d'analyse disponible",
+    rank: 'Rang',
+    probability: 'Probabilité',
+    topMatch: 'Meilleure correspondance',
+    sectionTitle: 'Distribution détaillée des états',
+  },
+
   // DATABASE MIGRATION
   migration: {
     title: 'Mise à jour de la base de données',
