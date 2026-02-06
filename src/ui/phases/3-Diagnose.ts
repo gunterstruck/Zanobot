@@ -456,20 +456,39 @@ export class DiagnosePhase {
 
     // Clean up dynamically created elements from inspection modal
     const inspectionModal = document.getElementById('inspection-modal');
-    if (inspectionModal) {
-      // Remove expert details section
-      const expertDetails = inspectionModal.querySelector('.inspection-expert-details');
-      if (expertDetails) {
-        expertDetails.remove();
-      }
-      // Remove tech row (camera + spectrum) and revoke ghost image URL
+    const inspectionContent = document.getElementById('inspection-content');
+    if (inspectionModal && inspectionContent) {
+      // Restore moved elements: move score container + reference info back to content
       const techRow = inspectionModal.querySelector('.inspection-tech-row');
       if (techRow) {
+        const scoreContainer = techRow.querySelector('#inspection-score-container');
+        const referenceInfo = techRow.querySelector('#inspection-reference-info');
+        const hintEl = document.getElementById('inspection-hint');
+        // Insert before hint (or append if hint not found)
+        if (scoreContainer) {
+          if (hintEl) inspectionContent.insertBefore(scoreContainer, hintEl);
+          else inspectionContent.appendChild(scoreContainer);
+        }
+        if (referenceInfo) {
+          if (hintEl) inspectionContent.insertBefore(referenceInfo, hintEl);
+          else inspectionContent.appendChild(referenceInfo);
+        }
+        // Revoke ghost image URL and remove tech row
         const ghostImage = techRow.querySelector('#inspection-ghost-image') as HTMLImageElement | null;
         if (ghostImage?.src) {
           URL.revokeObjectURL(ghostImage.src);
         }
         techRow.remove();
+      }
+      // Remove spectrum canvas
+      const spectrumCanvas = inspectionModal.querySelector('#inspection-spectrum-canvas');
+      if (spectrumCanvas) {
+        spectrumCanvas.remove();
+      }
+      // Remove expert details section
+      const expertDetails = inspectionModal.querySelector('.inspection-expert-details');
+      if (expertDetails) {
+        expertDetails.remove();
       }
     }
 
@@ -1010,11 +1029,13 @@ export class DiagnosePhase {
       hintElement.classList.add('hint-hidden');
     }
 
-    // ADVANCED/EXPERT: Add camera (ghost overlay) + spectrum side by side above score
+    // ADVANCED/EXPERT: Restructure layout
+    // Top row: [Camera+Ghost | Score+Status+Reference] side by side
+    // Below: [Spectrum Visualizer] full width
     const currentViewLevel = getViewLevel();
     if (currentViewLevel !== 'basic' && contentElement) {
-      const techRow = document.createElement('div');
-      techRow.className = 'inspection-tech-row';
+      const topRow = document.createElement('div');
+      topRow.className = 'inspection-tech-row';
 
       // Left: Camera with ghost overlay
       const cameraCell = document.createElement('div');
@@ -1048,21 +1069,33 @@ export class DiagnosePhase {
             </svg>
           </div>`;
       }
-      techRow.appendChild(cameraCell);
+      topRow.appendChild(cameraCell);
 
-      // Right: Spectrum visualizer canvas
-      const spectrumCell = document.createElement('div');
-      spectrumCell.className = 'inspection-tech-cell';
+      // Right: Move existing score container + reference info into right cell
+      const scoreCell = document.createElement('div');
+      scoreCell.className = 'inspection-tech-cell inspection-score-cell';
+      const scoreContainer = document.getElementById('inspection-score-container');
+      const referenceInfo = document.getElementById('inspection-reference-info');
+      if (scoreContainer) scoreCell.appendChild(scoreContainer);
+      if (referenceInfo) scoreCell.appendChild(referenceInfo);
+      topRow.appendChild(scoreCell);
+
+      // Insert top row at the beginning of content
+      contentElement.insertBefore(topRow, contentElement.firstChild);
+
+      // Full-width spectrum visualizer below the top row
       const spectrumCanvas = document.createElement('canvas');
       spectrumCanvas.id = 'inspection-spectrum-canvas';
       spectrumCanvas.className = 'inspection-spectrum-canvas';
       spectrumCanvas.width = 300;
       spectrumCanvas.height = 150;
-      spectrumCell.appendChild(spectrumCanvas);
-      techRow.appendChild(spectrumCell);
-
-      // Insert tech row at the top of content (before score container)
-      contentElement.insertBefore(techRow, contentElement.firstChild);
+      // Insert after top row (before hint)
+      const hintEl = document.getElementById('inspection-hint');
+      if (hintEl) {
+        contentElement.insertBefore(spectrumCanvas, hintEl);
+      } else {
+        contentElement.appendChild(spectrumCanvas);
+      }
     }
     if (currentViewLevel === 'expert') {
       const contentElement = document.getElementById('inspection-content');

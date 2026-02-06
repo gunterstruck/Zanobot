@@ -3280,13 +3280,15 @@ body {
     50% { opacity: 0.4; }
 }
 
-/* === ADVANCED/EXPERT: Camera + Spectrum side-by-side in Inspection Modal === */
+/* === ADVANCED/EXPERT: Camera + Score side-by-side, Spectrum below === */
+
+/* Top row: [Camera+Ghost | Score+Status+Reference] */
 .inspection-tech-row {
     display: flex;
     gap: var(--spacing-sm);
     width: 100%;
-    max-height: 25vh;
-    min-height: 80px;
+    min-height: 120px;
+    max-height: 40vh;
     flex-shrink: 0;
 }
 
@@ -3301,6 +3303,48 @@ body {
     overflow: hidden;
 }
 
+/* Right cell: Score + Status + Reference stacked vertically */
+.inspection-score-cell {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: transparent;
+}
+
+/* Score container compact when inside tech row */
+.inspection-score-cell .inspection-score-container {
+    width: clamp(100px, 30vw, 160px);
+    height: clamp(100px, 30vw, 160px);
+    max-width: 160px;
+    max-height: 160px;
+}
+
+.inspection-score-cell .inspection-score {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+}
+
+.inspection-score-cell .inspection-score-unit {
+    font-size: 0.35em;
+}
+
+.inspection-score-cell .inspection-status-label {
+    font-size: clamp(0.8rem, 3vw, 1.1rem);
+    letter-spacing: 0.1em;
+    bottom: 12%;
+}
+
+/* Reference info compact inside tech row */
+.inspection-score-cell .inspection-reference-info {
+    padding: var(--spacing-xs);
+    font-size: 0.75rem;
+    width: 100%;
+}
+
+.inspection-score-cell .inspection-reference-label {
+    font-size: 0.65rem;
+}
+
+/* Camera cell ghost overlay */
 .inspection-tech-cell .ghost-overlay-container {
     width: 100%;
     max-width: none;
@@ -3313,14 +3357,6 @@ body {
     border-radius: var(--radius-sm);
 }
 
-.inspection-spectrum-canvas {
-    width: 100%;
-    height: 100%;
-    min-height: 80px;
-    border-radius: var(--radius-sm);
-    background: var(--bg-tertiary);
-}
-
 .inspection-tech-placeholder {
     display: flex;
     align-items: center;
@@ -3329,6 +3365,17 @@ body {
     height: 100%;
     min-height: 80px;
     color: var(--text-muted);
+}
+
+/* Full-width spectrum canvas below the top row */
+.inspection-spectrum-canvas {
+    width: 100%;
+    height: 100px;
+    min-height: 80px;
+    max-height: 120px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
 }
 
 /* Hide tech row in basic mode */
@@ -3340,12 +3387,15 @@ body {
 @media (max-width: 360px) {
     .inspection-tech-row {
         flex-direction: column;
-        max-height: 35vh;
+        max-height: 50vh;
     }
     .inspection-tech-cell {
         flex: 0 0 auto;
-        min-height: 60px;
-        max-height: 15vh;
+        min-height: 80px;
+    }
+    .inspection-score-cell .inspection-score-container {
+        width: clamp(80px, 25vw, 120px);
+        height: clamp(80px, 25vw, 120px);
     }
 }
 
