@@ -3430,9 +3430,9 @@ body {
     gap: var(--spacing-sm);
 }
 
-/* Expert view: enable scrolling in middle section */
+/* Expert view: keep body overflow hidden — only expert-stats-panel scrolls */
 [data-view-level="expert"] .diagnosis-active #recording-modal .modal-body {
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 /* Footer for advanced/expert view - max 20% */
@@ -3466,7 +3466,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
     align-items: center;
 }
@@ -3576,6 +3576,7 @@ body {
 }
 
 /* === EXPERT STATS PANEL === */
+/* Takes remaining space and scrolls independently so header/grid/spectrum stay visible */
 .expert-stats-panel {
     display: none;
     flex-direction: column;
@@ -3583,6 +3584,9 @@ body {
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--divider-color);
     margin-top: var(--spacing-sm);
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 [data-view-level="expert"] .expert-stats-panel {
