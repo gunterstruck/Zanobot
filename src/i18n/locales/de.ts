@@ -251,6 +251,9 @@ export const de: TranslationDict = {
       match: 'Übereinstimmung',
       ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
       noCameraAvailable: 'Kein Positionsbild verfügbar',
+      machineQuestion: 'Hört sich die Maschine unauffällig an?',
+      reference: 'Referenz',
+      waitingForSignal: 'Warte auf Signal...',
     },
 
     smartStart: {

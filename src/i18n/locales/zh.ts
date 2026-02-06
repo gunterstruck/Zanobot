@@ -248,6 +248,9 @@ export const zh: TranslationDict = {
       match: '匹配度',
       ghostHint: '👻 移动手机直到实时图像与参考图像对齐',
       noCameraAvailable: '无可用的位置图像',
+      machineQuestion: '机器听起来正常吗？',
+      reference: '参考',
+      waitingForSignal: '等待信号...',
     },
 
     smartStart: {

@@ -249,6 +249,9 @@ export const fr: TranslationDict = {
       match: 'Correspondance',
       ghostHint: '👻 Déplacez le téléphone jusqu\'à ce que l\'image en direct et l\'image de référence correspondent',
       noCameraAvailable: 'Aucune image de position disponible',
+      machineQuestion: 'La machine semble-t-elle normale ?',
+      reference: 'Référence',
+      waitingForSignal: 'En attente du signal...',
     },
 
     smartStart: {

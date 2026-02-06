@@ -3559,8 +3559,8 @@ body {
     white-space: nowrap;
 }
 
-/* === SCROLLABLE LOWER AREA: Spectrum + Expert debug === */
-/* Takes all remaining space below the dashboard grid and scrolls as one unit */
+/* === SCROLLABLE AREA: Dashboard grid + Spectrum + Expert debug === */
+/* Takes all remaining space below the header and scrolls as one unit */
 .diagnosis-scrollable-area {
     flex: 1 1 0;
     min-height: 0;
@@ -3638,8 +3638,9 @@ body {
     display: none;
 }
 
-/* Advanced mode: Hide ghost overlay hint (only show in expert mode) */
-html[data-view-level="advanced"] .ghost-overlay-hint {
+/* Hide ghost overlay hint in advanced and expert mode */
+html[data-view-level="advanced"] .ghost-overlay-hint,
+html[data-view-level="expert"] .ghost-overlay-hint {
     display: none;
 }
 
