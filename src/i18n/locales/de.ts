@@ -167,8 +167,6 @@ export const de: TranslationDict = {
     existingModels: 'VORHANDENE MODELLE:',
     statesTrainedCount: '{{count}} Zustand(e) bereits trainiert',
     recordingStatusHighQuality: 'Hohe Audioqualität erkannt',
-    fingerprintQualityLabel: 'Fingerprint-Qualität:',
-    fingerprintQualityConfident: 'SICHER',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} Zustand aufgenommen',

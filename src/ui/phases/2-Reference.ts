@@ -1050,7 +1050,7 @@ export class ReferencePhase {
       }
     }
 
-    // Update quality indicator
+    // Update quality indicator (only visible for non-GOOD quality)
     this.updateQualityIndicator(this.currentQualityResult);
 
     // Setup event listeners for buttons
@@ -1104,9 +1104,20 @@ export class ReferencePhase {
   }
 
   /**
-   * Update quality indicator UI based on assessment result
+   * Update quality indicator UI - only shown when quality is not GOOD
    */
   private updateQualityIndicator(qualityResult: QualityResult): void {
+    const qualitySection = document.querySelector('.review-quality') as HTMLElement;
+    if (!qualitySection) return;
+
+    // Hide entire quality section when quality is GOOD
+    if (qualityResult.rating === 'GOOD') {
+      qualitySection.style.display = 'none';
+      return;
+    }
+
+    qualitySection.style.display = '';
+
     // Update score
     const scoreElement = document.getElementById('quality-score');
     if (scoreElement) {
@@ -1118,51 +1129,35 @@ export class ReferencePhase {
     const iconElement = document.getElementById('quality-icon');
 
     if (ratingElement && iconElement) {
-      // Clear existing classes and content
       ratingElement.className = 'quality-rating';
       iconElement.className = 'quality-icon';
       iconElement.innerHTML = '';
 
-      switch (qualityResult.rating) {
-        case 'GOOD':
-          ratingElement.classList.add('good');
-          ratingElement.textContent = t('reference.quality.signalStable');
-          iconElement.classList.add('good');
-          iconElement.innerHTML = '✓';
-          break;
-
-        case 'OK':
-          ratingElement.classList.add('ok');
-          ratingElement.textContent = t('reference.quality.slightUnrest');
-          iconElement.classList.add('ok');
-          iconElement.innerHTML = '⚠';
-          break;
-
-        case 'BAD':
-          ratingElement.classList.add('bad');
-          ratingElement.textContent = t('reference.quality.signalUnstable');
-          iconElement.classList.add('bad');
-          iconElement.innerHTML = '✗';
-          break;
+      if (qualityResult.rating === 'OK') {
+        ratingElement.classList.add('ok');
+        ratingElement.textContent = t('reference.quality.slightUnrest');
+        iconElement.classList.add('ok');
+        iconElement.innerHTML = '⚠';
+      } else {
+        ratingElement.classList.add('bad');
+        ratingElement.textContent = t('reference.quality.signalUnstable');
+        iconElement.classList.add('bad');
+        iconElement.innerHTML = '✗';
       }
     }
 
-    // Show/hide issues
+    // Show issues if any
     const issuesContainer = document.getElementById('quality-issues');
     const issuesList = document.getElementById('quality-issues-list');
 
     if (issuesContainer && issuesList) {
       if (qualityResult.issues.length > 0) {
-        // Clear existing issues
         issuesList.innerHTML = '';
-
-        // Add each issue
         qualityResult.issues.forEach((issue) => {
           const li = document.createElement('li');
           li.textContent = issue;
           issuesList.appendChild(li);
         });
-
         issuesContainer.style.display = 'block';
       } else {
         issuesContainer.style.display = 'none';
