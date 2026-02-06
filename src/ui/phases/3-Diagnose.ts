@@ -1526,6 +1526,9 @@ export class DiagnosePhase {
       }
     }
 
+    // Draw frequency spectrum on analysis canvas
+    this.drawAnalysisCanvas(diagnosis);
+
     // Update Work Point Ranking (Advanced/Expert view)
     this.updateWorkPointRanking();
 
@@ -1543,6 +1546,95 @@ export class DiagnosePhase {
           this.workPointRanking = null;
         }
       };
+    }
+  }
+
+  /**
+   * Draw frequency spectrum visualization on the analysis canvas.
+   * Shows the measured frequency energy distribution with color-coded
+   * bars based on the diagnosis status.
+   */
+  private drawAnalysisCanvas(diagnosis: DiagnosisResult): void {
+    const canvas = document.getElementById('analysis-canvas') as HTMLCanvasElement | null;
+    if (!canvas || !this.lastFeatureVector) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas resolution to match display size (avoid blurry rendering)
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * (window.devicePixelRatio || 1);
+    canvas.height = rect.height * (window.devicePixelRatio || 1);
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+    const displayWidth = rect.width;
+    const displayHeight = rect.height;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+    const features = this.lastFeatureVector.features;
+    const bins = features.length;
+    if (bins === 0) return;
+
+    // Downsample bins to fit display width (group bins together)
+    const barCount = Math.min(bins, Math.floor(displayWidth / 2));
+    const binsPerBar = bins / barCount;
+    const downsampled: number[] = [];
+    for (let i = 0; i < barCount; i++) {
+      const start = Math.floor(i * binsPerBar);
+      const end = Math.floor((i + 1) * binsPerBar);
+      let sum = 0;
+      for (let j = start; j < end; j++) {
+        sum += features[j];
+      }
+      downsampled.push(sum / (end - start));
+    }
+
+    // Find max value for normalization
+    const maxVal = Math.max(...downsampled, 1e-10);
+
+    // Choose color based on diagnosis status
+    const statusColors: Record<string, { bar: string; glow: string }> = {
+      healthy: { bar: '#00E676', glow: 'rgba(0, 230, 118, 0.3)' },
+      uncertain: { bar: '#FFA726', glow: 'rgba(255, 167, 38, 0.3)' },
+      faulty: { bar: '#FF5252', glow: 'rgba(255, 82, 82, 0.3)' },
+    };
+    const colors = statusColors[diagnosis.status] || statusColors.uncertain;
+
+    // Draw bars
+    const barWidth = displayWidth / barCount;
+    const padding = Math.max(0.5, barWidth * 0.1);
+
+    for (let i = 0; i < barCount; i++) {
+      const normalizedHeight = (downsampled[i] / maxVal) * (displayHeight - 4);
+      const barHeight = Math.max(1, normalizedHeight);
+      const x = i * barWidth + padding / 2;
+      const y = displayHeight - barHeight;
+
+      // Subtle glow effect
+      ctx.fillStyle = colors.glow;
+      ctx.fillRect(x, y - 1, barWidth - padding, barHeight + 1);
+
+      // Main bar
+      ctx.fillStyle = colors.bar;
+      ctx.globalAlpha = 0.4 + 0.6 * (downsampled[i] / maxVal);
+      ctx.fillRect(x, y, barWidth - padding, barHeight);
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Draw frequency axis labels
+    const freqRange = this.lastFeatureVector.frequencyRange;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.font = '9px sans-serif';
+    ctx.textBaseline = 'top';
+
+    const freqLabels = [0, 5, 10, 15, 20];
+    for (const kHz of freqLabels) {
+      const freq = kHz * 1000;
+      if (freq > freqRange[1]) break;
+      const xPos = (freq / freqRange[1]) * displayWidth;
+      ctx.fillText(`${kHz}k`, xPos + 2, 2);
     }
   }
 
