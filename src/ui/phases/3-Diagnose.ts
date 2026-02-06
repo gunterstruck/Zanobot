@@ -1208,7 +1208,7 @@ export class DiagnosePhase {
     // === HEADER: Question ===
     const headerSection = document.createElement('div');
     headerSection.className = 'diagnosis-header';
-    headerSection.innerHTML = `<h3>${t('diagnose.display.machineQuestion') || 'Hört sich die Maschine unauffällig an?'}</h3>`;
+    headerSection.innerHTML = `<h3>${t('diagnose.display.machineQuestion')}</h3>`;
     structuredContent.appendChild(headerSection);
 
     // === DASHBOARD GRID: Camera (left) + Score (right) ===
@@ -1257,7 +1257,7 @@ export class DiagnosePhase {
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4"/>
           </svg>
-          <div>${t('diagnose.display.noCameraAvailable') || 'Position Guide nicht verfügbar'}</div>
+          <div>${t('diagnose.display.noCameraAvailable')}</div>
         </div>
       `;
     }
@@ -1272,17 +1272,19 @@ export class DiagnosePhase {
         <span class="inspection-score" id="live-dashboard-score">--</span>
         <span class="inspection-score-unit">%</span>
       </div>
-      <div class="inspection-status" id="live-dashboard-status">${t('diagnose.display.waitingForSignal') || 'Warte auf Signal...'}</div>
-      <div class="inspection-ref-info" id="live-dashboard-ref">${t('diagnose.display.reference') || 'Referenz'}: ${this.machine.name}</div>
+      <div class="inspection-status" id="live-dashboard-status">${t('diagnose.display.waitingForSignal')}</div>
+      <div class="inspection-ref-info" id="live-dashboard-ref">${t('diagnose.display.reference')}: ${this.machine.name}</div>
     `;
     dashboardGrid.appendChild(dashboardRightScore);
-    structuredContent.appendChild(dashboardGrid);
 
-    // === SCROLLABLE LOWER AREA: Spectrum + Expert Debug ===
-    // Wraps spectrum and expert panel in one scroll container so the
-    // entire lower section scrolls as a unit (not just the tiny debug panel)
+    // === SCROLLABLE AREA: Camera+Score + Spectrum + Expert Debug ===
+    // Wraps dashboard grid, spectrum, and expert panel in one scroll container
+    // so the user can scroll through all content as a unit
     const scrollableArea = document.createElement('div');
     scrollableArea.className = 'diagnosis-scrollable-area';
+
+    // Dashboard grid (camera + score) is part of the scrollable area
+    scrollableArea.appendChild(dashboardGrid);
 
     // --- Spectrum: Waveform Visualizer ---
     const spectrumSection = document.createElement('div');

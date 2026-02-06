@@ -249,6 +249,9 @@ export const es: TranslationDict = {
       match: 'Coincidencia',
       ghostHint: '👻 Mueva el teléfono hasta que la imagen en vivo y la imagen de referencia coincidan',
       noCameraAvailable: 'No hay imagen de posición disponible',
+      machineQuestion: '¿La máquina suena normal?',
+      reference: 'Referencia',
+      waitingForSignal: 'Esperando señal...',
     },
 
     smartStart: {

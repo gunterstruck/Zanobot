@@ -249,6 +249,9 @@ export const en: TranslationDict = {
       match: 'Match',
       ghostHint: '👻 Move the phone until live image and reference image align',
       noCameraAvailable: 'No position image available',
+      machineQuestion: 'Does the machine sound normal?',
+      reference: 'Reference',
+      waitingForSignal: 'Waiting for signal...',
     },
 
     smartStart: {
