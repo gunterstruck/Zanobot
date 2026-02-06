@@ -3430,7 +3430,7 @@ body {
     gap: var(--spacing-sm);
 }
 
-/* Expert view: keep body overflow hidden — only expert-stats-panel scrolls */
+/* Expert view: body stays hidden — scrollable-area handles scrolling */
 [data-view-level="expert"] .diagnosis-active #recording-modal .modal-body {
     overflow: hidden;
 }
@@ -3557,7 +3557,18 @@ body {
     white-space: nowrap;
 }
 
-/* === SPECTRUM CONTAINER (below grid) === */
+/* === SCROLLABLE LOWER AREA: Spectrum + Expert debug === */
+/* Takes all remaining space below the dashboard grid and scrolls as one unit */
+.diagnosis-scrollable-area {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* Spectrum container inside scrollable area */
 .diagnosis-spectrum-container {
     flex: 0 0 auto;
     min-height: 80px;
@@ -3575,18 +3586,13 @@ body {
     margin: 0;
 }
 
-/* === EXPERT STATS PANEL === */
-/* Takes remaining space and scrolls independently so header/grid/spectrum stay visible */
+/* === EXPERT STATS PANEL (inside scrollable area) === */
 .expert-stats-panel {
     display: none;
     flex-direction: column;
     gap: var(--spacing-sm);
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--divider-color);
-    margin-top: var(--spacing-sm);
-    flex: 1 1 0;
-    min-height: 0;
-    overflow-y: auto;
 }
 
 [data-view-level="expert"] .expert-stats-panel {
@@ -3635,44 +3641,70 @@ html[data-view-level="advanced"] .ghost-overlay-hint {
     display: none;
 }
 
-/* === MOBILE: Stack grid vertically === */
+/* === MOBILE: Keep side-by-side grid, shrink elements to fit === */
 @media (max-width: 600px) {
     .diagnosis-dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-sm);
+        gap: var(--spacing-xs);
     }
 
     .dashboard-left-cam .ghost-overlay-container {
-        max-width: 180px;
+        max-width: 150px;
     }
 
     .dashboard-right-score .inspection-score-container {
-        width: clamp(100px, 40vw, 150px);
-        height: clamp(100px, 40vw, 150px);
+        width: clamp(90px, 28vw, 140px);
+        height: clamp(90px, 28vw, 140px);
     }
 
     .dashboard-right-score .inspection-score {
-        font-size: clamp(2rem, 10vw, 3rem);
+        font-size: clamp(1.75rem, 9vw, 2.5rem);
+    }
+
+    .dashboard-right-score .inspection-status {
+        font-size: clamp(0.6rem, 2vw, 0.8rem);
+    }
+
+    .dashboard-right-score .inspection-ref-info {
+        font-size: 0.6rem;
+    }
+
+    .dashboard-right-score {
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs);
     }
 }
 
 /* Responsive adjustments for short screens */
 @media (max-height: 600px) {
     .dashboard-left-cam .ghost-overlay-container {
-        max-width: 150px;
+        max-width: 130px;
+    }
+
+    .diagnosis-spectrum-container {
+        min-height: 60px;
+        max-height: 80px;
     }
 
     .diagnosis-spectrum-container #waveform-canvas {
+        min-height: 50px;
         max-height: 70px;
     }
 
     .dashboard-right-score .inspection-score-container {
-        width: 90px;
-        height: 90px;
+        width: 80px;
+        height: 80px;
     }
 
     .dashboard-right-score .inspection-score {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+    }
+
+    .dashboard-right-score .inspection-status {
+        font-size: 0.6rem;
+    }
+
+    .diagnosis-header h3 {
+        font-size: 0.8rem;
     }
 }
 

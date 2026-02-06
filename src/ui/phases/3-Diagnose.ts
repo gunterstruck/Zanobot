@@ -1286,18 +1286,23 @@ export class DiagnosePhase {
     dashboardGrid.appendChild(dashboardRightScore);
     structuredContent.appendChild(dashboardGrid);
 
-    // === SPECTRUM: Waveform Visualizer ===
+    // === SCROLLABLE LOWER AREA: Spectrum + Expert Debug ===
+    // Wraps spectrum and expert panel in one scroll container so the
+    // entire lower section scrolls as a unit (not just the tiny debug panel)
+    const scrollableArea = document.createElement('div');
+    scrollableArea.className = 'diagnosis-scrollable-area';
+
+    // --- Spectrum: Waveform Visualizer ---
     const spectrumSection = document.createElement('div');
     spectrumSection.className = 'diagnosis-spectrum-container';
 
-    // Move waveform canvas into spectrum section
     if (waveformCanvas) {
       waveformCanvas.style.display = 'block';
       spectrumSection.appendChild(waveformCanvas);
     }
-    structuredContent.appendChild(spectrumSection);
+    scrollableArea.appendChild(spectrumSection);
 
-    // === EXPERT DEBUG STATS: Only shown in expert view level ===
+    // --- Expert Debug Stats: Only shown in expert view level ---
     const currentViewLevel = getViewLevel();
     if (currentViewLevel === 'expert') {
       const dateLocale = getLocale();
@@ -1334,8 +1339,10 @@ export class DiagnosePhase {
           <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
         </div>
       `;
-      structuredContent.appendChild(expertStats);
+      scrollableArea.appendChild(expertStats);
     }
+
+    structuredContent.appendChild(scrollableArea);
 
     // === CONTROLS: Stop Button ===
     const controlsSection = document.createElement('div');
