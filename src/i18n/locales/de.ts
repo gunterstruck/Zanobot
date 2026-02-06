@@ -251,6 +251,9 @@ export const de: TranslationDict = {
       match: 'Übereinstimmung',
       ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
       noCameraAvailable: 'Kein Positionsbild verfügbar',
+      liveTitle: 'Live Diagnosis',
+      techParams: 'Technische Parameter',
+      detectedState: 'Erkannter Zustand',
     },
 
     smartStart: {
