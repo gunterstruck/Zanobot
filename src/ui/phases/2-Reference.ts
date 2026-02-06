@@ -1562,11 +1562,15 @@ export class ReferencePhase {
     // Find or create status container
     let statusContainer = document.getElementById('multiclass-status');
     if (!statusContainer) {
-      // Create container if it doesn't exist
-      // CRITICAL FIX: Use correct class selector from HTML (container-content, not phase-content)
-      const parentContainer = document.querySelector(
-        '#record-reference-content .container-content'
-      );
+      // CRITICAL FIX: Target the VISIBLE container based on machine selection state.
+      // '#record-reference-content .container-content' returns the FIRST match which is
+      // #reference-no-machine (hidden when machine IS selected). We must use the specific
+      // #reference-machine-ready container when a machine is selected.
+      const machineReady = document.getElementById('reference-machine-ready');
+      const noMachine = document.getElementById('reference-no-machine');
+      const parentContainer = (machineReady && machineReady.style.display !== 'none')
+        ? machineReady
+        : noMachine;
       if (!parentContainer) return;
 
       statusContainer = document.createElement('div');
