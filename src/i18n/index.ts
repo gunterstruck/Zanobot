@@ -285,7 +285,23 @@ export function translateDOM(): void {
   document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     if (key) {
-      el.textContent = t(key);
+      const translated = t(key);
+
+      if (el.children.length === 0) {
+        // Leaf element — safe to replace textContent directly
+        el.textContent = translated;
+      } else {
+        // Element has child elements (e.g., <svg> icons in buttons).
+        // Only replace direct text nodes to preserve child elements.
+        const childNodes = Array.from(el.childNodes);
+        for (const node of childNodes) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            el.removeChild(node);
+          }
+        }
+        // Append translated text after child elements (e.g., icon + label)
+        el.appendChild(document.createTextNode(' ' + translated));
+      }
     }
   });
 

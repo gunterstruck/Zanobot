@@ -380,7 +380,17 @@ export class ReferencePhase {
       }
     };
 
-    this.mediaRecorder.onstop = () => this.processRecording();
+    this.mediaRecorder.onstop = () => {
+      this.processRecording().catch((error) => {
+        logger.error('Unhandled error in processRecording:', error);
+        notify.error(t('reference.recording.processingFailed'), error as Error, {
+          title: t('modals.processingError'),
+          duration: 0,
+        });
+        this.cleanup();
+        this.hideRecordingModal();
+      });
+    };
 
     // Set up onstart handler to ensure precise timing
     this.mediaRecorder.onstart = () => {
@@ -980,22 +990,42 @@ export class ReferencePhase {
   private showReviewModal(): void {
     if (!this.recordedBlob || !this.currentQualityResult) {
       logger.error('Cannot show review modal: missing data');
+      notify.error(t('reference.recording.processingFailed'), new Error('Missing recording data'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
     const modal = document.getElementById('review-modal');
     if (!modal) {
       logger.error('Review modal element not found');
+      notify.error(t('reference.recording.processingFailed'), new Error('Review modal not found in DOM'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
     // Setup audio player with proper null checks
     const audioElement = document.getElementById('review-audio') as HTMLAudioElement | null;
-    const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement | null;
 
-    if (!audioElement || !audioSource) {
-      logger.error('Audio player elements not found');
+    if (!audioElement) {
+      logger.error('Audio player element not found');
+      notify.error(t('reference.recording.processingFailed'), new Error('Audio player element not found in DOM'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
+    }
+
+    // Recreate <source> element if missing (can be destroyed by translateDOM's textContent)
+    let audioSource = document.getElementById('review-audio-source') as HTMLSourceElement | null;
+    if (!audioSource) {
+      logger.warn('review-audio-source not found, recreating element');
+      audioSource = document.createElement('source');
+      audioSource.id = 'review-audio-source';
+      audioElement.appendChild(audioSource);
     }
 
     const audioUrl = URL.createObjectURL(this.recordedBlob);
@@ -1224,6 +1254,10 @@ export class ReferencePhase {
 
     if (!this.currentTrainingData || !this.currentQualityResult) {
       logger.error('Cannot save: missing training data or quality result');
+      notify.error(t('reference.recording.processingFailed'), new Error('Missing training data or quality result'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
