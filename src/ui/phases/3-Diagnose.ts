@@ -797,12 +797,18 @@ export class DiagnosePhase {
 
     } else {
       // === ADVANCED/EXPERT VIEW ===
-      // Update HealthGauge
+      const statusClass = normalizedStatus === 'healthy'
+        ? 'status-healthy'
+        : normalizedStatus === 'uncertain'
+          ? 'status-uncertain'
+          : 'status-faulty';
+
+      // Update HealthGauge (if still present)
       if (this.healthGauge) {
         this.healthGauge.draw(score, status);
       }
 
-      // Update score display in modal
+      // Update legacy score display in modal (live-health-score)
       const scoreElement = document.getElementById('live-health-score');
       if (scoreElement) {
         const scoreValue = score.toFixed(1);
@@ -814,7 +820,7 @@ export class DiagnosePhase {
         }
       }
 
-      // Update score display container color
+      // Update legacy score display container color
       const scoreDisplay = document.getElementById('live-score-display');
       if (scoreDisplay) {
         scoreDisplay.classList.remove('score-healthy', 'score-uncertain', 'score-faulty');
@@ -827,7 +833,44 @@ export class DiagnosePhase {
         }
       }
 
-      // Update status element
+      // === NEW DASHBOARD SCORE ELEMENTS ===
+      // Update dashboard score (large percentage in right panel)
+      const dashboardScore = document.getElementById('live-dashboard-score');
+      if (dashboardScore) {
+        const roundedScore = Math.round(score);
+        dashboardScore.textContent = `${roundedScore}`;
+      }
+
+      // Update dashboard score container color
+      const dashboardScoreContainer = document.getElementById('live-dashboard-score-container');
+      if (dashboardScoreContainer) {
+        dashboardScoreContainer.classList.remove('status-healthy', 'status-uncertain', 'status-faulty');
+        dashboardScoreContainer.classList.add(statusClass);
+      }
+
+      // Update dashboard status text
+      const dashboardStatus = document.getElementById('live-dashboard-status');
+      if (dashboardStatus) {
+        const localizedStatus = normalizedStatus === 'healthy'
+          ? t('status.healthy')
+          : normalizedStatus === 'uncertain'
+            ? t('status.uncertain')
+            : normalizedStatus === 'faulty'
+              ? t('status.faulty')
+              : status;
+
+        const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
+        const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
+
+        if (shouldShowState) {
+          dashboardStatus.textContent = `${localizedStatus} | ${displayState}`;
+        } else {
+          dashboardStatus.textContent = localizedStatus;
+        }
+        dashboardStatus.className = `inspection-status status-${normalizedStatus}`;
+      }
+
+      // Update legacy status element
       const statusElement = document.getElementById('live-status');
       if (statusElement) {
         const localizedStatus = normalizedStatus === 'healthy'
@@ -1107,9 +1150,9 @@ export class DiagnosePhase {
   }
 
   /**
-   * Show the advanced/expert recording modal with technical details
-   * Structured layout: Camera (top) → Spectrum (middle) → Score (bottom)
-   * Expert view adds scrollable details below score
+   * Show the advanced/expert recording modal with dashboard layout
+   * Split-Layout: Camera (left) + Score (right) | Spectrum (below) | Expert debug (below)
+   * Expert view adds scrollable details below spectrum
    */
   private showAdvancedRecordingModal(): void {
     const modal = document.getElementById('recording-modal');
@@ -1162,7 +1205,20 @@ export class DiagnosePhase {
     structuredContent.className = 'diagnosis-structured-content';
     structuredContent.style.cssText = 'display: flex; flex-direction: column; height: 100%; gap: var(--spacing-sm);';
 
-    // === TOP SECTION: Camera with Ghost Overlay ===
+    // === HEADER: Question ===
+    const headerSection = document.createElement('div');
+    headerSection.className = 'diagnosis-header';
+    headerSection.innerHTML = `<h3>${t('diagnose.display.machineQuestion') || 'Hört sich die Maschine unauffällig an?'}</h3>`;
+    structuredContent.appendChild(headerSection);
+
+    // === DASHBOARD GRID: Camera (left) + Score (right) ===
+    const dashboardGrid = document.createElement('div');
+    dashboardGrid.className = 'diagnosis-dashboard-grid';
+
+    // --- LEFT: Camera with Ghost Overlay ---
+    const dashboardLeftCam = document.createElement('div');
+    dashboardLeftCam.className = 'dashboard-left-cam';
+
     const cameraSection = document.createElement('div');
     cameraSection.className = 'diagnosis-middle-camera';
 
@@ -1213,11 +1269,26 @@ export class DiagnosePhase {
         </div>
       `;
     }
-    structuredContent.appendChild(cameraSection);
+    dashboardLeftCam.appendChild(cameraSection);
+    dashboardGrid.appendChild(dashboardLeftCam);
 
-    // === MIDDLE SECTION: Spectrum Diagram ===
+    // --- RIGHT: Score Display ---
+    const dashboardRightScore = document.createElement('div');
+    dashboardRightScore.className = 'dashboard-right-score';
+    dashboardRightScore.innerHTML = `
+      <div class="inspection-score-container" id="live-dashboard-score-container">
+        <span class="inspection-score" id="live-dashboard-score">--</span>
+        <span class="inspection-score-unit">%</span>
+      </div>
+      <div class="inspection-status" id="live-dashboard-status">${t('diagnose.display.waitingForSignal') || 'Warte auf Signal...'}</div>
+      <div class="inspection-ref-info" id="live-dashboard-ref">${t('diagnose.display.reference') || 'Referenz'}: ${this.machine.name}</div>
+    `;
+    dashboardGrid.appendChild(dashboardRightScore);
+    structuredContent.appendChild(dashboardGrid);
+
+    // === SPECTRUM: Waveform Visualizer ===
     const spectrumSection = document.createElement('div');
-    spectrumSection.className = 'diagnosis-middle-spectrum';
+    spectrumSection.className = 'diagnosis-spectrum-container';
 
     // Move waveform canvas into spectrum section
     if (waveformCanvas) {
@@ -1226,23 +1297,7 @@ export class DiagnosePhase {
     }
     structuredContent.appendChild(spectrumSection);
 
-    // === BOTTOM SECTION: Score with Animation ===
-    const scoreSection = document.createElement('div');
-    scoreSection.className = 'diagnosis-middle-score';
-    scoreSection.innerHTML = `
-      <div id="smart-start-status" class="smart-start-status">${t('common.initializing')}</div>
-      <div id="live-score-display" class="live-score-display is-active">
-        <div class="live-score-ring"></div>
-        <p class="live-score-label">${t('diagnose.display.match')}</p>
-        <p id="live-health-score" class="live-score">--<span class="live-score-unit">%</span></p>
-      </div>
-      <p id="live-status" class="live-status">${t('status.analyzing')}</p>
-    `;
-    structuredContent.appendChild(scoreSection);
-
-    // === EXPERT DETAILS: Only shown in expert view level (not advanced) ===
-    // Advanced mode: Clean, minimal interface without reference model info or debug values
-    // Expert mode: Full technical details for debugging and analysis
+    // === EXPERT DEBUG STATS: Only shown in expert view level ===
     const currentViewLevel = getViewLevel();
     if (currentViewLevel === 'expert') {
       const dateLocale = getLocale();
@@ -1259,9 +1314,10 @@ export class DiagnosePhase {
           }).join(', ')
         : t('reference.noModelsYet');
 
-      const expertDetails = document.createElement('div');
-      expertDetails.className = 'diagnosis-expert-details';
-      expertDetails.innerHTML = `
+      const expertStats = document.createElement('div');
+      expertStats.id = 'expert-debug-stats';
+      expertStats.className = 'expert-stats-panel';
+      expertStats.innerHTML = `
         <div class="reference-model-info">
           <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
           <div style="font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
@@ -1278,13 +1334,19 @@ export class DiagnosePhase {
           <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
         </div>
       `;
-      structuredContent.appendChild(expertDetails);
+      structuredContent.appendChild(expertStats);
     }
+
+    // === CONTROLS: Stop Button ===
+    const controlsSection = document.createElement('div');
+    controlsSection.className = 'diagnosis-controls';
+    controlsSection.innerHTML = `<button id="stop-diagnosis-btn" class="btn btn-danger" onclick="document.getElementById('stop-recording-btn')?.click()">${BUTTON_TEXT.STOP_DIAGNOSE}</button>`;
+    structuredContent.appendChild(controlsSection);
 
     // Add structured content to modal body
     modalBody.appendChild(structuredContent);
 
-    logger.info('✅ Advanced recording modal shown with structured layout');
+    logger.info('✅ Advanced recording modal shown with dashboard layout');
   }
 
   /**
