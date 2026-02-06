@@ -772,48 +772,19 @@ export class ReferencePhase {
       }
     }
 
-    // Add existing models info and status message
+    // Add status message
     const modalBody = document.querySelector('#recording-modal .modal-body');
     if (modalBody && !document.getElementById('recording-status')) {
-      // Show existing models info
-      const existingModels = this.machine?.referenceModels || [];
-      const existingModelsInfo =
-        existingModels.length > 0
-          ? existingModels
-              .map((m) => {
-                const trainingDate = new Date(m.trainingDate).toLocaleString(getLocale(), {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-                return `${m.label} (${trainingDate})`;
-              })
-              .join(', ')
-          : t('reference.noModelsYet');
-
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'existing-models-info';
-      infoDiv.style.cssText =
-        'background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--primary-color); padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;';
-      infoDiv.innerHTML = `
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${t('reference.existingModels')}</div>
-        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${existingModelsInfo}</div>
-        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${t('reference.statesTrainedCount', { count: existingModels.length })}</div>
-      `;
-      const visualizerContainer = modalBody.querySelector('#visualizer-container');
-      if (visualizerContainer) {
-        visualizerContainer.insertAdjacentElement('afterend', infoDiv);
-      } else {
-        modalBody.insertBefore(infoDiv, modalBody.firstChild);
-      }
-
       const statusDiv = document.createElement('div');
       statusDiv.id = 'recording-status';
       statusDiv.className = 'recording-status';
       statusDiv.textContent = t('common.initializing');
-      infoDiv.insertAdjacentElement('afterend', statusDiv);
+      const visualizerContainer = modalBody.querySelector('#visualizer-container');
+      if (visualizerContainer) {
+        visualizerContainer.insertAdjacentElement('afterend', statusDiv);
+      } else {
+        modalBody.insertBefore(statusDiv, modalBody.firstChild);
+      }
     }
 
     // Setup stop button
@@ -889,11 +860,6 @@ export class ReferencePhase {
       statusElement.remove();
     }
 
-    // Clean up existing models info
-    const existingModelsInfo = modal?.querySelector('.existing-models-info');
-    if (existingModelsInfo) {
-      existingModelsInfo.remove();
-    }
 
     // VISUAL POSITIONING: Clean up video elements
     const videoContainer = document.getElementById('reference-video-container');
