@@ -1525,14 +1525,16 @@ export class DiagnosePhase {
       }
     }
 
-    // Draw frequency spectrum on analysis canvas
+    // Show modal BEFORE drawing canvas/ranking — elements inside a display:none
+    // ancestor return 0×0 from getBoundingClientRect(), which caused the canvas
+    // to render at zero size (visible only as a gray background).
+    modal.style.display = 'flex';
+
+    // Draw frequency spectrum on analysis canvas (must be after modal is visible)
     this.drawAnalysisCanvas(diagnosis);
 
     // Update Work Point Ranking (Advanced/Expert view)
     this.updateWorkPointRanking();
-
-    // Show modal
-    modal.style.display = 'flex';
 
     // Setup close button
     const closeBtn = document.getElementById('close-diagnosis-modal');
