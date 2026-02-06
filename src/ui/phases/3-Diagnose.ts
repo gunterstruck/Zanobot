@@ -1247,14 +1247,6 @@ export class DiagnosePhase {
       ghostWrapper.appendChild(ghostImage);
       ghostContainer.appendChild(ghostWrapper);
 
-      // Only show hint text in expert mode to keep advanced mode minimal
-      if (getViewLevel() === 'expert') {
-        const hint = document.createElement('p');
-        hint.className = 'ghost-overlay-hint';
-        hint.textContent = t('diagnose.display.ghostHint');
-        ghostContainer.appendChild(hint);
-      }
-
       cameraSection.appendChild(ghostContainer);
       logger.info('✅ Ghost overlay added to diagnosis modal');
     } else {
