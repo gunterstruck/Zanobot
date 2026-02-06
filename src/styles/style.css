@@ -2324,27 +2324,6 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
-.fingerprint-quality {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.fingerprint-quality svg {
-    color: var(--primary-color);
-    flex-shrink: 0;
-}
-
-.fingerprint-quality strong {
-    color: var(--primary-color);
-}
-
 /* Diagnosis Modal Specific */
 .result-card {
     display: flex;
@@ -3633,7 +3612,6 @@ body {
 }
 
 /* Hide elements that should only show in specific views */
-.diagnosis-active .fingerprint-quality,
 .diagnosis-active .recording-timer {
     display: none;
 }

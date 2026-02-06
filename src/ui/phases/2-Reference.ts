@@ -1050,9 +1050,6 @@ export class ReferencePhase {
       }
     }
 
-    // Update quality indicator
-    this.updateQualityIndicator(this.currentQualityResult);
-
     // Setup event listeners for buttons
     const discardBtn = document.getElementById('review-discard-btn');
     const saveBtn = document.getElementById('review-save-btn');
@@ -1100,73 +1097,6 @@ export class ReferencePhase {
     if (imageContainer && imageElement) {
       imageElement.removeAttribute('src');
       imageContainer.style.display = 'none';
-    }
-  }
-
-  /**
-   * Update quality indicator UI based on assessment result
-   */
-  private updateQualityIndicator(qualityResult: QualityResult): void {
-    // Update score
-    const scoreElement = document.getElementById('quality-score');
-    if (scoreElement) {
-      scoreElement.textContent = qualityResult.score.toString();
-    }
-
-    // Update rating text and icon
-    const ratingElement = document.getElementById('quality-rating-text');
-    const iconElement = document.getElementById('quality-icon');
-
-    if (ratingElement && iconElement) {
-      // Clear existing classes and content
-      ratingElement.className = 'quality-rating';
-      iconElement.className = 'quality-icon';
-      iconElement.innerHTML = '';
-
-      switch (qualityResult.rating) {
-        case 'GOOD':
-          ratingElement.classList.add('good');
-          ratingElement.textContent = t('reference.quality.signalStable');
-          iconElement.classList.add('good');
-          iconElement.innerHTML = '✓';
-          break;
-
-        case 'OK':
-          ratingElement.classList.add('ok');
-          ratingElement.textContent = t('reference.quality.slightUnrest');
-          iconElement.classList.add('ok');
-          iconElement.innerHTML = '⚠';
-          break;
-
-        case 'BAD':
-          ratingElement.classList.add('bad');
-          ratingElement.textContent = t('reference.quality.signalUnstable');
-          iconElement.classList.add('bad');
-          iconElement.innerHTML = '✗';
-          break;
-      }
-    }
-
-    // Show/hide issues
-    const issuesContainer = document.getElementById('quality-issues');
-    const issuesList = document.getElementById('quality-issues-list');
-
-    if (issuesContainer && issuesList) {
-      if (qualityResult.issues.length > 0) {
-        // Clear existing issues
-        issuesList.innerHTML = '';
-
-        // Add each issue
-        qualityResult.issues.forEach((issue) => {
-          const li = document.createElement('li');
-          li.textContent = issue;
-          issuesList.appendChild(li);
-        });
-
-        issuesContainer.style.display = 'block';
-      } else {
-        issuesContainer.style.display = 'none';
-      }
     }
   }
 

@@ -164,8 +164,6 @@ export const zh: TranslationDict = {
     existingModels: '现有模型：',
     statesTrainedCount: '{{count}} 个状态已训练',
     recordingStatusHighQuality: '检测到高音频质量',
-    fingerprintQualityLabel: '指纹质量：',
-    fingerprintQualityConfident: '可信',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} 个状态已录制',

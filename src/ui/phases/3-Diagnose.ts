@@ -1192,13 +1192,11 @@ export class DiagnosePhase {
     const gaugeCanvas = document.getElementById('health-gauge-canvas');
     const recordingStatus = modalBody.querySelector('.recording-status') as HTMLElement;
     const recordingTimer = modalBody.querySelector('.recording-timer') as HTMLElement;
-    const fingerprintQuality = modalBody.querySelector('.fingerprint-quality') as HTMLElement;
 
     if (waveformCanvas) waveformCanvas.style.display = 'none';
     if (gaugeCanvas) gaugeCanvas.style.display = 'none';
     if (recordingStatus) recordingStatus.style.display = 'none';
     if (recordingTimer) recordingTimer.style.display = 'none';
-    if (fingerprintQuality) fingerprintQuality.style.display = 'none';
 
     // Build structured content container
     const structuredContent = document.createElement('div');
@@ -1443,10 +1441,8 @@ export class DiagnosePhase {
       // Reset original elements visibility
       const recordingStatus = recordingModal.querySelector('.recording-status') as HTMLElement;
       const recordingTimer = recordingModal.querySelector('.recording-timer') as HTMLElement;
-      const fingerprintQuality = recordingModal.querySelector('.fingerprint-quality') as HTMLElement;
       if (recordingStatus) recordingStatus.style.display = '';
       if (recordingTimer) recordingTimer.style.display = '';
-      if (fingerprintQuality) fingerprintQuality.style.display = '';
     }
 
     logger.debug('🧹 Modals hidden and reset');
