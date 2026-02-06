@@ -380,7 +380,17 @@ export class ReferencePhase {
       }
     };
 
-    this.mediaRecorder.onstop = () => this.processRecording();
+    this.mediaRecorder.onstop = () => {
+      this.processRecording().catch((error) => {
+        logger.error('Unhandled error in processRecording:', error);
+        notify.error(t('reference.recording.processingFailed'), error as Error, {
+          title: t('modals.processingError'),
+          duration: 0,
+        });
+        this.cleanup();
+        this.hideRecordingModal();
+      });
+    };
 
     // Set up onstart handler to ensure precise timing
     this.mediaRecorder.onstart = () => {
@@ -980,12 +990,20 @@ export class ReferencePhase {
   private showReviewModal(): void {
     if (!this.recordedBlob || !this.currentQualityResult) {
       logger.error('Cannot show review modal: missing data');
+      notify.error(t('reference.recording.processingFailed'), new Error('Missing recording data'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
     const modal = document.getElementById('review-modal');
     if (!modal) {
       logger.error('Review modal element not found');
+      notify.error(t('reference.recording.processingFailed'), new Error('Review modal not found in DOM'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
@@ -995,6 +1013,10 @@ export class ReferencePhase {
 
     if (!audioElement || !audioSource) {
       logger.error('Audio player elements not found');
+      notify.error(t('reference.recording.processingFailed'), new Error('Audio player elements not found in DOM'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
@@ -1224,6 +1246,10 @@ export class ReferencePhase {
 
     if (!this.currentTrainingData || !this.currentQualityResult) {
       logger.error('Cannot save: missing training data or quality result');
+      notify.error(t('reference.recording.processingFailed'), new Error('Missing training data or quality result'), {
+        title: t('modals.processingError'),
+        duration: 0,
+      });
       return;
     }
 
