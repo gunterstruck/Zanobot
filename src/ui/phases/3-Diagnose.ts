@@ -45,6 +45,7 @@ import { logger } from '@utils/logger.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
+import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -53,6 +54,7 @@ export class DiagnosePhase {
   private mediaStream: MediaStream | null = null;
   private cameraStream: MediaStream | null = null; // VISUAL POSITIONING: Camera stream for ghost overlay
   private audioWorkletManager: AudioWorkletManager | null = null;
+  private visualizer: AudioVisualizer | null = null; // Spectrum visualizer (advanced/expert)
   private healthGauge: HealthGauge | null = null;
   private activeModels: GMIAModel[] = [];
 
@@ -250,8 +252,22 @@ export class DiagnosePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // UNIFIED DESIGN: Camera stream not needed (ghost overlay was only in legacy advanced modal)
-      this.cameraStream = null;
+      // Request camera for ghost overlay (advanced/expert only)
+      const currentViewLevelForCamera = getViewLevel();
+      if (currentViewLevelForCamera !== 'basic') {
+        try {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false,
+          });
+          logger.info('📷 Camera access granted for ghost overlay');
+        } catch (cameraError) {
+          logger.warn('⚠️ Camera access denied or not available - continuing without ghost overlay', cameraError);
+          this.cameraStream = null;
+        }
+      } else {
+        this.cameraStream = null;
+      }
 
       // Create audio context with the expected sample rate
       // Note: Browser may still override this based on hardware capabilities
@@ -335,6 +351,16 @@ export class DiagnosePhase {
       // Show inspection modal (unified design for all view levels)
       this.showRecordingModal();
 
+      // Initialize AudioVisualizer for advanced/expert view
+      // The canvas is dynamically created inside showInspectionModal()
+      if (currentViewLevel !== 'basic' && this.audioContext && this.mediaStream) {
+        const spectrumCanvas = document.getElementById('inspection-spectrum-canvas') as HTMLCanvasElement | null;
+        if (spectrumCanvas) {
+          this.visualizer = new AudioVisualizer('inspection-spectrum-canvas');
+          this.visualizer.start(this.audioContext, this.mediaStream);
+        }
+      }
+
       // Initialize AudioWorklet Manager (always available at this point)
       this.audioWorkletManager = new AudioWorkletManager({
         bufferSize: this.chunkSize * 2,
@@ -410,6 +436,12 @@ export class DiagnosePhase {
       this.audioWorkletManager = null;
     }
 
+    // Stop visualizer (used in advanced/expert view)
+    if (this.visualizer) {
+      this.visualizer.stop();
+      this.visualizer = null;
+    }
+
     // Stop media stream tracks
     stopMediaStream(this.mediaStream);
     this.mediaStream = null;
@@ -422,12 +454,22 @@ export class DiagnosePhase {
     closeAudioContext(this.audioContext);
     this.audioContext = null;
 
-    // Clean up dynamically created expert details from inspection modal
+    // Clean up dynamically created elements from inspection modal
     const inspectionModal = document.getElementById('inspection-modal');
     if (inspectionModal) {
+      // Remove expert details section
       const expertDetails = inspectionModal.querySelector('.inspection-expert-details');
       if (expertDetails) {
         expertDetails.remove();
+      }
+      // Remove tech row (camera + spectrum) and revoke ghost image URL
+      const techRow = inspectionModal.querySelector('.inspection-tech-row');
+      if (techRow) {
+        const ghostImage = techRow.querySelector('#inspection-ghost-image') as HTMLImageElement | null;
+        if (ghostImage?.src) {
+          URL.revokeObjectURL(ghostImage.src);
+        }
+        techRow.remove();
       }
     }
 
@@ -968,8 +1010,60 @@ export class DiagnosePhase {
       hintElement.classList.add('hint-hidden');
     }
 
-    // EXPERT MODE: Add reference model info and debug values to inspection modal
+    // ADVANCED/EXPERT: Add camera (ghost overlay) + spectrum side by side above score
     const currentViewLevel = getViewLevel();
+    if (currentViewLevel !== 'basic' && contentElement) {
+      const techRow = document.createElement('div');
+      techRow.className = 'inspection-tech-row';
+
+      // Left: Camera with ghost overlay
+      const cameraCell = document.createElement('div');
+      cameraCell.className = 'inspection-tech-cell';
+      if (this.cameraStream && this.machine.referenceImage) {
+        const ghostContainer = document.createElement('div');
+        ghostContainer.id = 'inspection-ghost-container';
+        ghostContainer.className = 'ghost-overlay-container';
+        const ghostWrapper = document.createElement('div');
+        ghostWrapper.className = 'ghost-overlay-wrapper';
+        const video = document.createElement('video');
+        video.id = 'inspection-video';
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.srcObject = this.cameraStream;
+        const ghostImage = document.createElement('img');
+        ghostImage.id = 'inspection-ghost-image';
+        ghostImage.className = 'ghost-overlay-image';
+        ghostImage.src = URL.createObjectURL(this.machine.referenceImage);
+        ghostWrapper.appendChild(video);
+        ghostWrapper.appendChild(ghostImage);
+        ghostContainer.appendChild(ghostWrapper);
+        cameraCell.appendChild(ghostContainer);
+      } else {
+        cameraCell.innerHTML = `
+          <div class="inspection-tech-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4;">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>`;
+      }
+      techRow.appendChild(cameraCell);
+
+      // Right: Spectrum visualizer canvas
+      const spectrumCell = document.createElement('div');
+      spectrumCell.className = 'inspection-tech-cell';
+      const spectrumCanvas = document.createElement('canvas');
+      spectrumCanvas.id = 'inspection-spectrum-canvas';
+      spectrumCanvas.className = 'inspection-spectrum-canvas';
+      spectrumCanvas.width = 300;
+      spectrumCanvas.height = 150;
+      spectrumCell.appendChild(spectrumCanvas);
+      techRow.appendChild(spectrumCell);
+
+      // Insert tech row at the top of content (before score container)
+      contentElement.insertBefore(techRow, contentElement.firstChild);
+    }
     if (currentViewLevel === 'expert') {
       const contentElement = document.getElementById('inspection-content');
       if (contentElement) {
@@ -1250,6 +1344,12 @@ export class DiagnosePhase {
         diagnoseBtn.removeEventListener('click', this.diagnoseButtonClickHandler);
       }
       this.diagnoseButtonClickHandler = null;
+    }
+
+    // Destroy visualizer
+    if (this.visualizer) {
+      this.visualizer.destroy();
+      this.visualizer = null;
     }
 
     // Cleanup health gauge instance to prevent leaks
