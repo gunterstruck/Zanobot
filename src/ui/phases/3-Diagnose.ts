@@ -47,6 +47,7 @@ import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
+import { LiveDiagnosisView, type TechParameter } from '@ui/components/LiveDiagnosisView.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -96,6 +97,9 @@ export class DiagnosePhase {
 
   // CRITICAL FIX: Store event listener reference for proper cleanup
   private diagnoseButtonClickHandler: (() => void) | null = null;
+
+  // Live Diagnosis View (Three-mode UI: Basic / Advanced / Expert)
+  private liveDiagnosisView: LiveDiagnosisView | null = null;
 
   // Work Point Ranking (Advanced/Expert view)
   private workPointRanking: WorkPointRanking | null = null;
@@ -637,6 +641,19 @@ export class DiagnosePhase {
     const isWarmup = phase === 'warmup';
     const isWaiting = phase === 'waiting';
 
+    // Forward to LiveDiagnosisView
+    if (this.liveDiagnosisView) {
+      let enhancedMessage = message;
+      if (isWarmup) {
+        enhancedMessage = t('diagnose.smartStart.stabilizing', { message });
+      } else if (isWaiting) {
+        enhancedMessage = t('diagnose.smartStart.waiting', { message });
+      } else if (isRecording) {
+        enhancedMessage = t('diagnose.diagnosisRunning');
+      }
+      this.liveDiagnosisView.updateSmartStartStatus(enhancedMessage);
+    }
+
     if (this.useSimplifiedView) {
       // === SIMPLIFIED VIEW ===
       const subtitleElement = document.getElementById('inspection-subtitle');
@@ -739,6 +756,50 @@ export class DiagnosePhase {
    */
   private updateLiveDisplay(score: number, status: string, detectedState?: string): void {
     const normalizedStatus = status.toLowerCase();
+
+    // Forward to LiveDiagnosisView (three-mode overlay)
+    if (this.liveDiagnosisView) {
+      this.liveDiagnosisView.updateScore({
+        score,
+        status: normalizedStatus as 'healthy' | 'uncertain' | 'faulty' | 'UNKNOWN',
+        label: detectedState && detectedState !== 'UNKNOWN'
+          ? (detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState)
+          : undefined,
+      });
+
+      // Update tech params for Expert mode
+      if (this.lastDebugValues) {
+        const v = this.lastDebugValues;
+        const techParams: TechParameter[] = [
+          { label: 'Cosine Similarity', value: v.cosine.toFixed(4) },
+          { label: 'Adjusted Cosine', value: v.adjustedCosine.toFixed(4) },
+          { label: 'Magnitude Factor', value: v.magnitudeFactor.toFixed(4), highlight: v.magnitudeFactor < 0.5 },
+          { label: 'Weight Magnitude', value: v.weightMagnitude.toFixed(6) },
+          { label: 'Feature Magnitude', value: v.featureMagnitude.toFixed(6) },
+          { label: 'Scaling Constant', value: v.scalingConstant.toFixed(4) },
+          { label: 'Raw Score', value: v.rawScore.toFixed(1), unit: '%', highlight: v.rawScore === 0 },
+          { label: 'Sample Rate', value: String(this.actualSampleRate), unit: 'Hz' },
+          { label: 'Active Models', value: String(this.activeModels.length) },
+        ];
+        // Add frequency peaks if available
+        if (detectedState && detectedState !== 'UNKNOWN') {
+          techParams.unshift({
+            label: t('diagnose.display.detectedState') || 'Detected State',
+            value: detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState,
+          });
+        }
+        this.liveDiagnosisView.updateTechParams(techParams);
+      }
+
+      // Update quality hint
+      if (this.lastMagnitudeFactor < 0.3) {
+        this.liveDiagnosisView.updateHint(t('inspection.hintMoveCloser'), true);
+      } else if (this.lastMagnitudeFactor < 0.5) {
+        this.liveDiagnosisView.updateHint(t('inspection.hintChangePosition'), true);
+      } else {
+        this.liveDiagnosisView.updateHint('', false);
+      }
+    }
 
     if (this.useSimplifiedView) {
       // === SIMPLIFIED INSPECTION VIEW ===
@@ -1104,6 +1165,62 @@ export class DiagnosePhase {
     } else {
       this.showAdvancedRecordingModal();
     }
+
+    // Also initialize and show the new LiveDiagnosisView (three-mode overlay)
+    this.showLiveDiagnosisView();
+  }
+
+  /**
+   * Initialize and show the new LiveDiagnosisView component.
+   * Renders a mode-specific overlay (Basic / Advanced / Expert) on top.
+   */
+  private showLiveDiagnosisView(): void {
+    // Destroy previous instance if any
+    if (this.liveDiagnosisView) {
+      this.liveDiagnosisView.destroy();
+      this.liveDiagnosisView = null;
+    }
+
+    // Determine reference state name for display
+    let referenceState: string | undefined;
+    if (this.activeModels.length > 0) {
+      const baselineModel = this.activeModels.find(m => m.label === 'Baseline') || this.activeModels[0];
+      referenceState = baselineModel.label === 'Baseline'
+        ? t('inspection.referenceDefault')
+        : baselineModel.label;
+    }
+
+    this.liveDiagnosisView = new LiveDiagnosisView({
+      containerId: 'live-diagnosis-overlay',
+      onStop: () => this.stopRecording(),
+      machineName: this.machine.name,
+      referenceState,
+    });
+
+    this.liveDiagnosisView.show();
+
+    // Connect camera stream if available (Advanced/Expert modes)
+    const currentViewLevel = getViewLevel();
+    if (currentViewLevel !== 'basic') {
+      if (this.cameraStream) {
+        this.liveDiagnosisView.setCameraStream(this.cameraStream);
+      }
+      if (this.machine.referenceImage) {
+        this.liveDiagnosisView.setCameraGhostImage(this.machine.referenceImage);
+      }
+
+      // Connect spectrum visualizer canvas
+      const spectrumCanvas = this.liveDiagnosisView.getSpectrumCanvas();
+      if (spectrumCanvas && this.audioContext && this.mediaStream) {
+        // Create a separate AudioVisualizer for the LiveDiagnosisView spectrum canvas
+        const ldvVisualizer = new AudioVisualizer(spectrumCanvas.id);
+        ldvVisualizer.start(this.audioContext, this.mediaStream);
+        // Store reference for cleanup (attach to the view for lifecycle management)
+        (this.liveDiagnosisView as unknown as { _visualizer: AudioVisualizer })._visualizer = ldvVisualizer;
+      }
+    }
+
+    logger.info('[LiveDiagnosisView] Shown for mode:', currentViewLevel);
   }
 
   /**
@@ -1291,6 +1408,17 @@ export class DiagnosePhase {
    * Hide inspection modal (and legacy recording modal)
    */
   private hideRecordingModal(): void {
+    // Hide and destroy LiveDiagnosisView (three-mode overlay)
+    if (this.liveDiagnosisView) {
+      // Clean up attached visualizer if any
+      const attached = (this.liveDiagnosisView as unknown as { _visualizer?: AudioVisualizer })._visualizer;
+      if (attached) {
+        attached.destroy();
+      }
+      this.liveDiagnosisView.destroy();
+      this.liveDiagnosisView = null;
+    }
+
     // Hide inspection modal (new simplified view)
     const inspectionModal = document.getElementById('inspection-modal');
     if (inspectionModal) {
@@ -1567,6 +1695,16 @@ export class DiagnosePhase {
         diagnoseBtn.removeEventListener('click', this.diagnoseButtonClickHandler);
       }
       this.diagnoseButtonClickHandler = null;
+    }
+
+    // Destroy LiveDiagnosisView
+    if (this.liveDiagnosisView) {
+      const attached = (this.liveDiagnosisView as unknown as { _visualizer?: AudioVisualizer })._visualizer;
+      if (attached) {
+        attached.destroy();
+      }
+      this.liveDiagnosisView.destroy();
+      this.liveDiagnosisView = null;
     }
 
     // Destroy visualizer

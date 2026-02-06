@@ -7155,6 +7155,647 @@ body[data-detection-mode="STATIONARY"] [data-detection-mode="CYCLIC"]:not(.level
 }
 
 /* ===================================
+   LIVE DIAGNOSIS VIEW — THREE-MODE UI
+   =================================== */
+
+/* Overlay container — full-screen modal */
+#live-diagnosis-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    background: var(--bg-primary);
+    align-items: center;
+    justify-content: center;
+}
+
+.ldv-modal-content {
+    width: 100%;
+    max-width: var(--content-max-width);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-primary);
+    margin: 0 auto;
+}
+
+/* ── HEADER ────────────────────────── */
+
+.ldv-header {
+    flex: 0 0 auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--divider-color);
+    text-align: center;
+}
+
+.ldv-header-basic {
+    max-height: 18vh;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ldv-header-advanced,
+.ldv-header-expert {
+    max-height: 12vh;
+    min-height: 50px;
+    padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.ldv-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+}
+
+.ldv-question {
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs);
+    line-height: 1.3;
+}
+
+.ldv-subtitle {
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.ldv-title-compact {
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+}
+
+.ldv-machine-name {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    margin-top: var(--spacing-xs);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+.ldv-machine-badge {
+    font-size: 0.7rem;
+    color: var(--primary-color);
+    background: rgba(0, 212, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    white-space: nowrap;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ldv-smart-start {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+/* ── CONTENT AREA ──────────────────── */
+
+.ldv-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    overflow: hidden;
+}
+
+.ldv-content-scrollable {
+    overflow-y: auto;
+    justify-content: flex-start;
+}
+
+/* ── BASIC MODE: Score Area ────────── */
+
+.ldv-score-area-basic {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+/* ── SCORE CONTAINER (Shared) ──────── */
+
+.ldv-score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 50%;
+    transition: background-color 0.5s ease, box-shadow 0.5s ease;
+    text-align: center;
+}
+
+/* Basic: Large centered score */
+.ldv-basic .ldv-score-container {
+    width: clamp(200px, 60vw, 320px);
+    height: clamp(200px, 60vw, 320px);
+    max-width: min(320px, 85%);
+    max-height: min(320px, 50vh);
+    aspect-ratio: 1;
+}
+
+/* Advanced/Expert: Compact score in split-view */
+.ldv-score-compact {
+    width: clamp(100px, 28vw, 150px);
+    height: clamp(100px, 28vw, 150px);
+}
+
+/* Score value */
+.ldv-score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    z-index: 1;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.ldv-basic .ldv-score-value {
+    font-size: clamp(4.5rem, 22vw, 8rem);
+}
+
+.ldv-advanced .ldv-score-value,
+.ldv-expert .ldv-score-value {
+    font-size: clamp(2rem, 8vw, 3rem);
+}
+
+/* Score unit (%) */
+.ldv-score-unit {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-75%);
+    font-size: 0.35em;
+    font-weight: 400;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+.ldv-basic .ldv-score-unit {
+    right: 8%;
+    font-size: clamp(1.2rem, 5vw, 2rem);
+}
+
+.ldv-advanced .ldv-score-unit,
+.ldv-expert .ldv-score-unit {
+    right: 10%;
+    font-size: clamp(0.7rem, 3vw, 1rem);
+}
+
+/* Status label */
+.ldv-status-label {
+    position: absolute;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.ldv-basic .ldv-status-label {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+}
+
+.ldv-advanced .ldv-status-label,
+.ldv-expert .ldv-status-label {
+    font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+    bottom: 10%;
+    letter-spacing: 0.08em;
+}
+
+/* ── STATUS COLORS ─────────────────── */
+
+.ldv-score-container.status-healthy {
+    background: radial-gradient(circle, rgba(0, 230, 118, 0.15) 0%, rgba(0, 230, 118, 0.04) 70%, transparent 100%);
+    box-shadow: 0 0 80px rgba(0, 230, 118, 0.2);
+}
+
+.ldv-score-container.status-uncertain {
+    background: radial-gradient(circle, rgba(255, 183, 77, 0.15) 0%, rgba(255, 183, 77, 0.04) 70%, transparent 100%);
+    box-shadow: 0 0 80px rgba(255, 183, 77, 0.2);
+}
+
+.ldv-score-container.status-faulty {
+    background: radial-gradient(circle, rgba(255, 82, 82, 0.18) 0%, rgba(255, 82, 82, 0.05) 70%, transparent 100%);
+    box-shadow: 0 0 80px rgba(255, 82, 82, 0.25);
+}
+
+.ldv-score-value.status-healthy,
+.ldv-status-label.status-healthy {
+    color: var(--status-healthy);
+}
+
+.ldv-score-value.status-uncertain,
+.ldv-status-label.status-uncertain {
+    color: var(--status-warning);
+}
+
+.ldv-score-value.status-faulty,
+.ldv-status-label.status-faulty {
+    color: var(--status-error);
+}
+
+/* ── PULSE ANIMATION ───────────────── */
+
+.ldv-pulse-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ldv-pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: ldv-pulse 2.5s ease-out infinite;
+}
+
+.ldv-pulse-ring:nth-child(1) { animation-delay: 0s; }
+.ldv-pulse-ring:nth-child(2) { animation-delay: 0.6s; }
+.ldv-pulse-ring:nth-child(3) { animation-delay: 1.2s; }
+
+@keyframes ldv-pulse {
+    0% {
+        width: 60%;
+        height: 60%;
+        opacity: 0.4;
+    }
+    100% {
+        width: 120%;
+        height: 120%;
+        opacity: 0;
+    }
+}
+
+/* Pulse colors match status */
+.ldv-score-container.status-healthy .ldv-pulse-ring {
+    border-color: var(--status-healthy);
+}
+
+.ldv-score-container.status-uncertain .ldv-pulse-ring {
+    border-color: var(--status-warning);
+}
+
+.ldv-score-container.status-faulty .ldv-pulse-ring {
+    border-color: var(--status-error);
+}
+
+/* ── INITIALIZING STATE ────────────── */
+
+.ldv-content.is-initializing .ldv-score-container {
+    opacity: 0.4;
+}
+
+.ldv-content.is-initializing .ldv-score-value {
+    color: var(--text-muted);
+}
+
+.ldv-content.is-initializing .ldv-status-label {
+    color: var(--text-muted);
+}
+
+.ldv-content.is-initializing .ldv-pulse-ring {
+    border-color: var(--text-muted);
+}
+
+/* ── SPLIT VIEW (Advanced + Expert) ── */
+
+.ldv-split-view {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+.ldv-split-left {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ldv-split-right {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+}
+
+/* ── CAMERA CONTAINER ──────────────── */
+
+.ldv-camera-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--divider-color);
+}
+
+.ldv-camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ldv-camera-ghost {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.35;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.ldv-camera-ghost[src=""] {
+    display: none;
+}
+
+.ldv-camera-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* Hide placeholder when video is playing */
+.ldv-camera-video:not([src=""]) ~ .ldv-camera-placeholder {
+    display: none;
+}
+
+/* ── REFERENCE BADGE ───────────────── */
+
+.ldv-reference-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 10px;
+    border: 1px solid var(--divider-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    text-align: center;
+}
+
+.ldv-reference-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.ldv-reference-value {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ── SPECTRUM SECTION ──────────────── */
+
+.ldv-spectrum-section {
+    flex: 1 1 auto;
+    min-height: 150px;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+}
+
+.ldv-spectrum-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 150px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+}
+
+/* Expert: spectrum takes less flex so tech-params are visible */
+.ldv-expert .ldv-spectrum-section {
+    flex: 1 1 35%;
+    min-height: 120px;
+}
+
+/* ── TECH PARAMS (Expert only) ─────── */
+
+.ldv-tech-section {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: var(--spacing-xs) 0;
+    border-top: 1px solid var(--divider-color);
+}
+
+.ldv-tech-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.ldv-tech-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ldv-tech-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+}
+
+.ldv-tech-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ldv-tech-row:last-child {
+    border-bottom: none;
+}
+
+.ldv-tech-label {
+    padding: 3px 8px 3px 0;
+    color: var(--text-muted);
+    white-space: nowrap;
+    width: 45%;
+}
+
+.ldv-tech-value {
+    padding: 3px 0;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+}
+
+.ldv-tech-unit {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+    font-size: 0.65rem;
+}
+
+.ldv-tech-highlight .ldv-tech-value {
+    color: var(--status-warning);
+}
+
+.ldv-tech-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── HINT ──────────────────────────── */
+
+.ldv-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border-left: 3px solid var(--primary-color);
+    padding: 6px 10px;
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    width: 100%;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.ldv-hint.hint-hidden {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* ── FOOTER ────────────────────────── */
+
+.ldv-footer {
+    flex: 0 0 auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--divider-color);
+}
+
+.ldv-stop-btn {
+    display: block;
+    width: 100%;
+    padding: var(--btn-padding-md);
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--status-error);
+    color: #FFFFFF;
+    font-size: var(--btn-font-md);
+    font-weight: var(--btn-font-weight);
+    letter-spacing: var(--btn-letter-spacing);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: var(--btn-transition);
+}
+
+.ldv-stop-btn:hover,
+.ldv-stop-btn:focus {
+    background: #E53935;
+    transform: var(--hover-lift);
+    box-shadow: 0 4px 20px rgba(255, 82, 82, 0.4);
+}
+
+.ldv-stop-btn:active {
+    transform: var(--active-press);
+}
+
+/* ── RESPONSIVE: Small screens ─────── */
+
+@media (max-width: 480px) {
+    .ldv-modal-content {
+        max-width: 100%;
+    }
+}
+
+@media (max-height: 600px) {
+    .ldv-basic .ldv-score-container {
+        width: clamp(150px, 45vw, 220px);
+        height: clamp(150px, 45vw, 220px);
+    }
+
+    .ldv-basic .ldv-score-value {
+        font-size: clamp(3.5rem, 18vw, 5.5rem);
+    }
+
+    .ldv-score-compact {
+        width: clamp(80px, 22vw, 110px);
+        height: clamp(80px, 22vw, 110px);
+    }
+
+    .ldv-advanced .ldv-score-value,
+    .ldv-expert .ldv-score-value {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+
+    .ldv-spectrum-section {
+        min-height: 100px;
+    }
+
+    .ldv-header-basic {
+        max-height: 14vh;
+    }
+}
+
+/* ── RESPONSIVE: Large screens ─────── */
+
+@media (min-height: 800px) {
+    .ldv-spectrum-section {
+        min-height: 200px;
+    }
+
+    .ldv-basic .ldv-score-container {
+        width: clamp(240px, 50vw, 360px);
+        height: clamp(240px, 50vw, 360px);
+    }
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 @media print {
