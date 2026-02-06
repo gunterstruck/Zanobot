@@ -1009,15 +1009,23 @@ export class ReferencePhase {
 
     // Setup audio player with proper null checks
     const audioElement = document.getElementById('review-audio') as HTMLAudioElement | null;
-    const audioSource = document.getElementById('review-audio-source') as HTMLSourceElement | null;
 
-    if (!audioElement || !audioSource) {
-      logger.error('Audio player elements not found');
-      notify.error(t('reference.recording.processingFailed'), new Error('Audio player elements not found in DOM'), {
+    if (!audioElement) {
+      logger.error('Audio player element not found');
+      notify.error(t('reference.recording.processingFailed'), new Error('Audio player element not found in DOM'), {
         title: t('modals.processingError'),
         duration: 0,
       });
       return;
+    }
+
+    // Recreate <source> element if missing (can be destroyed by translateDOM's textContent)
+    let audioSource = document.getElementById('review-audio-source') as HTMLSourceElement | null;
+    if (!audioSource) {
+      logger.warn('review-audio-source not found, recreating element');
+      audioSource = document.createElement('source');
+      audioSource.id = 'review-audio-source';
+      audioElement.appendChild(audioSource);
     }
 
     const audioUrl = URL.createObjectURL(this.recordedBlob);
