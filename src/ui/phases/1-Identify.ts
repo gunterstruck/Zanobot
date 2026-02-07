@@ -1225,6 +1225,15 @@ export class IdentifyPhase {
     if (!this.nfcModal) {
       return;
     }
+
+    // CRITICAL FIX: Close settings modal before opening NFC writer modal
+    // This prevents the settings modal from overlaying the NFC writer modal
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal && window.getComputedStyle(settingsModal).display !== 'none') {
+      settingsModal.style.display = 'none';
+      logger.debug('Settings modal closed before opening NFC writer modal');
+    }
+
     const { supported: supportsNfc, message } = this.getNfcSupportStatus();
     this.updateNfcSpecificOption();
     this.updateNfcSupportDetails();
