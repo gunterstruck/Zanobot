@@ -495,6 +495,8 @@ export const en: TranslationDict = {
     changeMicrophone: 'Change microphone',
     confidenceThreshold: 'Confidence threshold',
     recordingDuration: 'Recording duration',
+    recordingDurationDesc:
+      'Net recording time for training data. An additional 5 seconds of stabilization time is added for optimal audio quality.',
     seconds5: '5 seconds',
     seconds10: '10 seconds',
     seconds15: '15 seconds',

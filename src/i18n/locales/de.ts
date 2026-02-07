@@ -521,6 +521,8 @@ export const de: TranslationDict = {
     changeMicrophone: 'Anderes Mikrofon wählen',
     confidenceThreshold: 'Vertrauensschwelle',
     recordingDuration: 'Aufnahmedauer',
+    recordingDurationDesc:
+      'Reine Aufnahmezeit für Trainingsdaten. Zusätzlich werden 5 Sekunden Stabilisierungszeit für optimale Audioqualität vorgeschaltet.',
     seconds5: '5 Sekunden',
     seconds10: '10 Sekunden',
     seconds15: '15 Sekunden',
