@@ -35,8 +35,8 @@ export class ReferencePhase {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
-  private recordingDuration: number; // seconds (total recording time as set by user)
-  private warmUpDuration: number = 1; // seconds (settling time for OS audio filters)
+  private recordingDuration: number; // seconds (net recording time for training data, excluding warmup)
+  private warmUpDuration: number = 5; // seconds (settling time for OS audio filters)
   private audioWorkletManager: AudioWorkletManager | null = null;
   private isRecordingActive: boolean = false;
   private recordedBlob: Blob | null = null; // For reference audio export
@@ -64,7 +64,7 @@ export class ReferencePhase {
     this.machine = machine || null;
     this.selectedDeviceId = selectedDeviceId;
 
-    // Load recording duration from settings (use exact duration from settings)
+    // Load recording duration from settings (net recording time without warmup)
     const settings = getRecordingSettings();
     this.recordingDuration = settings.recordingDuration;
 
@@ -317,8 +317,8 @@ export class ReferencePhase {
   /**
    * Actually start recording after Smart Start completes
    *
-   * Important: We record for the user-configured duration (including warmup) for debugging,
-   * but only use the audio after warmup period for training.
+   * Important: We record for warmup + user-configured duration (total) for debugging,
+   * but only use the audio after warmup period (user-configured duration) for training.
    */
   private actuallyStartRecording(): void {
     if (!this.mediaStream) {
@@ -376,19 +376,21 @@ export class ReferencePhase {
       // Update timer (shows dual-phase UI)
       this.startTimer();
 
-      // Auto-stop after full duration
-      // Use the user's configured recording duration
-      // Smart Start: 0s warmup (full duration is actual recording)
-      // Manual Start: 1s warmup included in total duration
+      // Auto-stop after full duration (warmup + recording)
+      // Smart Start: recordingDuration only (warmup already handled)
+      // Manual Start: warmUpDuration + recordingDuration
+      const totalDuration = this.smartStartWasUsed
+        ? this.recordingDuration
+        : this.warmUpDuration + this.recordingDuration;
+
       this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
-      }, this.recordingDuration * 1000);
+      }, totalDuration * 1000);
 
       // VISUAL POSITIONING: Capture reference image at midpoint of recording
       // Calculate snapshot time: halfway through the actual recording (after warmup)
       const warmupPhase = this.smartStartWasUsed ? 0 : this.warmUpDuration;
-      const actualRecordingDuration = this.recordingDuration - warmupPhase;
-      const snapshotDelay = warmupPhase * 1000 + (actualRecordingDuration * 1000) / 2;
+      const snapshotDelay = warmupPhase * 1000 + (this.recordingDuration * 1000) / 2;
 
       setTimeout(() => {
         this.captureReferenceSnapshot();
@@ -551,7 +553,7 @@ export class ReferencePhase {
       // UPDATED: Increased from 2.0s to 5.0s for stable GMIA models
       // With 330ms windows + 66ms hop: 5s = ~70-80 chunks (sufficient for statistical stability)
       // 2s was too short (~26 chunks), leading to high variance and unreliable models
-      const MIN_TRAINING_DURATION = 4.0; // Minimum 4 seconds of training data
+      const MIN_TRAINING_DURATION = 5.0; // Minimum 5 seconds of training data
       const minTrainingSamples = Math.floor(MIN_TRAINING_DURATION * sampleRate);
 
       if (trainingSamples <= 0) {
@@ -885,11 +887,11 @@ export class ReferencePhase {
    * Start recording timer with dual-phase UI
    *
    * CRITICAL FIX: Timer behavior depends on whether Smart Start was used:
-   * - Smart Start used: Show only recording phase (user-configured duration)
-   * - Smart Start NOT used: Show warmup + recording phases (1s warmup + remaining time = user-configured duration)
+   * - Smart Start used: Show only recording phase (user-configured duration, e.g., 10s)
+   * - Smart Start NOT used: Show warmup + recording phases (5s warmup + user-configured duration = e.g., 15s total)
    *
-   * Phase 1 (0-1s): "Stabilisierung..." (only if Smart Start NOT used)
-   * Phase 2 (1s-end or 0-end): "Aufnahme..." (actual recording used for training)
+   * Phase 1 (0-5s): "Stabilisierung..." (only if Smart Start NOT used)
+   * Phase 2 (5s-15s or 0-10s): "Aufnahme..." (actual recording used for training)
    */
   private startTimer(): void {
     // CRITICAL FIX: Clear any existing timer first to prevent memory leaks
@@ -904,8 +906,10 @@ export class ReferencePhase {
     const statusElement = document.getElementById('recording-status');
 
     // Determine total duration and warmup phase based on Smart Start usage
-    const totalDuration = this.recordingDuration;
     const warmupPhase = this.smartStartWasUsed ? 0 : this.warmUpDuration;
+    const totalDuration = this.smartStartWasUsed
+      ? this.recordingDuration
+      : this.warmUpDuration + this.recordingDuration;
 
     // Store interval reference for cleanup
     this.timerInterval = setInterval(() => {
@@ -934,7 +938,7 @@ export class ReferencePhase {
       } else {
         // Phase 2: Aufnahme - actual recording phase (after warmup if applicable)
         const recordingElapsed = this.smartStartWasUsed ? elapsed : elapsed - warmupPhase;
-        const recordingTotal = this.recordingDuration - warmupPhase;
+        const recordingTotal = this.recordingDuration;
 
         if (statusElement) {
           statusElement.textContent = `${t('reference.recording.recording')}...`;
