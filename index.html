@@ -973,6 +973,43 @@
         </div>
     </div>
 
+    <!-- Modal for Machine History Chart -->
+    <div id="history-chart-modal" class="modal" style="display: none;">
+        <div class="modal-content history-chart-modal-content">
+            <div class="modal-header">
+                <h3 id="history-chart-title" data-i18n="historyChart.title">Maschinen-Verlauf</h3>
+                <button class="close-modal-btn" id="close-history-chart-modal" aria-label="Verlauf schließen" data-i18n-aria="historyChart.closeDialog">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="history-chart-info">
+                    <div class="history-chart-info-item">
+                        <span class="info-label" data-i18n="historyChart.machineName">Maschine:</span>
+                        <span class="info-value" id="history-machine-name">-</span>
+                    </div>
+                    <div class="history-chart-info-item">
+                        <span class="info-label" data-i18n="historyChart.dataPoints">Datenpunkte:</span>
+                        <span class="info-value" id="history-data-count">-</span>
+                    </div>
+                    <div class="history-chart-info-item">
+                        <span class="info-label" data-i18n="historyChart.timeRange">Zeitraum:</span>
+                        <span class="info-value" id="history-time-range">-</span>
+                    </div>
+                </div>
+                <div class="history-chart-container">
+                    <canvas id="history-chart-canvas" width="800" height="400"></canvas>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-secondary" id="close-history-chart-btn" data-i18n="buttons.close">Schließen</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for Microphone Selection -->
     <div id="microphone-selection-modal" class="modal" style="display: none;">
         <div class="modal-content microphone-modal-content">

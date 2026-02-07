@@ -818,6 +818,22 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // HISTORY CHART MODAL
+  // ============================================================================
+  historyChart: {
+    title: 'Maschinen-Verlauf',
+    machineName: 'Maschine',
+    dataPoints: 'Datenpunkte',
+    timeRange: 'Zeitraum',
+    xAxisLabel: 'Zeit',
+    yAxisLabel: 'Health Score (%)',
+    noData: 'Noch keine Historie vorhanden',
+    noDataMessage: 'Für diese Maschine sind noch keine Diagnosen gespeichert.',
+    errorMessage: 'Fehler beim Laden des Verlaufs.',
+    closeDialog: 'Verlauf schließen',
+  },
+
+  // ============================================================================
   // WORK POINT RANKING (Probability Distribution View)
   // ============================================================================
   workPointRanking: {
