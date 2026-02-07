@@ -91,10 +91,11 @@ export function calculateHealthScore(cosineSimilarity: number, scalingConstant: 
  * Classify health status based on score
  *
  * @param score - Health score [0, 100]
+ * @param healthyThreshold - User-configured threshold for 'healthy' status (default: 75)
  * @returns Status category
  * @throws Error if score is NaN or Infinity
  */
-export function classifyHealthStatus(score: number): 'healthy' | 'uncertain' | 'faulty' {
+export function classifyHealthStatus(score: number, healthyThreshold: number = HEALTH_THRESHOLDS.healthy): 'healthy' | 'uncertain' | 'faulty' {
   // CRITICAL FIX: Validate input to prevent NaN propagation
   // NaN comparisons always return false, causing silent misclassification as 'faulty'
   if (!isFinite(score)) {
@@ -102,7 +103,8 @@ export function classifyHealthStatus(score: number): 'healthy' | 'uncertain' | '
     throw new Error(`Invalid health score: ${score}. Score must be a finite number.`);
   }
 
-  if (score >= HEALTH_THRESHOLDS.healthy) {
+  // Use user-configured threshold for 'healthy' status, fall back to hard-coded uncertain threshold
+  if (score >= healthyThreshold) {
     return 'healthy';
   } else if (score >= HEALTH_THRESHOLDS.uncertain) {
     return 'uncertain';
@@ -115,14 +117,15 @@ export function classifyHealthStatus(score: number): 'healthy' | 'uncertain' | '
  * Get classification details for a health score
  *
  * @param score - Health score [0, 100]
+ * @param healthyThreshold - User-configured threshold for 'healthy' status (default: 75)
  * @returns Classification details with confidence and recommendation
  */
-export function getClassificationDetails(score: number): {
+export function getClassificationDetails(score: number, healthyThreshold: number = HEALTH_THRESHOLDS.healthy): {
   status: 'healthy' | 'uncertain' | 'faulty';
   confidence: number;
   recommendation: string;
 } {
-  const status = classifyHealthStatus(score);
+  const status = classifyHealthStatus(score, healthyThreshold);
 
   let confidence: number;
   let recommendation: string;
@@ -131,7 +134,7 @@ export function getClassificationDetails(score: number): {
     confidence = Math.min(
       100,
       CONFIDENCE_PARAMS.healthyBase +
-        (score - HEALTH_THRESHOLDS.healthy) * CONFIDENCE_PARAMS.healthyMultiplier
+        (score - healthyThreshold) * CONFIDENCE_PARAMS.healthyMultiplier
     );
     recommendation = t('scoring.matchesReference');
   } else if (status === 'uncertain') {
@@ -217,8 +220,12 @@ export function generateDiagnosisResult(
   // Calculate health score
   const healthScore = calculateHealthScore(avgCosine, model.scalingConstant);
 
-  // Classify status
-  const status = classifyHealthStatus(healthScore);
+  // Get user-configured threshold from settings
+  const settings = getRecordingSettings();
+  const healthyThreshold = settings.confidenceThreshold;
+
+  // Classify status using user's configured threshold
+  const status = classifyHealthStatus(healthScore, healthyThreshold);
 
   // Calculate confidence
   const confidence = calculateConfidence(model, cosineSimilarities);
