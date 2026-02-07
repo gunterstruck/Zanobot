@@ -144,9 +144,18 @@ export class SettingsPhase {
         if (confidenceValue) {
           confidenceValue.textContent = `${value}%`;
         }
-        setRecordingSettings({
-          confidenceThreshold: value,
-        });
+        try {
+          setRecordingSettings({
+            confidenceThreshold: value,
+          });
+        } catch (error) {
+          logger.error('Failed to save confidence threshold:', error);
+          notify.error(
+            'Die Vertrauensschwelle konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
+            error as Error,
+            { title: 'Speicherfehler', duration: 5000 }
+          );
+        }
       });
     }
 
@@ -154,9 +163,18 @@ export class SettingsPhase {
       durationSelect.value = settings.recordingDuration.toString();
       durationSelect.addEventListener('change', () => {
         const value = parseInt(durationSelect.value, 10);
-        setRecordingSettings({
-          recordingDuration: value,
-        });
+        try {
+          setRecordingSettings({
+            recordingDuration: value,
+          });
+        } catch (error) {
+          logger.error('Failed to save recording duration:', error);
+          notify.error(
+            'Die Aufnahmedauer konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
+            error as Error,
+            { title: 'Speicherfehler', duration: 5000 }
+          );
+        }
       });
     }
   }
