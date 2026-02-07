@@ -406,18 +406,18 @@ export class ReferencePhase {
       this.startTimer();
 
       // Auto-stop after full duration
-      // CRITICAL FIX: If Smart Start was used, we only need 10s of recording (no warmup needed)
-      // If Smart Start was NOT used, record 15s (first 5s = warmup, last 10s = training)
-      const recordingDuration = this.smartStartWasUsed ? 10 : this.recordingDuration;
+      // Use the user's configured recording duration
+      // Smart Start: 0s warmup + full recording duration
+      // Manual Start: 5s warmup + remaining recording duration
       this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
-      }, recordingDuration * 1000);
+      }, this.recordingDuration * 1000);
 
       // VISUAL POSITIONING: Capture reference image at midpoint of recording
       // Calculate snapshot time: halfway through the actual recording (after warmup)
-      const snapshotDelay = this.smartStartWasUsed
-        ? 5000 // 5 seconds into 10-second recording (Smart Start)
-        : 10000; // 10 seconds into 15-second recording (5s warmup + 5s into training)
+      const warmupPhase = this.smartStartWasUsed ? 0 : this.warmUpDuration;
+      const actualRecordingDuration = this.recordingDuration - warmupPhase;
+      const snapshotDelay = warmupPhase * 1000 + (actualRecordingDuration * 1000) / 2;
 
       setTimeout(() => {
         this.captureReferenceSnapshot();
@@ -933,8 +933,8 @@ export class ReferencePhase {
     const timerElement = document.getElementById('recording-timer');
     const statusElement = document.getElementById('recording-status');
 
-    // CRITICAL FIX: Determine total duration and warmup phase based on Smart Start usage
-    const totalDuration = this.smartStartWasUsed ? 10 : this.recordingDuration;
+    // Determine total duration and warmup phase based on Smart Start usage
+    const totalDuration = this.recordingDuration;
     const warmupPhase = this.smartStartWasUsed ? 0 : this.warmUpDuration;
 
     // Store interval reference for cleanup
@@ -962,9 +962,9 @@ export class ReferencePhase {
           timerElement.textContent = '--:--';
         }
       } else {
-        // Phase 2: Aufnahme (0-10s if Smart Start, 5-15s if not)
+        // Phase 2: Aufnahme - actual recording phase (after warmup if applicable)
         const recordingElapsed = this.smartStartWasUsed ? elapsed : elapsed - warmupPhase;
-        const recordingTotal = this.smartStartWasUsed ? 10 : this.recordingDuration - warmupPhase;
+        const recordingTotal = this.recordingDuration - warmupPhase;
 
         if (statusElement) {
           statusElement.textContent = `${t('reference.recording.recording')}...`;
