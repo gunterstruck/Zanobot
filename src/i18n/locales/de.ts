@@ -372,21 +372,6 @@ export const de: TranslationDict = {
     micReady: 'Mikrofon bereit',
   },
 
-  // ============================================================================
-  // DETECTION MODE
-  // ============================================================================
-  detectionMode: {
-    stationary: 'Für kontinuierlich laufende Maschinen wie Ventilatoren, Pumpen, Kompressoren',
-    cyclic: 'Für Maschinen mit wiederkehrenden Abläufen wie Verpackungsmaschinen, Montagelinien',
-    referenceComparison: 'Referenzlauf-Vergleich',
-    featureFFT: 'Frequenzanalyse mit FFT',
-    featureGaussian: 'Gaussian Model für statistische Erkennung',
-    featureLocalProcessing: 'Schnelle lokale Verarbeitung',
-    featureNoML: 'Keine ML-Bibliothek erforderlich',
-    featureYAMNet: 'YAMNet Deep Learning Model',
-    featureMelSpectrogram: 'Mel-Spektrogramm Visualisierung',
-    featureWebGPU: 'WebGPU-beschleunigte Inferenz',
-  },
 
   // ============================================================================
   // COMMON
@@ -474,80 +459,7 @@ export const de: TranslationDict = {
     invalidSampleRate: 'Ungültige Sample Rate: {{rate}}Hz. Erwartet: 8000-192000Hz (typisch: 44100Hz oder 48000Hz)',
   },
 
-  // ============================================================================
-  // LEVEL 2 REFERENCE
-  // ============================================================================
-  level2Reference: {
-    title: '🔄 Level 2: Referenzlauf (ML)',
-    fullDescription: 'Nehmen Sie einen Referenzlauf Ihrer Maschine im Normalzustand auf. Diese Aufnahme wird verwendet, um zukünftige Abweichungen zu erkennen.',
-    description: 'Diese Aufnahme wird verwendet, um zukünftige Abweichungen zu erkennen.',
-    readyForRecording: 'Bereit für Aufnahme',
-    machineLabel: 'Maschine:',
-    seconds: 'Sekunden',
-    cameraHint: '📷 Position für Referenzbild - halten Sie das Gerät ruhig',
-    recordButton: '🎤 Referenz aufnehmen',
-    tipsTitle: 'ℹ️ Hinweise für gute Aufnahmen:',
-    tipNormalState: 'Stellen Sie sicher, dass die Maschine im Normalzustand läuft',
-    tipMicPosition: 'Halten Sie das Mikrofon konstant in Position',
-    tipNoNoise: 'Vermeiden Sie Störgeräusche während der Aufnahme',
-    tipDuration: 'Die Aufnahme dauert 10 Sekunden',
-    notLoaded: 'nicht geladen',
-    initializingModel: 'Initialisiere ML-Modell...',
-    recordingStarting: '🎤 Aufnahme startet...',
-    countdownText: '⏱️ Aufnahme startet in {{seconds}}...',
-    recordingRunning: '🔴 Aufnahme läuft...',
-    processingRecording: '🔄 Verarbeite Aufnahme...',
-    referenceCreated: '✅ Referenz erfolgreich erstellt!',
-    referenceSaved: 'Level 2 Referenz wurde gespeichert',
-    referenceCreatedBtn: '✅ Referenz erstellt',
-    errorPrefix: '❌ Fehler:',
-  },
 
-  // ============================================================================
-  // LEVEL 2 DIAGNOSE
-  // ============================================================================
-  level2Diagnose: {
-    title: '🔍 Level 2: Maschine prüfen (ML)',
-    description: 'Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz.',
-    machineLabel: 'Maschine:',
-    initializing: 'Initialisiere...',
-    ghostHint: '👻 Bewegen Sie das Handy, bis Live-Bild und Referenzbild übereinstimmen',
-    liveRecording: '🌊 Live-Aufnahme',
-    similarityLabel: 'Übereinstimmung mit Referenz',
-    spectrogramTitle: '📊 Spektrogramm (Analyse)',
-    checkMachine: '🔍 Maschine prüfen',
-    recheckMachine: '🔍 Erneut prüfen',
-    analysisResult: '📊 Analyseergebnis',
-    similarityDetail: 'Ähnlichkeit:',
-    statusLabel: 'Status:',
-    analysisTime: 'Analysezeit:',
-    notLoaded: 'nicht geladen',
-    noReference: '⚠️ Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.',
-    noReferenceError: 'Keine Referenz vorhanden. Bitte zuerst Referenz erstellen.',
-    recordingRunning: '🎤 Aufnahme läuft...',
-    recordingCountdown: '🔴 Aufnahme läuft... ({{seconds}}s)',
-    analyzingRecording: '🔄 Analysiere Aufnahme...',
-    analysisComplete: '✅ Analyse abgeschlossen: {{percentage}}%',
-    referenceLoaded: '✅ Referenz geladen. Bereit für Diagnose.',
-    newReferenceLoaded: '✅ Neue Referenz geladen. Bereit für Diagnose.',
-    loadingNewReference: '🔄 Lade neue Referenz...',
-    machineNormal: 'Maschine läuft normal',
-    calculatingSimilarity: 'Berechne Ähnlichkeit...',
-    initTensorflow: 'Initialisiere TensorFlow.js...',
-    loadingYamnet: 'Lade YAMNet Modell (6 MB)...',
-    extractingFeatures: 'Extrahiere Audio-Features...',
-    savingReference: 'Speichere Referenz...',
-    referenceCreatedProgress: 'Referenz erstellt',
-    generatingSpectrogram: 'Generiere Spektrogramm...',
-    warningDeviation: 'Leichte Abweichung erkannt - Beobachten empfohlen',
-    criticalDeviation: 'Signifikante Abweichung - Wartung dringend empfohlen!',
-    diagnosisSaved: 'Diagnose gespeichert',
-    diagnosisSaveFailed: 'Diagnose konnte nicht gespeichert werden',
-    healthyLabel: 'UNAUFFÄLLIG',
-    warningLabel: 'WARNUNG',
-    criticalLabel: 'KRITISCH',
-    errorPrefix: '❌ Fehler:',
-  },
 
   // ============================================================================
   // HEALTH GAUGE
@@ -582,18 +494,6 @@ export const de: TranslationDict = {
     stopButton: 'STOP',
   },
 
-  // ============================================================================
-  // MODE SELECTOR
-  // ============================================================================
-  modeSelector: {
-    title: 'Analysemodus',
-    description: 'Wählen Sie den passenden Modus für Ihre Maschine',
-    featuresOf: 'Funktionen von {{level}}:',
-    modeChanged: 'Modus geändert: {{name}}',
-    stationaryName: 'Level 1: Stationäre Geräusche (GMIA)',
-    stationaryFeature: 'Gaussian Model für statistische Erkennung',
-    cyclicName: 'Level 2: Zyklische Geräusche (ML)',
-  },
 
   // ============================================================================
   // AUDIO
@@ -631,33 +531,8 @@ export const de: TranslationDict = {
     amplitudeAxis: 'Y-Achse / Amplitude',
     amplitudeAxisDesc: 'Logarithmisch (dB) – betont leise Signale',
     amplitudeLogDesc: 'Logarithmisch (dB) – betont leise Signale',
-    deviceInvariantToggle: 'Device-Invariant Mode',
-    deviceInvariantHelp: 'Hilft beim Vergleich zwischen unterschiedlichen Handys/Mikrofonen (lineare Effekte). Kann bei aggressiver Noise-Suppression begrenzt helfen.',
-    deviceInvariantAdvanced: 'Erweiterte Einstellungen',
-    deviceInvariantMethod: 'Methode',
-    deviceInvariantMethodDct: 'DCT-Lifter Whitening',
-    deviceInvariantMethodSmooth: 'Smooth Subtract',
-    deviceInvariantStrength: 'Stärke',
-    deviceInvariantStrengthLow: 'Niedrig',
-    deviceInvariantStrengthMedium: 'Mittel',
-    deviceInvariantStrengthHigh: 'Hoch',
-    deviceInvariantZNorm: 'Z-Normalize',
-    deviceInvariantZNormDesc: 'Über Frequenz-Bins normalisieren (mittlere Lautstärke entfernen).',
-    deviceInvariantZNormOn: 'Z-Normalize an',
-    deviceInvariantZNormOff: 'Z-Normalize aus',
-    deviceInvariantABHint: 'Für A/B-Test: Referenz aufnehmen → DB exportieren → anderes Gerät importieren → Live-Test; dann Mode umschalten und wiederholen.',
-    deviceInvariantMismatchTitle: 'Feature-Mode passt nicht',
-    deviceInvariantMismatchDescription: 'Datenbank nutzt {{dbMode}}. App ist auf {{appMode}} eingestellt.',
-    deviceInvariantMismatchNotice: 'Datenbank nutzt {{mode}}. Die passenden Einstellungen finden Sie in den Profi-Audioeinstellungen.',
-    deviceInvariantMismatchPrompt: 'Datenbank nutzt {{dbMode}}. App ist auf {{appMode}} eingestellt. Einstellungen aus Datenbank übernehmen?',
-    deviceInvariantApplyFromDb: 'Einstellungen aus Datenbank übernehmen',
-    deviceInvariantApplied: 'Einstellungen aus Datenbank übernommen.',
-    deviceInvariantModeBaseline: 'Baseline',
-    deviceInvariantModeDim: 'Device-Invariant',
     analysisMethod: 'Analysemethode',
     analysisMethodDesc: 'Wählen Sie die passende Analysemethode für Ihre Maschine.',
-    level1Info: 'Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv',
-    level2Info: 'Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse',
     dataManagement: 'Datenverwaltung',
     exportDatabase: 'Datenbank exportieren',
     shareDatabase: 'Datenbank versenden',
@@ -805,8 +680,6 @@ export const de: TranslationDict = {
     title: 'Diagnoseergebnisse',
     fingerprintLabel: 'Fingerprint',
     confidenceScoreLabel: 'Vertrauensscore',
-    featureModeLabel: 'Feature-Mode',
-    featureModeValue: '{{mode}} · {{method}} · {{strength}} · {{zNorm}}',
     varianceTitle: 'Varianz',
     frequencyAnomalyLabel: 'Frequenzabweichung',
     analysisHintDefault: 'Hinweis: Leicht erhöhtes Signal um 20 kHz',
@@ -868,25 +741,6 @@ export const de: TranslationDict = {
     neonDesc: 'Kontrastreiches Neon-Design für dunkle Umgebungen. Akzente führen den Blick zu wichtigen Aktionen.',
   },
 
-  // ============================================================================
-  // LEVEL 2 DEFAULT CONTENT
-  // ============================================================================
-  level2Default: {
-    referenceTitle: 'ML-Referenzaufnahme',
-    referenceDescription: 'Erstellen Sie einen akustischen Fingerprint Ihrer Maschine im Normalzustand. Die KI lernt das typische Geräuschmuster für spätere Vergleiche.',
-    feature10sec: '10 Sekunden Aufnahme',
-    featureYamnet: 'YAMNet ML-Analyse',
-    featureCamera: 'Automatische Positionierung per Kamera',
-    selectMachineFirst: 'Bitte wählen Sie zuerst eine Maschine aus',
-    diagnoseTitle: 'KI-Zustandsanalyse',
-    diagnoseDescription: 'Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz. Die KI erkennt Abweichungen und bewertet den Gesundheitszustand.',
-    featureRealtime: 'Echtzeit-Analyse',
-    featureWaterfall: 'Live-Wasserfall-Spektrogramm',
-    featureTrafficLight: 'Ampel-Statusanzeige',
-    refSubDesc: '10-Sekunden Referenzaufnahme',
-    diagSubDesc: 'Live-Analyse durchführen',
-    analyzeBtn: 'Analysieren',
-  },
 
   // ============================================================================
   // MACHINE SETUP (NFC Deep Link - Status/Error Messages)

@@ -7,23 +7,18 @@
  *
  * The user MUST select a machine (Phase 1) before accessing Phase 2 or 3.
  *
- * DETECTION MODE SUPPORT:
- * - STATIONARY (Level 1): Uses GMIA analysis (ReferencePhase, DiagnosePhase)
- * - CYCLIC (Level 2): Uses YAMNet ML analysis (Level2ReferencePhase, Level2DiagnosePhase)
+ * Uses GMIA analysis (ReferencePhase, DiagnosePhase) for Gaussian model detection.
  */
 
 import { IdentifyPhase } from './phases/1-Identify.js';
 import { ReferencePhase } from './phases/2-Reference.js';
 import { DiagnosePhase } from './phases/3-Diagnose.js';
 import { SettingsPhase } from './phases/4-Settings.js';
-import { Level2ReferencePhase } from './phases/Level2-Reference.js';
-import { Level2DiagnosePhase } from './phases/Level2-Diagnose.js';
 import { AutoDetectionPhase } from './phases/AutoDetectionPhase.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { ReferenceCardController } from './components/ReferenceCardController.js';
-import { getDetectionModeManager } from '@core/detection-mode.js';
 import { getAllMachines } from '@data/db.js';
-import type { DetectionMode, AutoDetectionResult, MachineMatchResult } from '@data/types.js';
+import type { AutoDetectionResult, MachineMatchResult } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { notify } from '@utils/notifications.js';
@@ -34,13 +29,9 @@ export class Router {
   private identifyPhase: IdentifyPhase;
   private settingsPhase: SettingsPhase;
 
-  // Level 1 (GMIA) phases
+  // GMIA phases
   private referencePhase: ReferencePhase | null = null;
   private diagnosePhase: DiagnosePhase | null = null;
-
-  // Level 2 (YAMNet) phases
-  private level2ReferencePhase: Level2ReferencePhase | null = null;
-  private level2DiagnosePhase: Level2DiagnosePhase | null = null;
 
   // Auto-detection phase (simplified flow)
   private autoDetectionPhase: AutoDetectionPhase | null = null;
@@ -48,10 +39,6 @@ export class Router {
   // Card state controllers
   private diagnoseCardController: DiagnoseCardController;
   private referenceCardController: ReferenceCardController;
-
-  // Mode management
-  private modeManager = getDetectionModeManager();
-  private unsubscribeModeChange?: () => void;
 
   constructor() {
     // Initialize Phase 1 (always available)
@@ -90,15 +77,6 @@ export class Router {
     // ZERO-FRICTION: Initialize reference phase without machine for zero-friction recording
     // This allows users to start recording immediately without selecting a machine first
     this.initializeZeroFrictionReferencePhase();
-
-    // Set initial mode visibility
-    this.updateModeVisibility(this.modeManager.getMode());
-
-    // Subscribe to mode changes
-    this.unsubscribeModeChange = this.modeManager.onModeChange((newMode, oldMode) => {
-      logger.info(`🔄 Detection mode changed: ${oldMode} → ${newMode}`);
-      this.handleModeChange(newMode);
-    });
   }
 
   /**
@@ -555,7 +533,6 @@ export class Router {
 
   /**
    * Initialize Phase 2 (Reference) and Phase 3 (Diagnose)
-   * Initializes the appropriate phases based on current detection mode.
    */
   private initializePhases(machine: Machine): void {
     // Cleanup all previous instances with error handling
@@ -565,28 +542,17 @@ export class Router {
     const selectedDeviceId = this.identifyPhase.getSelectedDeviceId();
     logger.info(`📱 Using microphone device: ${selectedDeviceId || 'default'}`);
 
-    const currentMode = this.modeManager.getMode();
-    logger.info(`🎯 Initializing phases for mode: ${currentMode}`);
-
-    if (currentMode === 'STATIONARY') {
-      // Level 1: GMIA analysis
-      this.initializeLevel1Phases(machine, selectedDeviceId);
-    } else {
-      // Level 2: YAMNet ML analysis
-      this.initializeLevel2Phases(machine, selectedDeviceId);
-    }
-
-    // Update mode visibility in UI
-    this.updateModeVisibility(currentMode);
+    // Initialize GMIA analysis phases
+    this.initializeLevel1Phases(machine, selectedDeviceId);
   }
 
   /**
-   * Initialize Level 1 (GMIA) phases
+   * Initialize GMIA phases
    */
   private initializeLevel1Phases(machine: Machine, selectedDeviceId?: string): void {
-    logger.info('📊 Initializing Level 1 (GMIA) phases');
+    logger.info('📊 Initializing GMIA phases');
 
-    // Create Level 1 instances
+    // Create phase instances
     this.referencePhase = new ReferencePhase(machine, selectedDeviceId);
     this.referencePhase.init();
 
@@ -618,13 +584,6 @@ export class Router {
    * A new machine will be auto-created when the recording is saved.
    */
   private initializeZeroFrictionReferencePhase(): void {
-    const currentMode = this.modeManager.getMode();
-
-    // Only for Level 1 (STATIONARY) mode
-    if (currentMode !== 'STATIONARY') {
-      return;
-    }
-
     logger.info('🎯 Initializing zero-friction reference phase (no machine selected)');
 
     // Get selected microphone device ID
@@ -678,45 +637,10 @@ export class Router {
   }
 
   /**
-   * Initialize Level 2 (YAMNet ML) phases
-   */
-  private async initializeLevel2Phases(machine: Machine, selectedDeviceId?: string): Promise<void> {
-    logger.info('🔄 Initializing Level 2 (YAMNet) phases');
-
-    // Create Level 2 instances
-    this.level2ReferencePhase = new Level2ReferencePhase(machine, selectedDeviceId);
-    this.level2DiagnosePhase = new Level2DiagnosePhase(machine, selectedDeviceId);
-
-    // Render into containers
-    this.level2ReferencePhase.render('level2-reference-container');
-    this.level2DiagnosePhase.render('level2-diagnose-container');
-
-    // CRITICAL: Register callback to update diagnose phase when reference is created
-    // This ensures the diagnose phase reloads the reference after training
-    this.level2ReferencePhase.setOnComplete(async () => {
-      logger.info('🔄 Level 2 reference created, reloading in diagnose phase...');
-      if (this.level2DiagnosePhase) {
-        await this.level2DiagnosePhase.reloadReference();
-      }
-    });
-
-    // Initialize ML models asynchronously
-    try {
-      await Promise.all([
-        this.level2ReferencePhase.initialize(),
-        this.level2DiagnosePhase.initialize(),
-      ]);
-      logger.info('✅ Level 2 phases initialized successfully');
-    } catch (error) {
-      logger.error('❌ Error initializing Level 2 phases:', error);
-    }
-  }
-
-  /**
    * Cleanup all phase instances
    */
   private cleanupAllPhases(): void {
-    // Cleanup Level 1 phases
+    // Cleanup phases
     if (this.referencePhase) {
       try {
         this.referencePhase.destroy();
@@ -733,60 +657,6 @@ export class Router {
       }
       this.diagnosePhase = null;
     }
-
-    // Cleanup Level 2 phases
-    if (this.level2ReferencePhase) {
-      try {
-        this.level2ReferencePhase.destroy();
-      } catch (error) {
-        logger.warn('⚠️ Error destroying Level 2 reference phase:', error);
-      }
-      this.level2ReferencePhase = null;
-    }
-    if (this.level2DiagnosePhase) {
-      try {
-        this.level2DiagnosePhase.destroy();
-      } catch (error) {
-        logger.warn('⚠️ Error destroying Level 2 diagnose phase:', error);
-      }
-      this.level2DiagnosePhase = null;
-    }
-  }
-
-  /**
-   * Handle detection mode change
-   * Reinitializes phases for the new mode if a machine is selected.
-   */
-  private handleModeChange(newMode: DetectionMode): void {
-    // Update visibility first
-    this.updateModeVisibility(newMode);
-
-    // If a machine is selected, reinitialize phases for the new mode
-    if (this.currentMachine) {
-      this.initializePhases(this.currentMachine);
-    }
-  }
-
-  /**
-   * Update UI visibility based on detection mode
-   */
-  private updateModeVisibility(mode: DetectionMode): void {
-    // Set mode attribute on body for CSS-based visibility
-    document.body.setAttribute('data-detection-mode', mode);
-
-    // Update visibility of mode-specific containers
-    const level1Contents = document.querySelectorAll('[data-detection-mode="STATIONARY"]');
-    const level2Contents = document.querySelectorAll('[data-detection-mode="CYCLIC"]');
-
-    level1Contents.forEach((el) => {
-      (el as HTMLElement).style.display = mode === 'STATIONARY' ? '' : 'none';
-    });
-
-    level2Contents.forEach((el) => {
-      (el as HTMLElement).style.display = mode === 'CYCLIC' ? '' : 'none';
-    });
-
-    logger.debug(`Mode visibility updated: ${mode}`);
   }
 
   /**

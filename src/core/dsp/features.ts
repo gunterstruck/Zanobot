@@ -11,7 +11,6 @@
  */
 
 import { fft, getMagnitude, applyHanningWindow, padToPowerOfTwo } from './fft.js';
-import { applyDeviceInvariantTransform } from './deviceInvariant.js';
 import type { FeatureVector, AudioChunk, DSPConfig } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 
@@ -250,17 +249,8 @@ function extractChunkFeatures(chunk: AudioChunk, config: DSPConfig): FeatureVect
     );
   }
 
-  const deviceInvariantConfig = config.deviceInvariant;
-  const transformedFeatures =
-    deviceInvariantConfig?.mode === 'deviceInvariant'
-      ? applyDeviceInvariantTransform(binnedEnergy, deviceInvariantConfig)
-      : binnedEnergy;
-
-  // Step 8: Calculate relative features (sum = 1) for baseline mode
-  const relativeFeatures =
-    deviceInvariantConfig?.mode === 'deviceInvariant'
-      ? transformedFeatures
-      : normalizeFeatures(transformedFeatures);
+  // Step 8: Calculate relative features (sum = 1)
+  const relativeFeatures = normalizeFeatures(binnedEnergy);
 
   return {
     features: relativeFeatures,
