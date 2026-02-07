@@ -21,6 +21,7 @@ import { stopMediaStream } from '@utils/streamHelper.js';
 import type { Machine } from '@data/types.js';
 import { getMachine, saveMachine } from '@data/db.js';
 import { t } from '../../i18n/index.js';
+import { getRecordingSettings } from '@utils/recordingSettings.js';
 
 /**
  * Recording state
@@ -41,7 +42,7 @@ export class Level2ReferencePhase {
   private state: RecordingState = 'idle';
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
-  private recordingDuration: number = 10000; // 10 seconds
+  private recordingDuration: number; // in milliseconds
 
   // VISUAL POSITIONING: Camera stream for reference image
   private cameraStream: MediaStream | null = null;
@@ -61,6 +62,11 @@ export class Level2ReferencePhase {
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
+
+    // Load recording duration from settings (convert seconds to milliseconds)
+    const settings = getRecordingSettings();
+    this.recordingDuration = settings.recordingDuration * 1000;
+
     this.detector = new Level2Detector({
       onProgress: (progress, message) => this.updateProgress(progress, message),
       onError: (error) => this.handleError(error),

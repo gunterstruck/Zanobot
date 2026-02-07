@@ -21,7 +21,7 @@ import {
   classifyDiagnosticState,
   classifyHealthStatus,
   getAllModelScores,
-  MIN_CONFIDENT_MATCH_SCORE,
+  getMinConfidentMatchScore,
 } from '@core/ml/scoring.js';
 import { WorkPointRanking, type WorkPoint } from '@ui/components/WorkPointRanking.js';
 import { saveDiagnosis, getMachine } from '@data/db.js';
@@ -859,7 +859,7 @@ export class DiagnosePhase {
               ? t('status.faulty')
               : status;
 
-        const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
+        const shouldShowState = score >= getMinConfidentMatchScore() && detectedState && detectedState !== 'UNKNOWN';
         const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
 
         if (shouldShowState) {
@@ -882,7 +882,7 @@ export class DiagnosePhase {
               : status;
 
         // Show detected state if score meets confident match threshold
-        const shouldShowState = score >= MIN_CONFIDENT_MATCH_SCORE && detectedState && detectedState !== 'UNKNOWN';
+        const shouldShowState = score >= getMinConfidentMatchScore() && detectedState && detectedState !== 'UNKNOWN';
         const displayState = detectedState === 'Baseline' ? t('reference.labels.baseline') : detectedState;
 
         if (shouldShowState) {
@@ -1002,7 +1002,7 @@ export class DiagnosePhase {
       const classification = getClassificationDetails(finalScore);
 
       // UX FIX: Hide detected state if score below confident match threshold
-      const effectiveDetectedState = finalScore >= MIN_CONFIDENT_MATCH_SCORE ? detectedState : 'UNKNOWN';
+      const effectiveDetectedState = finalScore >= getMinConfidentMatchScore() ? detectedState : 'UNKNOWN';
 
       // MULTICLASS: Generate hint based on detected state
       let hint = classification.recommendation;
