@@ -1611,80 +1611,83 @@
                     <p class="about-subtitle">Assistent für akustischen Vergleich von Maschinenzuständen</p>
                 </div>
 
-                <h4>Was ist Zanobo?</h4>
                 <p>
-                    Zanobo ist eine <strong>Offline-First Progressive Web App (PWA)</strong> zur akustischen Analyse von Maschinenzuständen. Die App ermöglicht es, den aktuellen „Klang" einer Maschine mit einer Referenzaufnahme zu vergleichen. So lassen sich Veränderungen im Geräuschverhalten einfach und lokal detektieren – <strong>ganz ohne Cloud, externe Sensoren oder KI-Modelle.</strong>
+                    <strong>Zanobo 2.0</strong> ist eine datenschutzfreundliche Progressive Web App (PWA) für die vergleichende Analyse von Maschinenakustik. Sie ermöglicht es Nutzern, Maschinengeräusche vollständig <strong>offline</strong> aufzuzeichnen und zu vergleichen, ohne auf Cloud-Dienste, externe Sensoren oder KI-Modelle angewiesen zu sein.
                 </p>
 
-                <h4>Zielsetzung</h4>
-                <p>
-                    Zanobo verfolgt <strong>kein diagnostisches Ziel</strong>, sondern dient ausschließlich der visuellen und rechnerischen Einschätzung akustischer Abweichungen durch den Nutzer selbst. Die Anwendung ersetzt keine Wartung und gibt keine technischen oder rechtlichen Bewertungen ab.
-                </p>
-
-                <h4>Funktionsübersicht</h4>
+                <h4>Kernfunktionen</h4>
                 <ul>
-                    <li><strong>Offline-First:</strong> Keine Cloud, keine Datenübertragung – alle Berechnungen erfolgen vollständig lokal im Webbrowser.</li>
-                    <li><strong>GMIA-Algorithmus:</strong> Mathematischer Vergleichsalgorithmus auf Basis von Gaussian Model Independent Attributes.</li>
-                    <li><strong>Echtzeit-Frequenzanalyse:</strong> Visualisierung des Spektrums bei Live-Aufnahme.</li>
-                    <li><strong>Score-Logik:</strong> Prozentualer Ähnlichkeitswert (0–100 %), Schwelle frei einstellbar.</li>
-                    <li><strong>Zustandsanzeige:</strong> Auf Wunsch „Unauffällig" oder „Abweichend" – rein informativ, auf Basis des Nutzer-Schwellenwerts.</li>
-                    <li><strong>Keine Datenweitergabe:</strong> Alle Audiosignale verbleiben im lokalen Speicher des Endgeräts.</li>
+                    <li><strong>Offline-First:</strong> Alle Aufnahmen und Verarbeitungen erfolgen lokal im Browser.</li>
+                    <li><strong>Ähnlichkeits-Score (0–100%):</strong> Zanobo berechnet eine Kosinus-Ähnlichkeit zwischen Referenz- und neuer Aufnahme.</li>
+                    <li><strong>Nutzerdefinierte Schwelle:</strong> Nutzer können selbst festlegen, was als „Unauffällig" oder „Abweichend" gilt.</li>
+                    <li><strong>Visuelles Spektrum-Feedback:</strong> Echtzeit-Frequenzspektrum und Score-Visualisierung.</li>
+                    <li><strong>Keine Daten verlassen das Gerät:</strong> Alle Klangdaten und Scores werden in der lokalen IndexedDB gespeichert.</li>
                 </ul>
 
-                <h4>Technische Umsetzung</h4>
-                <ul>
-                    <li><strong>Technologien:</strong> Vanilla TypeScript, Vite, Web Audio API, AudioWorklets</li>
-                    <li><strong>Plattform:</strong> Cross-Plattform (PWA), installierbar wie eine native App</li>
-                    <li><strong>Codebasis:</strong> 100 % neu geschrieben, KI-unterstützt, veröffentlicht unter MIT-Lizenz</li>
-                </ul>
-
-                <h4>Rechtliche Einordnung und Abgrenzung</h4>
+                <h4>Rechtliche Position und IP-Überprüfung</h4>
                 <p>
-                    Zanobo steht bewusst <strong>außerhalb patentrechtlich geschützter Diagnoseverfahren.</strong> Die App nutzt keine Cloud, kein maschinelles Lernen und keine technischen Entscheidungen. Sie basiert auf mathematischer Ähnlichkeitsberechnung und überlässt die Interpretation dem Nutzer.
-                </p>
-
-                <h5>Abgrenzung zu Schutzrechten:</h5>
-                <ol>
-                    <li>
-                        <strong>Defensive Veröffentlichung (Siemens, 2016)</strong><br>
-                        DOI: 10.18169/PAPDEOTT005125<br>
-                        Diese Veröffentlichung beschreibt ein cloudbasiertes System zur Maschinenzustandsdiagnose. Zanobo arbeitet rein lokal und ist nicht darauf ausgelegt, Diagnosen zu stellen.
-                    </li>
-                    <li>
-                        <strong>Patent EP3701708B1 (Siemens AG, 2022)</strong><br>
-                        Cloudbasierte Zustandsdiagnose mit Machine Learning und Referenzdatenbanken. Zanobo verzichtet vollständig auf Modelltraining, Serverkommunikation oder KI-basierte Klassifikation.
-                    </li>
-                    <li>
-                        <strong>Claussen-Patente zu GMIA-Verfahren</strong><br>
-                        z.B. US9263041B2 – Channel detection in noise…<br>
-                        Diese Patente decken spezialisierte GMIA-Anwendungen für Sprachverarbeitung, Embedded-Systeme und lernfähige Klassifikationsverfahren. Zanobo verwendet GMIA ausschließlich zur deskriptiven Ähnlichkeitsberechnung zweier Audiodaten – kein Training, keine Diagnosefunktion.
-                    </li>
-                </ol>
-
-                <h4>Ist das Klassifikation?</h4>
-                <p>
-                    Zanobo berechnet einen Score (0–100 %) zur Beschreibung der Ähnlichkeit zwischen Referenz- und Liveaufnahme. Die Anzeige von „Unauffällig" oder „Abweichend" basiert auf einer frei wählbaren Schwelle durch den Nutzer. <strong>Dies ist keine maschinelle Klassifikation</strong>, sondern eine vereinfachte Orientierungshilfe ohne technische Bewertung.
-                </p>
-
-                <h4>Workflow</h4>
-                <ol>
-                    <li><strong>Identifizieren:</strong> Maschine anlegen oder per QR-Code scannen.</li>
-                    <li><strong>Referenz:</strong> 10-Sekunden-Aufnahme im unauffälligen Normalbetrieb erstellen.</li>
-                    <li><strong>Prüfung:</strong> Live-Vergleich durchführen. Die App zeigt an, ob das Geräuschmuster der Referenz entspricht („Unauffällig") oder abweicht („Abweichend").</li>
-                </ol>
-
-                <h4>Open Source</h4>
-                <p>
-                    Zanobo wird als freies Projekt unter der <strong>MIT-Lizenz</strong> veröffentlicht. Der Quellcode ist offen verfügbar und steht zur privaten und bildungsorientierten Nutzung bereit.<br>
-                    Wenn Sie Hinweise auf Schutzrechtsverletzungen haben, bitten wir um Kontaktaufnahme zur Prüfung.
-                </p>
-
-                <h4>Disclaimer</h4>
-                <p>
-                    Zanobo dient ausschließlich dem vergleichenden Monitoring von Audiosignalen. <strong>Die App ist kein Messgerät, keine KI, kein Diagnosewerkzeug.</strong> Die Nutzung erfolgt auf eigene Verantwortung.
+                    Zanobo wurde unabhängig als privates, nicht-kommerzielles Open-Source-Projekt unter der <strong>MIT-Lizenz</strong> entwickelt. Die Funktionalität basiert auf offen beschriebenen mathematischen Verfahren (z.B. GMIA-ähnlicher Kosinus-Vergleich) und integriert keine patentierte Systemlogik oder Lernmechanismen.
                 </p>
                 <p>
-                    Der Entwickler übernimmt <strong>keine Haftung</strong> für Interpretationen oder Wartungsentscheidungen, die auf Basis der Anzeige getroffen werden. Eine professionelle Überprüfung kann durch die App nicht ersetzt werden.
+                    Vor der Veröffentlichung wurde eine detaillierte rechtliche und technische Überprüfung durchgeführt, um sicherzustellen, dass die Lösung nicht mit bestehenden Patenten oder Siemens-internen Methoden kollidiert.
+                </p>
+
+                <h5>Relevante IP und technische Abgrenzung</h5>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background: var(--surface-color); border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Referenz / Titel</th>
+                                <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Quelle & Status</th>
+                                <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Geschützter Bereich</th>
+                                <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Zanobo-Unterschied</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>PAPDEOTT005125</strong><br><em>Verfahren zur Diagnose von Maschinen</em></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Defensive Veröffentlichung, Siemens AG, 2016</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cloudbasiertes Diagnosesystem mit zentralen Datenbanken und mobilen Sensoren</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo ist <strong>vollständig lokal</strong>, keine Cloud, keine Remote-DB, keine Diagnose</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Europäisches Patent, Siemens AG, 2022</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ML-basierte Remote-Diagnose mit trainierten Modellen und Sensoren</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo verwendet <strong>kein ML</strong>, keine Cloud, keine eingebettete Logik</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>US9263041B2</strong><br><em>Channel detection in noise using GMIA</em></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Siemens Corp, 2016</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wendet GMIA auf Spracherkennung und Hörsysteme an</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo nutzt GMIA-ähnliche Mathematik für <strong>Nicht-Sprache</strong>, nur lokaler Vergleich</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>US9443201B2</strong><br><em>Learning of sensor signatures</em></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Siemens, 2016</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Klassifikation und Modelltraining von Signalprofilen</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo macht <strong>keine Klassifikation</strong>, kein Modelltraining</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>US9602781B2</strong><br><em>Seismic signal deblending (GMIA)</em></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Schlumberger, 2017</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wendet GMIA-ähnliche Trennung auf seismische Daten an</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo ist im Bereich und Signaltyp nicht verwandt</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Transparenz und Intention</h4>
+                <p>
+                    Zanobo ist <strong>kein Diagnosewerkzeug</strong> und nimmt keine automatisierten technischen Bewertungen vor. Es bietet lediglich eine visuelle und mathematische Vergleichshilfe unter vollständiger Kontrolle des Nutzers. Alle Verarbeitungen erfolgen offline. Es werden keine Nutzerdaten übertragen, extern gespeichert oder ausgewertet.
+                </p>
+                <p>
+                    Diese Transparenz spiegelt ein starkes Engagement für verantwortungsvolle Open-Source-Entwicklung und Respekt vor Rechten Dritter wider.
+                </p>
+
+                <p style="margin-top: 1.5rem;">
+                    <strong>Öffentliche Instanz:</strong> <a href="https://zanobo.vercel.app" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color);">zanobo.vercel.app</a>
                 </p>
 
                 <div class="about-version">

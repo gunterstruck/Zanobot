@@ -994,4 +994,92 @@ export const en: TranslationDict = {
     dataCleared:
       'The database was reset due to an update. All machines, recordings and diagnoses have been deleted.',
   },
+
+  // ============================================================================
+  // ABOUT MODAL
+  // ============================================================================
+  about: {
+    title: 'About Zanobo',
+    subtitle: 'Assistant for acoustic comparison of machine states',
+
+    // Introduction
+    intro: '<strong>Zanobo 2.0</strong> is a privacy-friendly Progressive Web App (PWA) designed for the comparative analysis of machine acoustics. It allows users to record and compare machine sounds entirely <strong>offline</strong>, without relying on cloud services, external sensors, or AI models.',
+
+    // Core Features
+    coreFeaturesTitle: 'Core Features',
+    coreFeatures: {
+      offlineFirst: '<strong>Offline-First:</strong> All recordings and processing are handled locally in the browser.',
+      similarityScore: '<strong>Similarity Score (0–100%):</strong> Zanobo computes a cosine similarity between a reference and a new recording.',
+      userThreshold: '<strong>User-defined Threshold:</strong> Users can define what counts as "Normal" or "Deviating".',
+      visualFeedback: '<strong>Visual Spectrum Feedback:</strong> Real-time frequency spectrum and score visualization.',
+      noDataLeaks: '<strong>No Data Leaves the Device:</strong> All sound data and scores are stored in the local IndexedDB.',
+    },
+
+    // Legal Position
+    legalTitle: 'Legal Position and IP Review',
+    legalIntro: 'Zanobo was created independently as a private, non-commercial open-source project under the <strong>MIT license</strong>. Its functionality is based on openly described mathematical procedures (e.g. GMIA-like cosine comparison), and it does not incorporate any patented system logic or learning mechanisms.',
+    legalReview: 'Prior to publication, a detailed legal and technical review was conducted to ensure the solution does not overlap with existing patents or Siemens-internal methods.',
+
+    // IP Table
+    ipTableTitle: 'Relevant IP and Technical Differentiation',
+    ipTable: {
+      headers: {
+        reference: 'Reference / Title',
+        source: 'Source & Status',
+        protectedScope: 'Protected Scope',
+        zanoboDiff: 'Zanobo Difference',
+      },
+      rows: [
+        {
+          reference: '<strong>PAPDEOTT005125</strong><br><em>Procedure for diagnosing machines</em>',
+          source: 'Defensive publication, Siemens AG, 2016',
+          protectedScope: 'Cloud-based diagnostic system using central databases and mobile sensors',
+          zanoboDiff: 'Zanobo is <strong>fully local</strong>, no cloud, no remote DB, no diagnostics',
+        },
+        {
+          reference: '<strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em>',
+          source: 'European Patent, Siemens AG, 2022',
+          protectedScope: 'ML-based remote diagnostics with trained models and sensors',
+          zanoboDiff: 'Zanobo uses <strong>no ML</strong>, no cloud, no embedded logic',
+        },
+        {
+          reference: '<strong>US9263041B2</strong><br><em>Channel detection in noise using GMIA</em>',
+          source: 'Siemens Corp, 2016',
+          protectedScope: 'Applies GMIA to speech recognition and hearing systems',
+          zanoboDiff: 'Zanobo uses GMIA-like math for <strong>non-speech</strong>, local comparison only',
+        },
+        {
+          reference: '<strong>US9443201B2</strong><br><em>Learning of sensor signatures</em>',
+          source: 'Siemens, 2016',
+          protectedScope: 'Classification and model training of signal profiles',
+          zanoboDiff: 'Zanobo does <strong>no classification</strong>, no model training',
+        },
+        {
+          reference: '<strong>US9602781B2</strong><br><em>Seismic signal deblending (GMIA)</em>',
+          source: 'Schlumberger, 2017',
+          protectedScope: 'Applies GMIA-like separation to seismic data',
+          zanoboDiff: 'Zanobo is unrelated in domain and signal type',
+        },
+      ],
+    },
+
+    // Transparency
+    transparencyTitle: 'Transparency and Intent',
+    transparencyText1: 'Zanobo is <strong>not a diagnostic tool</strong> and makes no automated technical assessments. It provides only a visual and mathematical comparison aid, under full control of the user. All processing happens offline. No user data is transmitted, stored remotely, or evaluated externally.',
+    transparencyText2: 'This transparency reflects a strong commitment to responsible open-source development and respect for third-party IP.',
+
+    // Public Instance
+    publicInstance: 'Public instance:',
+    publicInstanceUrl: 'https://zanobo.vercel.app',
+
+    // Version Info
+    version: 'Version:',
+    versionNumber: '2.0.0 (2026)',
+    developedBy: 'Developed by:',
+    developerName: 'Günter Struck',
+    license: 'License:',
+    licenseType: 'MIT',
+    stack: 'Stack:',
+    stackTech: 'TypeScript, Vite, Web Audio API',
+  },
 };
