@@ -483,6 +483,7 @@ export const es: TranslationDict = {
     frequencyAxis: 'Eje de frecuencia', frequencyAxisDesc: 'Logarítmico (más detalle en rango 20-500 Hz)', frequencyLogDesc: 'Logarítmico (más detalle en rango 20-500 Hz)',
     amplitudeAxis: 'Eje Y / Amplitud', amplitudeAxisDesc: 'Logarítmico (dB) – enfatiza señales débiles', amplitudeLogDesc: 'Logarítmico (dB) – enfatiza señales débiles',
     analysisMethod: 'Método de análisis', analysisMethodDesc: 'Seleccione el método de análisis apropiado para su máquina.',
+    gmaiMethodDesc: 'GMIA (Generalized Mutual Interdependence Analysis) extrae los componentes comunes y estables de múltiples ventanas de tiempo mientras suprime efectos específicos del dispositivo. Ideal para sonidos de máquinas estructurados y estables en el tiempo.',
     level1Info: 'Nivel 1: Los ajustes de frecuencia y amplitud de arriba están activos',
     dataManagement: 'Gestión de datos', exportDatabase: 'Exportar base de datos', shareDatabase: 'Enviar base de datos',
     importDatabase: 'Importar base de datos', statistics: 'Estadísticas:',
