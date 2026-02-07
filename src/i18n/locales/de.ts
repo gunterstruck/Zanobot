@@ -535,6 +535,7 @@ export const de: TranslationDict = {
     amplitudeLogDesc: 'Logarithmisch (dB) – betont leise Signale',
     analysisMethod: 'Analysemethode',
     analysisMethodDesc: 'Wählen Sie die passende Analysemethode für Ihre Maschine.',
+    gmaiMethodDesc: 'GMIA (Generalized Mutual Interdependence Analysis) extrahiert den gemeinsamen, stabilen Anteil mehrerer Zeitfenster und unterdrückt gerätespezifische Effekte. Ideal für strukturierte, zeitlich stabile Maschinengeräusche.',
     level1Info: 'Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv',
     dataManagement: 'Datenverwaltung',
     exportDatabase: 'Datenbank exportieren',
