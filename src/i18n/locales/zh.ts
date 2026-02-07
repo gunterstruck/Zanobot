@@ -673,6 +673,18 @@ export const zh: TranslationDict = {
     viewHistory: '查看历史',
     closeDialog: '关闭诊断',
   },
+  historyChart: {
+    title: '机器历史',
+    machineName: '机器',
+    dataPoints: '数据点',
+    timeRange: '时间范围',
+    xAxisLabel: '时间',
+    yAxisLabel: '健康评分 (%)',
+    noData: '暂无历史记录',
+    noDataMessage: '此机器尚未保存任何诊断记录。',
+    errorMessage: '加载历史记录时出错。',
+    closeDialog: '关闭历史',
+  },
   themes: {
     focusTitle: 'Steve Jobs',
     focusDescription: '一个动作。没有噪音。专注本质 - 其余一切退居幕后。',

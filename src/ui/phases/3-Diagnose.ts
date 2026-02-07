@@ -24,8 +24,9 @@ import {
   getMinConfidentMatchScore,
 } from '@core/ml/scoring.js';
 import { WorkPointRanking, type WorkPoint } from '@ui/components/WorkPointRanking.js';
-import { saveDiagnosis, getMachine } from '@data/db.js';
+import { saveDiagnosis, getMachine, getDiagnosesForMachine } from '@data/db.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
+import { HistoryChart } from '@ui/components/HistoryChart.js';
 import {
   getRawAudioStream,
   getSmartStartStatusMessage,
@@ -57,6 +58,7 @@ export class DiagnosePhase {
   private audioWorkletManager: AudioWorkletManager | null = null;
   private visualizer: AudioVisualizer | null = null; // Used in advanced/expert view
   private healthGauge: HealthGauge | null = null;
+  private historyChart: HistoryChart | null = null;
   private activeModels: GMIAModel[] = [];
 
   // Simplified inspection view state
@@ -1546,6 +1548,14 @@ export class DiagnosePhase {
         }
       };
     }
+
+    // Setup view history button
+    const viewHistoryBtn = document.getElementById('view-history-btn');
+    if (viewHistoryBtn) {
+      viewHistoryBtn.onclick = () => {
+        this.showHistoryChart();
+      };
+    }
   }
 
   /**
@@ -1694,6 +1704,94 @@ export class DiagnosePhase {
     logger.info(`📊 WorkPointRanking updated with ${workPoints.length} states`);
   }
 
+  /**
+   * Show history chart modal with machine diagnosis history
+   */
+  private async showHistoryChart(): Promise<void> {
+    try {
+      logger.info('📈 Loading history chart...');
+
+      // Fetch diagnosis history for this machine
+      const diagnoses = await getDiagnosesForMachine(this.machine.id, 50); // Last 50 diagnoses
+
+      if (!diagnoses || diagnoses.length === 0) {
+        notify.info(t('historyChart.noDataMessage'));
+        return;
+      }
+
+      logger.info(`📈 Loaded ${diagnoses.length} diagnoses for history chart`);
+
+      // Open history chart modal
+      const modal = document.getElementById('history-chart-modal');
+      if (!modal) {
+        logger.error('❌ History chart modal not found');
+        return;
+      }
+
+      // Update machine name
+      const machineNameEl = document.getElementById('history-machine-name');
+      if (machineNameEl) {
+        machineNameEl.textContent = this.machine.name;
+      }
+
+      // Update data count
+      const dataCountEl = document.getElementById('history-data-count');
+      if (dataCountEl) {
+        dataCountEl.textContent = diagnoses.length.toString();
+      }
+
+      // Update time range
+      const timeRangeEl = document.getElementById('history-time-range');
+      if (timeRangeEl && diagnoses.length > 0) {
+        const firstDate = new Date(diagnoses[0].timestamp);
+        const lastDate = new Date(diagnoses[diagnoses.length - 1].timestamp);
+        const formatDate = (date: Date): string => {
+          return date.toLocaleDateString(getLocale(), {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+        };
+        timeRangeEl.textContent = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+      }
+
+      // Show modal BEFORE initializing chart (canvas needs to be visible)
+      modal.style.display = 'flex';
+
+      // Initialize history chart
+      if (this.historyChart) {
+        this.historyChart.destroy();
+      }
+      this.historyChart = new HistoryChart('history-chart-canvas');
+      this.historyChart.draw(diagnoses, true);
+
+      // Setup close buttons
+      const closeBtn = document.getElementById('close-history-chart-modal');
+      const closeActionBtn = document.getElementById('close-history-chart-btn');
+
+      const closeHandler = (): void => {
+        modal.style.display = 'none';
+        // Cleanup chart when modal closes
+        if (this.historyChart) {
+          this.historyChart.destroy();
+          this.historyChart = null;
+        }
+      };
+
+      if (closeBtn) {
+        closeBtn.onclick = closeHandler;
+      }
+      if (closeActionBtn) {
+        closeActionBtn.onclick = closeHandler;
+      }
+
+      logger.info('✅ History chart displayed successfully');
+    } catch (error) {
+      logger.error('❌ Failed to show history chart:', error);
+      notify.error(t('historyChart.errorMessage'), error);
+    }
+  }
+
   private applyAppShellLayout(): void {
     const modal = document.getElementById('diagnosis-modal');
     if (!modal) return;
@@ -1732,6 +1830,12 @@ export class DiagnosePhase {
     if (this.healthGauge) {
       this.healthGauge.destroy();
       this.healthGauge = null;
+    }
+
+    // Cleanup history chart
+    if (this.historyChart) {
+      this.historyChart.destroy();
+      this.historyChart = null;
     }
 
     // Cleanup work point ranking

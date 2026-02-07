@@ -677,6 +677,18 @@ export const es: TranslationDict = {
     viewHistory: 'Ver historial',
     closeDialog: 'Cerrar diagnóstico',
   },
+  historyChart: {
+    title: 'Historial de la máquina',
+    machineName: 'Máquina',
+    dataPoints: 'Puntos de datos',
+    timeRange: 'Período de tiempo',
+    xAxisLabel: 'Tiempo',
+    yAxisLabel: 'Puntuación de salud (%)',
+    noData: 'Aún no hay historial disponible',
+    noDataMessage: 'Todavía no se han guardado diagnósticos para esta máquina.',
+    errorMessage: 'Error al cargar el historial.',
+    closeDialog: 'Cerrar historial',
+  },
   themes: {
     focusTitle: 'Steve Jobs',
     focusDescription: 'Una acción. Sin ruido. Enfoque en lo esencial – todo lo demás desaparece.',

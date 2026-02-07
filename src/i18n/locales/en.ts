@@ -777,6 +777,19 @@ export const en: TranslationDict = {
     closeDialog: 'Close diagnosis',
   },
 
+  historyChart: {
+    title: 'Machine History',
+    machineName: 'Machine',
+    dataPoints: 'Data Points',
+    timeRange: 'Time Range',
+    xAxisLabel: 'Time',
+    yAxisLabel: 'Health Score (%)',
+    noData: 'No history available yet',
+    noDataMessage: 'No diagnoses have been saved for this machine yet.',
+    errorMessage: 'Error loading history.',
+    closeDialog: 'Close history',
+  },
+
   // Work Point Ranking (Probability Distribution View)
   workPointRanking: {
     title: 'State Analysis',
