@@ -1511,6 +1511,14 @@ export class IdentifyPhase {
    */
   private async showMicrophoneSelection(): Promise<void> {
     try {
+      // CRITICAL FIX: Close settings modal before opening microphone selection
+      // This prevents the settings modal from overlaying the microphone selection modal
+      const settingsModal = document.getElementById('settings-modal');
+      if (settingsModal && window.getComputedStyle(settingsModal).display !== 'none') {
+        settingsModal.style.display = 'none';
+        logger.debug('Settings modal closed before opening microphone selection');
+      }
+
       const liveDevices = await getMicrophones();
       const devices: AudioDeviceInfo[] = liveDevices.map((device) => ({
         deviceId: device.deviceId,
