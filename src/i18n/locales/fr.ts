@@ -483,6 +483,7 @@ export const fr: TranslationDict = {
     frequencyAxis: 'Axe des fréquences', frequencyAxisDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)', frequencyLogDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)',
     amplitudeAxis: 'Axe Y / Amplitude', amplitudeAxisDesc: 'Logarithmique (dB) – met en valeur les signaux faibles', amplitudeLogDesc: 'Logarithmique (dB) – met en valeur les signaux faibles',
     analysisMethod: 'Méthode d\'analyse', analysisMethodDesc: 'Sélectionnez la méthode d\'analyse appropriée pour votre machine.',
+    level1Info: 'Niveau 1 : Les paramètres de fréquence et d\'amplitude ci-dessus sont actifs',
     dataManagement: 'Gestion des données', exportDatabase: 'Exporter la base de données', shareDatabase: 'Envoyer la base de données',
     importDatabase: 'Importer la base de données', statistics: 'Statistiques :',
     machines: 'Machines', recordings: 'Enregistrements', diagnoses: 'Diagnostics',

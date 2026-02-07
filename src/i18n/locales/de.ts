@@ -535,6 +535,7 @@ export const de: TranslationDict = {
     amplitudeLogDesc: 'Logarithmisch (dB) – betont leise Signale',
     analysisMethod: 'Analysemethode',
     analysisMethodDesc: 'Wählen Sie die passende Analysemethode für Ihre Maschine.',
+    level1Info: 'Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv',
     dataManagement: 'Datenverwaltung',
     exportDatabase: 'Datenbank exportieren',
     shareDatabase: 'Datenbank versenden',
