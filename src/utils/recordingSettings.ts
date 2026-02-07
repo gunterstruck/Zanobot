@@ -59,13 +59,15 @@ export const setRecordingSettings = (
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // Ignore storage errors (e.g., private mode) and still broadcast.
+
+    // Only dispatch event if localStorage save was successful
+    window.dispatchEvent(
+      new CustomEvent<RecordingSettings>(RECORDING_SETTINGS_EVENT, { detail: next })
+    );
+
+    return next;
+  } catch (error) {
+    // Re-throw the error so the caller knows the save failed
+    throw new Error(`Failed to save recording settings: ${error instanceof Error ? error.message : 'localStorage not available'}`);
   }
-
-  window.dispatchEvent(
-    new CustomEvent<RecordingSettings>(RECORDING_SETTINGS_EVENT, { detail: next })
-  );
-
-  return next;
 };
