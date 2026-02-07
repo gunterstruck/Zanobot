@@ -21,29 +21,9 @@ import {
   getRecordingSettings,
   setRecordingSettings,
 } from '@utils/recordingSettings.js';
-import {
-  applyDeviceInvariantDetails,
-  clearDeviceInvariantMismatch,
-  getDeviceInvariantConfig,
-  getDeviceInvariantMismatch,
-  getDeviceInvariantSettings,
-  setDeviceInvariantMismatch,
-  setDeviceInvariantSettings,
-  type DeviceInvariantStrength,
-} from '@utils/deviceInvariantSettings.js';
-import {
-  formatFeatureModeDetails,
-  getFeatureModeDetailsFromConfig,
-  getFeatureModeSummary,
-  isFeatureModeMatch,
-} from '@utils/featureMode.js';
-import { ModeSelector, injectModeSelectorStyles } from '@ui/components/ModeSelector.js';
-import { getDetectionModeManager } from '@core/detection-mode.js';
 import { t } from '../../i18n/index.js';
 
 export class SettingsPhase {
-  private modeSelector: ModeSelector | null = null;
-  private unsubscribeModeChange?: () => void;
 
   // Pre-built export payload for instant sharing (preserves user gesture)
   private preparedSharePayload: {
@@ -71,10 +51,6 @@ export class SettingsPhase {
 
     this.initVisualizerScaleSettings();
     this.initRecordingSettings();
-    this.initDeviceInvariantSettings();
-
-    // Initialize mode selector for analysis method selection
-    this.initModeSelector();
 
     // Initialize banner settings (advanced/expert only)
     this.initBannerSettings();
@@ -107,49 +83,6 @@ export class SettingsPhase {
     } finally {
       this.isPreparingPayload = false;
     }
-  }
-
-  /**
-   * Initialize the Mode Selector component for GMIA/YAMNet toggle
-   */
-  private initModeSelector(): void {
-    // Inject styles
-    injectModeSelectorStyles();
-
-    // Create and render the mode selector
-    this.modeSelector = new ModeSelector();
-    this.modeSelector.render('analysis-mode-selector');
-
-    // Subscribe to mode changes to update visibility of mode-dependent settings
-    const modeManager = getDetectionModeManager();
-    this.unsubscribeModeChange = modeManager.onModeChange((newMode) => {
-      this.updateModeVisibility(newMode);
-    });
-
-    // Set initial visibility based on current mode
-    this.updateModeVisibility(modeManager.getMode());
-
-    logger.info('🎛️ Mode selector initialized');
-  }
-
-  /**
-   * Update visibility of mode-dependent settings
-   */
-  private updateModeVisibility(mode: 'STATIONARY' | 'CYCLIC'): void {
-    // Update data-detection-mode attribute on body for CSS-based visibility
-    document.body.setAttribute('data-detection-mode', mode);
-
-    // Update info badges in the mode settings info section
-    const infoSection = document.getElementById('mode-settings-info');
-    if (infoSection) {
-      const badges = infoSection.querySelectorAll('[data-detection-mode]');
-      badges.forEach((badge) => {
-        const badgeMode = badge.getAttribute('data-detection-mode');
-        (badge as HTMLElement).style.display = badgeMode === mode ? 'flex' : 'none';
-      });
-    }
-
-    logger.debug(`Mode visibility updated: ${mode}`);
   }
 
   private initVisualizerScaleSettings(): void {
@@ -223,134 +156,6 @@ export class SettingsPhase {
         const value = parseInt(durationSelect.value, 10);
         setRecordingSettings({
           recordingDuration: value,
-        });
-      });
-    }
-  }
-
-  private initDeviceInvariantSettings(): void {
-    const toggle = document.getElementById('device-invariant-toggle') as HTMLInputElement | null;
-    const advancedToggle = document.getElementById(
-      'device-invariant-advanced-toggle'
-    ) as HTMLButtonElement | null;
-    const details = document.getElementById('device-invariant-details') as HTMLElement | null;
-    const methodSelect = document.getElementById('device-invariant-method') as HTMLSelectElement | null;
-    const strengthSelect = document.getElementById('device-invariant-strength') as HTMLSelectElement | null;
-    const zNormToggle = document.getElementById('device-invariant-znorm') as HTMLInputElement | null;
-    const warningCard = document.getElementById('device-invariant-db-warning') as HTMLElement | null;
-    const warningText = document.getElementById('device-invariant-db-warning-text');
-    const applyButton = document.getElementById('device-invariant-apply-db');
-
-    if (!toggle && !details && !methodSelect && !strengthSelect && !zNormToggle) {
-      return;
-    }
-
-    let isExpanded = false;
-    const setExpanded = (expanded: boolean) => {
-      isExpanded = expanded;
-      if (details) {
-        details.style.display = expanded ? 'block' : 'none';
-      }
-      if (advancedToggle) {
-        advancedToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        advancedToggle.classList.toggle('is-expanded', expanded);
-      }
-    };
-
-    const applyVisibility = (enabled: boolean) => {
-      if (advancedToggle) {
-        advancedToggle.disabled = !enabled;
-      }
-      if (!enabled) {
-        setExpanded(false);
-        return;
-      }
-      setExpanded(true);
-    };
-
-    const syncUI = () => {
-      const settings = getDeviceInvariantSettings();
-      if (toggle) {
-        toggle.checked = settings.enabled;
-      }
-      if (methodSelect) {
-        methodSelect.value = settings.method;
-      }
-      if (strengthSelect) {
-        strengthSelect.value = settings.strength;
-      }
-      if (zNormToggle) {
-        zNormToggle.checked = settings.zNorm;
-      }
-      applyVisibility(settings.enabled);
-    };
-
-    syncUI();
-
-    if (toggle) {
-      toggle.addEventListener('change', () => {
-        const updated = setDeviceInvariantSettings({ enabled: toggle.checked });
-        applyVisibility(updated.enabled);
-      });
-    }
-
-    if (advancedToggle) {
-      advancedToggle.addEventListener('click', () => {
-        if (!toggle?.checked) {
-          return;
-        }
-        setExpanded(!isExpanded);
-      });
-    }
-
-    if (methodSelect) {
-      methodSelect.addEventListener('change', () => {
-        setDeviceInvariantSettings({
-          method: methodSelect.value as 'dctLifter' | 'smoothSubtract',
-        });
-      });
-    }
-
-    if (strengthSelect) {
-      strengthSelect.addEventListener('change', () => {
-        setDeviceInvariantSettings({ strength: strengthSelect.value as DeviceInvariantStrength });
-      });
-    }
-
-    if (zNormToggle) {
-      zNormToggle.addEventListener('change', () => {
-        setDeviceInvariantSettings({ zNorm: zNormToggle.checked });
-      });
-    }
-
-    const mismatch = getDeviceInvariantMismatch();
-    if (warningCard) {
-      if (mismatch) {
-        warningCard.style.display = 'block';
-        if (warningText) {
-          warningText.textContent = t('settingsUI.deviceInvariantMismatchDescription', {
-            dbMode: formatFeatureModeDetails(mismatch.details, t),
-            appMode: formatFeatureModeDetails(
-              getFeatureModeDetailsFromConfig(getDeviceInvariantConfig()),
-              t
-            ),
-          });
-        }
-      } else {
-        warningCard.style.display = 'none';
-      }
-    }
-
-    if (applyButton && mismatch) {
-      applyButton.addEventListener('click', () => {
-        applyDeviceInvariantDetails(mismatch.details);
-        clearDeviceInvariantMismatch();
-        syncUI();
-        if (warningCard) {
-          warningCard.style.display = 'none';
-        }
-        notify.success(t('settingsUI.deviceInvariantApplied'), {
-          title: t('settingsUI.deviceInvariantMismatchTitle'),
         });
       });
     }
@@ -584,24 +389,6 @@ export class SettingsPhase {
             }
           }
 
-          const importedModels = (data.machines || [])
-            .flatMap((machine: { referenceModels?: unknown[] }) => machine.referenceModels || [])
-            .filter(Boolean);
-          const modeSummary = getFeatureModeSummary(importedModels as never[]);
-          const currentConfig = getDeviceInvariantConfig();
-          if (modeSummary && !isFeatureModeMatch(currentConfig, modeSummary.details)) {
-            setDeviceInvariantMismatch(modeSummary.details, 'import');
-            notify.warning(
-              t('settingsUI.deviceInvariantMismatchNotice', {
-                mode: formatFeatureModeDetails(modeSummary.details, t),
-              }),
-              {
-                title: t('settingsUI.deviceInvariantMismatchTitle'),
-                duration: 0,
-              }
-            );
-          }
-
           // Import data
           await importData(data, merge);
 
@@ -769,18 +556,6 @@ export class SettingsPhase {
       logger.debug(`🧹 Removed event handler from ${elementId}`);
     }
     this.eventHandlers.clear();
-
-    // Cleanup mode selector
-    if (this.modeSelector) {
-      this.modeSelector.destroy();
-      this.modeSelector = null;
-    }
-
-    // Unsubscribe from mode changes
-    if (this.unsubscribeModeChange) {
-      this.unsubscribeModeChange();
-      this.unsubscribeModeChange = undefined;
-    }
 
     // Clear prepared share payload to release memory
     this.preparedSharePayload = null;

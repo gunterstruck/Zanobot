@@ -3,7 +3,7 @@
  *
  * Shared utility functions for cleaning up media resources.
  * These utilities ensure consistent and safe resource cleanup
- * across all phases (Reference, Diagnose, Level2, etc.).
+ * across all phases (Reference, Diagnose, etc.).
  */
 
 import { logger } from '@utils/logger.js';

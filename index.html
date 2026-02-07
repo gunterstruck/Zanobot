@@ -385,53 +385,6 @@
                             <button class="action-btn reference-main-btn" id="record-btn" data-i18n="buttons.record">Aufnehmen</button>
                         </div>
                     </div>
-                    <!-- Level 2 (YAMNet) Reference Content - rendered dynamically -->
-                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-reference-container">
-                        <!-- Default content shown before machine selection -->
-                        <div class="level2-default-content" id="level2-reference-default">
-                            <div class="phase-intro">
-                                <div class="phase-icon">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M12 6v6l4 2"/>
-                                    </svg>
-                                </div>
-                                <h4 class="phase-title" data-i18n="level2Default.referenceTitle">ML-Referenzaufnahme</h4>
-                                <p class="phase-description" data-i18n="level2Default.referenceDescription">
-                                    Erstellen Sie einen akustischen Fingerprint Ihrer Maschine im Normalzustand.
-                                    Die KI lernt das typische Geräuschmuster für spätere Vergleiche.
-                                </p>
-                            </div>
-                            <div class="phase-features">
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.feature10sec">10 Sekunden Aufnahme</span>
-                                </div>
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.featureYamnet">YAMNet ML-Analyse</span>
-                                </div>
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.featureCamera">Automatische Positionierung per Kamera</span>
-                                </div>
-                            </div>
-                            <div class="phase-action-hint">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="16" x2="12" y2="12"/>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                </svg>
-                                <span data-i18n="level2Default.selectMachineFirst">Bitte wählen Sie zuerst eine Maschine aus</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -536,53 +489,6 @@
                         </div>
                         <!-- Analyze button only visible when machine is selected -->
                         <button class="action-btn diagnose-main-btn" id="diagnose-btn" data-i18n="buttons.analyze">Analysieren</button>
-                    </div>
-
-                    <!-- Level 2 (YAMNet) Diagnose Content - rendered dynamically -->
-                    <div class="container-content level2-content" data-detection-mode="CYCLIC" id="level2-diagnose-container">
-                        <!-- Default content shown before machine selection -->
-                        <div class="level2-default-content" id="level2-diagnose-default">
-                            <div class="phase-intro">
-                                <div class="phase-icon">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="1.5">
-                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                                    </svg>
-                                </div>
-                                <h4 class="phase-title" data-i18n="level2Default.diagnoseTitle">KI-Zustandsanalyse</h4>
-                                <p class="phase-description" data-i18n="level2Default.diagnoseDescription">
-                                    Vergleichen Sie den aktuellen Maschinenzustand mit der Referenz.
-                                    Die KI erkennt Abweichungen und bewertet den Gesundheitszustand.
-                                </p>
-                            </div>
-                            <div class="phase-features">
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.featureRealtime">Echtzeit-Analyse</span>
-                                </div>
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.featureWaterfall">Live-Wasserfall-Spektrogramm</span>
-                                </div>
-                                <div class="feature-item">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-healthy)" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    <span data-i18n="level2Default.featureTrafficLight">Ampel-Statusanzeige</span>
-                                </div>
-                            </div>
-                            <div class="phase-action-hint">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="16" x2="12" y2="12"/>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                </svg>
-                                <span data-i18n="level2Default.selectMachineFirst">Bitte wählen Sie zuerst eine Maschine aus</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1438,49 +1344,6 @@
                                 <p class="setting-description" data-i18n="settingsUI.amplitudeAxisDesc">Logarithmisch (dB) – betont leise Signale</p>
                             </div>
                         </div>
-                        <div class="setting-item device-invariant-setting" data-view-level="advanced" data-detection-mode="STATIONARY">
-                            <div class="device-invariant-header">
-                                <input type="checkbox" id="device-invariant-toggle">
-                                <label for="device-invariant-toggle" data-i18n="settingsUI.deviceInvariantToggle">Device-Invariant Mode</label>
-                            </div>
-                            <p class="setting-description device-invariant-help" data-i18n="settingsUI.deviceInvariantHelp">Hilft beim Vergleich zwischen unterschiedlichen Handys/Mikrofonen (lineare Effekte). Kann bei aggressiver Noise-Suppression begrenzt helfen.</p>
-                            <button class="device-invariant-advanced-toggle" id="device-invariant-advanced-toggle" type="button" aria-expanded="false">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                                <span data-i18n="settingsUI.deviceInvariantAdvanced">Erweiterte Einstellungen</span>
-                            </button>
-                            <div class="device-invariant-details" id="device-invariant-details" style="display: none;">
-                                <div class="device-invariant-row">
-                                    <label for="device-invariant-method" data-i18n="settingsUI.deviceInvariantMethod">Method</label>
-                                    <select id="device-invariant-method">
-                                        <option value="dctLifter" data-i18n="settingsUI.deviceInvariantMethodDct">DCT-Lifter Whitening</option>
-                                        <option value="smoothSubtract" data-i18n="settingsUI.deviceInvariantMethodSmooth">Smooth Subtract</option>
-                                    </select>
-                                </div>
-                                <div class="device-invariant-row">
-                                    <label for="device-invariant-strength" data-i18n="settingsUI.deviceInvariantStrength">Strength</label>
-                                    <select id="device-invariant-strength">
-                                        <option value="low" data-i18n="settingsUI.deviceInvariantStrengthLow">Low</option>
-                                        <option value="medium" data-i18n="settingsUI.deviceInvariantStrengthMedium">Medium</option>
-                                        <option value="high" data-i18n="settingsUI.deviceInvariantStrengthHigh">High</option>
-                                    </select>
-                                </div>
-                                <div class="device-invariant-row device-invariant-row-tight">
-                                    <label for="device-invariant-znorm" data-i18n="settingsUI.deviceInvariantZNorm">Z-Normalize</label>
-                                    <input type="checkbox" id="device-invariant-znorm">
-                                </div>
-                                <p class="setting-description device-invariant-znorm-desc" data-i18n="settingsUI.deviceInvariantZNormDesc">Normalize über Frequenz-Bins (mittlere Lautstärke entfernen).</p>
-                                <p class="setting-description device-invariant-ab-hint" data-i18n="settingsUI.deviceInvariantABHint">Für A/B-Test: Referenz aufnehmen → DB exportieren → anderes Gerät importieren → Live-Test; dann Mode umschalten und wiederholen.</p>
-                            </div>
-                        </div>
-                        <div class="setting-item device-invariant-warning" id="device-invariant-db-warning" data-view-level="advanced" data-detection-mode="STATIONARY" style="display: none;">
-                            <div class="setting-warning-header" data-i18n="settingsUI.deviceInvariantMismatchTitle">Feature mode mismatch</div>
-                            <p class="setting-description" id="device-invariant-db-warning-text">...</p>
-                            <button class="action-btn secondary-btn" id="device-invariant-apply-db" type="button">
-                                <span data-i18n="settingsUI.deviceInvariantApplyFromDb">Einstellungen aus Datenbank übernehmen</span>
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Divider (Expert) -->
@@ -1491,8 +1354,6 @@
                         <h4 class="setting-category-title" data-i18n="settingsUI.analysisMethod">Analysemethode</h4>
                         <p class="setting-category-description" data-i18n="settingsUI.analysisMethodDesc">Wählen Sie die passende Analysemethode für Ihre Maschine.</p>
 
-                        <!-- Mode Selector Container - rendered by ModeSelector component -->
-                        <div id="analysis-mode-selector"></div>
 
                         <!-- Mode-dependent settings info -->
                         <div class="mode-settings-info" id="mode-settings-info">
@@ -1503,14 +1364,6 @@
                                     <line x1="12" y1="8" x2="12.01" y2="8"/>
                                 </svg>
                                 <span data-i18n="settingsUI.level1Info">Level 1: Frequenz- und Amplitudeneinstellungen oben aktiv</span>
-                            </div>
-                            <div class="info-badge" data-detection-mode="CYCLIC">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="16" x2="12" y2="12"/>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                </svg>
-                                <span data-i18n="settingsUI.level2Info">Level 2: 10-Sekunden Aufnahme, YAMNet ML-Analyse</span>
                             </div>
                         </div>
                     </div>

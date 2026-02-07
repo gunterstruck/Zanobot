@@ -14,7 +14,6 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
-import { getDetectionModeManager } from '@core/detection-mode.js';
 import { t } from '../../i18n/index.js';
 import {
   HardwareCheck,
@@ -926,36 +925,18 @@ export class IdentifyPhase {
       }
       logger.info(`🎨 NFC-Onboarding: View Level von '${previousViewLevel}' auf 'basic' gesetzt`);
 
-      // SCHRITT 2: Detection Mode auf STATIONARY setzen (Mess-Algorithmus)
-      // STATIONARY (Level 1/GMIA) liefert zuverlässige Messwerte, CYCLIC (Level 2/YAMNet) nicht
-      const modeManager = getDetectionModeManager();
-      const previousDetectionMode = modeManager.getMode();
-      if (previousDetectionMode !== 'STATIONARY') {
-        modeManager.setMode('STATIONARY');
-        logger.info(`🔧 NFC-Onboarding: Detection Mode von ${previousDetectionMode} auf STATIONARY gesetzt`);
-      }
-
-      // SCHRITT 3: Trace-Session starten (für Debugging/Protokoll)
+      // SCHRITT 2: Trace-Session starten (für Debugging/Protokoll)
       onboardingTrace.start('nfc');
 
       // Mark NFC onboarding as active (for view level restore later)
       this.isNfcOnboardingActive = true;
 
-      // Trace: Beide Mode-Änderungen protokollieren
+      // Trace: Mode-Änderung protokollieren
       onboardingTrace.success('ui_mode_set', {
         from: previousViewLevel,
         to: 'basic',
         reason: 'nfc_onboarding',
       });
-      if (previousDetectionMode !== 'STATIONARY') {
-        onboardingTrace.success('detection_mode_set', {
-          from: previousDetectionMode,
-          to: 'STATIONARY',
-          reason: 'nfc_onboarding_requires_level1',
-        });
-      } else {
-        onboardingTrace.success('detection_mode_ok', { mode: 'STATIONARY' });
-      }
 
       // Show trace overlay for debugging (always show for NFC deep links, or when debug=1)
       const showDebugTrace = OnboardingTraceService.shouldShowTrace();
@@ -1117,10 +1098,7 @@ export class IdentifyPhase {
     // This ensures simplified inspection modal is shown regardless of user's view level setting
     document.body.setAttribute('data-nfc-diagnosis', 'true');
 
-    const mode = document.body.getAttribute('data-detection-mode');
-    const level2Button = document.getElementById('level2-diag-btn') as HTMLButtonElement | null;
-    const level1Button = document.getElementById('diagnose-btn') as HTMLButtonElement | null;
-    const startButton = mode === 'CYCLIC' ? level2Button : level1Button;
+    const startButton = document.getElementById('diagnose-btn') as HTMLButtonElement | null;
 
     if (!startButton) {
       return;
