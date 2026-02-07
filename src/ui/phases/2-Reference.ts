@@ -35,8 +35,8 @@ export class ReferencePhase {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
-  private recordingDuration: number; // seconds (warmup + actual recording)
-  private warmUpDuration: number = 5; // seconds (settling time for OS audio filters)
+  private recordingDuration: number; // seconds (total recording time as set by user)
+  private warmUpDuration: number = 1; // seconds (settling time for OS audio filters)
   private audioWorkletManager: AudioWorkletManager | null = null;
   private isRecordingActive: boolean = false;
   private recordedBlob: Blob | null = null; // For reference audio export
@@ -64,9 +64,9 @@ export class ReferencePhase {
     this.machine = machine || null;
     this.selectedDeviceId = selectedDeviceId;
 
-    // Load recording duration from settings (add warmup time for total duration)
+    // Load recording duration from settings (use exact duration from settings)
     const settings = getRecordingSettings();
-    this.recordingDuration = this.warmUpDuration + settings.recordingDuration;
+    this.recordingDuration = settings.recordingDuration;
 
     // DEBUG LOGGING: Show which machine is being used for reference recording
     if (machine) {
@@ -317,8 +317,8 @@ export class ReferencePhase {
   /**
    * Actually start recording after Smart Start completes
    *
-   * Important: We record the FULL 15 seconds (including warmup) for debugging,
-   * but only use the last 10 seconds (after warmup) for training.
+   * Important: We record for the user-configured duration (including warmup) for debugging,
+   * but only use the audio after warmup period for training.
    */
   private actuallyStartRecording(): void {
     if (!this.mediaStream) {
@@ -378,8 +378,8 @@ export class ReferencePhase {
 
       // Auto-stop after full duration
       // Use the user's configured recording duration
-      // Smart Start: 0s warmup + full recording duration
-      // Manual Start: 5s warmup + remaining recording duration
+      // Smart Start: 0s warmup (full duration is actual recording)
+      // Manual Start: 1s warmup included in total duration
       this.autoStopTimer = setTimeout(() => {
         this.stopRecording();
       }, this.recordingDuration * 1000);
@@ -490,7 +490,7 @@ export class ReferencePhase {
    * Process recorded audio and show review modal
    *
    * PHASE 2 WORKFLOW:
-   * 1. Extract features from post-warmup audio (seconds 5-15)
+   * 1. Extract features from post-warmup audio (after warmup period)
    * 2. Assess recording quality
    * 3. Show review modal with audio player and quality assessment
    * 4. Wait for user decision (Save or Discard)
@@ -551,7 +551,7 @@ export class ReferencePhase {
       // UPDATED: Increased from 2.0s to 5.0s for stable GMIA models
       // With 330ms windows + 66ms hop: 5s = ~70-80 chunks (sufficient for statistical stability)
       // 2s was too short (~26 chunks), leading to high variance and unreliable models
-      const MIN_TRAINING_DURATION = 5.0; // Minimum 5 seconds of training data
+      const MIN_TRAINING_DURATION = 4.0; // Minimum 4 seconds of training data
       const minTrainingSamples = Math.floor(MIN_TRAINING_DURATION * sampleRate);
 
       if (trainingSamples <= 0) {
@@ -885,11 +885,11 @@ export class ReferencePhase {
    * Start recording timer with dual-phase UI
    *
    * CRITICAL FIX: Timer behavior depends on whether Smart Start was used:
-   * - Smart Start used: Show only recording phase (10s total)
-   * - Smart Start NOT used: Show warmup + recording phases (5s + 10s = 15s total)
+   * - Smart Start used: Show only recording phase (user-configured duration)
+   * - Smart Start NOT used: Show warmup + recording phases (1s warmup + remaining time = user-configured duration)
    *
-   * Phase 1 (0-5s): "Stabilisierung..." (only if Smart Start NOT used)
-   * Phase 2 (0-10s or 5-15s): "Aufnahme..." (actual recording used for training)
+   * Phase 1 (0-1s): "Stabilisierung..." (only if Smart Start NOT used)
+   * Phase 2 (1s-end or 0-end): "Aufnahme..." (actual recording used for training)
    */
   private startTimer(): void {
     // CRITICAL FIX: Clear any existing timer first to prevent memory leaks
