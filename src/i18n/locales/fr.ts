@@ -898,4 +898,92 @@ export const fr: TranslationDict = {
     dataCleared:
       'La base de données a été réinitialisée suite à une mise à jour. Toutes les machines, enregistrements et diagnostics ont été supprimés.',
   },
+
+  // ============================================================================
+  // ABOUT MODAL
+  // ============================================================================
+  about: {
+    title: 'À propos de Zanobo',
+    subtitle: 'Assistant pour la comparaison acoustique des états de machines',
+
+    // Introduction
+    intro: '<strong>Zanobo 2.0</strong> est une Progressive Web App (PWA) respectueuse de la vie privée, conçue pour l\'analyse comparative de l\'acoustique des machines. Elle permet aux utilisateurs d\'enregistrer et de comparer les sons de machines entièrement <strong>hors ligne</strong>, sans dépendre de services cloud, de capteurs externes ou de modèles d\'IA.',
+
+    // Core Features
+    coreFeaturesTitle: 'Fonctionnalités principales',
+    coreFeatures: {
+      offlineFirst: '<strong>Hors ligne d\'abord :</strong> Tous les enregistrements et traitements sont effectués localement dans le navigateur.',
+      similarityScore: '<strong>Score de similarité (0–100%) :</strong> Zanobo calcule une similarité cosinus entre une référence et un nouvel enregistrement.',
+      userThreshold: '<strong>Seuil défini par l\'utilisateur :</strong> Les utilisateurs peuvent définir ce qui compte comme "Normal" ou "Déviant".',
+      visualFeedback: '<strong>Retour visuel du spectre :</strong> Spectre de fréquence en temps réel et visualisation du score.',
+      noDataLeaks: '<strong>Aucune donnée ne quitte l\'appareil :</strong> Toutes les données sonores et les scores sont stockés dans l\'IndexedDB local.',
+    },
+
+    // Legal Position
+    legalTitle: 'Position juridique et examen de la propriété intellectuelle',
+    legalIntro: 'Zanobo a été créé de manière indépendante en tant que projet open-source privé et non commercial sous <strong>licence MIT</strong>. Sa fonctionnalité est basée sur des procédures mathématiques décrites ouvertement (par ex. comparaison cosinus de type GMIA), et n\'intègre aucune logique système brevetée ni mécanismes d\'apprentissage.',
+    legalReview: 'Avant la publication, un examen juridique et technique détaillé a été effectué pour s\'assurer que la solution ne chevauche pas les brevets existants ou les méthodes internes de Siemens.',
+
+    // IP Table
+    ipTableTitle: 'Propriété intellectuelle pertinente et différenciation technique',
+    ipTable: {
+      headers: {
+        reference: 'Référence / Titre',
+        source: 'Source et statut',
+        protectedScope: 'Portée protégée',
+        zanoboDiff: 'Différence Zanobo',
+      },
+      rows: {
+        '0': {
+          reference: '<strong>PAPDEOTT005125</strong><br><em>Procédure de diagnostic des machines</em>',
+          source: 'Publication défensive, Siemens AG, 2016',
+          protectedScope: 'Système de diagnostic basé sur le cloud utilisant des bases de données centrales et des capteurs mobiles',
+          zanoboDiff: 'Zanobo est <strong>entièrement local</strong>, pas de cloud, pas de BD distante, pas de diagnostic',
+        },
+        '1': {
+          reference: '<strong>EP3701708B1</strong><br><em>Analyse à distance de l\'état de la machine</em>',
+          source: 'Brevet européen, Siemens AG, 2022',
+          protectedScope: 'Diagnostic à distance basé sur le ML avec des modèles entraînés et des capteurs',
+          zanoboDiff: 'Zanobo <strong>n\'utilise pas de ML</strong>, pas de cloud, pas de logique intégrée',
+        },
+        '2': {
+          reference: '<strong>US9263041B2</strong><br><em>Détection de canal dans le bruit utilisant GMIA</em>',
+          source: 'Siemens Corp, 2016',
+          protectedScope: 'Applique GMIA à la reconnaissance vocale et aux systèmes auditifs',
+          zanoboDiff: 'Zanobo utilise des mathématiques de type GMIA pour le <strong>non-vocal</strong>, comparaison locale uniquement',
+        },
+        '3': {
+          reference: '<strong>US9443201B2</strong><br><em>Apprentissage des signatures de capteurs</em>',
+          source: 'Siemens, 2016',
+          protectedScope: 'Classification et entraînement de modèles de profils de signaux',
+          zanoboDiff: 'Zanobo ne fait <strong>aucune classification</strong>, pas d\'entraînement de modèle',
+        },
+        '4': {
+          reference: '<strong>US9602781B2</strong><br><em>Démêlage de signaux sismiques (GMIA)</em>',
+          source: 'Schlumberger, 2017',
+          protectedScope: 'Applique une séparation de type GMIA aux données sismiques',
+          zanoboDiff: 'Zanobo n\'est pas lié au domaine et au type de signal',
+        },
+      },
+    },
+
+    // Transparency
+    transparencyTitle: 'Transparence et intention',
+    transparencyText1: 'Zanobo <strong>n\'est pas un outil de diagnostic</strong> et ne fait aucune évaluation technique automatisée. Il fournit uniquement une aide visuelle et mathématique à la comparaison, sous le contrôle total de l\'utilisateur. Tout le traitement se fait hors ligne. Aucune donnée utilisateur n\'est transmise, stockée à distance ou évaluée en externe.',
+    transparencyText2: 'Cette transparence reflète un engagement fort envers le développement open-source responsable et le respect de la propriété intellectuelle tierce.',
+
+    // Public Instance
+    publicInstance: 'Instance publique :',
+    publicInstanceUrl: 'https://zanobo.vercel.app',
+
+    // Version Info
+    version: 'Version :',
+    versionNumber: '2.0.0 (2026)',
+    developedBy: 'Développé par :',
+    developerName: 'Günter Struck',
+    license: 'Licence :',
+    licenseType: 'MIT',
+    stack: 'Stack :',
+    stackTech: 'TypeScript, Vite, Web Audio API',
+  },
 };

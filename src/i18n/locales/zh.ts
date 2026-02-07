@@ -894,4 +894,92 @@ export const zh: TranslationDict = {
       process_failed: '流程失败',
     },
   },
+
+  // ============================================================================
+  // ABOUT MODAL
+  // ============================================================================
+  about: {
+    title: '关于 Zanobo',
+    subtitle: '机器状态声学比较助手',
+
+    // Introduction
+    intro: '<strong>Zanobo 2.0</strong> 是一个注重隐私的渐进式 Web 应用（PWA），专为机器声学的比较分析而设计。它允许用户完全<strong>离线</strong>记录和比较机器声音，无需依赖云服务、外部传感器或 AI 模型。',
+
+    // Core Features
+    coreFeaturesTitle: '核心功能',
+    coreFeatures: {
+      offlineFirst: '<strong>离线优先：</strong>所有录音和处理都在浏览器本地进行。',
+      similarityScore: '<strong>相似度评分（0-100%）：</strong>Zanobo 计算参考录音和新录音之间的余弦相似度。',
+      userThreshold: '<strong>用户定义阈值：</strong>用户可以定义什么算作"正常"或"偏离"。',
+      visualFeedback: '<strong>可视化频谱反馈：</strong>实时频谱和评分可视化。',
+      noDataLeaks: '<strong>数据不离开设备：</strong>所有声音数据和评分都存储在本地 IndexedDB 中。',
+    },
+
+    // Legal Position
+    legalTitle: '法律地位和知识产权审查',
+    legalIntro: 'Zanobo 是作为私人非商业开源项目独立创建的，采用 <strong>MIT 许可证</strong>。其功能基于公开描述的数学程序（例如类 GMIA 余弦比较），不包含任何专利系统逻辑或学习机制。',
+    legalReview: '在发布之前，进行了详细的法律和技术审查，以确保该解决方案不与现有专利或西门子内部方法重叠。',
+
+    // IP Table
+    ipTableTitle: '相关知识产权和技术差异',
+    ipTable: {
+      headers: {
+        reference: '参考 / 标题',
+        source: '来源和状态',
+        protectedScope: '保护范围',
+        zanoboDiff: 'Zanobo 差异',
+      },
+      rows: {
+        '0': {
+          reference: '<strong>PAPDEOTT005125</strong><br><em>机器诊断程序</em>',
+          source: '防御性出版物，西门子公司，2016',
+          protectedScope: '使用中央数据库和移动传感器的基于云的诊断系统',
+          zanoboDiff: 'Zanobo 是<strong>完全本地的</strong>，无云、无远程数据库、无诊断',
+        },
+        '1': {
+          reference: '<strong>EP3701708B1</strong><br><em>远程机器状态分析</em>',
+          source: '欧洲专利，西门子公司，2022',
+          protectedScope: '基于 ML 的远程诊断，带有训练模型和传感器',
+          zanoboDiff: 'Zanobo <strong>不使用 ML</strong>，无云、无嵌入式逻辑',
+        },
+        '2': {
+          reference: '<strong>US9263041B2</strong><br><em>使用 GMIA 进行噪声中的信道检测</em>',
+          source: '西门子公司，2016',
+          protectedScope: '将 GMIA 应用于语音识别和听觉系统',
+          zanoboDiff: 'Zanobo 使用类似 GMIA 的数学进行<strong>非语音</strong>，仅本地比较',
+        },
+        '3': {
+          reference: '<strong>US9443201B2</strong><br><em>传感器特征学习</em>',
+          source: '西门子，2016',
+          protectedScope: '信号配置文件的分类和模型训练',
+          zanoboDiff: 'Zanobo <strong>不进行分类</strong>，无模型训练',
+        },
+        '4': {
+          reference: '<strong>US9602781B2</strong><br><em>地震信号去混合（GMIA）</em>',
+          source: '斯伦贝谢，2017',
+          protectedScope: '将类似 GMIA 的分离应用于地震数据',
+          zanoboDiff: 'Zanobo 在领域和信号类型上无关',
+        },
+      },
+    },
+
+    // Transparency
+    transparencyTitle: '透明度和意图',
+    transparencyText1: 'Zanobo <strong>不是诊断工具</strong>，不进行自动技术评估。它仅提供视觉和数学比较辅助，完全由用户控制。所有处理都在离线进行。不传输、远程存储或外部评估用户数据。',
+    transparencyText2: '这种透明度反映了对负责任的开源开发和尊重第三方知识产权的坚定承诺。',
+
+    // Public Instance
+    publicInstance: '公共实例：',
+    publicInstanceUrl: 'https://zanobo.vercel.app',
+
+    // Version Info
+    version: '版本：',
+    versionNumber: '2.0.0 (2026)',
+    developedBy: '开发者：',
+    developerName: 'Günter Struck',
+    license: '许可证：',
+    licenseType: 'MIT',
+    stack: '技术栈：',
+    stackTech: 'TypeScript、Vite、Web Audio API',
+  },
 };

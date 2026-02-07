@@ -14,6 +14,7 @@ import './styles/toast.css';
 
 import { initDB, getDBStats } from '@data/db.js';
 import { toast } from '@ui/components/Toast.js';
+import { AboutModalController } from '@ui/components/AboutModalController.js';
 import { nfcImportService } from '@data/NfcImportService.js';
 import { Router } from '@ui/router.js';
 import { BannerManager } from '@ui/BannerManager.js';
@@ -226,6 +227,9 @@ class ZanobotApp {
       this.setupQuickThemeToggle();
       this.setupViewLevelSelector();
       this.setupFooterLinks();
+
+      // Initialize About Modal with dynamic i18n content
+      new AboutModalController();
 
       // Translate static DOM elements based on detected language
       translateDOM();
