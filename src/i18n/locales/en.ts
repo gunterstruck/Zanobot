@@ -509,6 +509,7 @@ export const en: TranslationDict = {
     amplitudeLogDesc: 'Logarithmic (dB) - emphasizes quiet signals',
     analysisMethod: 'Analysis Method',
     analysisMethodDesc: 'Select the appropriate analysis method for your machine.',
+    level1Info: 'Level 1: Frequency and amplitude settings above are active',
     dataManagement: 'Data Management',
     exportDatabase: 'Export database',
     shareDatabase: 'Send database file',

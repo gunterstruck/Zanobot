@@ -479,6 +479,7 @@ export const zh: TranslationDict = {
     frequencyAxis: '频率轴', frequencyAxisDesc: '对数（20-500 Hz范围更多细节）', frequencyLogDesc: '对数（20-500 Hz范围更多细节）',
     amplitudeAxis: 'Y轴/振幅', amplitudeAxisDesc: '对数（dB）- 强调微弱信号', amplitudeLogDesc: '对数（dB）- 强调微弱信号',
     analysisMethod: '分析方法', analysisMethodDesc: '为您的机器选择合适的分析方法。',
+    level1Info: '等级 1：上方的频率和振幅设置处于活动状态',
     dataManagement: '数据管理', exportDatabase: '导出数据库', shareDatabase: '发送数据库',
     importDatabase: '导入数据库', statistics: '统计：',
     machines: '机器', recordings: '录制', diagnoses: '诊断',
