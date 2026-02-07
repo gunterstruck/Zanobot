@@ -929,38 +929,38 @@ export const zh: TranslationDict = {
         protectedScope: '保护范围',
         zanoboDiff: 'Zanobo 差异',
       },
-      rows: [
-        {
+      rows: {
+        '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>机器诊断程序</em>',
           source: '防御性出版物，西门子公司，2016',
           protectedScope: '使用中央数据库和移动传感器的基于云的诊断系统',
           zanoboDiff: 'Zanobo 是<strong>完全本地的</strong>，无云、无远程数据库、无诊断',
         },
-        {
+        '1': {
           reference: '<strong>EP3701708B1</strong><br><em>远程机器状态分析</em>',
           source: '欧洲专利，西门子公司，2022',
           protectedScope: '基于 ML 的远程诊断，带有训练模型和传感器',
           zanoboDiff: 'Zanobo <strong>不使用 ML</strong>，无云、无嵌入式逻辑',
         },
-        {
+        '2': {
           reference: '<strong>US9263041B2</strong><br><em>使用 GMIA 进行噪声中的信道检测</em>',
           source: '西门子公司，2016',
           protectedScope: '将 GMIA 应用于语音识别和听觉系统',
           zanoboDiff: 'Zanobo 使用类似 GMIA 的数学进行<strong>非语音</strong>，仅本地比较',
         },
-        {
+        '3': {
           reference: '<strong>US9443201B2</strong><br><em>传感器特征学习</em>',
           source: '西门子，2016',
           protectedScope: '信号配置文件的分类和模型训练',
           zanoboDiff: 'Zanobo <strong>不进行分类</strong>，无模型训练',
         },
-        {
+        '4': {
           reference: '<strong>US9602781B2</strong><br><em>地震信号去混合（GMIA）</em>',
           source: '斯伦贝谢，2017',
           protectedScope: '将类似 GMIA 的分离应用于地震数据',
           zanoboDiff: 'Zanobo 在领域和信号类型上无关',
         },
-      ],
+      },
     },
 
     // Transparency

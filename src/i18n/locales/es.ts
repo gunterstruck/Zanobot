@@ -933,38 +933,38 @@ export const es: TranslationDict = {
         protectedScope: 'Ámbito protegido',
         zanoboDiff: 'Diferencia de Zanobo',
       },
-      rows: [
-        {
+      rows: {
+        '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procedimiento para diagnóstico de máquinas</em>',
           source: 'Publicación defensiva, Siemens AG, 2016',
           protectedScope: 'Sistema de diagnóstico basado en la nube que utiliza bases de datos centrales y sensores móviles',
           zanoboDiff: 'Zanobo es <strong>completamente local</strong>, sin nube, sin BD remota, sin diagnóstico',
         },
-        {
+        '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Análisis remoto del estado de la máquina</em>',
           source: 'Patente europea, Siemens AG, 2022',
           protectedScope: 'Diagnóstico remoto basado en ML con modelos entrenados y sensores',
           zanoboDiff: 'Zanobo <strong>no usa ML</strong>, sin nube, sin lógica incorporada',
         },
-        {
+        '2': {
           reference: '<strong>US9263041B2</strong><br><em>Detección de canales en ruido usando GMIA</em>',
           source: 'Siemens Corp, 2016',
           protectedScope: 'Aplica GMIA al reconocimiento de voz y sistemas auditivos',
           zanoboDiff: 'Zanobo usa matemáticas similares a GMIA para <strong>no-voz</strong>, solo comparación local',
         },
-        {
+        '3': {
           reference: '<strong>US9443201B2</strong><br><em>Aprendizaje de firmas de sensores</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Clasificación y entrenamiento de modelos de perfiles de señales',
           zanoboDiff: 'Zanobo <strong>no hace clasificación</strong>, sin entrenamiento de modelos',
         },
-        {
+        '4': {
           reference: '<strong>US9602781B2</strong><br><em>Desmezcla de señales sísmicas (GMIA)</em>',
           source: 'Schlumberger, 2017',
           protectedScope: 'Aplica separación similar a GMIA a datos sísmicos',
           zanoboDiff: 'Zanobo no está relacionado en dominio y tipo de señal',
         },
-      ],
+      },
     },
 
     // Transparency

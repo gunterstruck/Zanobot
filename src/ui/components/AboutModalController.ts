@@ -96,9 +96,8 @@ export class AboutModalController {
       zanoboDiff: t('about.ipTable.headers.zanoboDiff'),
     };
 
-    // Get rows from i18n - they are stored as an array
-    // We need to access them differently since they're in the translation object
-    const rows = this.getIPTableRows();
+    // We have 5 rows (0-4) stored as object keys in i18n
+    const rowIndices = ['0', '1', '2', '3', '4'];
 
     return `
       <div style="overflow-x: auto;">
@@ -112,7 +111,7 @@ export class AboutModalController {
             </tr>
           </thead>
           <tbody>
-            ${rows.map((row, index) => `
+            ${rowIndices.map((index) => `
               <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">${t(`about.ipTable.rows.${index}.reference`)}</td>
                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">${t(`about.ipTable.rows.${index}.source`)}</td>
@@ -124,18 +123,5 @@ export class AboutModalController {
         </table>
       </div>
     `;
-  }
-
-  /**
-   * Get IP table rows count (5 rows)
-   */
-  private getIPTableRows(): Array<{ index: number }> {
-    return [
-      { index: 0 },
-      { index: 1 },
-      { index: 2 },
-      { index: 3 },
-      { index: 4 },
-    ];
   }
 }

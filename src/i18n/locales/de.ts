@@ -1083,38 +1083,38 @@ export const de: TranslationDict = {
         protectedScope: 'Geschützter Bereich',
         zanoboDiff: 'Zanobo-Unterschied',
       },
-      rows: [
-        {
+      rows: {
+        '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Verfahren zur Diagnose von Maschinen</em>',
           source: 'Defensive Veröffentlichung, Siemens AG, 2016',
           protectedScope: 'Cloudbasiertes Diagnosesystem mit zentralen Datenbanken und mobilen Sensoren',
           zanoboDiff: 'Zanobo ist <strong>vollständig lokal</strong>, keine Cloud, keine Remote-DB, keine Diagnose',
         },
-        {
+        '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em>',
           source: 'Europäisches Patent, Siemens AG, 2022',
           protectedScope: 'ML-basierte Remote-Diagnose mit trainierten Modellen und Sensoren',
           zanoboDiff: 'Zanobo verwendet <strong>kein ML</strong>, keine Cloud, keine eingebettete Logik',
         },
-        {
+        '2': {
           reference: '<strong>US9263041B2</strong><br><em>Channel detection in noise using GMIA</em>',
           source: 'Siemens Corp, 2016',
           protectedScope: 'Wendet GMIA auf Spracherkennung und Hörsysteme an',
           zanoboDiff: 'Zanobo nutzt GMIA-ähnliche Mathematik für <strong>Nicht-Sprache</strong>, nur lokaler Vergleich',
         },
-        {
+        '3': {
           reference: '<strong>US9443201B2</strong><br><em>Learning of sensor signatures</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Klassifikation und Modelltraining von Signalprofilen',
           zanoboDiff: 'Zanobo macht <strong>keine Klassifikation</strong>, kein Modelltraining',
         },
-        {
+        '4': {
           reference: '<strong>US9602781B2</strong><br><em>Seismic signal deblending (GMIA)</em>',
           source: 'Schlumberger, 2017',
           protectedScope: 'Wendet GMIA-ähnliche Trennung auf seismische Daten an',
           zanoboDiff: 'Zanobo ist im Bereich und Signaltyp nicht verwandt',
         },
-      ],
+      },
     },
 
     // Transparency

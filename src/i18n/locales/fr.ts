@@ -933,38 +933,38 @@ export const fr: TranslationDict = {
         protectedScope: 'Portée protégée',
         zanoboDiff: 'Différence Zanobo',
       },
-      rows: [
-        {
+      rows: {
+        '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procédure de diagnostic des machines</em>',
           source: 'Publication défensive, Siemens AG, 2016',
           protectedScope: 'Système de diagnostic basé sur le cloud utilisant des bases de données centrales et des capteurs mobiles',
           zanoboDiff: 'Zanobo est <strong>entièrement local</strong>, pas de cloud, pas de BD distante, pas de diagnostic',
         },
-        {
+        '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Analyse à distance de l\'état de la machine</em>',
           source: 'Brevet européen, Siemens AG, 2022',
           protectedScope: 'Diagnostic à distance basé sur le ML avec des modèles entraînés et des capteurs',
           zanoboDiff: 'Zanobo <strong>n\'utilise pas de ML</strong>, pas de cloud, pas de logique intégrée',
         },
-        {
+        '2': {
           reference: '<strong>US9263041B2</strong><br><em>Détection de canal dans le bruit utilisant GMIA</em>',
           source: 'Siemens Corp, 2016',
           protectedScope: 'Applique GMIA à la reconnaissance vocale et aux systèmes auditifs',
           zanoboDiff: 'Zanobo utilise des mathématiques de type GMIA pour le <strong>non-vocal</strong>, comparaison locale uniquement',
         },
-        {
+        '3': {
           reference: '<strong>US9443201B2</strong><br><em>Apprentissage des signatures de capteurs</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Classification et entraînement de modèles de profils de signaux',
           zanoboDiff: 'Zanobo ne fait <strong>aucune classification</strong>, pas d\'entraînement de modèle',
         },
-        {
+        '4': {
           reference: '<strong>US9602781B2</strong><br><em>Démêlage de signaux sismiques (GMIA)</em>',
           source: 'Schlumberger, 2017',
           protectedScope: 'Applique une séparation de type GMIA aux données sismiques',
           zanoboDiff: 'Zanobo n\'est pas lié au domaine et au type de signal',
         },
-      ],
+      },
     },
 
     // Transparency

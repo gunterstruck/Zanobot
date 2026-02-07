@@ -1029,38 +1029,38 @@ export const en: TranslationDict = {
         protectedScope: 'Protected Scope',
         zanoboDiff: 'Zanobo Difference',
       },
-      rows: [
-        {
+      rows: {
+        '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procedure for diagnosing machines</em>',
           source: 'Defensive publication, Siemens AG, 2016',
           protectedScope: 'Cloud-based diagnostic system using central databases and mobile sensors',
           zanoboDiff: 'Zanobo is <strong>fully local</strong>, no cloud, no remote DB, no diagnostics',
         },
-        {
+        '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em>',
           source: 'European Patent, Siemens AG, 2022',
           protectedScope: 'ML-based remote diagnostics with trained models and sensors',
           zanoboDiff: 'Zanobo uses <strong>no ML</strong>, no cloud, no embedded logic',
         },
-        {
+        '2': {
           reference: '<strong>US9263041B2</strong><br><em>Channel detection in noise using GMIA</em>',
           source: 'Siemens Corp, 2016',
           protectedScope: 'Applies GMIA to speech recognition and hearing systems',
           zanoboDiff: 'Zanobo uses GMIA-like math for <strong>non-speech</strong>, local comparison only',
         },
-        {
+        '3': {
           reference: '<strong>US9443201B2</strong><br><em>Learning of sensor signatures</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Classification and model training of signal profiles',
           zanoboDiff: 'Zanobo does <strong>no classification</strong>, no model training',
         },
-        {
+        '4': {
           reference: '<strong>US9602781B2</strong><br><em>Seismic signal deblending (GMIA)</em>',
           source: 'Schlumberger, 2017',
           protectedScope: 'Applies GMIA-like separation to seismic data',
           zanoboDiff: 'Zanobo is unrelated in domain and signal type',
         },
-      ],
+      },
     },
 
     // Transparency
