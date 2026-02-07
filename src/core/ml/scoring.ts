@@ -25,6 +25,7 @@ import { inferGMIA } from './gmia.js';
 import { vectorMagnitude } from './mathUtils.js';
 import { logger } from '@utils/logger.js';
 import { t } from '../../i18n/index.js';
+import { getRecordingSettings } from '@utils/recordingSettings.js';
 
 /**
  * Thresholds for health status classification
@@ -38,8 +39,21 @@ const HEALTH_THRESHOLDS = {
 /**
  * Minimum score for confident state detection
  * Below this threshold, detected state labels are hidden to avoid confusion
+ *
+ * @deprecated Use getMinConfidentMatchScore() instead to respect user settings
  */
 export const MIN_CONFIDENT_MATCH_SCORE = 70;
+
+/**
+ * Get the minimum score for confident state detection from user settings
+ * Below this threshold, detected state labels are hidden to avoid confusion
+ *
+ * @returns Minimum confidence score threshold (0-100)
+ */
+export function getMinConfidentMatchScore(): number {
+  const settings = getRecordingSettings();
+  return settings.confidenceThreshold;
+}
 
 /**
  * Confidence calculation parameters
@@ -523,6 +537,8 @@ export class LabelHistory {
 /**
  * Uncertainty threshold for multiclass diagnosis
  * Scores below this threshold indicate an unknown anomaly
+ *
+ * @deprecated This constant is no longer used. The threshold is now read from user settings.
  */
 const UNCERTAINTY_THRESHOLD = 70;
 
@@ -648,9 +664,13 @@ export function classifyDiagnosticState(
 
   // Step 4: Uncertainty check - is the best score too low?
   let status: DiagnosisResult['status'];
+  // Get user-configured confidence threshold from settings
+  const settings = getRecordingSettings();
+  const uncertaintyThreshold = settings.confidenceThreshold;
+
   // CRITICAL FIX: Check bestModel === null FIRST to prevent null reference error
   // This ensures we never access bestModel.type when bestModel is null
-  if (bestModel === null || bestScore < UNCERTAINTY_THRESHOLD) {
+  if (bestModel === null || bestScore < uncertaintyThreshold) {
     // Anomaly detected, but doesn't match any known pattern
     // OR all scores were zero/negative (bestModel remains null)
     status = 'uncertain';

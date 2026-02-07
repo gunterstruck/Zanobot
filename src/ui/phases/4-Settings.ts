@@ -18,6 +18,10 @@ import {
   setVisualizerSettings,
 } from '@utils/visualizerSettings.js';
 import {
+  getRecordingSettings,
+  setRecordingSettings,
+} from '@utils/recordingSettings.js';
+import {
   applyDeviceInvariantDetails,
   clearDeviceInvariantMismatch,
   getDeviceInvariantConfig,
@@ -66,6 +70,7 @@ export class SettingsPhase {
     this.registerEventHandler('show-stats-btn', () => this.showStats());
 
     this.initVisualizerScaleSettings();
+    this.initRecordingSettings();
     this.initDeviceInvariantSettings();
 
     // Initialize mode selector for analysis method selection
@@ -175,6 +180,49 @@ export class SettingsPhase {
       ampToggle.addEventListener('change', () => {
         setVisualizerSettings({
           amplitudeScale: ampToggle.checked ? 'log' : 'linear',
+        });
+      });
+    }
+  }
+
+  private initRecordingSettings(): void {
+    const confidenceSlider = document.getElementById(
+      'confidence-threshold'
+    ) as HTMLInputElement | null;
+    const confidenceValue = document.getElementById('confidence-value');
+    const durationSelect = document.getElementById(
+      'recording-duration'
+    ) as HTMLSelectElement | null;
+
+    if (!confidenceSlider && !durationSelect) {
+      return;
+    }
+
+    const settings = getRecordingSettings();
+
+    if (confidenceSlider) {
+      confidenceSlider.value = settings.confidenceThreshold.toString();
+      if (confidenceValue) {
+        confidenceValue.textContent = `${settings.confidenceThreshold}%`;
+      }
+
+      confidenceSlider.addEventListener('input', () => {
+        const value = parseInt(confidenceSlider.value, 10);
+        if (confidenceValue) {
+          confidenceValue.textContent = `${value}%`;
+        }
+        setRecordingSettings({
+          confidenceThreshold: value,
+        });
+      });
+    }
+
+    if (durationSelect) {
+      durationSelect.value = settings.recordingDuration.toString();
+      durationSelect.addEventListener('change', () => {
+        const value = parseInt(durationSelect.value, 10);
+        setRecordingSettings({
+          recordingDuration: value,
         });
       });
     }

@@ -29,6 +29,7 @@ import { BUTTON_TEXT } from '@ui/constants.js';
 import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
 import { t, getLocale } from '../../i18n/index.js';
+import { getRecordingSettings } from '@utils/recordingSettings.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -41,7 +42,7 @@ export class ReferencePhase {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private visualizer: AudioVisualizer | null = null;
-  private recordingDuration: number = 15; // seconds (5s warmup + 10s actual recording)
+  private recordingDuration: number; // seconds (warmup + actual recording)
   private warmUpDuration: number = 5; // seconds (settling time for OS audio filters)
   private audioWorkletManager: AudioWorkletManager | null = null;
   private isRecordingActive: boolean = false;
@@ -69,6 +70,10 @@ export class ReferencePhase {
   constructor(machine?: Machine | null, selectedDeviceId?: string) {
     this.machine = machine || null;
     this.selectedDeviceId = selectedDeviceId;
+
+    // Load recording duration from settings (add warmup time for total duration)
+    const settings = getRecordingSettings();
+    this.recordingDuration = this.warmUpDuration + settings.recordingDuration;
 
     // DEBUG LOGGING: Show which machine is being used for reference recording
     if (machine) {
