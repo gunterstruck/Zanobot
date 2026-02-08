@@ -123,11 +123,15 @@ export class SettingsPhase {
       'confidence-threshold'
     ) as HTMLInputElement | null;
     const confidenceValue = document.getElementById('confidence-value');
+    const faultySlider = document.getElementById(
+      'faulty-threshold'
+    ) as HTMLInputElement | null;
+    const faultyValue = document.getElementById('faulty-value');
     const durationSelect = document.getElementById(
       'recording-duration'
     ) as HTMLSelectElement | null;
 
-    if (!confidenceSlider && !durationSelect) {
+    if (!confidenceSlider && !faultySlider && !durationSelect) {
       return;
     }
 
@@ -148,10 +152,46 @@ export class SettingsPhase {
           setRecordingSettings({
             confidenceThreshold: value,
           });
+          // Update faulty slider max to ensure it stays below confidence threshold
+          if (faultySlider) {
+            const currentFaulty = parseInt(faultySlider.value, 10);
+            if (currentFaulty >= value) {
+              faultySlider.value = Math.max(0, value - 10).toString();
+              if (faultyValue) {
+                faultyValue.textContent = `${faultySlider.value}%`;
+              }
+            }
+          }
         } catch (error) {
           logger.error('Failed to save confidence threshold:', error);
           notify.error(
             'Die Vertrauensschwelle konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
+            error as Error,
+            { title: 'Speicherfehler', duration: 5000 }
+          );
+        }
+      });
+    }
+
+    if (faultySlider) {
+      faultySlider.value = settings.faultyThreshold.toString();
+      if (faultyValue) {
+        faultyValue.textContent = `${settings.faultyThreshold}%`;
+      }
+
+      faultySlider.addEventListener('input', () => {
+        const value = parseInt(faultySlider.value, 10);
+        if (faultyValue) {
+          faultyValue.textContent = `${value}%`;
+        }
+        try {
+          setRecordingSettings({
+            faultyThreshold: value,
+          });
+        } catch (error) {
+          logger.error('Failed to save faulty threshold:', error);
+          notify.error(
+            'Die Auffälligkeitsschwelle konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
             error as Error,
             { title: 'Speicherfehler', duration: 5000 }
           );

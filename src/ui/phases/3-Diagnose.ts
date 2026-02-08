@@ -530,9 +530,13 @@ export class DiagnosePhase {
       const filteredScore = this.scoreHistory.getFilteredScore();
 
       // Step 5: Derive status from filtered score for consistency
-      // Use user-configured threshold from settings
+      // Use user-configured thresholds from settings
       const settings = getRecordingSettings();
-      const filteredStatus = classifyHealthStatus(filteredScore, settings.confidenceThreshold);
+      const filteredStatus = classifyHealthStatus(
+        filteredScore,
+        settings.confidenceThreshold,
+        settings.faultyThreshold
+      );
 
       // Step 6: Store debug values from diagnosis metadata
       if (diagnosis.metadata?.debug) {

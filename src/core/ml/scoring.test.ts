@@ -105,12 +105,33 @@ describe('Health Scoring', () => {
       expect(classifyHealthStatus(90, 90)).toBe('healthy');
     });
 
-    it('should still use uncertain threshold (50) for faulty classification', () => {
-      // Even with custom healthy threshold, uncertain/faulty boundary stays at 50
+    it('should still use uncertain threshold (50) for faulty classification with default', () => {
+      // Even with custom healthy threshold, uncertain/faulty boundary stays at 50 by default
       expect(classifyHealthStatus(49, 90)).toBe('faulty');
       expect(classifyHealthStatus(50, 90)).toBe('uncertain');
       expect(classifyHealthStatus(89, 90)).toBe('uncertain');
       expect(classifyHealthStatus(90, 90)).toBe('healthy');
+    });
+
+    it('should respect custom faulty threshold', () => {
+      // With healthyThreshold=80 and faultyThreshold=40
+      expect(classifyHealthStatus(85, 80, 40)).toBe('healthy');   // >= 80
+      expect(classifyHealthStatus(80, 80, 40)).toBe('healthy');   // >= 80
+      expect(classifyHealthStatus(60, 80, 40)).toBe('uncertain'); // 40-80
+      expect(classifyHealthStatus(40, 80, 40)).toBe('uncertain'); // >= 40
+      expect(classifyHealthStatus(39, 80, 40)).toBe('faulty');    // < 40
+
+      // With healthyThreshold=84 and faultyThreshold=60
+      expect(classifyHealthStatus(90, 84, 60)).toBe('healthy');   // >= 84
+      expect(classifyHealthStatus(73, 84, 60)).toBe('uncertain'); // 60-84
+      expect(classifyHealthStatus(60, 84, 60)).toBe('uncertain'); // >= 60
+      expect(classifyHealthStatus(59, 84, 60)).toBe('faulty');    // < 60
+    });
+
+    it('should handle edge case where both thresholds are the same', () => {
+      // If both thresholds are 70, scores >=70 are healthy, <70 are faulty (no uncertain range)
+      expect(classifyHealthStatus(70, 70, 70)).toBe('healthy');
+      expect(classifyHealthStatus(69, 70, 70)).toBe('faulty');
     });
   });
 

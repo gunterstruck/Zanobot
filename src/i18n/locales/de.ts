@@ -520,6 +520,7 @@ export const de: TranslationDict = {
     initHardwareCheck: 'Initialisiere Hardware-Check',
     changeMicrophone: 'Anderes Mikrofon wählen',
     confidenceThreshold: 'Vertrauensschwelle',
+    faultyThreshold: 'Auffälligkeitsschwelle',
     recordingDuration: 'Aufnahmedauer',
     recordingDurationDesc:
       'Reine Aufnahmezeit für Trainingsdaten. Zusätzlich werden 5 Sekunden Stabilisierungszeit für optimale Audioqualität vorgeschaltet.',

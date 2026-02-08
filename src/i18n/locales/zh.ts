@@ -473,6 +473,7 @@ export const zh: TranslationDict = {
     audioSettings: '音频设置', audioHardware: '音频硬件',
     detectingMic: '正在检测麦克风...', detectingMicrophone: '正在检测麦克风...', initHardwareCheck: '初始化硬件检查',
     changeMicrophone: '更换麦克风', confidenceThreshold: '置信度阈值',
+    faultyThreshold: '异常阈值',
     recordingDuration: '录制时长',
     recordingDurationDesc: '训练数据的净录制时间。额外增加5秒稳定时间以获得最佳音频质量。',
     seconds5: '5秒', seconds10: '10秒', seconds15: '15秒', seconds: '秒',
