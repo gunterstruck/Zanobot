@@ -498,9 +498,12 @@ class ZanobotApp {
 
         updateCompactExpandedState();
 
-        // Reset debounce flag after animation completes (300ms matches CSS transition)
+        // CRITICAL FIX: Reset debounce flag after animation completes (300ms matches CSS transition)
+        // Using requestAnimationFrame ensures the timeout executes reliably even under heavy load
         setTimeout(() => {
-          isAnimating = false;
+          requestAnimationFrame(() => {
+            isAnimating = false;
+          });
         }, 300);
       });
     });

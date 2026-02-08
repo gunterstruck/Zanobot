@@ -345,10 +345,16 @@ export class IdentifyPhase {
    * Close scanner modal
    */
   private async closeScanner(): Promise<void> {
-    await this.stopScanner();
-
-    if (this.scannerModal) {
-      this.scannerModal.style.display = 'none';
+    try {
+      await this.stopScanner();
+    } catch (error) {
+      logger.error('Error stopping scanner:', error);
+    } finally {
+      // CRITICAL FIX: Always hide modal, even if stopScanner() fails
+      // This ensures the modal doesn't block clicks if scanner cleanup errors occur
+      if (this.scannerModal) {
+        this.scannerModal.style.display = 'none';
+      }
     }
   }
 
@@ -631,6 +637,13 @@ export class IdentifyPhase {
       if (result.success) {
         overlay.showSuccess();
         logger.info(`✅ Reference DB downloaded: ${result.modelsImported} models, v${result.version}`);
+
+        // CRITICAL FIX: Explicitly destroy overlay to prevent it from blocking clicks
+        // The setTimeout in showSuccess() might fail, leaving the overlay active
+        setTimeout(() => {
+          overlay.hide();
+          overlay.destroy();
+        }, 1600); // Slightly longer than showSuccess timeout to ensure it completes
 
         // CRITICAL: Refresh machine lists after successful import
         // This is especially important for full database imports where the
