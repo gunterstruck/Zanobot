@@ -787,13 +787,13 @@ export const zh: TranslationDict = {
       similarityScore: '<strong>相似度评分（0-100%）：</strong>Zanobo 计算参考录音和新录音之间的余弦相似度。',
       userThreshold: '<strong>用户定义阈值：</strong>用户可以定义什么算作"正常"或"偏离"。',
       visualFeedback: '<strong>可视化频谱反馈：</strong>实时频谱和评分可视化。',
-      noDataLeaks: '<strong>数据不离开设备：</strong>所有声音数据和评分都存储在本地 IndexedDB 中。',
+      noDataLeaks: '<strong>数据不离开设备：</strong>所有声音数据和评分都专门存储在本地 IndexedDB 中。',
     },
 
     // Legal Position
     legalTitle: '法律地位和知识产权审查',
     legalIntro: 'Zanobo 是作为私人非商业开源项目独立创建的，采用 <strong>MIT 许可证</strong>。其功能基于公开描述的数学程序（例如类 GMIA 余弦比较），不包含任何专利系统逻辑或学习机制。',
-    legalReview: '在发布之前，进行了详细的法律和技术审查，以确保该解决方案不与现有专利或西门子内部方法重叠。',
+    legalReview: '在发布之前，进行了详细的法律和技术审查，以确保该解决方案不与现有专利或内部方法产生冲突。',
 
     // IP Table
     ipTableTitle: '相关知识产权和技术差异',
@@ -820,19 +820,19 @@ export const zh: TranslationDict = {
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>使用 GMIA 进行噪声中的信道检测</em>',
           source: '西门子公司，2016',
-          protectedScope: '将 GMIA 应用于语音识别和听觉系统',
-          zanoboDiff: 'Zanobo 使用类似 GMIA 的数学进行<strong>非语音</strong>，仅本地比较',
+          protectedScope: 'GMIA 在语音识别和听觉系统中的应用',
+          zanoboDiff: 'Zanobo 使用类似 GMIA 的数学进行<strong>非语音</strong>，专门本地比较',
         },
         '3': {
           reference: '<strong>US9443201B2</strong><br><em>传感器特征学习</em>',
           source: '西门子，2016',
           protectedScope: '信号配置文件的分类和模型训练',
-          zanoboDiff: 'Zanobo <strong>不进行分类</strong>，无模型训练',
+          zanoboDiff: 'Zanobo <strong>不进行分类</strong>，不进行模型训练',
         },
         '4': {
           reference: '<strong>US9602781B2</strong><br><em>地震信号去混合（GMIA）</em>',
           source: '斯伦贝谢，2017',
-          protectedScope: '将类似 GMIA 的分离应用于地震数据',
+          protectedScope: '基于 GMIA 的地震信号分离',
           zanoboDiff: 'Zanobo 在领域和信号类型上无关',
         },
       },
@@ -840,8 +840,8 @@ export const zh: TranslationDict = {
 
     // Transparency
     transparencyTitle: '透明度和意图',
-    transparencyText1: 'Zanobo <strong>不是诊断工具</strong>，不进行自动技术评估。它仅提供视觉和数学比较辅助，完全由用户控制。所有处理都在离线进行。不传输、远程存储或外部评估用户数据。',
-    transparencyText2: '这种透明度反映了对负责任的开源开发和尊重第三方知识产权的坚定承诺。',
+    transparencyText1: 'Zanobo <strong>不是诊断工具</strong>，不进行自动技术评估。它专门提供视觉和数学比较辅助，完全由用户控制。所有处理都在离线进行。不传输、远程存储或外部评估用户数据。',
+    transparencyText2: '这种透明度反映了对负责任的开源开发和尊重第三方权利的坚定承诺。',
 
     // Public Instance
     publicInstance: '公共实例：',

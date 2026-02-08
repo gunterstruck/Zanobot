@@ -791,13 +791,13 @@ export const es: TranslationDict = {
       similarityScore: '<strong>Puntuación de similitud (0–100%):</strong> Zanobo calcula una similitud de coseno entre una referencia y una nueva grabación.',
       userThreshold: '<strong>Umbral definido por el usuario:</strong> Los usuarios pueden definir qué cuenta como "Normal" o "Desviado".',
       visualFeedback: '<strong>Retroalimentación visual del espectro:</strong> Espectro de frecuencia en tiempo real y visualización de puntuación.',
-      noDataLeaks: '<strong>Ningún dato sale del dispositivo:</strong> Todos los datos de sonido y puntuaciones se almacenan en la IndexedDB local.',
+      noDataLeaks: '<strong>Ningún dato sale del dispositivo:</strong> Todos los datos de sonido y puntuaciones se almacenan exclusivamente en la IndexedDB local.',
     },
 
     // Legal Position
     legalTitle: 'Posición legal y revisión de propiedad intelectual',
     legalIntro: 'Zanobo fue creado de forma independiente como un proyecto privado de código abierto no comercial bajo la <strong>licencia MIT</strong>. Su funcionalidad se basa en procedimientos matemáticos descritos abiertamente (p. ej., comparación de coseno similar a GMIA), y no incorpora ninguna lógica de sistema patentada ni mecanismos de aprendizaje.',
-    legalReview: 'Antes de la publicación, se realizó una revisión legal y técnica detallada para garantizar que la solución no se superponga con patentes existentes o métodos internos de Siemens.',
+    legalReview: 'Antes de la publicación, se realizó una revisión legal y técnica detallada para garantizar que la solución no entre en conflicto con patentes existentes o métodos internos.',
 
     // IP Table
     ipTableTitle: 'Propiedad intelectual relevante y diferenciación técnica',
@@ -813,7 +813,7 @@ export const es: TranslationDict = {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procedimiento para diagnóstico de máquinas</em>',
           source: 'Publicación defensiva, Siemens AG, 2016',
           protectedScope: 'Sistema de diagnóstico basado en la nube que utiliza bases de datos centrales y sensores móviles',
-          zanoboDiff: 'Zanobo es <strong>completamente local</strong>, sin nube, sin BD remota, sin diagnóstico',
+          zanoboDiff: 'Zanobo es <strong>completamente local</strong>, sin nube, sin base de datos remota, sin diagnóstico',
         },
         '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Análisis remoto del estado de la máquina</em>',
@@ -824,19 +824,19 @@ export const es: TranslationDict = {
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>Detección de canales en ruido usando GMIA</em>',
           source: 'Siemens Corp, 2016',
-          protectedScope: 'Aplica GMIA al reconocimiento de voz y sistemas auditivos',
-          zanoboDiff: 'Zanobo usa matemáticas similares a GMIA para <strong>no-voz</strong>, solo comparación local',
+          protectedScope: 'Aplicación de GMIA para reconocimiento de voz y sistemas auditivos',
+          zanoboDiff: 'Zanobo usa matemáticas similares a GMIA para <strong>no-voz</strong>, exclusivamente comparación local',
         },
         '3': {
           reference: '<strong>US9443201B2</strong><br><em>Aprendizaje de firmas de sensores</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Clasificación y entrenamiento de modelos de perfiles de señales',
-          zanoboDiff: 'Zanobo <strong>no hace clasificación</strong>, sin entrenamiento de modelos',
+          zanoboDiff: 'Zanobo <strong>no realiza clasificación</strong> ni entrenamiento de modelos',
         },
         '4': {
           reference: '<strong>US9602781B2</strong><br><em>Desmezcla de señales sísmicas (GMIA)</em>',
           source: 'Schlumberger, 2017',
-          protectedScope: 'Aplica separación similar a GMIA a datos sísmicos',
+          protectedScope: 'Separación basada en GMIA de señales sísmicas',
           zanoboDiff: 'Zanobo no está relacionado en dominio y tipo de señal',
         },
       },
@@ -844,8 +844,8 @@ export const es: TranslationDict = {
 
     // Transparency
     transparencyTitle: 'Transparencia e intención',
-    transparencyText1: 'Zanobo <strong>no es una herramienta de diagnóstico</strong> y no realiza evaluaciones técnicas automatizadas. Proporciona solo una ayuda visual y matemática de comparación, bajo el control total del usuario. Todo el procesamiento ocurre offline. No se transmiten, almacenan remotamente ni evalúan externamente datos del usuario.',
-    transparencyText2: 'Esta transparencia refleja un fuerte compromiso con el desarrollo de código abierto responsable y el respeto por la propiedad intelectual de terceros.',
+    transparencyText1: 'Zanobo <strong>no es una herramienta de diagnóstico</strong> y no realiza evaluaciones técnicas automatizadas. Proporciona exclusivamente una ayuda visual y matemática de comparación, bajo el control total del usuario. Todo el procesamiento ocurre offline. No se transmiten, almacenan remotamente ni evalúan externamente datos del usuario.',
+    transparencyText2: 'Esta transparencia refleja un fuerte compromiso con el desarrollo de código abierto responsable y el respeto por los derechos de terceros.',
 
     // Public Instance
     publicInstance: 'Instancia pública:',
@@ -858,7 +858,7 @@ export const es: TranslationDict = {
     developerName: 'Günter Struck',
     license: 'Licencia:',
     licenseType: 'MIT',
-    stack: 'Stack:',
+    stack: 'Stack tecnológico:',
     stackTech: 'TypeScript, Vite, Web Audio API',
   },
 };
