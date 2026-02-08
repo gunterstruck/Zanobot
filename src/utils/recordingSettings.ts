@@ -10,8 +10,8 @@ const STORAGE_KEY = 'zanobot.recording.settings';
 
 const defaultSettings: RecordingSettings = {
   recordingDuration: 10,
-  confidenceThreshold: 75,  // Default: ≥75% = unauffällig (unremarkable)
-  faultyThreshold: 50,      // Default: <50% = auffällig (conspicuous)
+  confidenceThreshold: 90,  // Default: ≥90% = unauffällig (unremarkable)
+  faultyThreshold: 80,      // Default: <80% = auffällig (conspicuous)
 };
 
 const readFromStorage = (): RecordingSettings => {
