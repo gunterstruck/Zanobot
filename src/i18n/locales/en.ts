@@ -882,13 +882,13 @@ export const en: TranslationDict = {
       similarityScore: '<strong>Similarity Score (0–100%):</strong> Zanobo computes a cosine similarity between a reference and a new recording.',
       userThreshold: '<strong>User-defined Threshold:</strong> Users can define what counts as "Normal" or "Deviating".',
       visualFeedback: '<strong>Visual Spectrum Feedback:</strong> Real-time frequency spectrum and score visualization.',
-      noDataLeaks: '<strong>No Data Leaves the Device:</strong> All sound data and scores are stored in the local IndexedDB.',
+      noDataLeaks: '<strong>No Data Leaves the Device:</strong> All sound data and scores are stored exclusively in the local IndexedDB.',
     },
 
     // Legal Position
     legalTitle: 'Legal Position and IP Review',
     legalIntro: 'Zanobo was created independently as a private, non-commercial open-source project under the <strong>MIT license</strong>. Its functionality is based on openly described mathematical procedures (e.g. GMIA-like cosine comparison), and it does not incorporate any patented system logic or learning mechanisms.',
-    legalReview: 'Prior to publication, a detailed legal and technical review was conducted to ensure the solution does not overlap with existing patents or Siemens-internal methods.',
+    legalReview: 'Prior to publication, a detailed legal and technical review was conducted to ensure the solution does not conflict with existing patents or internal methods.',
 
     // IP Table
     ipTableTitle: 'Relevant IP and Technical Differentiation',
@@ -904,7 +904,7 @@ export const en: TranslationDict = {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procedure for diagnosing machines</em>',
           source: 'Defensive publication, Siemens AG, 2016',
           protectedScope: 'Cloud-based diagnostic system using central databases and mobile sensors',
-          zanoboDiff: 'Zanobo is <strong>fully local</strong>, no cloud, no remote DB, no diagnostics',
+          zanoboDiff: 'Zanobo is <strong>fully local</strong>, no cloud, no remote database, no diagnostics',
         },
         '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em>',
@@ -915,19 +915,19 @@ export const en: TranslationDict = {
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>Channel detection in noise using GMIA</em>',
           source: 'Siemens Corp, 2016',
-          protectedScope: 'Applies GMIA to speech recognition and hearing systems',
-          zanoboDiff: 'Zanobo uses GMIA-like math for <strong>non-speech</strong>, local comparison only',
+          protectedScope: 'Application of GMIA for speech recognition and hearing systems',
+          zanoboDiff: 'Zanobo uses GMIA-like mathematics for <strong>non-speech</strong>, exclusively local comparison',
         },
         '3': {
           reference: '<strong>US9443201B2</strong><br><em>Learning of sensor signatures</em>',
           source: 'Siemens, 2016',
           protectedScope: 'Classification and model training of signal profiles',
-          zanoboDiff: 'Zanobo does <strong>no classification</strong>, no model training',
+          zanoboDiff: 'Zanobo performs <strong>no classification</strong> and no model training',
         },
         '4': {
           reference: '<strong>US9602781B2</strong><br><em>Seismic signal deblending (GMIA)</em>',
           source: 'Schlumberger, 2017',
-          protectedScope: 'Applies GMIA-like separation to seismic data',
+          protectedScope: 'GMIA-based separation of seismic signals',
           zanoboDiff: 'Zanobo is unrelated in domain and signal type',
         },
       },
@@ -935,8 +935,8 @@ export const en: TranslationDict = {
 
     // Transparency
     transparencyTitle: 'Transparency and Intent',
-    transparencyText1: 'Zanobo is <strong>not a diagnostic tool</strong> and makes no automated technical assessments. It provides only a visual and mathematical comparison aid, under full control of the user. All processing happens offline. No user data is transmitted, stored remotely, or evaluated externally.',
-    transparencyText2: 'This transparency reflects a strong commitment to responsible open-source development and respect for third-party IP.',
+    transparencyText1: 'Zanobo is <strong>not a diagnostic tool</strong> and makes no automated technical assessments. It provides exclusively a visual and mathematical comparison aid, under full control of the user. All processing happens offline. No user data is transmitted, stored remotely, or evaluated externally.',
+    transparencyText2: 'This transparency reflects a strong commitment to responsible open-source development and respect for third-party rights.',
 
     // Public Instance
     publicInstance: 'Public instance:',
@@ -949,7 +949,7 @@ export const en: TranslationDict = {
     developerName: 'Günter Struck',
     license: 'License:',
     licenseType: 'MIT',
-    stack: 'Stack:',
+    stack: 'Technology Stack:',
     stackTech: 'TypeScript, Vite, Web Audio API',
   },
 };
