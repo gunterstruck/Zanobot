@@ -982,6 +982,48 @@ export const de: TranslationDict = {
       },
     },
 
+    // Use Cases
+    useCasesTitle: 'Anwendungsfälle',
+    useCasesIntro: 'Zanobo ermöglicht zwei grundlegende Vergleichsszenarien, die sich in ihrer zeitlichen und räumlichen Struktur unterscheiden:',
+
+    // Serial Comparison
+    serialComparisonTitle: 'a) Serieller Vergleich (Zeitlicher Vergleich / Trend)',
+    serialComparisonPrinciple: '<strong>Prinzip:</strong> Vergleich einer aktuellen Aufnahme mit einer zuvor erstellten Referenz <strong>derselben Maschine</strong>.',
+    serialComparisonGoal: '<strong>Ziel:</strong> Veränderungen des akustischen Musters über die Zeit sichtbar machen.',
+    serialComparisonApplication: '<strong>Anwendung:</strong><ul><li>Eine Referenzaufnahme wird zu einem Zeitpunkt erstellt, an dem die Maschine als „unauffällig" bewertet wird</li><li>Spätere Aufnahmen werden mit dieser Referenz verglichen</li><li>Abweichungen vom ursprünglichen Muster werden quantifiziert (Ähnlichkeits-Score)</li></ul>',
+    serialComparisonHint: '<strong>Hinweis:</strong> Zanobo zeigt lediglich <strong>ob und wie stark</strong> sich das aktuelle Geräusch von der Referenz unterscheidet. Die Interpretation, ob eine Abweichung relevant ist, erfolgt durch den Nutzer. Das System trifft keine Diagnose und gibt keine Prognose ab.',
+
+    // Parallel Comparison
+    parallelComparisonTitle: 'b) Paralleler Vergleich (Vergleich baugleicher Maschinen / Flotten-Check)',
+    parallelComparisonPrinciple: '<strong>Prinzip:</strong> Vergleich mehrerer baugleicher Maschinen unter ähnlichen Betriebsbedingungen.',
+    parallelComparisonGoal: '<strong>Ziel:</strong> Identifikation akustischer Ausreißer innerhalb einer Gruppe baugleicher Anlagen.',
+    parallelComparisonApplication: '<strong>Anwendung:</strong><ul><li>Aufnahmen von mehreren baugleichen Maschinen (z. B. in einer Produktionshalle) werden erstellt</li><li>Zanobo berechnet die akustische Ähnlichkeit zwischen den Maschinen</li><li>Maschinen, deren Geräuschsignatur deutlich von der Gruppe abweicht, werden sichtbar</li></ul>',
+    parallelComparisonSpecial: '<strong>Besonderheit:</strong> Funktioniert <strong>auch ohne historische Referenz</strong>. Die Vergleichsbasis bildet die Gruppe selbst.',
+    parallelComparisonHint: '<strong>Hinweis:</strong> Zanobo entscheidet nicht, welche Maschine defekt ist oder welche den „Sollzustand" darstellt. Es zeigt ausschließlich <strong>relative Abweichungen</strong> innerhalb der Gruppe. Die Bewertung, ob eine abweichende Maschine weiter untersucht werden sollte, liegt beim Nutzer.',
+
+    // NFC Section
+    nfcTitle: 'NFC-basierter Sofortzugang und kontextbasierter Vergleich',
+    nfcIntro: 'Zanobo unterstützt den <strong>Einsatz von NFC-Tags</strong> an Maschinen, um den Zugang zur App zu vereinfachen und optional einen maschinenspezifischen Kontext bereitzustellen.',
+
+    nfcFunctionalityTitle: 'Funktionsweise',
+    nfcTagDescription: '<strong>NFC-Tag an der Maschine:</strong> Ein am Gehäuse oder an der Zugangsstelle platzierter NFC-Tag kann folgende Informationen enthalten:<ul><li>URL zur Zanobo-PWA (direkter App-Start im Browser)</li><li>Maschinen-ID zur automatischen Identifikation</li><li>Optional: Verweis auf kundenspezifische Referenzdaten (URL zu einer JSON-Datei)</li></ul>',
+    nfcInstantAccess: '<strong>Sofortzugang ohne Installation:</strong><ul><li>Der Nutzer hält das Smartphone an den NFC-Tag</li><li>Die Zanobo-PWA öffnet sich direkt im Browser (kein App Store, keine Registrierung erforderlich)</li><li>Optional: Die hinterlegte Maschinen-ID wird automatisch geladen</li></ul>',
+
+    nfcReferenceDataTitle: 'Optionale kontextbasierte Referenzdaten',
+    nfcReferenceDataDescription: 'Der NFC-Tag kann zusätzlich eine <strong>URL zu einer Referenzdatenbank</strong> enthalten. Diese Datenbank wird vom Maschinenbetreiber oder Servicepartner bereitgestellt und kann beinhalten:<ul><li><strong>Referenzaufnahmen</strong> für verschiedene Betriebszustände der Maschine</li><li><strong>Maschinenspezifische Metadaten</strong> (z. B. Typ, Baujahr, Standort)</li><li><strong>Vergleichsparameter</strong> für Flotten-Checks baugleicher Maschinen</li></ul>',
+
+    nfcAdvantageTitle: 'Vorteil für neue oder externe Nutzer',
+    nfcAdvantageDescription: 'Ein Servicetechniker oder Bediener, der die Maschine zum ersten Mal prüft, kann:<ul><li><strong>Sofort eine akustische Prüfung durchführen</strong>, ohne selbst eine Referenz aufnehmen zu müssen</li><li><strong>Direkt gegen vorhandene Referenzdaten vergleichen</strong>, die vom Betreiber bereitgestellt wurden</li><li><strong>Ohne Vorwissen</strong> eine erste Einschätzung treffen, ob das aktuelle Geräusch von der hinterlegten Referenz abweicht</li></ul>',
+
+    nfcDataPrivacyTitle: 'Datenhaltung und Datenschutz',
+    nfcDataPrivacyImportant: '<strong>Wichtig:</strong> Die Referenzdaten liegen <strong>nicht in einer Cloud von Zanobo</strong>. Sie werden bereitgestellt:<ul><li>Im <strong>lokalen Netzwerk</strong> des Betreibers (z. B. Intranet-Server)</li><li>In einer <strong>kundeneigenen Umgebung</strong> (z. B. GitHub Pages, eigener Webserver)</li><li>Als <strong>statische JSON-Datei</strong>, die über eine HTTPS-URL abrufbar ist</li></ul>',
+    nfcDataPrivacyStorage: 'Die Referenzdatenbank wird beim ersten NFC-Scan heruntergeladen und anschließend <strong>lokal im Gerät</strong> gespeichert (IndexedDB). Alle weiteren Vergleiche erfolgen offline.',
+
+    nfcFocusTitle: 'Fokus und Abgrenzung',
+    nfcFocusDescription: 'Der NFC-basierte Zugang dient ausschließlich der <strong>Zugänglichkeit und Vergleichbarkeit</strong>. Er ermöglicht:<ul><li>Schnellen Einstieg ohne manuelle Konfiguration</li><li>Nutzung vorhandener Referenzdaten ohne eigene Aufnahme</li><li>Konsistente Vergleichsbasis bei mehreren Nutzern oder Standorten</li></ul>',
+    nfcNoFeatures: '<strong>Zanobo führt auch bei Nutzung von NFC-basierten Referenzdaten:</strong><ul><li><strong>Keine Diagnose</strong> durch (keine Aussage über Schadensursache oder Zustand)</li><li><strong>Keine Automatisierung</strong> von Entscheidungen (kein „Gut/Schlecht"-Urteil)</li><li><strong>Keine Cloud-basierte Auswertung</strong> (alle Berechnungen erfolgen lokal)</li></ul>',
+    nfcInterpretation: 'Die Interpretation der Vergleichsergebnisse liegt stets beim Nutzer.',
+
     // Transparency
     transparencyTitle: 'Transparenz und Intention',
     transparencyText1: 'Zanobo ist <strong>kein Diagnosewerkzeug</strong> und trifft <strong>keine automatisierten technischen Bewertungen</strong>. Es stellt ausschließlich eine <strong>visuelle und mathematische Vergleichshilfe</strong> bereit.',
