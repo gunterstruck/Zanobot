@@ -782,22 +782,22 @@ export const es: TranslationDict = {
     subtitle: 'Asistente para comparación acústica de estados de máquinas',
 
     // Introduction
-    intro: '<strong>Zanobo 2.0</strong> es una Progressive Web App (PWA) respetuosa con la privacidad, diseñada para el análisis comparativo de acústica de máquinas. Permite a los usuarios grabar y comparar sonidos de máquinas completamente <strong>offline</strong>, sin depender de servicios en la nube, sensores externos o modelos de IA.',
+    intro: '<strong>Zanobo 2.0</strong> es una Progressive Web App (PWA) respetuosa con la privacidad, diseñada para el análisis comparativo de acústica de máquinas. La aplicación permite grabar y comparar sonidos de máquinas completamente <strong>offline</strong> – sin servicios en la nube, sin sensores externos y sin modelos de IA entrenados.<br><br>Zanobo se entiende deliberadamente <strong>no como una herramienta de diagnóstico</strong>, sino como un <strong>instrumento de comparación y orientación</strong> que apoya la evaluación humana.',
 
     // Core Features
     coreFeaturesTitle: 'Características principales',
     coreFeatures: {
-      offlineFirst: '<strong>Offline-First:</strong> Todas las grabaciones y procesamientos se manejan localmente en el navegador.',
-      similarityScore: '<strong>Puntuación de similitud (0–100%):</strong> Zanobo calcula una similitud de coseno entre una referencia y una nueva grabación.',
-      userThreshold: '<strong>Umbral definido por el usuario:</strong> Los usuarios pueden definir qué cuenta como "Normal" o "Desviado".',
-      visualFeedback: '<strong>Retroalimentación visual del espectro:</strong> Espectro de frecuencia en tiempo real y visualización de puntuación.',
-      noDataLeaks: '<strong>Ningún dato sale del dispositivo:</strong> Todos los datos de sonido y puntuaciones se almacenan exclusivamente en la IndexedDB local.',
+      offlineFirst: '<strong>Offline-First:</strong> Todas las grabaciones y cálculos se realizan localmente en el navegador.',
+      similarityScore: '<strong>Puntuación de similitud (0–100%):</strong> Zanobo calcula una similitud matemática (similitud del coseno) entre grabación de referencia y de comparación.',
+      userThreshold: '<strong>Umbral definido por el usuario:</strong> Los usuarios definen ellos mismos a partir de qué puntuación un estado cuenta como "normal" o "desviado".',
+      visualFeedback: '<strong>Retroalimentación visual del espectro:</strong> Visualización en tiempo real del espectro de frecuencia y resultado de comparación.',
+      noDataLeaks: '<strong>Almacenamiento local de datos:</strong> Todas las grabaciones de audio y puntuaciones se almacenan exclusivamente en la IndexedDB local del dispositivo.',
     },
 
     // Legal Position
     legalTitle: 'Posición legal y revisión de propiedad intelectual',
-    legalIntro: 'Zanobo fue creado de forma independiente como un proyecto privado de código abierto no comercial bajo la <strong>licencia MIT</strong>. Su funcionalidad se basa en procedimientos matemáticos descritos abiertamente (p. ej., comparación de coseno similar a GMIA), y no incorpora ninguna lógica de sistema patentada ni mecanismos de aprendizaje.',
-    legalReview: 'Antes de la publicación, se realizó una revisión legal y técnica detallada para garantizar que la solución no entre en conflicto con patentes existentes o métodos internos.',
+    legalIntro: 'Zanobo fue desarrollado independientemente como un <strong>proyecto privado de código abierto no comercial</strong> bajo la <strong>licencia MIT</strong>. Su funcionalidad se basa en <strong>procedimientos matemáticos descritos abiertamente</strong> (p. ej., análisis de frecuencia y comparaciones de coseno similares a GMIA) y no incorpora <strong>ninguna lógica de sistema patentada</strong>, <strong>ningún mecanismo de clasificación</strong> ni <strong>ningún modelo de aprendizaje</strong>.',
+    legalReview: 'Antes del lanzamiento, se realizó una <strong>revisión técnica y de contenido</strong> para garantizar que Zanobo no entre en conflicto con patentes existentes o enfoques de diagnóstico industrial conocidos.',
 
     // IP Table
     ipTableTitle: 'Propiedad intelectual relevante y diferenciación técnica',
@@ -806,46 +806,58 @@ export const es: TranslationDict = {
         reference: 'Referencia / Título',
         source: 'Fuente y estado',
         protectedScope: 'Ámbito protegido',
-        zanoboDiff: 'Diferencia de Zanobo',
+        zanoboDiff: 'Diferenciación de Zanobo',
       },
       rows: {
         '0': {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procedimiento para diagnóstico de máquinas</em>',
           source: 'Publicación defensiva, Siemens AG, 2016',
           protectedScope: 'Sistema de diagnóstico basado en la nube que utiliza bases de datos centrales y sensores móviles',
-          zanoboDiff: 'Zanobo es <strong>completamente local</strong>, sin nube, sin base de datos remota, sin diagnóstico',
+          zanoboDiff: 'Zanobo opera completamente local, sin nube, sin base de datos central, sin diagnósticos',
         },
         '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Análisis remoto del estado de la máquina</em>',
           source: 'Patente europea, Siemens AG, 2022',
           protectedScope: 'Diagnóstico remoto basado en ML con modelos entrenados y sensores',
-          zanoboDiff: 'Zanobo <strong>no usa ML</strong>, sin nube, sin lógica incorporada',
+          zanoboDiff: 'Zanobo no usa aprendizaje automático, sin nube, sin lógica de diagnóstico integrada',
         },
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>Detección de canales en ruido usando GMIA</em>',
-          source: 'Siemens Corp, 2016',
-          protectedScope: 'Aplicación de GMIA para reconocimiento de voz y sistemas auditivos',
-          zanoboDiff: 'Zanobo usa matemáticas similares a GMIA para <strong>no-voz</strong>, exclusivamente comparación local',
+          source: 'Siemens Corp., 2016',
+          protectedScope: 'Aplicación de GMIA para sistemas de voz y audición',
+          zanoboDiff: 'Zanobo usa matemáticas similares a GMIA exclusivamente para no-voz y comparaciones locales',
         },
         '3': {
           reference: '<strong>US9443201B2</strong><br><em>Aprendizaje de firmas de sensores</em>',
           source: 'Siemens, 2016',
-          protectedScope: 'Clasificación y entrenamiento de modelos de perfiles de señales',
-          zanoboDiff: 'Zanobo <strong>no realiza clasificación</strong> ni entrenamiento de modelos',
+          protectedScope: 'Clasificación y entrenamiento de modelos de firmas de sensores',
+          zanoboDiff: 'Zanobo no realiza clasificación ni entrenamiento de modelos',
         },
         '4': {
           reference: '<strong>US9602781B2</strong><br><em>Desmezcla de señales sísmicas (GMIA)</em>',
           source: 'Schlumberger, 2017',
-          protectedScope: 'Separación basada en GMIA de señales sísmicas',
-          zanoboDiff: 'Zanobo no está relacionado en dominio y tipo de señal',
+          protectedScope: 'Separación de señales sísmicas usando GMIA',
+          zanoboDiff: 'Dominio y tipo de señal diferentes, no relacionados',
+        },
+        '5': {
+          reference: '<strong>ABB – Integration of Mobile Measurement</strong>',
+          source: 'Presentación industrial pública, ABB, 2015',
+          protectedScope: 'Sensores móviles para diagnóstico ad-hoc con integración de nube y servicio',
+          zanoboDiff: 'Zanobo evita diagnósticos, flujos de trabajo de servicio y conectividad a la nube, enfocándose en la comparación local',
         },
       },
     },
 
     // Transparency
     transparencyTitle: 'Transparencia e intención',
-    transparencyText1: 'Zanobo <strong>no es una herramienta de diagnóstico</strong> y no realiza evaluaciones técnicas automatizadas. Proporciona exclusivamente una ayuda visual y matemática de comparación, bajo el control total del usuario. Todo el procesamiento ocurre offline. No se transmiten, almacenan remotamente ni evalúan externamente datos del usuario.',
-    transparencyText2: 'Esta transparencia refleja un fuerte compromiso con el desarrollo de código abierto responsable y el respeto por los derechos de terceros.',
+    transparencyText1: 'Zanobo <strong>no es una herramienta de diagnóstico</strong> y <strong>no realiza evaluaciones técnicas automatizadas</strong>. Proporciona exclusivamente una <strong>ayuda de comparación visual y matemática</strong>.',
+    transparencyText2: 'Todo el procesamiento ocurre <strong>offline</strong>. <strong>No se transmiten, almacenan ni evalúan datos del usuario</strong>.',
+    transparencyText3: 'Esta transparencia expresa un enfoque consciente hacia la responsabilidad, la protección de datos y los derechos de terceros.',
+    transparencyList: {
+      noClassification: 'sin clasificación de estados',
+      noCauseAnalysis: 'sin análisis de causas de fallas',
+      noRepairRecommendations: 'sin recomendaciones de reparación',
+    },
 
     // Public Instance
     publicInstance: 'Instancia pública:',
@@ -860,5 +872,10 @@ export const es: TranslationDict = {
     licenseType: 'MIT',
     stack: 'Stack tecnológico:',
     stackTech: 'TypeScript, Vite, Web Audio API',
+
+    // Guiding Principle
+    guidingPrincipleTitle: 'Principio rector',
+    guidingPrincipleQuestion: '¿La máquina suena normal?',
+    guidingPrincipleStatement: 'Los teléfonos inteligentes escuchan los sonidos de las máquinas.',
   },
 };
