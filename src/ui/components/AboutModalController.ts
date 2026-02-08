@@ -96,8 +96,8 @@ export class AboutModalController {
       zanoboDiff: t('about.ipTable.headers.zanoboDiff'),
     };
 
-    // We have 5 rows (0-4) stored as object keys in i18n
-    const rowIndices = ['0', '1', '2', '3', '4'];
+    // We have 6 rows (0-5) stored as object keys in i18n
+    const rowIndices = ['0', '1', '2', '3', '4', '5'];
 
     return `
       <div style="overflow-x: auto;">
