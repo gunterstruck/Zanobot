@@ -91,11 +91,16 @@ export function calculateHealthScore(cosineSimilarity: number, scalingConstant: 
  * Classify health status based on score
  *
  * @param score - Health score [0, 100]
- * @param healthyThreshold - User-configured threshold for 'healthy' status (default: 75)
- * @returns Status category
+ * @param healthyThreshold - User-configured threshold for 'unauffällig' (unremarkable) status (default: 75)
+ * @param faultyThreshold - User-configured threshold for 'auffällig' (conspicuous) status (default: 50)
+ * @returns Status category: 'healthy' (unauffällig), 'uncertain' (Abweichung), or 'faulty' (auffällig)
  * @throws Error if score is NaN or Infinity
  */
-export function classifyHealthStatus(score: number, healthyThreshold: number = HEALTH_THRESHOLDS.healthy): 'healthy' | 'uncertain' | 'faulty' {
+export function classifyHealthStatus(
+  score: number,
+  healthyThreshold: number = HEALTH_THRESHOLDS.healthy,
+  faultyThreshold: number = HEALTH_THRESHOLDS.uncertain
+): 'healthy' | 'uncertain' | 'faulty' {
   // CRITICAL FIX: Validate input to prevent NaN propagation
   // NaN comparisons always return false, causing silent misclassification as 'faulty'
   if (!isFinite(score)) {
@@ -103,10 +108,13 @@ export function classifyHealthStatus(score: number, healthyThreshold: number = H
     throw new Error(`Invalid health score: ${score}. Score must be a finite number.`);
   }
 
-  // Use user-configured threshold for 'healthy' status, fall back to hard-coded uncertain threshold
+  // Use user-configured thresholds for classification
+  // Logic: score >= healthyThreshold → unauffällig (unremarkable)
+  //        score >= faultyThreshold  → Abweichung (uncertain/deviation)
+  //        score < faultyThreshold   → auffällig (conspicuous/anomalous)
   if (score >= healthyThreshold) {
     return 'healthy';
-  } else if (score >= HEALTH_THRESHOLDS.uncertain) {
+  } else if (score >= faultyThreshold) {
     return 'uncertain';
   } else {
     return 'faulty';
@@ -117,15 +125,20 @@ export function classifyHealthStatus(score: number, healthyThreshold: number = H
  * Get classification details for a health score
  *
  * @param score - Health score [0, 100]
- * @param healthyThreshold - User-configured threshold for 'healthy' status (default: 75)
+ * @param healthyThreshold - User-configured threshold for 'unauffällig' status (default: 75)
+ * @param faultyThreshold - User-configured threshold for 'auffällig' status (default: 50)
  * @returns Classification details with confidence and recommendation
  */
-export function getClassificationDetails(score: number, healthyThreshold: number = HEALTH_THRESHOLDS.healthy): {
+export function getClassificationDetails(
+  score: number,
+  healthyThreshold: number = HEALTH_THRESHOLDS.healthy,
+  faultyThreshold: number = HEALTH_THRESHOLDS.uncertain
+): {
   status: 'healthy' | 'uncertain' | 'faulty';
   confidence: number;
   recommendation: string;
 } {
-  const status = classifyHealthStatus(score, healthyThreshold);
+  const status = classifyHealthStatus(score, healthyThreshold, faultyThreshold);
 
   let confidence: number;
   let recommendation: string;
@@ -140,12 +153,12 @@ export function getClassificationDetails(score: number, healthyThreshold: number
   } else if (status === 'uncertain') {
     confidence =
       CONFIDENCE_PARAMS.uncertainBase +
-      (score - HEALTH_THRESHOLDS.uncertain) * CONFIDENCE_PARAMS.uncertainMultiplier;
+      (score - faultyThreshold) * CONFIDENCE_PARAMS.uncertainMultiplier;
     recommendation = t('scoring.moderateDeviation');
   } else {
     confidence = Math.max(
       20,
-      HEALTH_THRESHOLDS.uncertain - (HEALTH_THRESHOLDS.uncertain - score) * 0.6
+      faultyThreshold - (faultyThreshold - score) * 0.6
     );
     recommendation = t('scoring.significantDeviation');
   }
@@ -220,12 +233,13 @@ export function generateDiagnosisResult(
   // Calculate health score
   const healthScore = calculateHealthScore(avgCosine, model.scalingConstant);
 
-  // Get user-configured threshold from settings
+  // Get user-configured thresholds from settings
   const settings = getRecordingSettings();
   const healthyThreshold = settings.confidenceThreshold;
+  const faultyThreshold = settings.faultyThreshold;
 
-  // Classify status using user's configured threshold
-  const status = classifyHealthStatus(healthScore, healthyThreshold);
+  // Classify status using user's configured thresholds
+  const status = classifyHealthStatus(healthScore, healthyThreshold, faultyThreshold);
 
   // Calculate confidence
   const confidence = calculateConfidence(model, cosineSimilarities);

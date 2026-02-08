@@ -1,6 +1,7 @@
 export type RecordingSettings = {
   recordingDuration: number; // in seconds
-  confidenceThreshold: number; // 0-100 percentage
+  confidenceThreshold: number; // 0-100 percentage (threshold for "unauffällig" / unremarkable status)
+  faultyThreshold: number; // 0-100 percentage (threshold for "auffällig" / conspicuous status)
 };
 
 export const RECORDING_SETTINGS_EVENT = 'zanobot:recording-settings-change';
@@ -9,7 +10,8 @@ const STORAGE_KEY = 'zanobot.recording.settings';
 
 const defaultSettings: RecordingSettings = {
   recordingDuration: 10,
-  confidenceThreshold: 75,
+  confidenceThreshold: 75,  // Default: ≥75% = unauffällig (unremarkable)
+  faultyThreshold: 50,      // Default: <50% = auffällig (conspicuous)
 };
 
 const readFromStorage = (): RecordingSettings => {
@@ -22,6 +24,7 @@ const readFromStorage = (): RecordingSettings => {
     return {
       recordingDuration: validateRecordingDuration(parsed.recordingDuration),
       confidenceThreshold: validateConfidenceThreshold(parsed.confidenceThreshold),
+      faultyThreshold: validateFaultyThreshold(parsed.faultyThreshold),
     };
   } catch {
     return { ...defaultSettings };
@@ -42,20 +45,37 @@ const validateConfidenceThreshold = (value: number | undefined): number => {
   return clamped;
 };
 
+const validateFaultyThreshold = (value: number | undefined): number => {
+  if (value === undefined) return defaultSettings.faultyThreshold;
+  // Ensure value is between 0 and 100
+  const clamped = Math.max(0, Math.min(100, value));
+  return clamped;
+};
+
 export const getRecordingSettings = (): RecordingSettings => readFromStorage();
 
 export const setRecordingSettings = (
   updates: Partial<RecordingSettings>
 ): RecordingSettings => {
   const current = readFromStorage();
-  const next: RecordingSettings = {
+  let next: RecordingSettings = {
     recordingDuration: updates.recordingDuration !== undefined
       ? validateRecordingDuration(updates.recordingDuration)
       : current.recordingDuration,
     confidenceThreshold: updates.confidenceThreshold !== undefined
       ? validateConfidenceThreshold(updates.confidenceThreshold)
       : current.confidenceThreshold,
+    faultyThreshold: updates.faultyThreshold !== undefined
+      ? validateFaultyThreshold(updates.faultyThreshold)
+      : current.faultyThreshold,
   };
+
+  // VALIDATION: Ensure faultyThreshold < confidenceThreshold
+  // If user sets invalid values, auto-correct to maintain logical order
+  if (next.faultyThreshold >= next.confidenceThreshold) {
+    // Automatically adjust faultyThreshold to be 10% below confidenceThreshold
+    next.faultyThreshold = Math.max(0, next.confidenceThreshold - 10);
+  }
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));

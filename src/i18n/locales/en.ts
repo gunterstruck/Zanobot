@@ -494,6 +494,7 @@ export const en: TranslationDict = {
     initHardwareCheck: 'Initializing hardware check',
     changeMicrophone: 'Change microphone',
     confidenceThreshold: 'Confidence threshold',
+    faultyThreshold: 'Anomaly threshold',
     recordingDuration: 'Recording duration',
     recordingDurationDesc:
       'Net recording time for training data. An additional 5 seconds of stabilization time is added for optimal audio quality.',

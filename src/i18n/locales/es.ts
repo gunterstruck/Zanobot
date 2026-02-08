@@ -477,6 +477,7 @@ export const es: TranslationDict = {
     audioSettings: 'Configuración de audio', audioHardware: 'Hardware de audio',
     detectingMic: 'Detectando micrófono...', detectingMicrophone: 'Detectando micrófono...', initHardwareCheck: 'Inicializando verificación de hardware',
     changeMicrophone: 'Cambiar micrófono', confidenceThreshold: 'Umbral de confianza',
+    faultyThreshold: 'Umbral de anomalía',
     recordingDuration: 'Duración de grabación',
     recordingDurationDesc: 'Tiempo neto de grabación para datos de entrenamiento. Se añaden 5 segundos adicionales de estabilización para una calidad de audio óptima.',
     seconds5: '5 segundos', seconds10: '10 segundos', seconds15: '15 segundos', seconds: 'segundos',
