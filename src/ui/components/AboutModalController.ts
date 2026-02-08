@@ -56,6 +56,44 @@ export class AboutModalController {
         <li>${t('about.coreFeatures.noDataLeaks')}</li>
       </ul>
 
+      <h4>${t('about.useCasesTitle')}</h4>
+      <p>${t('about.useCasesIntro')}</p>
+
+      <h5>${t('about.serialComparisonTitle')}</h5>
+      <p>${t('about.serialComparisonPrinciple')}</p>
+      <p>${t('about.serialComparisonGoal')}</p>
+      <p>${t('about.serialComparisonApplication')}</p>
+      <p>${t('about.serialComparisonHint')}</p>
+
+      <h5>${t('about.parallelComparisonTitle')}</h5>
+      <p>${t('about.parallelComparisonPrinciple')}</p>
+      <p>${t('about.parallelComparisonGoal')}</p>
+      <p>${t('about.parallelComparisonApplication')}</p>
+      <p>${t('about.parallelComparisonSpecial')}</p>
+      <p>${t('about.parallelComparisonHint')}</p>
+
+      <h4>${t('about.nfcTitle')}</h4>
+      <p>${t('about.nfcIntro')}</p>
+
+      <h5>${t('about.nfcFunctionalityTitle')}</h5>
+      <p>${t('about.nfcTagDescription')}</p>
+      <p>${t('about.nfcInstantAccess')}</p>
+
+      <h5>${t('about.nfcReferenceDataTitle')}</h5>
+      <p>${t('about.nfcReferenceDataDescription')}</p>
+
+      <h5>${t('about.nfcAdvantageTitle')}</h5>
+      <p>${t('about.nfcAdvantageDescription')}</p>
+
+      <h5>${t('about.nfcDataPrivacyTitle')}</h5>
+      <p>${t('about.nfcDataPrivacyImportant')}</p>
+      <p>${t('about.nfcDataPrivacyStorage')}</p>
+
+      <h5>${t('about.nfcFocusTitle')}</h5>
+      <p>${t('about.nfcFocusDescription')}</p>
+      <p>${t('about.nfcNoFeatures')}</p>
+      <p>${t('about.nfcInterpretation')}</p>
+
       <h4>${t('about.legalTitle')}</h4>
       <p>${t('about.legalIntro')}</p>
       <p>${t('about.legalReview')}</p>

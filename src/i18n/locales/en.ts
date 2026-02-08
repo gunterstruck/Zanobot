@@ -939,6 +939,48 @@ export const en: TranslationDict = {
       },
     },
 
+    // Use Cases
+    useCasesTitle: 'Use Cases',
+    useCasesIntro: 'Zanobo enables two fundamental comparison scenarios that differ in their temporal and spatial structure:',
+
+    // Serial Comparison
+    serialComparisonTitle: 'a) Serial Comparison (Temporal Comparison / Trend)',
+    serialComparisonPrinciple: '<strong>Principle:</strong> Comparison of a current recording with a previously created reference of <strong>the same machine</strong>.',
+    serialComparisonGoal: '<strong>Goal:</strong> Making changes in the acoustic pattern visible over time.',
+    serialComparisonApplication: '<strong>Application:</strong><ul><li>A reference recording is created at a time when the machine is assessed as "normal"</li><li>Later recordings are compared with this reference</li><li>Deviations from the original pattern are quantified (similarity score)</li></ul>',
+    serialComparisonHint: '<strong>Note:</strong> Zanobo only shows <strong>whether and how strongly</strong> the current sound differs from the reference. The interpretation of whether a deviation is relevant is made by the user. The system makes no diagnosis and provides no prognosis.',
+
+    // Parallel Comparison
+    parallelComparisonTitle: 'b) Parallel Comparison (Comparison of Identical Machines / Fleet Check)',
+    parallelComparisonPrinciple: '<strong>Principle:</strong> Comparison of multiple identical machines under similar operating conditions.',
+    parallelComparisonGoal: '<strong>Goal:</strong> Identification of acoustic outliers within a group of identical machines.',
+    parallelComparisonApplication: '<strong>Application:</strong><ul><li>Recordings of multiple identical machines (e.g., in a production hall) are created</li><li>Zanobo calculates the acoustic similarity between the machines</li><li>Machines whose sound signature significantly deviates from the group become visible</li></ul>',
+    parallelComparisonSpecial: '<strong>Special feature:</strong> Works <strong>even without historical reference</strong>. The group itself forms the comparison basis.',
+    parallelComparisonHint: '<strong>Note:</strong> Zanobo does not decide which machine is defective or which represents the "target state". It only shows <strong>relative deviations</strong> within the group. The assessment of whether a deviating machine should be further investigated is up to the user.',
+
+    // NFC Section
+    nfcTitle: 'NFC-based Instant Access and Context-based Comparison',
+    nfcIntro: 'Zanobo supports the <strong>use of NFC tags</strong> on machines to simplify app access and optionally provide a machine-specific context.',
+
+    nfcFunctionalityTitle: 'How it works',
+    nfcTagDescription: '<strong>NFC tag on the machine:</strong> An NFC tag placed on the housing or access point can contain the following information:<ul><li>URL to the Zanobo PWA (direct app launch in browser)</li><li>Machine ID for automatic identification</li><li>Optional: Reference to customer-specific reference data (URL to a JSON file)</li></ul>',
+    nfcInstantAccess: '<strong>Instant access without installation:</strong><ul><li>The user holds the smartphone to the NFC tag</li><li>The Zanobo PWA opens directly in the browser (no app store, no registration required)</li><li>Optional: The stored machine ID is automatically loaded</li></ul>',
+
+    nfcReferenceDataTitle: 'Optional context-based reference data',
+    nfcReferenceDataDescription: 'The NFC tag can additionally contain a <strong>URL to a reference database</strong>. This database is provided by the machine operator or service partner and can include:<ul><li><strong>Reference recordings</strong> for various operating states of the machine</li><li><strong>Machine-specific metadata</strong> (e.g., type, year of manufacture, location)</li><li><strong>Comparison parameters</strong> for fleet checks of identical machines</li></ul>',
+
+    nfcAdvantageTitle: 'Advantage for new or external users',
+    nfcAdvantageDescription: 'A service technician or operator checking the machine for the first time can:<ul><li><strong>Immediately perform an acoustic check</strong> without having to record a reference themselves</li><li><strong>Directly compare against existing reference data</strong> provided by the operator</li><li><strong>Without prior knowledge</strong> make an initial assessment of whether the current sound deviates from the stored reference</li></ul>',
+
+    nfcDataPrivacyTitle: 'Data storage and privacy',
+    nfcDataPrivacyImportant: '<strong>Important:</strong> The reference data is <strong>not stored in a Zanobo cloud</strong>. It is provided:<ul><li>In the operator\'s <strong>local network</strong> (e.g., intranet server)</li><li>In a <strong>customer-owned environment</strong> (e.g., GitHub Pages, own web server)</li><li>As a <strong>static JSON file</strong> accessible via an HTTPS URL</li></ul>',
+    nfcDataPrivacyStorage: 'The reference database is downloaded on the first NFC scan and then stored <strong>locally on the device</strong> (IndexedDB). All further comparisons are performed offline.',
+
+    nfcFocusTitle: 'Focus and distinction',
+    nfcFocusDescription: 'The NFC-based access serves exclusively for <strong>accessibility and comparability</strong>. It enables:<ul><li>Quick start without manual configuration</li><li>Use of existing reference data without own recording</li><li>Consistent comparison basis for multiple users or locations</li></ul>',
+    nfcNoFeatures: '<strong>Even when using NFC-based reference data, Zanobo:</strong><ul><li>Performs <strong>no diagnosis</strong> (no statement about damage cause or condition)</li><li>Performs <strong>no automation</strong> of decisions (no "good/bad" judgment)</li><li>Performs <strong>no cloud-based evaluation</strong> (all calculations are local)</li></ul>',
+    nfcInterpretation: 'The interpretation of comparison results always remains with the user.',
+
     // Transparency
     transparencyTitle: 'Transparency and Intent',
     transparencyText1: 'Zanobo is <strong>not a diagnostic tool</strong> and makes <strong>no automated technical assessments</strong>. It provides exclusively a <strong>visual and mathematical comparison aid</strong>.',
