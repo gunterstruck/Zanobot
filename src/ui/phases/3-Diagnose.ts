@@ -41,6 +41,7 @@ import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
+import { getRecordingSettings } from '@utils/recordingSettings.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -529,7 +530,9 @@ export class DiagnosePhase {
       const filteredScore = this.scoreHistory.getFilteredScore();
 
       // Step 5: Derive status from filtered score for consistency
-      const filteredStatus = classifyHealthStatus(filteredScore);
+      // Use user-configured threshold from settings
+      const settings = getRecordingSettings();
+      const filteredStatus = classifyHealthStatus(filteredScore, settings.confidenceThreshold);
 
       // Step 6: Store debug values from diagnosis metadata
       if (diagnosis.metadata?.debug) {
