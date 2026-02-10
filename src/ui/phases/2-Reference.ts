@@ -251,7 +251,6 @@ export class ReferencePhase {
 
         // Start Smart Start sequence
         this.audioWorkletManager.startSmartStart();
-      }
       } else {
         // Fallback: Start recording immediately without Smart Start
         logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
