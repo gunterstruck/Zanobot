@@ -381,14 +381,24 @@ export class DiagnosePhase {
       // Initialize AudioWorklet
       await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
+      // Start Smart Start sequence (always needed for audio processing)
+      this.audioWorkletManager.startSmartStart();
+
       if (skipSmartStart) {
-        // FORCE START: Skip Smart Start and start processing immediately
-        logger.info('⚡ Force Start: Audio trigger disabled, starting diagnosis immediately');
-        this.updateSmartStartStatus(t('diagnose.diagnosisRunning'));
-        this.isProcessing = true; // Start processing incoming chunks immediately
-      } else {
-        // Start Smart Start sequence
-        this.audioWorkletManager.startSmartStart();
+        // FORCE START: Skip signal detection after warmup (5s), start immediately
+        logger.info('⚡ Force Start: Audio trigger disabled, will start after warmup');
+
+        // Wait for warmup duration (5000ms), then skip to recording
+        setTimeout(() => {
+          if (!this.audioWorkletManager) {
+            logger.error('AudioWorkletManager not initialized');
+            return;
+          }
+          logger.info('⚡ Force Start: Warmup complete, starting diagnosis immediately');
+          this.updateSmartStartStatus(t('diagnose.diagnosisRunning'));
+          this.audioWorkletManager.skipToRecording();
+          this.isProcessing = true; // Start processing incoming chunks
+        }, DEFAULT_SMART_START_CONFIG.warmUpDuration);
       }
 
       logger.info('✅ Real-time diagnosis initialized!');
