@@ -839,7 +839,7 @@ export class DiagnosePhase {
       const dashboardScore = document.getElementById('live-dashboard-score');
       if (dashboardScore) {
         const roundedScore = Math.round(score);
-        dashboardScore.textContent = `${roundedScore}`;
+        dashboardScore.innerHTML = `${roundedScore}<span class="inspection-score-unit">%</span>`;
       }
 
       // Update dashboard score container color
@@ -1120,8 +1120,7 @@ export class DiagnosePhase {
               <div class="inspection-pulse-ring"></div>
             </div>
             <!-- Score Value -->
-            <span class="inspection-score" id="inspection-score">--</span>
-            <span class="inspection-score-unit">%</span>
+            <span class="inspection-score" id="inspection-score">--<span class="inspection-score-unit">%</span></span>
           </div>
           <div class="inspection-status" id="inspection-status-label">${t('common.initializing')}</div>
         </div>
@@ -1201,6 +1200,16 @@ export class DiagnosePhase {
 
         // Initialize camera video element
         this.initCamera();
+
+        // Add reference info line (same position as advanced/expert view)
+        const rightScore = contentElement.querySelector('.dashboard-right-score');
+        if (rightScore) {
+          const refInfo = document.createElement('div');
+          refInfo.className = 'inspection-ref-info';
+          refInfo.id = 'inspection-ref-info';
+          refInfo.textContent = `${t('diagnose.display.reference')}: ${this.machine.name}`;
+          rightScore.appendChild(refInfo);
+        }
       }
 
       contentElement.classList.add('is-initializing');
