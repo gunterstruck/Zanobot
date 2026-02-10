@@ -204,7 +204,16 @@ export class ReferencePhase {
         this.visualizer.start(this.audioContext, this.mediaStream);
       }
 
-      if (this.useAudioWorklet) {
+      // FORCE START: Check if audio trigger should be disabled
+      const recordingSettings = getRecordingSettings();
+      const skipSmartStart = recordingSettings.disableAudioTrigger;
+
+      if (skipSmartStart) {
+        // FORCE START: Skip Smart Start and start recording immediately
+        logger.info('⚡ Force Start: Audio trigger disabled, starting recording immediately');
+        this.updateStatusMessage(t('reference.recording.recording'));
+        setTimeout(() => this.actuallyStartRecording(), 500);
+      } else if (this.useAudioWorklet) {
         // CRITICAL FIX: Calculate proper buffer size based on actual sample rate
         // At 96kHz: chunkSize = 31680, so we need bufferSize >= 63360
         const chunkSize = Math.floor(0.33 * actualSampleRate);
@@ -242,6 +251,7 @@ export class ReferencePhase {
 
         // Start Smart Start sequence
         this.audioWorkletManager.startSmartStart();
+      }
       } else {
         // Fallback: Start recording immediately without Smart Start
         logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');

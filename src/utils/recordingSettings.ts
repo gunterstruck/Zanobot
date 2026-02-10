@@ -2,6 +2,7 @@ export type RecordingSettings = {
   recordingDuration: number; // in seconds
   confidenceThreshold: number; // 0-100 percentage (threshold for "unauffällig" / unremarkable status)
   faultyThreshold: number; // 0-100 percentage (threshold for "auffällig" / conspicuous status)
+  disableAudioTrigger: boolean; // if true, skip Smart Start and record immediately (for very quiet machines)
 };
 
 export const RECORDING_SETTINGS_EVENT = 'zanobot:recording-settings-change';
@@ -12,6 +13,7 @@ const defaultSettings: RecordingSettings = {
   recordingDuration: 10,
   confidenceThreshold: 90,  // Default: ≥90% = unauffällig (unremarkable)
   faultyThreshold: 80,      // Default: <80% = auffällig (conspicuous)
+  disableAudioTrigger: false, // Default: Smart Start enabled (wait for signal)
 };
 
 const readFromStorage = (): RecordingSettings => {
@@ -25,6 +27,7 @@ const readFromStorage = (): RecordingSettings => {
       recordingDuration: validateRecordingDuration(parsed.recordingDuration),
       confidenceThreshold: validateConfidenceThreshold(parsed.confidenceThreshold),
       faultyThreshold: validateFaultyThreshold(parsed.faultyThreshold),
+      disableAudioTrigger: validateDisableAudioTrigger(parsed.disableAudioTrigger),
     };
   } catch {
     return { ...defaultSettings };
@@ -52,6 +55,12 @@ const validateFaultyThreshold = (value: number | undefined): number => {
   return clamped;
 };
 
+const validateDisableAudioTrigger = (value: boolean | undefined): boolean => {
+  if (value === undefined) return defaultSettings.disableAudioTrigger;
+  // Ensure value is boolean
+  return Boolean(value);
+};
+
 export const getRecordingSettings = (): RecordingSettings => readFromStorage();
 
 export const setRecordingSettings = (
@@ -68,6 +77,9 @@ export const setRecordingSettings = (
     faultyThreshold: updates.faultyThreshold !== undefined
       ? validateFaultyThreshold(updates.faultyThreshold)
       : current.faultyThreshold,
+    disableAudioTrigger: updates.disableAudioTrigger !== undefined
+      ? validateDisableAudioTrigger(updates.disableAudioTrigger)
+      : current.disableAudioTrigger,
   };
 
   // VALIDATION: Ensure faultyThreshold < confidenceThreshold

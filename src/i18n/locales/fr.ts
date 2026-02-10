@@ -483,6 +483,7 @@ export const fr: TranslationDict = {
     seconds5: '5 secondes', seconds10: '10 secondes', seconds15: '15 secondes', seconds: 'secondes',
     frequencyAxis: 'Axe des fréquences', frequencyAxisDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)', frequencyLogDesc: 'Logarithmique (plus de détails dans la plage 20-500 Hz)',
     amplitudeAxis: 'Axe Y / Amplitude', amplitudeAxisDesc: 'Logarithmique (dB) – met en valeur les signaux faibles', amplitudeLogDesc: 'Logarithmique (dB) – met en valeur les signaux faibles',
+    disableAudioTriggerLabel: 'Désactiver le déclencheur audio', disableAudioTriggerDesc: 'Démarre la mesure immédiatement, même avec des signaux très faibles, sans attendre un niveau minimum. Pour les machines ou environnements extrêmement silencieux.',
     analysisMethod: 'Méthode d\'analyse', analysisMethodDesc: 'Sélectionnez la méthode d\'analyse appropriée pour votre machine.',
     gmaiMethodDesc: 'GMIA (Generalized Mutual Interdependence Analysis) extrait les composants communs et stables de plusieurs fenêtres temporelles tout en supprimant les effets spécifiques à l\'appareil. Idéal pour les sons de machines structurés et stables dans le temps.',
     level1Info: 'Niveau 1 : Les paramètres de fréquence et d\'amplitude ci-dessus sont actifs',

@@ -343,6 +343,10 @@ export class DiagnosePhase {
         }
       }
 
+      // FORCE START: Check if audio trigger should be disabled
+      const recordingSettings = getRecordingSettings();
+      const skipSmartStart = recordingSettings.disableAudioTrigger;
+
       // Initialize AudioWorklet Manager (always available at this point)
       this.audioWorkletManager = new AudioWorkletManager({
         bufferSize: this.chunkSize * 2,
@@ -377,8 +381,15 @@ export class DiagnosePhase {
       // Initialize AudioWorklet
       await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
-      // Start Smart Start sequence
-      this.audioWorkletManager.startSmartStart();
+      if (skipSmartStart) {
+        // FORCE START: Skip Smart Start and start processing immediately
+        logger.info('⚡ Force Start: Audio trigger disabled, starting diagnosis immediately');
+        this.updateSmartStartStatus(t('diagnose.diagnosisRunning'));
+        this.isProcessing = true; // Start processing incoming chunks immediately
+      } else {
+        // Start Smart Start sequence
+        this.audioWorkletManager.startSmartStart();
+      }
 
       logger.info('✅ Real-time diagnosis initialized!');
     } catch (error) {
