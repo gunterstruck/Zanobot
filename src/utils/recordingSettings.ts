@@ -13,7 +13,7 @@ const defaultSettings: RecordingSettings = {
   recordingDuration: 10,
   confidenceThreshold: 90,  // Default: ≥90% = unauffällig (unremarkable)
   faultyThreshold: 80,      // Default: <80% = auffällig (conspicuous)
-  disableAudioTrigger: false, // Default: Smart Start enabled (wait for signal)
+  disableAudioTrigger: true, // Default: Smart Start disabled (Force Start for quiet machines)
 };
 
 const readFromStorage = (): RecordingSettings => {
