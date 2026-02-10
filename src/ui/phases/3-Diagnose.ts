@@ -1144,6 +1144,12 @@ export class DiagnosePhase {
    * NEW: Now includes camera view with ghost overlay for positioning assistance
    */
   private showInspectionModal(): void {
+    // Hide recording modal (in case it was shown before)
+    const recordingModal = document.getElementById('recording-modal');
+    if (recordingModal) {
+      recordingModal.style.display = 'none';
+    }
+
     const modal = document.getElementById('inspection-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -1233,6 +1239,12 @@ export class DiagnosePhase {
    * Expert view adds scrollable details below spectrum
    */
   private showAdvancedRecordingModal(): void {
+    // Hide inspection modal (in case it was shown before)
+    const inspectionModal = document.getElementById('inspection-modal');
+    if (inspectionModal) {
+      inspectionModal.style.display = 'none';
+    }
+
     const modal = document.getElementById('recording-modal');
     if (!modal) return;
 
@@ -1280,12 +1292,6 @@ export class DiagnosePhase {
     const structuredContent = document.createElement('div');
     structuredContent.className = 'diagnosis-structured-content';
     structuredContent.style.cssText = 'display: flex; flex-direction: column; height: 100%; gap: var(--spacing-sm);';
-
-    // === HEADER: Question ===
-    const headerSection = document.createElement('div');
-    headerSection.className = 'diagnosis-header';
-    headerSection.innerHTML = `<h3>${t('diagnose.display.machineQuestion')}</h3>`;
-    structuredContent.appendChild(headerSection);
 
     // === DASHBOARD GRID: Camera (left) + Score (right) ===
     // Use shared rendering method for consistency with basic view
