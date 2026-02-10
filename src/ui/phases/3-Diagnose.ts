@@ -1200,6 +1200,16 @@ export class DiagnosePhase {
 
         // Initialize camera video element
         this.initCamera();
+
+        // Add reference info line (same position as advanced/expert view)
+        const rightScore = contentElement.querySelector('.dashboard-right-score');
+        if (rightScore) {
+          const refInfo = document.createElement('div');
+          refInfo.className = 'inspection-ref-info';
+          refInfo.id = 'inspection-ref-info';
+          refInfo.textContent = `${t('diagnose.display.reference')}: ${this.machine.name}`;
+          rightScore.appendChild(refInfo);
+        }
       }
 
       contentElement.classList.add('is-initializing');
