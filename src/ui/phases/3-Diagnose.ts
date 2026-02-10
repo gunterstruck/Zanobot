@@ -1066,10 +1066,72 @@ export class DiagnosePhase {
   }
 
   /**
+   * Render camera and score layout (shared between basic and advanced views)
+   * Returns HTML string for the 2-column layout
+   */
+  private renderCameraAndScoreLayout(): string {
+    // --- LEFT: Camera with Ghost Overlay ---
+    let cameraHTML = '';
+    if (this.cameraStream && this.machine.referenceImage) {
+      const imageUrl = URL.createObjectURL(this.machine.referenceImage);
+      cameraHTML = `
+        <div class="ghost-overlay-container" id="ghost-overlay-container">
+          <div class="ghost-overlay-wrapper">
+            <video id="diagnosis-video" autoplay playsinline muted></video>
+            <img id="ghost-overlay-image" class="ghost-overlay-image" src="${imageUrl}" />
+          </div>
+        </div>
+      `;
+    } else {
+      cameraHTML = `
+        <div style="text-align: center; padding: var(--spacing-sm); color: var(--text-muted); font-size: 0.75rem;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5; margin-bottom: 4px;">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <div>${t('diagnose.display.noCameraAvailable')}</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="diagnosis-dashboard-grid">
+        <div class="dashboard-left-cam">
+          <div class="diagnosis-middle-camera">
+            ${cameraHTML}
+          </div>
+        </div>
+        <div class="dashboard-right-score">
+          <div class="inspection-score-container" id="inspection-score-container">
+            <span class="inspection-score" id="inspection-score">--</span>
+            <span class="inspection-score-unit">%</span>
+          </div>
+          <div class="inspection-status" id="inspection-status-label">${t('common.initializing')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Initialize camera video element after rendering
+   */
+  private initCamera(): void {
+    if (!this.cameraStream) return;
+
+    const video = document.getElementById('diagnosis-video') as HTMLVideoElement | null;
+    if (video) {
+      video.srcObject = this.cameraStream;
+      logger.info('✅ Camera video element initialized');
+    }
+  }
+
+  /**
    * Show simplified inspection modal (redesigned PWA view)
    *
-   * Layout: Fixed header, scrollable middle, fixed footer
-   * Focus on: Clear question, large percentage, status word, STOP button
+   * Layout: Fixed header, 2-column layout (camera + score), fixed footer
+   * Focus on: Clear question, camera with ghost overlay, large percentage, STOP button
+   *
+   * NEW: Now includes camera view with ghost overlay for positioning assistance
    */
   private showInspectionModal(): void {
     const modal = document.getElementById('inspection-modal');
@@ -1100,16 +1162,31 @@ export class DiagnosePhase {
       referenceValueElement.textContent = referenceLabel;
     }
 
+    // NEW: Insert camera and score layout
+    const contentElement = document.getElementById('inspection-content');
+    if (contentElement) {
+      // Check if layout already exists (prevent duplicate insertion)
+      if (!contentElement.querySelector('.diagnosis-dashboard-grid')) {
+        const layoutHTML = this.renderCameraAndScoreLayout();
+        // Insert before the hint element
+        const hintElement = document.getElementById('inspection-hint');
+        if (hintElement) {
+          hintElement.insertAdjacentHTML('beforebegin', layoutHTML);
+        } else {
+          contentElement.insertAdjacentHTML('afterbegin', layoutHTML);
+        }
+
+        // Initialize camera video element
+        this.initCamera();
+      }
+
+      contentElement.classList.add('is-initializing');
+    }
+
     // Setup stop button
     const stopBtn = document.getElementById('inspection-stop-btn');
     if (stopBtn) {
       stopBtn.onclick = () => this.stopRecording();
-    }
-
-    // Set initial state (initializing)
-    const contentElement = document.getElementById('inspection-content');
-    if (contentElement) {
-      contentElement.classList.add('is-initializing');
     }
 
     // Hide quality hint initially
@@ -1118,7 +1195,7 @@ export class DiagnosePhase {
       hintElement.classList.add('hint-hidden');
     }
 
-    logger.info('✅ Inspection modal shown');
+    logger.info('✅ Inspection modal shown with camera and score layout');
   }
 
   /**
@@ -1201,70 +1278,35 @@ export class DiagnosePhase {
     structuredContent.appendChild(headerSection);
 
     // === DASHBOARD GRID: Camera (left) + Score (right) ===
-    const dashboardGrid = document.createElement('div');
-    dashboardGrid.className = 'diagnosis-dashboard-grid';
+    // Use shared rendering method for consistency with basic view
+    const dashboardContainer = document.createElement('div');
+    dashboardContainer.innerHTML = this.renderCameraAndScoreLayout();
+    const dashboardGrid = dashboardContainer.firstElementChild as HTMLElement;
 
-    // --- LEFT: Camera with Ghost Overlay ---
-    const dashboardLeftCam = document.createElement('div');
-    dashboardLeftCam.className = 'dashboard-left-cam';
+    // Initialize camera video element
+    this.initCamera();
 
-    const cameraSection = document.createElement('div');
-    cameraSection.className = 'diagnosis-middle-camera';
+    // Update score container IDs for advanced view (to maintain existing updateLiveDisplay logic)
+    const scoreContainer = dashboardGrid.querySelector('#inspection-score-container');
+    const scoreElement = dashboardGrid.querySelector('#inspection-score');
+    const statusElement = dashboardGrid.querySelector('#inspection-status-label');
 
-    if (this.cameraStream && this.machine.referenceImage) {
-      const ghostContainer = document.createElement('div');
-      ghostContainer.id = 'ghost-overlay-container';
-      ghostContainer.className = 'ghost-overlay-container';
-
-      const ghostWrapper = document.createElement('div');
-      ghostWrapper.className = 'ghost-overlay-wrapper';
-
-      const video = document.createElement('video');
-      video.id = 'diagnosis-video';
-      video.autoplay = true;
-      video.playsInline = true;
-      video.muted = true;
-      video.srcObject = this.cameraStream;
-
-      const ghostImage = document.createElement('img');
-      ghostImage.id = 'ghost-overlay-image';
-      ghostImage.className = 'ghost-overlay-image';
-      const imageUrl = URL.createObjectURL(this.machine.referenceImage);
-      ghostImage.src = imageUrl;
-
-      ghostWrapper.appendChild(video);
-      ghostWrapper.appendChild(ghostImage);
-      ghostContainer.appendChild(ghostWrapper);
-
-      cameraSection.appendChild(ghostContainer);
-      logger.info('✅ Ghost overlay added to diagnosis modal');
-    } else {
-      // Show placeholder when no camera available
-      cameraSection.innerHTML = `
-        <div style="text-align: center; padding: var(--spacing-sm); color: var(--text-muted); font-size: 0.75rem;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5; margin-bottom: 4px;">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-          <div>${t('diagnose.display.noCameraAvailable')}</div>
-        </div>
-      `;
+    if (scoreContainer) scoreContainer.id = 'live-dashboard-score-container';
+    if (scoreElement) scoreElement.id = 'live-dashboard-score';
+    if (statusElement) {
+      statusElement.id = 'live-dashboard-status';
+      statusElement.textContent = t('diagnose.display.waitingForSignal');
     }
-    dashboardLeftCam.appendChild(cameraSection);
-    dashboardGrid.appendChild(dashboardLeftCam);
 
-    // --- RIGHT: Score Display ---
-    const dashboardRightScore = document.createElement('div');
-    dashboardRightScore.className = 'dashboard-right-score';
-    dashboardRightScore.innerHTML = `
-      <div class="inspection-score-container" id="live-dashboard-score-container">
-        <span class="inspection-score" id="live-dashboard-score">--</span>
-        <span class="inspection-score-unit">%</span>
-      </div>
-      <div class="inspection-status" id="live-dashboard-status">${t('diagnose.display.waitingForSignal')}</div>
-      <div class="inspection-ref-info" id="live-dashboard-ref">${t('diagnose.display.reference')}: ${this.machine.name}</div>
-    `;
-    dashboardGrid.appendChild(dashboardRightScore);
+    // Add reference info line for advanced view
+    const rightScore = dashboardGrid.querySelector('.dashboard-right-score');
+    if (rightScore) {
+      const refInfo = document.createElement('div');
+      refInfo.className = 'inspection-ref-info';
+      refInfo.id = 'live-dashboard-ref';
+      refInfo.textContent = `${t('diagnose.display.reference')}: ${this.machine.name}`;
+      rightScore.appendChild(refInfo);
+    }
 
     // === SCROLLABLE AREA: Camera+Score + Spectrum + Expert Debug ===
     // Wraps dashboard grid, spectrum, and expert panel in one scroll container
@@ -1352,6 +1394,18 @@ export class DiagnosePhase {
       const contentElement = document.getElementById('inspection-content');
       if (contentElement) {
         contentElement.classList.add('is-initializing');
+
+        // Clean up ghost overlay image URL in basic view
+        const ghostImage = contentElement.querySelector('#ghost-overlay-image') as HTMLImageElement | null;
+        if (ghostImage && ghostImage.src) {
+          URL.revokeObjectURL(ghostImage.src);
+        }
+
+        // Remove camera and score layout
+        const dashboardGrid = contentElement.querySelector('.diagnosis-dashboard-grid');
+        if (dashboardGrid) {
+          dashboardGrid.remove();
+        }
       }
 
       // Reset score container classes
