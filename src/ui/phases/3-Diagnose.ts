@@ -1306,9 +1306,6 @@ export class DiagnosePhase {
     dashboardContainer.innerHTML = this.renderCameraAndScoreLayout();
     const dashboardGrid = dashboardContainer.firstElementChild as HTMLElement;
 
-    // Initialize camera video element
-    this.initCamera();
-
     // Update score container IDs for advanced view (to maintain existing updateLiveDisplay logic)
     const scoreContainer = dashboardGrid.querySelector('#inspection-score-container');
     const scoreElement = dashboardGrid.querySelector('#inspection-score');
@@ -1400,6 +1397,9 @@ export class DiagnosePhase {
 
     // Add structured content to modal body
     modalBody.appendChild(structuredContent);
+
+    // Initialize camera video element (must be done AFTER adding to DOM)
+    this.initCamera();
 
     logger.info('✅ Advanced recording modal shown with dashboard layout');
   }
