@@ -1216,12 +1216,6 @@ export class DiagnosePhase {
     structuredContent.className = 'diagnosis-structured-content';
     structuredContent.style.cssText = 'display: flex; flex-direction: column; height: 100%; gap: var(--spacing-sm);';
 
-    // === HEADER: Question ===
-    const headerSection = document.createElement('div');
-    headerSection.className = 'diagnosis-header';
-    headerSection.innerHTML = `<h3>${t('diagnose.display.machineQuestion')}</h3>`;
-    structuredContent.appendChild(headerSection);
-
     // === DASHBOARD GRID: Camera (left) + Score (right) ===
     const dashboardGrid = document.createElement('div');
     dashboardGrid.className = 'diagnosis-dashboard-grid';
@@ -1275,11 +1269,18 @@ export class DiagnosePhase {
     dashboardLeftCam.appendChild(cameraSection);
     dashboardGrid.appendChild(dashboardLeftCam);
 
-    // --- RIGHT: Score Display ---
+    // --- RIGHT: Score Display with Pulse Animation ---
     const dashboardRightScore = document.createElement('div');
     dashboardRightScore.className = 'dashboard-right-score';
     dashboardRightScore.innerHTML = `
       <div class="inspection-score-container" id="live-dashboard-score-container">
+        <!-- Pulse Animation Rings -->
+        <div class="inspection-pulse-animation">
+          <div class="inspection-pulse-ring"></div>
+          <div class="inspection-pulse-ring"></div>
+          <div class="inspection-pulse-ring"></div>
+        </div>
+        <!-- Score Value -->
         <span class="inspection-score" id="live-dashboard-score">--</span>
         <span class="inspection-score-unit">%</span>
       </div>
