@@ -130,8 +130,11 @@ export class SettingsPhase {
     const durationSelect = document.getElementById(
       'recording-duration'
     ) as HTMLSelectElement | null;
+    const disableAudioTriggerToggle = document.getElementById(
+      'disable-audio-trigger-toggle'
+    ) as HTMLInputElement | null;
 
-    if (!confidenceSlider && !faultySlider && !durationSelect) {
+    if (!confidenceSlider && !faultySlider && !durationSelect && !disableAudioTriggerToggle) {
       return;
     }
 
@@ -211,6 +214,25 @@ export class SettingsPhase {
           logger.error('Failed to save recording duration:', error);
           notify.error(
             'Die Aufnahmedauer konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
+            error as Error,
+            { title: 'Speicherfehler', duration: 5000 }
+          );
+        }
+      });
+    }
+
+    if (disableAudioTriggerToggle) {
+      disableAudioTriggerToggle.checked = settings.disableAudioTrigger;
+      disableAudioTriggerToggle.addEventListener('change', () => {
+        try {
+          setRecordingSettings({
+            disableAudioTrigger: disableAudioTriggerToggle.checked,
+          });
+          logger.info(`Audio-Trigger ${disableAudioTriggerToggle.checked ? 'deaktiviert' : 'aktiviert'}`);
+        } catch (error) {
+          logger.error('Failed to save disable audio trigger setting:', error);
+          notify.error(
+            'Die Audio-Trigger-Einstellung konnte nicht gespeichert werden. Möglicherweise ist der Speicher voll oder Sie befinden sich im privaten Modus.',
             error as Error,
             { title: 'Speicherfehler', duration: 5000 }
           );

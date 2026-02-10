@@ -479,6 +479,7 @@ export const zh: TranslationDict = {
     seconds5: '5秒', seconds10: '10秒', seconds15: '15秒', seconds: '秒',
     frequencyAxis: '频率轴', frequencyAxisDesc: '对数（20-500 Hz范围更多细节）', frequencyLogDesc: '对数（20-500 Hz范围更多细节）',
     amplitudeAxis: 'Y轴/振幅', amplitudeAxisDesc: '对数（dB）- 强调微弱信号', amplitudeLogDesc: '对数（dB）- 强调微弱信号',
+    disableAudioTriggerLabel: '禁用音频触发', disableAudioTriggerDesc: '即使信号非常微弱，也立即开始测量，无需等待最小电平。适用于极其安静的机器或环境。',
     analysisMethod: '分析方法', analysisMethodDesc: '为您的机器选择合适的分析方法。',
     gmaiMethodDesc: 'GMIA（广义互依赖分析）从多个时间窗口中提取共同的稳定成分，同时抑制设备特定效应。适用于结构化、时间稳定的机器声音。',
     level1Info: '等级 1：上方的频率和振幅设置处于活动状态',

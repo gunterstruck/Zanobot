@@ -508,6 +508,8 @@ export const en: TranslationDict = {
     amplitudeAxis: 'Y-axis / Amplitude',
     amplitudeAxisDesc: 'Logarithmic (dB) - emphasizes quiet signals',
     amplitudeLogDesc: 'Logarithmic (dB) - emphasizes quiet signals',
+    disableAudioTriggerLabel: 'Disable Audio Trigger',
+    disableAudioTriggerDesc: 'Starts the measurement immediately, even with very quiet signals, without waiting for a minimum level. For extremely quiet machines or environments.',
     analysisMethod: 'Analysis Method',
     analysisMethodDesc: 'Select the appropriate analysis method for your machine.',
     gmaiMethodDesc: 'GMIA (Generalized Mutual Interdependence Analysis) extracts the common, stable components from multiple time windows while suppressing device-specific effects. Ideal for structured, time-stable machine sounds.',
