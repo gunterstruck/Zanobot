@@ -1113,6 +1113,13 @@ export class DiagnosePhase {
         </div>
         <div class="dashboard-right-score">
           <div class="inspection-score-container" id="inspection-score-container">
+            <!-- Pulse Animation Rings -->
+            <div class="inspection-pulse-animation">
+              <div class="inspection-pulse-ring"></div>
+              <div class="inspection-pulse-ring"></div>
+              <div class="inspection-pulse-ring"></div>
+            </div>
+            <!-- Score Value -->
             <span class="inspection-score" id="inspection-score">--</span>
             <span class="inspection-score-unit">%</span>
           </div>
