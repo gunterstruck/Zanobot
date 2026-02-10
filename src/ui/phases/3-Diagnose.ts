@@ -1082,6 +1082,12 @@ export class DiagnosePhase {
    * Focus on: Clear question, large percentage, status word, STOP button
    */
   private showInspectionModal(): void {
+    // Hide recording modal (in case it was shown before)
+    const recordingModal = document.getElementById('recording-modal');
+    if (recordingModal) {
+      recordingModal.style.display = 'none';
+    }
+
     const modal = document.getElementById('inspection-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -1156,6 +1162,12 @@ export class DiagnosePhase {
    * Expert view adds scrollable details below spectrum
    */
   private showAdvancedRecordingModal(): void {
+    // Hide inspection modal (in case it was shown before)
+    const inspectionModal = document.getElementById('inspection-modal');
+    if (inspectionModal) {
+      inspectionModal.style.display = 'none';
+    }
+
     const modal = document.getElementById('recording-modal');
     if (!modal) return;
 
