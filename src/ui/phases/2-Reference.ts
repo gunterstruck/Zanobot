@@ -208,18 +208,13 @@ export class ReferencePhase {
       const recordingSettings = getRecordingSettings();
       const skipSmartStart = recordingSettings.disableAudioTrigger;
 
-      if (skipSmartStart) {
-        // FORCE START: Skip Smart Start and start recording immediately
-        logger.info('⚡ Force Start: Audio trigger disabled, starting recording immediately');
-        this.updateStatusMessage(t('reference.recording.recording'));
-        setTimeout(() => this.actuallyStartRecording(), 500);
-      } else if (this.useAudioWorklet) {
+      if (this.useAudioWorklet) {
         // CRITICAL FIX: Calculate proper buffer size based on actual sample rate
         // At 96kHz: chunkSize = 31680, so we need bufferSize >= 63360
         const chunkSize = Math.floor(0.33 * actualSampleRate);
         const bufferSize = Math.max(32768, chunkSize * 2);
 
-        // Initialize AudioWorklet Manager
+        // Initialize AudioWorklet Manager (always needed for audio processing)
         this.audioWorkletManager = new AudioWorkletManager({
           bufferSize: bufferSize,
           warmUpDuration: this.warmUpDuration * 1000, // Convert seconds to milliseconds
@@ -249,8 +244,26 @@ export class ReferencePhase {
         // Initialize AudioWorklet
         await this.audioWorkletManager.init(this.audioContext, this.mediaStream);
 
-        // Start Smart Start sequence
+        // Start Smart Start sequence (always needed for audio processing)
         this.audioWorkletManager.startSmartStart();
+
+        if (skipSmartStart) {
+          // FORCE START: Skip signal detection after warmup, start immediately
+          logger.info('⚡ Force Start: Audio trigger disabled, will start after warmup');
+
+          // Wait for warmup duration, then skip to recording
+          setTimeout(() => {
+            if (!this.audioWorkletManager) {
+              logger.error('AudioWorkletManager not initialized');
+              return;
+            }
+            logger.info('⚡ Force Start: Warmup complete, starting recording immediately');
+            this.updateStatusMessage(t('reference.recording.recording'));
+            this.audioWorkletManager.skipToRecording();
+            this.smartStartWasUsed = false; // Force Start doesn't use signal detection
+            this.actuallyStartRecording();
+          }, this.warmUpDuration * 1000);
+        }
       } else {
         // Fallback: Start recording immediately without Smart Start
         logger.info('⏭️ Skipping Smart Start (AudioWorklet not supported)');
