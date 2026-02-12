@@ -401,14 +401,18 @@ export class IdentifyPhase {
 
       if (match.type === 'machine' && match.machineId) {
         // Machine route: load/create machine and download reference DB
-        // No diagnosis test is started - user must initiate manually
         const validation = this.validateMachineId(match.machineId);
         if (!validation.valid) {
           this.showError(validation.error || t('identify.errors.invalidMachineId'));
           return;
         }
 
-        await this.handleMachineId(match.machineId, match.referenceDbUrl);
+        const machineHandled = await this.handleMachineId(match.machineId, match.referenceDbUrl);
+
+        // After successful machine load + DB import, ask user if they want to run a test
+        if (machineHandled) {
+          this.openNfcDiagnosisPrompt();
+        }
         return;
       }
 
@@ -467,12 +471,21 @@ export class IdentifyPhase {
           { title: t('urlImport.successTitle') }
         );
 
-        // Refresh UI to show imported data
+        // Refresh UI, then select first machine and offer diagnosis prompt
         setTimeout(async () => {
           overlay.hide();
           overlay.destroy();
           await this.refreshMachineLists();
           await this.loadDiagnosisHistory();
+
+          // Select first available machine and ask user if they want to run a test
+          const machines = await getAllMachines();
+          if (machines.length > 0) {
+            const firstMachine = machines[0];
+            this.setCurrentMachine(firstMachine);
+            this.onMachineSelected(firstMachine);
+            this.openNfcDiagnosisPrompt();
+          }
         }, 1600);
       } else {
         // Error is already shown via onError callback on the overlay
