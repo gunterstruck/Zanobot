@@ -635,6 +635,37 @@ export const en: TranslationDict = {
     closeDialog: 'Close NFC dialog',
   },
 
+  // ============================================================================
+  // QR CODE GENERATOR
+  // ============================================================================
+  qrCode: {
+    title: 'Create QR Code',
+    description: 'Create a QR code to print or save. Simply attach it to the machine — done.',
+    openGenerator: 'Create QR Code',
+    optionGeneric: 'App link (generic)',
+    optionGenericDetail: 'Opens the app without a machine ID.',
+    optionSpecific: 'Machine link',
+    optionSpecificDetailDefault: 'Opens the app for the currently selected machine.',
+    optionSpecificDetail: 'Opens the app for "{{name}}" (ID: {{id}}).',
+    optionSpecificUnavailable: 'Select a machine first to create a specific QR code.',
+    customerIdLabel: 'Customer ID (c)',
+    customerIdDescription: 'This ID determines which reference data is loaded when scanning.',
+    customerIdPlaceholder: 'e.g. Customer_ID_1',
+    customerIdRequired: 'Please enter a customer ID.',
+    dbUrlPreview: 'Loaded DB URL: {{url}}',
+    urlPreview: 'Link preview',
+    downloadPng: 'Save as image',
+    print: 'Print',
+    closeDialog: 'Close QR code dialog',
+    generatedFor: 'QR code for',
+    machineLabel: 'Machine',
+    machineIdLabel: 'ID',
+    dateLabel: 'Created on',
+    printTitle: 'Machine QR Code',
+    printInstructions: 'Cut out QR code and attach to the machine.',
+    genericLabel: 'App Access',
+  },
+
   review: {
     title: 'Review Recording',
     subtitle: 'Quality Control',
