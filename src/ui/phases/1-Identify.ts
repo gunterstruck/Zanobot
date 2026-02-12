@@ -23,6 +23,7 @@ import {
 import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 import { HashRouter } from '../HashRouter.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
+import { nfcImportService } from '@data/NfcImportService.js';
 import QRCode from 'qrcode';
 import { ReferenceLoadingOverlay } from '../components/ReferenceLoadingOverlay.js';
 import { traceOverlay } from '../components/OnboardingTraceOverlay.js';
@@ -326,11 +327,26 @@ export class IdentifyPhase {
 
   /**
    * Process the scanned code
+   *
+   * Supports three input types:
+   * 1. Full URL with hash route (#/m/ID?c=CUSTOMER) → machine import with reference DB
+   * 2. Full URL with import route (#/import?url=URL) → full database import
+   * 3. Plain text → treated as machine ID (existing behavior)
+   *
+   * For URL-based QR codes: all relevant data is imported (machine, reference DB),
+   * but no diagnosis test is started automatically.
    */
   private async processScannedCode(code: string): Promise<void> {
     try {
-      // Trim and validate the scanned code
       const trimmedCode = code.trim();
+
+      // Check if the scanned code is a URL containing a hash route
+      if (this.isUrlWithHashRoute(trimmedCode)) {
+        await this.processScannedUrl(trimmedCode);
+        return;
+      }
+
+      // Plain text: treat as machine ID (existing behavior)
       const validation = this.validateMachineId(trimmedCode);
 
       if (!validation.valid) {
@@ -342,6 +358,134 @@ export class IdentifyPhase {
     } catch (error) {
       logger.error('Error processing scanned code:', error);
       this.showError(t('identify.errors.codeProcessing'));
+    }
+  }
+
+  /**
+   * Check if a scanned code is a URL containing a hash route
+   * Matches URLs like https://example.com#/m/... or https://example.com#/import?...
+   */
+  private isUrlWithHashRoute(code: string): boolean {
+    try {
+      if (!code.startsWith('http://') && !code.startsWith('https://')) {
+        return false;
+      }
+      const url = new URL(code);
+      return url.hash.startsWith('#/m/') || url.hash.startsWith('#/import');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Process a scanned URL containing a hash route
+   *
+   * Parses the hash part using HashRouter and dispatches to the appropriate handler:
+   * - machine route: loads/creates machine and imports reference DB (no auto-test)
+   * - import route: imports full database export via NfcImportService
+   */
+  private async processScannedUrl(url: string): Promise<void> {
+    try {
+      const parsed = new URL(url);
+      const hash = parsed.hash;
+
+      if (!hash) {
+        this.showError(t('identify.errors.invalidCode'));
+        return;
+      }
+
+      const router = new HashRouter();
+      const match = router.parseHash(hash);
+
+      logger.info(`📱 QR scan URL parsed: type=${match.type}, machineId=${match.machineId || 'none'}, dbUrl=${match.referenceDbUrl || 'none'}`);
+
+      if (match.type === 'machine' && match.machineId) {
+        // Machine route: load/create machine and download reference DB
+        // No diagnosis test is started - user must initiate manually
+        const validation = this.validateMachineId(match.machineId);
+        if (!validation.valid) {
+          this.showError(validation.error || t('identify.errors.invalidMachineId'));
+          return;
+        }
+
+        await this.handleMachineId(match.machineId, match.referenceDbUrl);
+        return;
+      }
+
+      if (match.type === 'import' && match.importUrl) {
+        // Import route: full database import via external URL
+        await this.processScannedImportUrl(match.importUrl);
+        return;
+      }
+
+      // Unknown route type - treat the whole URL as invalid
+      logger.warn(`⚠️ QR scan URL has unknown route type: ${match.type}`);
+      this.showError(t('identify.errors.invalidCode'));
+    } catch (error) {
+      logger.error('Error processing scanned URL:', error);
+      this.showError(t('identify.errors.codeProcessing'));
+    }
+  }
+
+  /**
+   * Process a scanned import URL (#/import?url=...)
+   * Fetches and imports the full database export, then refreshes the UI.
+   * Shows loading overlay during the import process.
+   */
+  private async processScannedImportUrl(importUrl: string): Promise<void> {
+    const overlay = new ReferenceLoadingOverlay();
+    overlay.show();
+    overlay.updateStatus(t('urlImport.statusFetching'), 10);
+
+    try {
+      const result = await nfcImportService.importFromExternalUrl(importUrl, {
+        onProgress: (status) => {
+          const progressMap: Record<string, number> = {
+            [t('urlImport.statusFetching')]: 30,
+            [t('urlImport.statusValidating')]: 60,
+            [t('urlImport.statusImporting')]: 85,
+          };
+          overlay.updateStatus(status, progressMap[status] || 50);
+        },
+        onError: (errorMessage) => {
+          overlay.showError(errorMessage);
+        },
+      });
+
+      if (result.success) {
+        overlay.showSuccess();
+
+        const meta = result.metadata;
+        const details = meta
+          ? `${meta.machineCount} ${t('settings.machines')}, ${meta.recordingCount} ${t('settings.recordings')}, ${meta.diagnosisCount} ${t('settings.diagnoses')}`
+          : '';
+
+        notify.success(
+          details
+            ? `${t('urlImport.success')}\n\n${details}`
+            : t('urlImport.success'),
+          { title: t('urlImport.successTitle') }
+        );
+
+        // Refresh UI to show imported data
+        setTimeout(async () => {
+          overlay.hide();
+          overlay.destroy();
+          await this.refreshMachineLists();
+          await this.loadDiagnosisHistory();
+        }, 1600);
+      } else {
+        // Error is already shown via onError callback on the overlay
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        overlay.hide();
+        overlay.destroy();
+      }
+    } catch (error) {
+      logger.error('QR scan import error:', error);
+      overlay.showError(t('urlImport.errorGeneric'));
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      overlay.hide();
+      overlay.destroy();
     }
   }
 
