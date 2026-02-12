@@ -743,6 +743,26 @@ export const es: TranslationDict = {
   },
 
   // ============================================================================
+  // URL IMPORT (Deep Link Import via #/import?url=)
+  // ============================================================================
+  urlImport: {
+    statusFetching: 'Cargando base de datos...',
+    statusValidating: 'Validando datos...',
+    statusImporting: 'Importando datos...',
+    success: '¡Base de datos importada con éxito!',
+    successTitle: 'Importación completada',
+    errorTitle: 'Importación fallida',
+    errorGeneric: 'La importación falló.',
+    errorInvalidUrl: 'URL no válida.',
+    errorFetchFailed: 'Descarga fallida (HTTP {{status}}).',
+    errorFileTooLarge: 'Archivo demasiado grande. Tamaño máximo: 50 MB.',
+    errorNotJson: 'La URL devuelve HTML en lugar de JSON. Por favor, revise el enlace.',
+    errorInvalidJson: 'El archivo no contiene un formato JSON válido.',
+    errorInvalidStructure: 'El archivo no tiene el formato de base de datos esperado.',
+    errorNetwork: 'Error de red al cargar los datos. Por favor, compruebe su conexión a Internet.',
+  },
+
+  // ============================================================================
   // ONBOARDING TRACE (Debug Protocol)
   // ============================================================================
   trace: {
@@ -768,6 +788,7 @@ export const es: TranslationDict = {
       machine_id_extracted: 'ID de máquina extraído',
       customer_id_extracted: 'ID de cliente extraído',
       db_url_derived: 'URL de BD derivada',
+      import_url_detected: 'URL de importación detectada',
 
       // Download Process
       download_started: 'Descarga iniciada',

@@ -37,6 +37,7 @@ export type TraceStepId =
   | 'machine_id_extracted'
   | 'customer_id_extracted'
   | 'db_url_derived'
+  | 'import_url_detected'
   // Download Process
   | 'download_started'
   | 'download_complete'

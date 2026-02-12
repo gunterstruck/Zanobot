@@ -739,6 +739,26 @@ export const zh: TranslationDict = {
   },
 
   // ============================================================================
+  // URL IMPORT (Deep Link Import via #/import?url=)
+  // ============================================================================
+  urlImport: {
+    statusFetching: '正在加载数据库...',
+    statusValidating: '正在验证数据...',
+    statusImporting: '正在导入数据...',
+    success: '数据库导入成功！',
+    successTitle: '导入完成',
+    errorTitle: '导入失败',
+    errorGeneric: '导入失败。',
+    errorInvalidUrl: '无效的URL。',
+    errorFetchFailed: '下载失败 (HTTP {{status}})。',
+    errorFileTooLarge: '文件过大。最大大小：50 MB。',
+    errorNotJson: 'URL返回的是HTML而不是JSON。请检查链接。',
+    errorInvalidJson: '文件不包含有效的JSON格式。',
+    errorInvalidStructure: '文件不具有预期的数据库格式。',
+    errorNetwork: '加载数据时出现网络错误。请检查您的互联网连接。',
+  },
+
+  // ============================================================================
   // ONBOARDING TRACE (Debug Protocol)
   // ============================================================================
   trace: {
@@ -764,6 +784,7 @@ export const zh: TranslationDict = {
       machine_id_extracted: '已提取机器 ID',
       customer_id_extracted: '已提取客户 ID',
       db_url_derived: '已派生数据库 URL',
+      import_url_detected: '检测到导入 URL',
 
       // Download Process
       download_started: '下载已开始',

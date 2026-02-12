@@ -17,6 +17,8 @@ import { toast } from '@ui/components/Toast.js';
 import { AboutModalController } from '@ui/components/AboutModalController.js';
 import { nfcImportService } from '@data/NfcImportService.js';
 import { Router } from '@ui/router.js';
+import { HashRouter } from '@ui/HashRouter.js';
+import { ReferenceLoadingOverlay } from '@ui/components/ReferenceLoadingOverlay.js';
 import { BannerManager } from '@ui/BannerManager.js';
 import { notify } from '@utils/notifications.js';
 import { logger } from '@utils/logger.js';
@@ -214,6 +216,16 @@ class ZanobotApp {
       await this.handleNfcImport();
     }
 
+    // URL IMPORT CHECK: Handle #/import?url=<url> deep links from NFC tags / QR codes
+    // Must run BEFORE router initialization to process import first
+    if (dbAvailable) {
+      const urlImportHandled = await this.handleUrlImport();
+      if (urlImportHandled) {
+        // Import was processed - page will reload, skip further init
+        return;
+      }
+    }
+
     // CRITICAL FIX: Always initialize UI components (even without database)
     // This ensures buttons have event listeners and the app is interactive
     try {
@@ -356,6 +368,103 @@ class ZanobotApp {
         error as Error,
         { title: t('nfcImport.errorTitle') }
       );
+    }
+  }
+
+  /**
+   * Handle URL-based database import via deep link
+   *
+   * Checks for #/import?url=<url> hash route and handles the import workflow:
+   * 1. Parse hash to detect import route
+   * 2. Show loading overlay
+   * 3. Fetch, validate, and import database from URL
+   * 4. Show success/error feedback
+   * 5. Reload to IdentifyPhase on success
+   *
+   * Security:
+   * - Only JSON data is processed (HTML/scripts rejected)
+   * - GitHub blob URLs are auto-converted to raw URLs
+   * - Size limit enforced (50 MB)
+   *
+   * @returns true if an import route was detected and handled
+   */
+  private async handleUrlImport(): Promise<boolean> {
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#/import')) {
+      return false;
+    }
+
+    // Parse the hash to extract import URL
+    const hashRouter = new HashRouter();
+    const match = hashRouter.parseHash(hash);
+
+    if (match.type !== 'import' || !match.importUrl) {
+      return false;
+    }
+
+    logger.info(`🔗 URL import deep link detected: ${match.importUrl}`);
+
+    // Show loading overlay
+    const overlay = new ReferenceLoadingOverlay();
+    overlay.show();
+    overlay.updateStatus(t('urlImport.statusFetching') || 'Datenbank wird geladen...', 10);
+
+    // Perform import
+    const result = await nfcImportService.importFromExternalUrl(match.importUrl, {
+      onProgress: (status) => {
+        // Advance progress bar based on status
+        const progressMap: Record<string, number> = {
+          [t('urlImport.statusFetching') || 'fetching']: 30,
+          [t('urlImport.statusValidating') || 'validating']: 60,
+          [t('urlImport.statusImporting') || 'importing']: 85,
+        };
+        const progress = progressMap[status] || 50;
+        overlay.updateStatus(status, progress);
+      },
+      onError: (errorMessage) => {
+        overlay.showError(errorMessage);
+      },
+    });
+
+    if (result.success) {
+      // Show success on overlay
+      overlay.showSuccess();
+
+      // Show success toast
+      const meta = result.metadata;
+      const details = meta
+        ? `${meta.machineCount} Maschinen, ${meta.recordingCount} Aufnahmen, ${meta.diagnosisCount} Diagnosen`
+        : '';
+
+      notify.success(
+        details
+          ? `${t('urlImport.success') || 'Datenbank erfolgreich importiert!'}\n\n${details}`
+          : (t('urlImport.success') || 'Datenbank erfolgreich importiert!'),
+        { title: t('urlImport.successTitle') || 'Import abgeschlossen' }
+      );
+
+      // Reload to IdentifyPhase (Phase 1) to show imported machines
+      setTimeout(() => {
+        window.location.reload();
+      }, 1800);
+
+      return true;
+    } else {
+      // Error was already shown on overlay via onError callback
+      // Also show as notification for persistence
+      notify.error(
+        result.errorMessage || (t('urlImport.errorGeneric') || 'Import fehlgeschlagen.'),
+        undefined,
+        { title: t('urlImport.errorTitle') || 'Import fehlgeschlagen' }
+      );
+
+      // Hide overlay after showing error
+      setTimeout(() => overlay.hide(), 3000);
+
+      // Clean hash so user doesn't get stuck in a loop
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      return true;
     }
   }
 

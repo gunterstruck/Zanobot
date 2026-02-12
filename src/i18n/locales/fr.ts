@@ -736,6 +736,26 @@ export const fr: TranslationDict = {
   },
 
   // ============================================================================
+  // URL IMPORT (Deep Link Import via #/import?url=)
+  // ============================================================================
+  urlImport: {
+    statusFetching: 'Chargement de la base de données...',
+    statusValidating: 'Validation des données...',
+    statusImporting: 'Importation des données...',
+    success: 'Base de données importée avec succès !',
+    successTitle: 'Importation terminée',
+    errorTitle: 'Échec de l\'importation',
+    errorGeneric: 'L\'importation a échoué.',
+    errorInvalidUrl: 'URL invalide.',
+    errorFetchFailed: 'Échec du téléchargement (HTTP {{status}}).',
+    errorFileTooLarge: 'Fichier trop volumineux. Taille maximale : 50 Mo.',
+    errorNotJson: 'L\'URL renvoie du HTML au lieu de JSON. Veuillez vérifier le lien.',
+    errorInvalidJson: 'Le fichier ne contient pas un format JSON valide.',
+    errorInvalidStructure: 'Le fichier n\'a pas le format de base de données attendu.',
+    errorNetwork: 'Erreur réseau lors du chargement des données. Veuillez vérifier votre connexion Internet.',
+  },
+
+  // ============================================================================
   // ONBOARDING TRACE (Debug Protocol)
   // ============================================================================
   trace: {
@@ -761,6 +781,7 @@ export const fr: TranslationDict = {
       machine_id_extracted: 'ID de machine extrait',
       customer_id_extracted: 'ID client extrait',
       db_url_derived: 'URL de BD dérivée',
+      import_url_detected: 'URL d\'importation détectée',
 
       // Download Process
       download_started: 'Téléchargement démarré',

@@ -27,12 +27,14 @@ export const GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
  * Route match result
  */
 export interface RouteMatch {
-  type: 'machine' | 'unknown';
+  type: 'machine' | 'import' | 'unknown';
   machineId?: string;
   /** Customer ID from NFC link (c parameter) - used to build DB URL */
   customerId?: string;
   /** Reference DB URL from NFC link (allows auto-creation on new devices) */
   referenceDbUrl?: string;
+  /** External database URL for import route (#/import?url=...) */
+  importUrl?: string;
 }
 
 /**
@@ -61,6 +63,7 @@ export class HashRouter {
   private onMachineReady?: (machine: Machine) => void;
   private onDownloadProgress?: (status: string, progress?: number) => void;
   private onDownloadError?: (error: string) => void;
+  private onImportRequested?: (importUrl: string) => void;
 
   constructor() {
     // Listen for hash changes
@@ -96,6 +99,13 @@ export class HashRouter {
   }
 
   /**
+   * Set callback for import route requests (#/import?url=...)
+   */
+  public setOnImportRequested(callback: (importUrl: string) => void): void {
+    this.onImportRequested = callback;
+  }
+
+  /**
    * Initialize router and process current hash
    */
   public async init(): Promise<void> {
@@ -107,6 +117,7 @@ export class HashRouter {
    * Supports:
    * - New format: #/m/<machine_id>?c=<customer_id> (customerId builds DB URL automatically)
    * - Legacy format: #/m/<machine_id>?ref=<encoded_url> (full URL in parameter)
+   * - Import format: #/import?url=<encoded_url> (direct DB import from external URL)
    */
   public parseHash(hash: string): RouteMatch {
     // Remove leading # if present
@@ -117,6 +128,37 @@ export class HashRouter {
 
     // Split path and query string
     const [path, queryString] = cleanHash.split('?');
+
+    // Match /import route (URL-based database import)
+    if (path === '/import') {
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        const importUrl = params.get('url');
+
+        if (importUrl) {
+          const decodedUrl = decodeURIComponent(importUrl);
+
+          // Validate that it's a proper URL
+          try {
+            new URL(decodedUrl);
+          } catch {
+            logger.warn(`⚠️ Invalid import URL in hash: ${decodedUrl}`);
+            return { type: 'unknown' };
+          }
+
+          logger.info(`🔗 Import route detected: ${decodedUrl}`);
+          onboardingTrace.step('import_url_detected', { url: decodedUrl });
+
+          return {
+            type: 'import',
+            importUrl: decodedUrl,
+          };
+        }
+      }
+
+      logger.warn('⚠️ /import route without url parameter');
+      return { type: 'unknown' };
+    }
 
     // Match /m/<machine_id> pattern
     const machineMatch = path.match(/^\/m\/([^/?]+)/);
@@ -166,16 +208,62 @@ export class HashRouter {
   }
 
   /**
-   * Build the reference database URL from a customer ID
-   * Rule: https://gunterstruck.github.io/<customerId>/db-latest.json
+   * Build the reference database URL from a customer ID or direct URL
    *
-   * @param customerId - Customer identifier (e.g., "Kundenkennung_nr1")
-   * @returns Full URL to the customer's database
+   * Supports two input modes:
+   * 1. Customer ID: "Kundenkennung_nr1" → https://gunterstruck.github.io/Kundenkennung_nr1/db-latest.json
+   * 2. Direct URL: "https://..." → used as-is (with GitHub blob→raw auto-conversion)
+   *
+   * @param customerIdOrUrl - Customer identifier or direct URL to JSON database
+   * @returns Full URL to the database
    */
-  public static buildDbUrlFromCustomerId(customerId: string): string {
-    // Sanitize customerId: remove leading/trailing slashes, encode special chars
-    const sanitized = customerId.trim().replace(/^\/+|\/+$/g, '');
+  public static buildDbUrlFromCustomerId(customerIdOrUrl: string): string {
+    const trimmed = customerIdOrUrl.trim();
+
+    // Detect if input is already a full URL
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+      // Auto-convert GitHub blob URLs to raw URLs
+      if (trimmed.includes('github.com') && trimmed.includes('/blob/')) {
+        const converted = HashRouter.convertGitHubBlobToRaw(trimmed);
+        logger.info(`🔄 GitHub blob URL auto-converted: ${converted}`);
+        return converted;
+      }
+      // Direct URL - use as-is
+      return trimmed;
+    }
+
+    // Customer ID mode: build URL from ID
+    const sanitized = trimmed.replace(/^\/+|\/+$/g, '');
     return `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(sanitized)}/db-latest.json`;
+  }
+
+  /**
+   * Convert a GitHub blob URL to a raw.githubusercontent.com URL
+   *
+   * Example:
+   * github.com/user/repo/blob/branch/path/file.json
+   * → raw.githubusercontent.com/user/repo/branch/path/file.json
+   *
+   * @param blobUrl - GitHub blob URL
+   * @returns Raw content URL
+   */
+  public static convertGitHubBlobToRaw(blobUrl: string): string {
+    try {
+      const parsed = new URL(blobUrl);
+      const pathParts = parsed.pathname.split('/');
+      const blobIndex = pathParts.indexOf('blob');
+
+      if (blobIndex !== -1) {
+        // Remove 'blob' from path
+        pathParts.splice(blobIndex, 1);
+        const newPath = pathParts.join('/');
+        return `https://raw.githubusercontent.com${newPath}`;
+      }
+
+      return blobUrl;
+    } catch {
+      return blobUrl;
+    }
   }
 
   /**
@@ -226,6 +314,11 @@ export class HashRouter {
     // Handle machine route
     if (match.type === 'machine' && match.machineId) {
       await this.handleMachineRoute(match.machineId, match.referenceDbUrl);
+    }
+
+    // Handle import route
+    if (match.type === 'import' && match.importUrl) {
+      this.onImportRequested?.(match.importUrl);
     }
   }
 

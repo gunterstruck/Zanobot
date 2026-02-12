@@ -500,6 +500,145 @@ export class NfcImportService {
       if (e.target === modal) cleanup();
     });
   }
+
+  /**
+   * Import database from an external URL (used by #/import?url=... deep links)
+   *
+   * Full workflow:
+   * 1. Validates the URL
+   * 2. Converts GitHub blob URLs to raw URLs automatically
+   * 3. Fetches and validates JSON data
+   * 4. Imports into local database
+   *
+   * Security:
+   * - Only processes JSON data (HTML responses are rejected)
+   * - Validates content structure before import
+   * - Size limit enforced (50 MB)
+   * - No script execution possible (JSON.parse only)
+   *
+   * @param targetUrl - The URL to fetch the database JSON from
+   * @param callbacks - Optional progress/status callbacks
+   * @returns Result with success flag and metadata
+   */
+  public async importFromExternalUrl(
+    targetUrl: string,
+    callbacks?: {
+      onProgress?: (status: string) => void;
+      onError?: (errorMessage: string) => void;
+    }
+  ): Promise<{ success: boolean; errorMessage?: string; metadata?: ImportMetadata }> {
+    // Step 1: Validate URL
+    try {
+      new URL(targetUrl);
+    } catch {
+      const msg = t('urlImport.errorInvalidUrl') || 'Ungültige URL.';
+      callbacks?.onError?.(msg);
+      return { success: false, errorMessage: msg };
+    }
+
+    // Step 2: Auto-convert GitHub blob URLs to raw URLs
+    let fetchUrl = targetUrl;
+    if (this.isGitHubBlobUrl(targetUrl)) {
+      fetchUrl = this.convertToRawUrl(targetUrl);
+      logger.info(`🔄 GitHub blob URL auto-converted to raw: ${fetchUrl}`);
+    }
+
+    // Step 3: Fetch the data
+    callbacks?.onProgress?.(t('urlImport.statusFetching') || 'Datenbank wird geladen...');
+
+    try {
+      const response = await fetch(fetchUrl, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const msg = (t('urlImport.errorFetchFailed') || 'Download fehlgeschlagen (HTTP {{status}}).')
+          .replace('{{status}}', String(response.status));
+        callbacks?.onError?.(msg);
+        return { success: false, errorMessage: msg };
+      }
+
+      // SECURITY: Check Content-Length
+      const contentLength = response.headers.get('content-length');
+      if (contentLength) {
+        const size = parseInt(contentLength, 10);
+        if (size > MAX_IMPORT_SIZE_BYTES) {
+          const sizeMB = (size / (1024 * 1024)).toFixed(1);
+          const maxMB = (MAX_IMPORT_SIZE_BYTES / (1024 * 1024)).toFixed(0);
+          const msg = (t('urlImport.errorFileTooLarge') || `Datei zu groß (${sizeMB} MB). Maximale Größe: ${maxMB} MB.`);
+          callbacks?.onError?.(msg);
+          return { success: false, errorMessage: msg };
+        }
+      }
+
+      // Step 4: Parse response
+      callbacks?.onProgress?.(t('urlImport.statusValidating') || 'Daten werden geprüft...');
+
+      const text = await response.text();
+
+      // SECURITY: Reject HTML responses (wrong URL / GitHub page)
+      if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+        const msg = t('urlImport.errorNotJson') ||
+          'Die URL liefert HTML statt JSON. Bitte prüfen Sie den Link.';
+        callbacks?.onError?.(msg);
+        return { success: false, errorMessage: msg };
+      }
+
+      let data: ImportData;
+      try {
+        data = JSON.parse(text) as ImportData;
+      } catch {
+        const msg = t('urlImport.errorInvalidJson') ||
+          'Die Datei enthält kein gültiges JSON-Format.';
+        callbacks?.onError?.(msg);
+        return { success: false, errorMessage: msg };
+      }
+
+      // Step 5: Validate structure
+      if (!this.isValidImportData(data)) {
+        const msg = t('urlImport.errorInvalidStructure') ||
+          'Die Datei hat nicht das erwartete Datenbank-Format.';
+        callbacks?.onError?.(msg);
+        return { success: false, errorMessage: msg };
+      }
+
+      // Extract metadata
+      const metadata: ImportMetadata = {
+        machineCount: data.machines?.length || 0,
+        recordingCount: data.recordings?.length || 0,
+        diagnosisCount: data.diagnoses?.length || 0,
+        exportDate: data.exportedAt,
+        sourceUrl: targetUrl,
+      };
+
+      logger.info(`✅ External URL data validated: ${metadata.machineCount} machines, ${metadata.recordingCount} recordings, ${metadata.diagnosisCount} diagnoses`);
+
+      // Step 6: Import data
+      callbacks?.onProgress?.(t('urlImport.statusImporting') || 'Daten werden importiert...');
+      await importData(data as Parameters<typeof importData>[0], false);
+
+      logger.info('✅ External URL import completed successfully');
+
+      // Clean hash after successful import
+      this.cleanupHash();
+
+      return { success: true, metadata };
+    } catch (error) {
+      logger.error('❌ External URL import failed:', error);
+      const msg = t('urlImport.errorNetwork') ||
+        'Netzwerkfehler beim Laden der Daten. Bitte prüfen Sie Ihre Internetverbindung.';
+      callbacks?.onError?.(msg);
+      return { success: false, errorMessage: msg };
+    }
+  }
+
+  /**
+   * Clean up the hash after import processing
+   */
+  private cleanupHash(): void {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    logger.info('🧹 Import hash cleaned from URL');
+  }
 }
 
 /**
