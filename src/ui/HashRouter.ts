@@ -208,16 +208,62 @@ export class HashRouter {
   }
 
   /**
-   * Build the reference database URL from a customer ID
-   * Rule: https://gunterstruck.github.io/<customerId>/db-latest.json
+   * Build the reference database URL from a customer ID or direct URL
    *
-   * @param customerId - Customer identifier (e.g., "Kundenkennung_nr1")
-   * @returns Full URL to the customer's database
+   * Supports two input modes:
+   * 1. Customer ID: "Kundenkennung_nr1" → https://gunterstruck.github.io/Kundenkennung_nr1/db-latest.json
+   * 2. Direct URL: "https://..." → used as-is (with GitHub blob→raw auto-conversion)
+   *
+   * @param customerIdOrUrl - Customer identifier or direct URL to JSON database
+   * @returns Full URL to the database
    */
-  public static buildDbUrlFromCustomerId(customerId: string): string {
-    // Sanitize customerId: remove leading/trailing slashes, encode special chars
-    const sanitized = customerId.trim().replace(/^\/+|\/+$/g, '');
+  public static buildDbUrlFromCustomerId(customerIdOrUrl: string): string {
+    const trimmed = customerIdOrUrl.trim();
+
+    // Detect if input is already a full URL
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+      // Auto-convert GitHub blob URLs to raw URLs
+      if (trimmed.includes('github.com') && trimmed.includes('/blob/')) {
+        const converted = HashRouter.convertGitHubBlobToRaw(trimmed);
+        logger.info(`🔄 GitHub blob URL auto-converted: ${converted}`);
+        return converted;
+      }
+      // Direct URL - use as-is
+      return trimmed;
+    }
+
+    // Customer ID mode: build URL from ID
+    const sanitized = trimmed.replace(/^\/+|\/+$/g, '');
     return `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(sanitized)}/db-latest.json`;
+  }
+
+  /**
+   * Convert a GitHub blob URL to a raw.githubusercontent.com URL
+   *
+   * Example:
+   * github.com/user/repo/blob/branch/path/file.json
+   * → raw.githubusercontent.com/user/repo/branch/path/file.json
+   *
+   * @param blobUrl - GitHub blob URL
+   * @returns Raw content URL
+   */
+  public static convertGitHubBlobToRaw(blobUrl: string): string {
+    try {
+      const parsed = new URL(blobUrl);
+      const pathParts = parsed.pathname.split('/');
+      const blobIndex = pathParts.indexOf('blob');
+
+      if (blobIndex !== -1) {
+        // Remove 'blob' from path
+        pathParts.splice(blobIndex, 1);
+        const newPath = pathParts.join('/');
+        return `https://raw.githubusercontent.com${newPath}`;
+      }
+
+      return blobUrl;
+    } catch {
+      return blobUrl;
+    }
   }
 
   /**
