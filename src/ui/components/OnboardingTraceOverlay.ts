@@ -77,6 +77,7 @@ export class OnboardingTraceOverlay {
   public hide(): void {
     if (this.container) {
       this.container.style.display = 'none';
+      this.container.style.pointerEvents = 'none';
     }
 
     if (this.unsubscribe) {

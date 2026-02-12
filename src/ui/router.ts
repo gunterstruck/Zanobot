@@ -74,6 +74,9 @@ export class Router {
     // This is needed because auto-detection works WITHOUT machine pre-selection
     this.ensureAutoDetectButtonsEnabled();
 
+    // CRITICAL: Ensure tile buttons (QR scannen, Maschine wählen, Neue Maschine) are always clickable
+    this.ensureTileButtonsEnabled();
+
     // ZERO-FRICTION: Initialize reference phase without machine for zero-friction recording
     // This allows users to start recording immediately without selecting a machine first
     this.initializeZeroFrictionReferencePhase();
@@ -665,6 +668,8 @@ export class Router {
   private lockPhases(): void {
     this.setPhaseState('record-reference-content', false);
     this.setPhaseState('run-diagnosis-content', false);
+    // Safety: re-enable tile buttons that must always stay clickable
+    this.ensureTileButtonsEnabled();
   }
 
   /**
@@ -673,6 +678,8 @@ export class Router {
   private unlockPhases(): void {
     this.setPhaseState('record-reference-content', true);
     this.setPhaseState('run-diagnosis-content', true);
+    // Safety: re-enable tile buttons that must always stay clickable
+    this.ensureTileButtonsEnabled();
   }
 
   /**
@@ -732,6 +739,32 @@ export class Router {
       manualToggleBtn.style.pointerEvents = 'auto';
       logger.debug('[Router] Manual selection toggle explicitly enabled');
     }
+  }
+
+  /**
+   * Explicitly ensure all diagnose-tile buttons are always enabled
+   * Called after lockPhases() to guarantee tile buttons remain clickable
+   */
+  private ensureTileButtonsEnabled(): void {
+    const tileIds = [
+      'reference-scan-btn',
+      'reference-select-btn',
+      'reference-create-btn',
+      'diagnose-scan-btn',
+      'diagnose-select-btn',
+      'diagnose-create-btn',
+    ];
+
+    for (const id of tileIds) {
+      const btn = document.getElementById(id);
+      if (btn instanceof HTMLButtonElement) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.pointerEvents = 'auto';
+      }
+    }
+    logger.debug('[Router] Tile buttons explicitly enabled');
   }
 
   /**

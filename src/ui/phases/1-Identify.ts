@@ -1043,6 +1043,7 @@ export class IdentifyPhase {
     }
     if (this.deepLinkOverlay) {
       this.deepLinkOverlay.style.display = show ? 'flex' : 'none';
+      this.deepLinkOverlay.style.pointerEvents = show ? 'auto' : 'none';
     }
   }
 
