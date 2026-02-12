@@ -817,6 +817,31 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // URL IMPORT (Deep Link Import via #/import?url=)
+  // ============================================================================
+  urlImport: {
+    // Status messages (loading overlay)
+    statusFetching: 'Loading database...',
+    statusValidating: 'Validating data...',
+    statusImporting: 'Importing data...',
+
+    // Success
+    success: 'Database imported successfully!',
+    successTitle: 'Import Complete',
+
+    // Errors
+    errorTitle: 'Import Failed',
+    errorGeneric: 'Import failed.',
+    errorInvalidUrl: 'Invalid URL.',
+    errorFetchFailed: 'Download failed (HTTP {{status}}).',
+    errorFileTooLarge: 'File too large. Maximum size: 50 MB.',
+    errorNotJson: 'The URL returns HTML instead of JSON. Please check the link.',
+    errorInvalidJson: 'The file does not contain valid JSON format.',
+    errorInvalidStructure: 'The file does not have the expected database format.',
+    errorNetwork: 'Network error loading data. Please check your internet connection.',
+  },
+
+  // ============================================================================
   // ONBOARDING TRACE (Debug Protocol)
   // ============================================================================
   trace: {
@@ -842,6 +867,7 @@ export const en: TranslationDict = {
       machine_id_extracted: 'Machine ID extracted',
       customer_id_extracted: 'Customer ID extracted',
       db_url_derived: 'DB URL derived',
+      import_url_detected: 'Import URL detected',
 
       // Download Process
       download_started: 'Download started',

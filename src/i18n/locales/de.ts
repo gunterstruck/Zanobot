@@ -860,6 +860,31 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // URL IMPORT (Deep Link Import via #/import?url=)
+  // ============================================================================
+  urlImport: {
+    // Status messages (loading overlay)
+    statusFetching: 'Datenbank wird geladen...',
+    statusValidating: 'Daten werden geprüft...',
+    statusImporting: 'Daten werden importiert...',
+
+    // Success
+    success: 'Datenbank erfolgreich importiert!',
+    successTitle: 'Import abgeschlossen',
+
+    // Errors
+    errorTitle: 'Import fehlgeschlagen',
+    errorGeneric: 'Import fehlgeschlagen.',
+    errorInvalidUrl: 'Ungültige URL.',
+    errorFetchFailed: 'Download fehlgeschlagen (HTTP {{status}}).',
+    errorFileTooLarge: 'Datei zu groß. Maximale Größe: 50 MB.',
+    errorNotJson: 'Die URL liefert HTML statt JSON. Bitte prüfen Sie den Link.',
+    errorInvalidJson: 'Die Datei enthält kein gültiges JSON-Format.',
+    errorInvalidStructure: 'Die Datei hat nicht das erwartete Datenbank-Format.',
+    errorNetwork: 'Netzwerkfehler beim Laden der Daten. Bitte prüfen Sie Ihre Internetverbindung.',
+  },
+
+  // ============================================================================
   // ONBOARDING TRACE (Debug Protocol)
   // ============================================================================
   trace: {
@@ -885,6 +910,7 @@ export const de: TranslationDict = {
       machine_id_extracted: 'Maschinen-ID extrahiert',
       customer_id_extracted: 'Kunden-ID extrahiert',
       db_url_derived: 'DB-URL abgeleitet',
+      import_url_detected: 'Import-URL erkannt',
 
       // Download Process
       download_started: 'Download gestartet',

@@ -27,12 +27,14 @@ export const GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
  * Route match result
  */
 export interface RouteMatch {
-  type: 'machine' | 'unknown';
+  type: 'machine' | 'import' | 'unknown';
   machineId?: string;
   /** Customer ID from NFC link (c parameter) - used to build DB URL */
   customerId?: string;
   /** Reference DB URL from NFC link (allows auto-creation on new devices) */
   referenceDbUrl?: string;
+  /** External database URL for import route (#/import?url=...) */
+  importUrl?: string;
 }
 
 /**
@@ -61,6 +63,7 @@ export class HashRouter {
   private onMachineReady?: (machine: Machine) => void;
   private onDownloadProgress?: (status: string, progress?: number) => void;
   private onDownloadError?: (error: string) => void;
+  private onImportRequested?: (importUrl: string) => void;
 
   constructor() {
     // Listen for hash changes
@@ -96,6 +99,13 @@ export class HashRouter {
   }
 
   /**
+   * Set callback for import route requests (#/import?url=...)
+   */
+  public setOnImportRequested(callback: (importUrl: string) => void): void {
+    this.onImportRequested = callback;
+  }
+
+  /**
    * Initialize router and process current hash
    */
   public async init(): Promise<void> {
@@ -107,6 +117,7 @@ export class HashRouter {
    * Supports:
    * - New format: #/m/<machine_id>?c=<customer_id> (customerId builds DB URL automatically)
    * - Legacy format: #/m/<machine_id>?ref=<encoded_url> (full URL in parameter)
+   * - Import format: #/import?url=<encoded_url> (direct DB import from external URL)
    */
   public parseHash(hash: string): RouteMatch {
     // Remove leading # if present
@@ -117,6 +128,37 @@ export class HashRouter {
 
     // Split path and query string
     const [path, queryString] = cleanHash.split('?');
+
+    // Match /import route (URL-based database import)
+    if (path === '/import') {
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        const importUrl = params.get('url');
+
+        if (importUrl) {
+          const decodedUrl = decodeURIComponent(importUrl);
+
+          // Validate that it's a proper URL
+          try {
+            new URL(decodedUrl);
+          } catch {
+            logger.warn(`⚠️ Invalid import URL in hash: ${decodedUrl}`);
+            return { type: 'unknown' };
+          }
+
+          logger.info(`🔗 Import route detected: ${decodedUrl}`);
+          onboardingTrace.step('import_url_detected', { url: decodedUrl });
+
+          return {
+            type: 'import',
+            importUrl: decodedUrl,
+          };
+        }
+      }
+
+      logger.warn('⚠️ /import route without url parameter');
+      return { type: 'unknown' };
+    }
 
     // Match /m/<machine_id> pattern
     const machineMatch = path.match(/^\/m\/([^/?]+)/);
@@ -226,6 +268,11 @@ export class HashRouter {
     // Handle machine route
     if (match.type === 'machine' && match.machineId) {
       await this.handleMachineRoute(match.machineId, match.referenceDbUrl);
+    }
+
+    // Handle import route
+    if (match.type === 'import' && match.importUrl) {
+      this.onImportRequested?.(match.importUrl);
     }
   }
 
