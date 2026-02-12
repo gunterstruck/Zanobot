@@ -260,7 +260,7 @@ export class ReferencePhase {
             logger.info('⚡ Force Start: Warmup complete, starting recording immediately');
             this.updateStatusMessage(t('reference.recording.recording'));
             this.audioWorkletManager.skipToRecording();
-            this.smartStartWasUsed = false; // Force Start doesn't use signal detection
+            this.smartStartWasUsed = true; // CRITICAL FIX: Warmup was completed, prevent duplicate stabilization in timer
             this.actuallyStartRecording();
           }, this.warmUpDuration * 1000);
         }
