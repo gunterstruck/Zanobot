@@ -536,6 +536,38 @@ export const zh: TranslationDict = {
     dbUrlPreview: '加载的数据库 URL：{{url}}',
     closeDialog: '关闭 NFC 对话框',
   },
+
+  // ============================================================================
+  // QR CODE GENERATOR
+  // ============================================================================
+  qrCode: {
+    title: '创建二维码',
+    description: '创建可打印或保存的二维码。只需贴在机器上即可。',
+    openGenerator: '创建二维码',
+    optionGeneric: '应用链接（通用）',
+    optionGenericDetail: '打开应用但不包含机器 ID。',
+    optionSpecific: '机器链接',
+    optionSpecificDetailDefault: '打开当前选择的机器。',
+    optionSpecificDetail: '打开 "{{name}}"（ID：{{id}}）。',
+    optionSpecificUnavailable: '请先选择一台机器以创建专用二维码。',
+    customerIdLabel: '客户 ID (c)',
+    customerIdDescription: '此 ID 决定扫描时加载哪些参考数据。',
+    customerIdPlaceholder: '例如 Customer_ID_1',
+    customerIdRequired: '请输入客户 ID。',
+    dbUrlPreview: '加载的数据库 URL：{{url}}',
+    urlPreview: '链接预览',
+    downloadPng: '保存为图片',
+    print: '打印',
+    closeDialog: '关闭二维码对话框',
+    generatedFor: '二维码用于',
+    machineLabel: '机器',
+    machineIdLabel: 'ID',
+    dateLabel: '创建日期',
+    printTitle: '机器二维码',
+    printInstructions: '剪下二维码并贴在机器上。',
+    genericLabel: '应用入口',
+  },
+
   review: {
     title: '检查录制', subtitle: '质量控制',
     listenTitle: '听录制',

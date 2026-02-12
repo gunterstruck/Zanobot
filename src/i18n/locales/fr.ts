@@ -540,6 +540,38 @@ export const fr: TranslationDict = {
     dbUrlPreview: 'URL de la BD chargée : {{url}}',
     closeDialog: 'Fermer le dialogue NFC',
   },
+
+  // ============================================================================
+  // QR CODE GENERATOR
+  // ============================================================================
+  qrCode: {
+    title: 'Créer un QR code',
+    description: 'Créez un QR code à imprimer ou enregistrer. Fixez-le simplement sur la machine — c\'est fait.',
+    openGenerator: 'Créer un QR code',
+    optionGeneric: 'Lien de l\'app (générique)',
+    optionGenericDetail: 'Ouvre l\'app sans ID de machine.',
+    optionSpecific: 'Lien de machine',
+    optionSpecificDetailDefault: 'Ouvre l\'app pour la machine actuellement sélectionnée.',
+    optionSpecificDetail: 'Ouvre l\'app pour "{{name}}" (ID : {{id}}).',
+    optionSpecificUnavailable: 'Sélectionnez d\'abord une machine pour créer un QR code spécifique.',
+    customerIdLabel: 'Identifiant client (c)',
+    customerIdDescription: 'Cet identifiant détermine quelles données de référence sont chargées lors du scan.',
+    customerIdPlaceholder: 'ex. Identifiant_Client_1',
+    customerIdRequired: 'Veuillez entrer un identifiant client.',
+    dbUrlPreview: 'URL de la BD chargée : {{url}}',
+    urlPreview: 'Aperçu du lien',
+    downloadPng: 'Enregistrer comme image',
+    print: 'Imprimer',
+    closeDialog: 'Fermer le dialogue QR code',
+    generatedFor: 'QR code pour',
+    machineLabel: 'Machine',
+    machineIdLabel: 'ID',
+    dateLabel: 'Créé le',
+    printTitle: 'QR Code Machine',
+    printInstructions: 'Découpez le QR code et fixez-le sur la machine.',
+    genericLabel: 'Accès App',
+  },
+
   review: {
     title: 'Vérifier l\'enregistrement', subtitle: 'Contrôle qualité',
     listenTitle: 'Écouter l\'enregistrement',

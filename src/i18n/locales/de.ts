@@ -662,6 +662,37 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // QR CODE GENERATOR
+  // ============================================================================
+  qrCode: {
+    title: 'QR-Code erstellen',
+    description: 'Erstellen Sie einen QR-Code zum Ausdrucken oder Speichern. Einfach an der Maschine anbringen — fertig.',
+    openGenerator: 'QR-Code erstellen',
+    optionGeneric: 'App-Link (generisch)',
+    optionGenericDetail: 'Öffnet die App ohne Maschinen-ID.',
+    optionSpecific: 'Maschinen-Link',
+    optionSpecificDetailDefault: 'Öffnet die App mit der aktuell ausgewählten Maschine.',
+    optionSpecificDetail: 'Öffnet die App für "{{name}}" (ID: {{id}}).',
+    optionSpecificUnavailable: 'Wählen Sie zuerst eine Maschine aus, um einen spezifischen QR-Code zu erstellen.',
+    customerIdLabel: 'Kundenkennung (c)',
+    customerIdDescription: 'Diese Kennung bestimmt, welche Referenzdaten beim Scan geladen werden.',
+    customerIdPlaceholder: 'z.B. Kundenkennung_nr1',
+    customerIdRequired: 'Bitte geben Sie eine Kundenkennung ein.',
+    dbUrlPreview: 'Geladene DB-URL: {{url}}',
+    urlPreview: 'Link-Vorschau',
+    downloadPng: 'Als Bild speichern',
+    print: 'Drucken',
+    closeDialog: 'QR-Code Dialog schließen',
+    generatedFor: 'QR-Code für',
+    machineLabel: 'Maschine',
+    machineIdLabel: 'ID',
+    dateLabel: 'Erstellt am',
+    printTitle: 'Maschinen-QR-Code',
+    printInstructions: 'QR-Code ausschneiden und an der Maschine anbringen.',
+    genericLabel: 'App-Zugang',
+  },
+
+  // ============================================================================
   // REVIEW MODAL
   // ============================================================================
   review: {

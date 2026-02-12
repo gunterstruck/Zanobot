@@ -540,6 +540,38 @@ export const es: TranslationDict = {
     dbUrlPreview: 'URL de BD cargada: {{url}}',
     closeDialog: 'Cerrar diálogo NFC',
   },
+
+  // ============================================================================
+  // QR CODE GENERATOR
+  // ============================================================================
+  qrCode: {
+    title: 'Crear código QR',
+    description: 'Cree un código QR para imprimir o guardar. Simplemente colóquelo en la máquina — listo.',
+    openGenerator: 'Crear código QR',
+    optionGeneric: 'Enlace de la app (genérico)',
+    optionGenericDetail: 'Abre la app sin un ID de máquina.',
+    optionSpecific: 'Enlace de máquina',
+    optionSpecificDetailDefault: 'Abre la app para la máquina seleccionada actualmente.',
+    optionSpecificDetail: 'Abre la app para "{{name}}" (ID: {{id}}).',
+    optionSpecificUnavailable: 'Seleccione primero una máquina para crear un código QR específico.',
+    customerIdLabel: 'ID de cliente (c)',
+    customerIdDescription: 'Este ID determina qué datos de referencia se cargan al escanear.',
+    customerIdPlaceholder: 'ej. ID_Cliente_1',
+    customerIdRequired: 'Por favor ingrese un ID de cliente.',
+    dbUrlPreview: 'URL de BD cargada: {{url}}',
+    urlPreview: 'Vista previa del enlace',
+    downloadPng: 'Guardar como imagen',
+    print: 'Imprimir',
+    closeDialog: 'Cerrar diálogo de código QR',
+    generatedFor: 'Código QR para',
+    machineLabel: 'Máquina',
+    machineIdLabel: 'ID',
+    dateLabel: 'Creado el',
+    printTitle: 'Código QR de Máquina',
+    printInstructions: 'Recorte el código QR y colóquelo en la máquina.',
+    genericLabel: 'Acceso App',
+  },
+
   review: {
     title: 'Revisar grabación', subtitle: 'Control de calidad',
     listenTitle: 'Escuchar grabación',

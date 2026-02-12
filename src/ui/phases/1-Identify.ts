@@ -23,6 +23,7 @@ import {
 import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
 import { HashRouter } from '../HashRouter.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
+import QRCode from 'qrcode';
 import { ReferenceLoadingOverlay } from '../components/ReferenceLoadingOverlay.js';
 import { traceOverlay } from '../components/OnboardingTraceOverlay.js';
 
@@ -70,6 +71,22 @@ export class IdentifyPhase {
   // NFC Onboarding context tracking
   // Used to restore view level after NFC flow ends
   private isNfcOnboardingActive: boolean = false;
+
+  // QR Code Generator UI
+  private qrModal: HTMLElement | null = null;
+  private qrCanvas: HTMLCanvasElement | null = null;
+  private qrPreviewContainer: HTMLElement | null = null;
+  private qrUrlPreview: HTMLElement | null = null;
+  private qrLabelInfo: HTMLElement | null = null;
+  private qrGenericOption: HTMLInputElement | null = null;
+  private qrSpecificOption: HTMLInputElement | null = null;
+  private qrSpecificDetail: HTMLElement | null = null;
+  private qrCustomerIdInput: HTMLInputElement | null = null;
+  private qrCustomerIdSection: HTMLElement | null = null;
+  private qrDbUrlPreview: HTMLElement | null = null;
+  private qrDownloadBtn: HTMLButtonElement | null = null;
+  private qrPrintBtn: HTMLButtonElement | null = null;
+  private qrCurrentUrl: string = '';
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -163,6 +180,9 @@ export class IdentifyPhase {
 
     // NFC Writer integration
     this.initNfcWriter();
+
+    // QR Code Generator integration
+    this.initQrGenerator();
 
     // NFC diagnosis prompt modal
     this.initNfcDiagnosisPrompt();
@@ -1385,6 +1405,279 @@ export class IdentifyPhase {
     } finally {
       this.nfcWriteBtn.disabled = false;
     }
+  }
+
+  /**
+   * ========================================
+   * QR CODE GENERATOR
+   * ========================================
+   */
+
+  private initQrGenerator(): void {
+    const openBtn = document.getElementById('open-qr-generator-btn') as HTMLButtonElement | null;
+    const settingsBtn = document.getElementById('settings-qr-generator-btn') as HTMLButtonElement | null;
+
+    this.qrModal = document.getElementById('qr-generator-modal');
+    this.qrCanvas = document.getElementById('qr-canvas') as HTMLCanvasElement | null;
+    this.qrPreviewContainer = document.getElementById('qr-preview-container');
+    this.qrUrlPreview = document.getElementById('qr-url-preview');
+    this.qrLabelInfo = document.getElementById('qr-label-info');
+    this.qrGenericOption = document.getElementById('qr-option-generic') as HTMLInputElement | null;
+    this.qrSpecificOption = document.getElementById('qr-option-specific') as HTMLInputElement | null;
+    this.qrSpecificDetail = document.getElementById('qr-option-specific-detail');
+    this.qrCustomerIdInput = document.getElementById('qr-customer-id-input') as HTMLInputElement | null;
+    this.qrCustomerIdSection = document.getElementById('qr-customer-id-section');
+    this.qrDbUrlPreview = document.getElementById('qr-db-url-preview');
+    this.qrDownloadBtn = document.getElementById('qr-download-btn') as HTMLButtonElement | null;
+    this.qrPrintBtn = document.getElementById('qr-print-btn') as HTMLButtonElement | null;
+
+    const closeBtn = document.getElementById('close-qr-generator-modal');
+    const cancelBtn = document.getElementById('qr-close-btn');
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => this.openQrModal());
+    }
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => this.openQrModal());
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeQrModal());
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.closeQrModal());
+    }
+    if (this.qrModal) {
+      this.qrModal.addEventListener('click', (event) => {
+        if (event.target === this.qrModal) {
+          this.closeQrModal();
+        }
+      });
+    }
+
+    // Radio button changes trigger QR regeneration
+    if (this.qrGenericOption) {
+      this.qrGenericOption.addEventListener('change', () => void this.generateQrPreview());
+    }
+    if (this.qrSpecificOption) {
+      this.qrSpecificOption.addEventListener('change', () => void this.generateQrPreview());
+    }
+
+    // Customer ID input changes trigger QR regeneration
+    if (this.qrCustomerIdInput) {
+      this.qrCustomerIdInput.addEventListener('input', () => {
+        this.updateQrDbUrlPreview();
+        void this.generateQrPreview();
+      });
+    }
+
+    // Download button
+    if (this.qrDownloadBtn) {
+      this.qrDownloadBtn.addEventListener('click', () => this.downloadQrCode());
+    }
+
+    // Print button
+    if (this.qrPrintBtn) {
+      this.qrPrintBtn.addEventListener('click', () => this.printQrCode());
+    }
+  }
+
+  private openQrModal(): void {
+    if (!this.qrModal) {
+      return;
+    }
+
+    // Close settings modal if open (same pattern as NFC)
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal && window.getComputedStyle(settingsModal).display !== 'none') {
+      settingsModal.style.display = 'none';
+    }
+
+    this.updateQrSpecificOption();
+    this.qrModal.style.display = 'flex';
+
+    // Generate initial QR code
+    void this.generateQrPreview();
+  }
+
+  private closeQrModal(): void {
+    if (this.qrModal) {
+      this.qrModal.style.display = 'none';
+    }
+  }
+
+  private updateQrSpecificOption(): void {
+    if (!this.qrSpecificOption || !this.qrSpecificDetail) {
+      return;
+    }
+
+    if (this.currentMachine) {
+      this.qrSpecificOption.disabled = false;
+      this.qrSpecificDetail.textContent = t('qrCode.optionSpecificDetail', {
+        name: this.currentMachine.name,
+        id: this.currentMachine.id,
+      });
+    } else {
+      this.qrSpecificOption.disabled = true;
+      if (this.qrGenericOption) {
+        this.qrGenericOption.checked = true;
+      }
+      this.qrSpecificDetail.textContent = t('qrCode.optionSpecificUnavailable');
+    }
+  }
+
+  private updateQrDbUrlPreview(): void {
+    if (!this.qrDbUrlPreview || !this.qrCustomerIdInput) {
+      return;
+    }
+
+    const customerId = this.qrCustomerIdInput.value.trim();
+    if (customerId) {
+      const dbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+      this.qrDbUrlPreview.textContent = t('qrCode.dbUrlPreview', { url: dbUrl });
+      this.qrDbUrlPreview.style.display = 'block';
+    } else {
+      this.qrDbUrlPreview.style.display = 'none';
+    }
+  }
+
+  private getQrUrl(): string {
+    const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
+    const baseUrl = this.getBaseAppUrl();
+
+    if (selectedOption === 'specific' && this.currentMachine) {
+      const customerId = this.qrCustomerIdInput?.value.trim() || '';
+      if (customerId) {
+        return HashRouter.getFullMachineUrl(this.currentMachine.id, customerId);
+      }
+      // Without customerId, use base URL with machine hash only
+      return `${baseUrl}#/m/${encodeURIComponent(this.currentMachine.id)}`;
+    }
+
+    return baseUrl;
+  }
+
+  private async generateQrPreview(): Promise<void> {
+    if (!this.qrCanvas || !this.qrPreviewContainer) {
+      return;
+    }
+
+    const url = this.getQrUrl();
+    this.qrCurrentUrl = url;
+
+    try {
+      await QRCode.toCanvas(this.qrCanvas, url, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+        errorCorrectionLevel: 'M',
+      });
+
+      // Show preview and action buttons
+      this.qrPreviewContainer.style.display = 'block';
+      if (this.qrDownloadBtn) this.qrDownloadBtn.style.display = '';
+      if (this.qrPrintBtn) this.qrPrintBtn.style.display = '';
+
+      // Update URL preview
+      if (this.qrUrlPreview) {
+        this.qrUrlPreview.textContent = url;
+      }
+
+      // Update label info
+      if (this.qrLabelInfo) {
+        const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
+        if (selectedOption === 'specific' && this.currentMachine) {
+          this.qrLabelInfo.innerHTML =
+            `<strong>${t('qrCode.machineLabel')}:</strong> ${this.escapeHtml(this.currentMachine.name)}<br>` +
+            `<strong>${t('qrCode.machineIdLabel')}:</strong> ${this.escapeHtml(this.currentMachine.id)}`;
+        } else {
+          this.qrLabelInfo.innerHTML = `<strong>${t('qrCode.genericLabel')}</strong>`;
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to generate QR code:', error);
+    }
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private downloadQrCode(): void {
+    if (!this.qrCanvas) {
+      return;
+    }
+
+    // Create a higher-resolution canvas for download (400px)
+    const downloadCanvas = document.createElement('canvas');
+    void QRCode.toCanvas(downloadCanvas, this.qrCurrentUrl, {
+      width: 400,
+      margin: 3,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    }).then(() => {
+      const link = document.createElement('a');
+      link.download = this.currentMachine && this.qrSpecificOption?.checked
+        ? `qr-${this.currentMachine.id}.png`
+        : 'qr-zanobot.png';
+      link.href = downloadCanvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  private printQrCode(): void {
+    const printHeader = document.getElementById('qr-print-header');
+    const printCanvas = document.getElementById('qr-print-canvas') as HTMLCanvasElement | null;
+    const printDetails = document.getElementById('qr-print-details');
+    const printFooter = document.getElementById('qr-print-footer');
+
+    if (!printCanvas || !printHeader || !printDetails || !printFooter) {
+      return;
+    }
+
+    const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
+    const isSpecific = selectedOption === 'specific' && this.currentMachine;
+    const now = new Date().toLocaleDateString();
+
+    // Fill print label content
+    printHeader.textContent = t('qrCode.printTitle');
+
+    if (isSpecific && this.currentMachine) {
+      printDetails.innerHTML =
+        `<strong>${t('qrCode.machineLabel')}:</strong> ${this.escapeHtml(this.currentMachine.name)}<br>` +
+        `<strong>${t('qrCode.machineIdLabel')}:</strong> ${this.escapeHtml(this.currentMachine.id)}<br>` +
+        `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
+    } else {
+      printDetails.innerHTML =
+        `<strong>${t('qrCode.genericLabel')}</strong><br>` +
+        `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
+    }
+
+    printFooter.textContent = t('qrCode.printInstructions');
+
+    // Generate QR code on the print canvas
+    void QRCode.toCanvas(printCanvas, this.qrCurrentUrl, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    }).then(() => {
+      // Trigger print with special body class
+      document.body.classList.add('qr-printing');
+      window.print();
+      document.body.classList.remove('qr-printing');
+    });
   }
 
   /**

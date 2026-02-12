@@ -3830,6 +3830,108 @@ html[data-view-level="expert"] .ghost-overlay-hint {
 }
 
 /* ===================================
+   QR CODE GENERATOR
+   =================================== */
+
+.qr-preview-container {
+    margin-top: var(--spacing-md);
+    text-align: center;
+}
+
+.qr-canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-md);
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    margin: var(--spacing-sm) 0;
+}
+
+.qr-canvas-wrapper canvas {
+    max-width: 200px;
+    max-height: 200px;
+    width: 100%;
+    height: auto;
+}
+
+.qr-url-preview {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    word-break: break-all;
+    font-family: monospace;
+    padding: var(--spacing-xs);
+    background: rgba(var(--primary-rgb), 0.08);
+    border-radius: var(--radius-xs);
+    margin-bottom: var(--spacing-xs);
+    text-align: left;
+}
+
+.qr-url-preview::before {
+    content: '';
+    display: inline;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.qr-label-info {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+    line-height: 1.4;
+}
+
+/* QR Print Area - Hidden on screen, visible only when printing */
+.qr-print-area {
+    display: none;
+}
+
+.qr-print-label {
+    width: 80mm;
+    margin: 0 auto;
+    padding: 6mm;
+    text-align: center;
+    border: 1px dashed #ccc;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #000;
+    background: #fff;
+    page-break-inside: avoid;
+}
+
+.qr-print-header {
+    font-size: 14pt;
+    font-weight: 700;
+    margin-bottom: 3mm;
+    color: #000;
+}
+
+.qr-print-label canvas {
+    max-width: 50mm;
+    max-height: 50mm;
+    width: 100%;
+    height: auto;
+    margin: 2mm auto;
+}
+
+.qr-print-details {
+    font-size: 9pt;
+    line-height: 1.5;
+    margin-top: 2mm;
+    color: #333;
+}
+
+.qr-print-details strong {
+    color: #000;
+}
+
+.qr-print-footer {
+    font-size: 7pt;
+    color: #999;
+    margin-top: 3mm;
+    border-top: 1px solid #eee;
+    padding-top: 2mm;
+}
+
+/* ===================================
    DEEP LINK OVERLAY
    =================================== */
 .deep-link-overlay {
@@ -6636,5 +6738,25 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     .modal,
     .footer {
         display: none;
+    }
+
+    /* QR Code print layout */
+    body.qr-printing .container,
+    body.qr-printing .status-badge,
+    body.qr-printing .header,
+    body.qr-printing .footer,
+    body.qr-printing .modal {
+        display: none !important;
+    }
+
+    body.qr-printing .qr-print-area {
+        display: block !important;
+        position: static;
+    }
+
+    body.qr-printing {
+        background: #fff !important;
+        margin: 0;
+        padding: 10mm;
     }
 }
