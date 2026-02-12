@@ -48,6 +48,7 @@ export class ReferenceLoadingOverlay {
   public hide(): void {
     if (this.overlay) {
       this.overlay.style.display = 'none';
+      this.overlay.style.pointerEvents = 'none';
     }
 
     logger.info('📥 Reference loading overlay hidden');

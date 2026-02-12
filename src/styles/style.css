@@ -4011,7 +4011,7 @@ html[data-view-level="expert"] .ghost-overlay-hint {
     }
     to {
         opacity: 1;
-        max-height: 500px;
+        max-height: 2000px;
     }
 }
 
@@ -6203,6 +6203,21 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
 }
 
 #diagnose-show-manual-btn:disabled {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+/* CRITICAL: Force diagnose-tile buttons to always be clickable
+   These tiles (QR scannen, Maschine wählen, Neue Maschine) must remain
+   interactive regardless of phase lock state or overlay issues */
+.diagnose-tile {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+.diagnose-tile:disabled {
     pointer-events: auto !important;
     cursor: pointer !important;
     opacity: 1 !important;
