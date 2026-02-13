@@ -22,6 +22,7 @@
 
 import { t } from '../../i18n/index.js';
 import { logger } from '@utils/logger.js';
+import { escapeHtml } from '@utils/sanitize.js';
 
 /**
  * Represents a single work point (machine state) with its probability
@@ -184,7 +185,7 @@ export class WorkPointRanking {
         <div class="ranking-item-header">
           <div class="ranking-item-left">
             ${this.config.showRankNumbers ? `<span class="ranking-rank">#${rank}</span>` : ''}
-            <span class="ranking-name" title="${this.escapeHtml(wp.name)}">${this.escapeHtml(wp.name)}</span>
+            <span class="ranking-name" title="${escapeHtml(wp.name)}">${escapeHtml(wp.name)}</span>
           </div>
           <div class="ranking-item-right">
             <span class="ranking-badge ${statusClass}">
@@ -261,15 +262,6 @@ export class WorkPointRanking {
         element.classList.add('animate');
       });
     }, this.currentData.length * 50 + 100);
-  }
-
-  /**
-   * Escape HTML special characters to prevent XSS
-   */
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   /**

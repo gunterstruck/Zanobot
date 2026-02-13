@@ -13,6 +13,7 @@ import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
+import { escapeHtml } from '@utils/sanitize.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
 import { t } from '../../i18n/index.js';
 import {
@@ -1761,8 +1762,8 @@ export class IdentifyPhase {
         const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
         if (selectedOption === 'specific' && this.currentMachine) {
           this.qrLabelInfo.innerHTML =
-            `<strong>${t('qrCode.machineLabel')}:</strong> ${this.escapeHtml(this.currentMachine.name)}<br>` +
-            `<strong>${t('qrCode.machineIdLabel')}:</strong> ${this.escapeHtml(this.currentMachine.id)}`;
+            `<strong>${t('qrCode.machineLabel')}:</strong> ${escapeHtml(this.currentMachine.name)}<br>` +
+            `<strong>${t('qrCode.machineIdLabel')}:</strong> ${escapeHtml(this.currentMachine.id)}`;
         } else {
           this.qrLabelInfo.innerHTML = `<strong>${t('qrCode.genericLabel')}</strong>`;
         }
@@ -1770,12 +1771,6 @@ export class IdentifyPhase {
     } catch (error) {
       logger.error('Failed to generate QR code:', error);
     }
-  }
-
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   private downloadQrCode(): void {
@@ -1822,8 +1817,8 @@ export class IdentifyPhase {
 
     if (isSpecific && this.currentMachine) {
       printDetails.innerHTML =
-        `<strong>${t('qrCode.machineLabel')}:</strong> ${this.escapeHtml(this.currentMachine.name)}<br>` +
-        `<strong>${t('qrCode.machineIdLabel')}:</strong> ${this.escapeHtml(this.currentMachine.id)}<br>` +
+        `<strong>${t('qrCode.machineLabel')}:</strong> ${escapeHtml(this.currentMachine.name)}<br>` +
+        `<strong>${t('qrCode.machineIdLabel')}:</strong> ${escapeHtml(this.currentMachine.id)}<br>` +
         `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
     } else {
       printDetails.innerHTML =
