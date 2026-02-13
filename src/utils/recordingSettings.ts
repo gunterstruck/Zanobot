@@ -67,7 +67,7 @@ export const setRecordingSettings = (
   updates: Partial<RecordingSettings>
 ): RecordingSettings => {
   const current = readFromStorage();
-  let next: RecordingSettings = {
+  const next: RecordingSettings = {
     recordingDuration: updates.recordingDuration !== undefined
       ? validateRecordingDuration(updates.recordingDuration)
       : current.recordingDuration,

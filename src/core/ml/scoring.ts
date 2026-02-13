@@ -556,15 +556,6 @@ export class LabelHistory {
 }
 
 /**
- * Uncertainty threshold for multiclass diagnosis
- * Scores below this threshold indicate an unknown anomaly
- *
- * @deprecated This constant is no longer used. The threshold is now read from user settings.
- */
-const UNCERTAINTY_THRESHOLD = 70;
-
-
-/**
  * Multiclass Diagnosis - Classify machine state across multiple trained models
  *
  * Algorithm:
