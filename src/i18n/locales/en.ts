@@ -299,6 +299,7 @@ export const en: TranslationDict = {
       success: 'Machines: {{machines}}\nRecordings: {{recordings}}\nDiagnoses: {{diagnoses}}\n\nMode: {{mode}}',
       modeMerged: 'Merged',
       modeReplaced: 'Replaced',
+      partialWarning: 'Machines: {{machinesImported}} imported, {{machinesSkipped}} skipped\nRecordings: {{recordingsImported}} imported, {{recordingsSkipped}} skipped\nDiagnoses: {{diagnosesImported}} imported, {{diagnosesSkipped}} skipped\n\n{{totalSkipped}} record(s) could not be imported.\nMode: {{mode}}',
       setupError: 'Error preparing import',
     },
 

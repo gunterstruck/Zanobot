@@ -301,6 +301,7 @@ export const de: TranslationDict = {
       success: 'Maschinen: {{machines}}\nAufnahmen: {{recordings}}\nDiagnosen: {{diagnoses}}\n\nModus: {{mode}}',
       modeMerged: 'Zusammengeführt',
       modeReplaced: 'Ersetzt',
+      partialWarning: 'Maschinen: {{machinesImported}} importiert, {{machinesSkipped}} übersprungen\nAufnahmen: {{recordingsImported}} importiert, {{recordingsSkipped}} übersprungen\nDiagnosen: {{diagnosesImported}} importiert, {{diagnosesSkipped}} übersprungen\n\n{{totalSkipped}} Datensatz/Datensätze konnten nicht importiert werden.\nModus: {{mode}}',
       setupError: 'Fehler beim Vorbereiten des Imports',
     },
 

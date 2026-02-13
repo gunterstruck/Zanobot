@@ -981,10 +981,24 @@ function isSerializedBlob(obj: unknown): obj is SerializedBlob {
 }
 
 /**
+ * Result of an import operation, reporting how many records were imported vs skipped.
+ */
+export interface ImportResult {
+  machinesImported: number;
+  machinesSkipped: number;
+  recordingsImported: number;
+  recordingsSkipped: number;
+  diagnosesImported: number;
+  diagnosesSkipped: number;
+  totalSkipped: number;
+}
+
+/**
  * Import data (restore from backup)
  *
  * @param data - Data to import
  * @param merge - If true, merge with existing data; if false, replace all data
+ * @returns Import statistics with imported/skipped counts per category
  */
 export async function importData(
   data: {
@@ -993,7 +1007,7 @@ export async function importData(
     diagnoses?: DiagnosisResult[];
   },
   merge: boolean = false
-): Promise<void> {
+): Promise<ImportResult> {
   const db = await initDB();
 
   // If not merging, clear existing data first
@@ -1091,6 +1105,16 @@ export async function importData(
   } else {
     logger.info('✅ Data import complete');
   }
+
+  return {
+    machinesImported,
+    machinesSkipped,
+    recordingsImported,
+    recordingsSkipped,
+    diagnosesImported,
+    diagnosesSkipped,
+    totalSkipped,
+  };
 }
 
 // ============================================================================

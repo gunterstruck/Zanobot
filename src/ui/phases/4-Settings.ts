@@ -470,24 +470,36 @@ export class SettingsPhase {
           }
 
           // Import data
-          await importData(data, merge);
+          const result = await importData(data, merge);
 
-          // Show success
-          const stats = {
-            machines: data.machines?.length || 0,
-            recordings: data.recordings?.length || 0,
-            diagnoses: data.diagnoses?.length || 0,
-          };
+          // Show success (or warning if some records were skipped)
+          const mode = merge ? t('settings.import.modeMerged') : t('settings.import.modeReplaced');
 
-          notify.success(
-            t('settings.import.success', {
-              machines: stats.machines,
-              recordings: stats.recordings,
-              diagnoses: stats.diagnoses,
-              mode: merge ? t('settings.import.modeMerged') : t('settings.import.modeReplaced'),
-            }),
-            { title: t('modals.databaseImported') }
-          );
+          if (result.totalSkipped > 0) {
+            notify.warning(
+              t('settings.import.partialWarning', {
+                machinesImported: result.machinesImported,
+                machinesSkipped: result.machinesSkipped,
+                recordingsImported: result.recordingsImported,
+                recordingsSkipped: result.recordingsSkipped,
+                diagnosesImported: result.diagnosesImported,
+                diagnosesSkipped: result.diagnosesSkipped,
+                totalSkipped: result.totalSkipped,
+                mode,
+              }),
+              { title: t('modals.databaseImported') }
+            );
+          } else {
+            notify.success(
+              t('settings.import.success', {
+                machines: result.machinesImported,
+                recordings: result.recordingsImported,
+                diagnoses: result.diagnosesImported,
+                mode,
+              }),
+              { title: t('modals.databaseImported') }
+            );
+          }
 
           // Refresh stats display
           this.showStats();

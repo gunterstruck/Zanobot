@@ -299,6 +299,7 @@ export const fr: TranslationDict = {
       success: 'Machines : {{machines}}\nEnregistrements : {{recordings}}\nDiagnostics : {{diagnoses}}\n\nMode : {{mode}}',
       modeMerged: 'Fusionné',
       modeReplaced: 'Remplacé',
+      partialWarning: 'Machines : {{machinesImported}} importées, {{machinesSkipped}} ignorées\nEnregistrements : {{recordingsImported}} importés, {{recordingsSkipped}} ignorés\nDiagnostics : {{diagnosesImported}} importés, {{diagnosesSkipped}} ignorés\n\n{{totalSkipped}} enregistrement(s) n\'ont pas pu être importés.\nMode : {{mode}}',
       setupError: 'Erreur lors de la préparation de l\'importation',
     },
 
