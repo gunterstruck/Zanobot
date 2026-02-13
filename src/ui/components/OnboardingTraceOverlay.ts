@@ -16,6 +16,7 @@
 import { t } from '../../i18n/index.js';
 import { onboardingTrace, type TraceSession, type TraceEntry, type TraceStatus } from '@utils/onboardingTrace.js';
 import { logger } from '@utils/logger.js';
+import { escapeHtml } from '@utils/sanitize.js';
 
 /**
  * Status indicator icons (using Unicode symbols for simplicity)
@@ -209,7 +210,7 @@ export class OnboardingTraceOverlay {
           const truncated = displayValue.length > 60
             ? displayValue.substring(0, 60) + '...'
             : displayValue;
-          return `<span class="trace-detail-key">${key}:</span> ${this.escapeHtml(truncated)}`;
+          return `<span class="trace-detail-key">${key}:</span> ${escapeHtml(truncated)}`;
         })
         .join('<br>');
       detailsHtml = `<div class="trace-entry-details">${detailLines}</div>`;
@@ -226,15 +227,6 @@ export class OnboardingTraceOverlay {
         </div>
       </div>
     `;
-  }
-
-  /**
-   * Escape HTML characters
-   */
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   /**

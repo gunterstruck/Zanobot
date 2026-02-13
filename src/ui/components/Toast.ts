@@ -12,6 +12,7 @@
  */
 
 import { t } from '../../i18n/index.js';
+import { escapeHtml } from '@utils/sanitize.js';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -230,11 +231,11 @@ export class ToastManager {
 
     // Title
     const titleHTML = config.title
-      ? `<div class="toast-title">${this.escapeHTML(config.title)}</div>`
+      ? `<div class="toast-title">${escapeHtml(config.title)}</div>`
       : '';
 
     // Message
-    const messageHTML = `<div class="toast-message">${this.escapeHTML(config.message)}</div>`;
+    const messageHTML = `<div class="toast-message">${escapeHtml(config.message)}</div>`;
 
     // Close button
     const closeButton = config.dismissible
@@ -245,7 +246,7 @@ export class ToastManager {
     const actionsHTML =
       config.actions.length > 0
         ? `<div class="toast-actions">${config.actions
-            .map((action, i) => `<button class="toast-action-btn" data-action-index="${i}">${this.escapeHTML(action.label)}</button>`)
+            .map((action, i) => `<button class="toast-action-btn" data-action-index="${i}">${escapeHtml(action.label)}</button>`)
             .join('')}</div>`
         : '';
 
@@ -298,15 +299,6 @@ export class ToastManager {
     };
 
     return icons[type] || icons.info;
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  private escapeHTML(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
   /**
