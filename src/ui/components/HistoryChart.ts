@@ -703,8 +703,6 @@ export class HistoryChart {
    */
   private formatTimestamp(timestamp: number, detailed: boolean = false): string {
     const date = new Date(timestamp);
-    const now = Date.now();
-    const diff = now - timestamp;
 
     // For tooltips, always show detailed format
     if (detailed) {

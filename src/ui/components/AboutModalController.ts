@@ -5,7 +5,7 @@
  * based on the current language using i18n translations.
  */
 
-import { t, getLanguage, onLanguageChange } from '../../i18n/index.js';
+import { t, onLanguageChange } from '../../i18n/index.js';
 
 export class AboutModalController {
   private modalBody: HTMLElement | null = null;
@@ -29,9 +29,6 @@ export class AboutModalController {
    */
   private render(): void {
     if (!this.modalBody) return;
-
-    // Get current language
-    const lang = getLanguage();
 
     // Build HTML content
     const html = `
