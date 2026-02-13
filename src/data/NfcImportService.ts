@@ -16,6 +16,7 @@
 
 import { importData, getDBStats } from './db.js';
 import { logger } from '@utils/logger.js';
+import { escapeHtml } from '@utils/sanitize.js';
 import { t, getLocale } from '../i18n/index.js';
 
 /**
@@ -473,7 +474,7 @@ export class NfcImportService {
               <line x1="15" y1="9" x2="9" y2="15"/>
               <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
-            <p class="error-message">${errorMessage}</p>
+            <p class="error-message">${escapeHtml(errorMessage)}</p>
           </div>
         </div>
         <div class="modal-footer">
