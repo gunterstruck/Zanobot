@@ -22,6 +22,7 @@ import type { AutoDetectionResult, MachineMatchResult } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { notify } from '@utils/notifications.js';
+import { escapeHtml } from '@utils/sanitize.js';
 import { t, getLocale } from '../i18n/index.js';
 
 export class Router {
@@ -448,7 +449,7 @@ export class Router {
         item.className = 'candidate-item';
         item.innerHTML = `
           <div class="candidate-info">
-            <span class="candidate-name">${candidate.machine.name}</span>
+            <span class="candidate-name">${escapeHtml(candidate.machine.name)}</span>
             <span class="candidate-similarity">${candidate.similarity.toFixed(0)}%</span>
           </div>
           <div class="candidate-status status-${candidate.status}">

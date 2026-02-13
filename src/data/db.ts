@@ -1003,65 +1003,94 @@ export async function importData(
   }
 
   // Import machines
+  let machinesImported = 0;
+  let machinesSkipped = 0;
   if (data.machines) {
     for (const machine of data.machines) {
-      const referenceImage = machine.referenceImage;
-      let normalizedReferenceImage: Blob | undefined;
+      try {
+        const referenceImage = machine.referenceImage;
+        let normalizedReferenceImage: Blob | undefined;
 
-      if (referenceImage instanceof Blob) {
-        normalizedReferenceImage = referenceImage;
-      } else if (isSerializedBlob(referenceImage)) {
-        normalizedReferenceImage = deserializeBlob(referenceImage);
+        if (referenceImage instanceof Blob) {
+          normalizedReferenceImage = referenceImage;
+        } else if (isSerializedBlob(referenceImage)) {
+          normalizedReferenceImage = deserializeBlob(referenceImage);
+        }
+
+        const normalizedMachine: Machine = {
+          ...machine,
+          referenceImage: normalizedReferenceImage,
+          referenceModels: (machine.referenceModels || []).map((model) => ({
+            ...model,
+            weightVector:
+              model.weightVector instanceof Float64Array
+                ? model.weightVector
+                : new Float64Array(model.weightVector as number[]),
+          })),
+        };
+        await db.put('machines', normalizedMachine);
+        machinesImported++;
+      } catch (error) {
+        machinesSkipped++;
+        logger.warn(`⚠️ Skipped machine "${machine.id || 'unknown'}": ${error instanceof Error ? error.message : error}`);
       }
-
-      const normalizedMachine: Machine = {
-        ...machine,
-        referenceImage: normalizedReferenceImage,
-        referenceModels: (machine.referenceModels || []).map((model) => ({
-          ...model,
-          weightVector:
-            model.weightVector instanceof Float64Array
-              ? model.weightVector
-              : new Float64Array(model.weightVector as number[]),
-        })),
-      };
-      await db.put('machines', normalizedMachine);
     }
-    logger.info(`📥 Imported ${data.machines.length} machines`);
+    logger.info(`📥 Imported ${machinesImported} machines${machinesSkipped > 0 ? ` (${machinesSkipped} skipped due to errors)` : ''}`);
   }
 
   // Import recordings with AudioBuffer rehydration
+  let recordingsImported = 0;
+  let recordingsSkipped = 0;
   if (data.recordings) {
     for (const recording of data.recordings) {
-      // CRITICAL FIX: IndexedDB requires serialized AudioBuffers, not real AudioBuffer objects
-      // AudioBuffer is not structure-cloneable and causes DataCloneError
-      let serializedRecording: SerializedRecording;
+      try {
+        // CRITICAL FIX: IndexedDB requires serialized AudioBuffers, not real AudioBuffer objects
+        // AudioBuffer is not structure-cloneable and causes DataCloneError
+        let serializedRecording: SerializedRecording;
 
-      if (isSerializedAudioBuffer(recording.audioBuffer)) {
-        // Already serialized - use directly (format matches IndexedDB storage)
-        serializedRecording = recording as SerializedRecording;
-      } else {
-        // Real AudioBuffer - serialize it before storing in IndexedDB
-        serializedRecording = {
-          ...recording,
-          audioBuffer: serializeAudioBuffer(recording.audioBuffer as AudioBuffer),
-        };
+        if (isSerializedAudioBuffer(recording.audioBuffer)) {
+          // Already serialized - use directly (format matches IndexedDB storage)
+          serializedRecording = recording as SerializedRecording;
+        } else {
+          // Real AudioBuffer - serialize it before storing in IndexedDB
+          serializedRecording = {
+            ...recording,
+            audioBuffer: serializeAudioBuffer(recording.audioBuffer as AudioBuffer),
+          };
+        }
+
+        await db.put('recordings', serializedRecording as unknown as Recording);
+        recordingsImported++;
+      } catch (error) {
+        recordingsSkipped++;
+        logger.warn(`⚠️ Skipped recording "${recording.id || 'unknown'}": ${error instanceof Error ? error.message : error}`);
       }
-
-      await db.put('recordings', serializedRecording as unknown as Recording);
     }
-    logger.info(`📥 Imported ${data.recordings.length} recordings`);
+    logger.info(`📥 Imported ${recordingsImported} recordings${recordingsSkipped > 0 ? ` (${recordingsSkipped} skipped due to errors)` : ''}`);
   }
 
   // Import diagnoses
+  let diagnosesImported = 0;
+  let diagnosesSkipped = 0;
   if (data.diagnoses) {
     for (const diagnosis of data.diagnoses) {
-      await db.put('diagnoses', diagnosis);
+      try {
+        await db.put('diagnoses', diagnosis);
+        diagnosesImported++;
+      } catch (error) {
+        diagnosesSkipped++;
+        logger.warn(`⚠️ Skipped diagnosis "${diagnosis.id || 'unknown'}": ${error instanceof Error ? error.message : error}`);
+      }
     }
-    logger.info(`📥 Imported ${data.diagnoses.length} diagnoses`);
+    logger.info(`📥 Imported ${diagnosesImported} diagnoses${diagnosesSkipped > 0 ? ` (${diagnosesSkipped} skipped due to errors)` : ''}`);
   }
 
-  logger.info('✅ Data import complete');
+  const totalSkipped = machinesSkipped + recordingsSkipped + diagnosesSkipped;
+  if (totalSkipped > 0) {
+    logger.warn(`⚠️ Data import completed with ${totalSkipped} skipped record(s)`);
+  } else {
+    logger.info('✅ Data import complete');
+  }
 }
 
 // ============================================================================

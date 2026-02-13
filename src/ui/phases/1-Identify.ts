@@ -364,6 +364,9 @@ export class IdentifyPhase {
   /**
    * Check if a scanned code is a URL containing a hash route
    * Matches URLs like https://example.com#/m/... or https://example.com#/import?...
+   *
+   * SECURITY FIX: Uses exact route matching for #/import to prevent
+   * unrelated routes like #/important from being routed into import handling.
    */
   private isUrlWithHashRoute(code: string): boolean {
     try {
@@ -371,7 +374,9 @@ export class IdentifyPhase {
         return false;
       }
       const url = new URL(code);
-      return url.hash.startsWith('#/m/') || url.hash.startsWith('#/import');
+      // Extract path from hash (before any query string)
+      const hashPath = url.hash.split('?')[0];
+      return hashPath.startsWith('#/m/') || hashPath === '#/import';
     } catch {
       return false;
     }
@@ -472,20 +477,28 @@ export class IdentifyPhase {
         );
 
         // Refresh UI, then select first machine and offer diagnosis prompt
-        setTimeout(async () => {
-          overlay.hide();
-          overlay.destroy();
-          await this.refreshMachineLists();
-          await this.loadDiagnosisHistory();
+        setTimeout(() => {
+          void (async () => {
+            try {
+              overlay.hide();
+              overlay.destroy();
+              await this.refreshMachineLists();
+              await this.loadDiagnosisHistory();
 
-          // Select first available machine and ask user if they want to run a test
-          const machines = await getAllMachines();
-          if (machines.length > 0) {
-            const firstMachine = machines[0];
-            this.setCurrentMachine(firstMachine);
-            this.onMachineSelected(firstMachine);
-            this.openNfcDiagnosisPrompt();
-          }
+              // Select first available machine and ask user if they want to run a test
+              const machines = await getAllMachines();
+              if (machines.length > 0) {
+                const firstMachine = machines[0];
+                this.setCurrentMachine(firstMachine);
+                this.onMachineSelected(firstMachine);
+                this.openNfcDiagnosisPrompt();
+              }
+            } catch (error) {
+              logger.error('Post-import UI refresh failed:', error);
+              overlay.hide();
+              overlay.destroy();
+            }
+          })();
         }, 1600);
       } else {
         // Error is already shown via onError callback on the overlay
