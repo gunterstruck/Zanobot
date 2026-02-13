@@ -298,6 +298,7 @@ export const zh: TranslationDict = {
       success: '机器：{{machines}}\n录制：{{recordings}}\n诊断：{{diagnoses}}\n\n模式：{{mode}}',
       modeMerged: '已合并',
       modeReplaced: '已替换',
+      partialWarning: '机器：{{machinesImported}} 已导入，{{machinesSkipped}} 已跳过\n录制：{{recordingsImported}} 已导入，{{recordingsSkipped}} 已跳过\n诊断：{{diagnosesImported}} 已导入，{{diagnosesSkipped}} 已跳过\n\n{{totalSkipped}} 条记录无法导入。\n模式：{{mode}}',
       setupError: '准备导入时出错',
     },
 
