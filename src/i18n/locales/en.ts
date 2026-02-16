@@ -285,6 +285,31 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // OPERATING POINT MONITOR (Expert Mode)
+  // ============================================================================
+  opMonitor: {
+    title: 'Operating Point / Measurement Details',
+    initializingBaseline: 'Capturing reference operating point \u2013 please hold device steady\u2026',
+    operatingPointChanged: 'Operating point changed \u2013 reference comparison limited.',
+    similarityP10: {
+      shortLabel: 'Short-term Minimum',
+      description: 'Lowest similarity value of the last seconds. More sensitive to short-term changes.',
+    },
+    energyDelta: {
+      shortLabel: 'Volume Change',
+      description: 'Compares current level with reference. Large deviation may indicate load or distance change.',
+    },
+    frequencyDelta: {
+      shortLabel: 'RPM Shift',
+      description: 'Change in dominant frequency compared to reference. May indicate changed operating point.',
+    },
+    stability: {
+      shortLabel: 'Signal Stability',
+      description: 'Proportion of stable signal segments during measurement.',
+    },
+  },
+
+  // ============================================================================
   // PHASE 4: SETTINGS
   // ============================================================================
   settings: {

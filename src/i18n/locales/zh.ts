@@ -279,8 +279,33 @@ export const zh: TranslationDict = {
     statesReady: '{{count}} 个状态已训练',
     noReference: '尚无参考',
     changeMachine: '更换机器',
-    noMachinesYet: '尚未创建机器。',
-    noMachinesHint: '请先创建一台新机器。',
+    noMachinesYet: '\u5c1a\u672a\u521b\u5efa\u673a\u5668\u3002',
+    noMachinesHint: '\u8bf7\u5148\u521b\u5efa\u4e00\u53f0\u65b0\u673a\u5668\u3002',
+  },
+
+  // ============================================================================
+  // OPERATING POINT MONITOR (Expert Mode)
+  // ============================================================================
+  opMonitor: {
+    title: '\u8fd0\u884c\u70b9 / \u6d4b\u91cf\u8be6\u60c5',
+    initializingBaseline: '\u6b63\u5728\u6355\u83b7\u53c2\u8003\u8fd0\u884c\u70b9 \u2013 \u8bf7\u4fdd\u6301\u8bbe\u5907\u7a33\u5b9a\u2026',
+    operatingPointChanged: '\u8fd0\u884c\u70b9\u5df2\u53d8\u66f4 \u2013 \u53c2\u8003\u6bd4\u8f83\u53d7\u9650\u3002',
+    similarityP10: {
+      shortLabel: '\u77ed\u671f\u6700\u5c0f\u503c',
+      description: '\u8fd1\u51e0\u79d2\u5185\u7684\u6700\u4f4e\u76f8\u4f3c\u5ea6\u503c\u3002\u5bf9\u77ed\u671f\u53d8\u5316\u66f4\u654f\u611f\u3002',
+    },
+    energyDelta: {
+      shortLabel: '\u97f3\u91cf\u53d8\u5316',
+      description: '\u5c06\u5f53\u524d\u7535\u5e73\u4e0e\u53c2\u8003\u8fdb\u884c\u6bd4\u8f83\u3002\u8f83\u5927\u504f\u5dee\u53ef\u80fd\u8868\u793a\u8d1f\u8f7d\u6216\u8ddd\u79bb\u53d8\u5316\u3002',
+    },
+    frequencyDelta: {
+      shortLabel: '\u8f6c\u901f\u504f\u79fb',
+      description: '\u4e0e\u53c2\u8003\u76f8\u6bd4\u4e3b\u9891\u7387\u7684\u53d8\u5316\u3002\u53ef\u80fd\u8868\u793a\u8fd0\u884c\u70b9\u5df2\u6539\u53d8\u3002',
+    },
+    stability: {
+      shortLabel: '\u4fe1\u53f7\u7a33\u5b9a\u6027',
+      description: '\u6d4b\u91cf\u671f\u95f4\u7a33\u5b9a\u4fe1\u53f7\u6bb5\u7684\u6bd4\u4f8b\u3002',
+    },
   },
 
   // ============================================================================

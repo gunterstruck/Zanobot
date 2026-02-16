@@ -24,6 +24,8 @@ import {
   getMinConfidentMatchScore,
 } from '@core/ml/scoring.js';
 import { WorkPointRanking, type WorkPoint } from '@ui/components/WorkPointRanking.js';
+import { OperatingPointMetrics } from '@core/dsp/operatingPointMetrics.js';
+import { OperatingPointMonitor } from '@ui/components/OperatingPointMonitor.js';
 import { saveDiagnosis, getMachine, getDiagnosesForMachine } from '@data/db.js';
 import { HealthGauge } from '@ui/components/HealthGauge.js';
 import { HistoryChart } from '@ui/components/HistoryChart.js';
@@ -102,6 +104,10 @@ export class DiagnosePhase {
     frequencyRange: [number, number];
     rmsAmplitude?: number;
   } | null = null; // Store for ranking calculation
+
+  // Operating Point Monitor (Expert mode only)
+  private opMetrics: OperatingPointMetrics | null = null;
+  private opMonitor: OperatingPointMonitor | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -433,6 +439,16 @@ export class DiagnosePhase {
     this.scoreHistory.clear();
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
+    // Cleanup Operating Point Monitor (Expert mode)
+    if (this.opMetrics) {
+      this.opMetrics.reset();
+      this.opMetrics = null;
+    }
+    if (this.opMonitor) {
+      this.opMonitor.destroy();
+      this.opMonitor = null;
+    }
+
     // Cleanup AudioWorklet
     if (this.audioWorkletManager) {
       this.audioWorkletManager.cleanup();
@@ -576,6 +592,19 @@ export class DiagnosePhase {
         logger.debug('✅ Debug values stored:', this.lastDebugValues);
       } else {
         logger.warn('⚠️ No debug values in diagnosis.metadata!', diagnosis.metadata);
+      }
+
+      // Step 6b: Update operating point metrics (Expert mode only)
+      if (this.opMetrics && featureVector.rmsAmplitude !== undefined) {
+        this.opMetrics.update(
+          featureVector.features,
+          featureVector.rmsAmplitude,
+          this.scoreHistory.getAllScores()
+        );
+        const opResult = this.opMetrics.getResult();
+        if (opResult && this.opMonitor) {
+          this.opMonitor.update(opResult);
+        }
       }
 
       // Step 7: Update UI in real-time with detected state and debug values
@@ -1394,6 +1423,18 @@ export class DiagnosePhase {
         </div>
       `;
       scrollableArea.appendChild(expertStats);
+
+      // --- Operating Point Monitor: Container for live metrics ---
+      const opMonitorContainer = document.createElement('div');
+      opMonitorContainer.id = 'op-monitor-container';
+      scrollableArea.appendChild(opMonitorContainer);
+
+      // Initialize OperatingPointMetrics calculator
+      this.opMetrics = new OperatingPointMetrics(
+        this.actualSampleRate,
+        this.dspConfig.fftSize,
+        this.dspConfig.frequencyBins
+      );
     }
 
     structuredContent.appendChild(scrollableArea);
@@ -1409,6 +1450,12 @@ export class DiagnosePhase {
 
     // Initialize camera video element (must be done AFTER adding to DOM)
     this.initCamera();
+
+    // Mount Operating Point Monitor AFTER DOM is ready (expert mode only)
+    if (currentViewLevel === 'expert' && !this.opMonitor) {
+      this.opMonitor = new OperatingPointMonitor('op-monitor-container');
+      this.opMonitor.mount();
+    }
 
     logger.info('✅ Advanced recording modal shown with dashboard layout');
   }
