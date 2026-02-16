@@ -160,7 +160,7 @@ export const de: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Referenz aufnehmen',
-    tenSecondRecording: '10-Sekunden Referenzaufnahme',
+    tenSecondRecording: '{{duration}}-Sekunden Referenzaufnahme',
     noReferenceModel: 'Kein Referenzmodell vorhanden',
     trainedStates: 'Trainierte Zustände',
     noModelsYet: 'Noch keine Referenzmodelle vorhanden',
@@ -397,7 +397,7 @@ export const de: TranslationDict = {
   // ============================================================================
   router: {
     statesTrained: '{{count}} Zustand{{plural}} trainiert (zuletzt: {{date}}) - Weitere hinzufügen',
-    referenceRequired: '10-Sekunden Referenzaufnahme (Erforderlich für Diagnose)',
+    referenceRequired: '{{duration}}-Sekunden Referenzaufnahme (Erforderlich für Diagnose)',
     liveAnalysis: 'Live-Analyse durchführen',
     lastCheck: 'Letzte Prüfung {{time}}',
   },
@@ -701,7 +701,7 @@ export const de: TranslationDict = {
     subtitle: 'Qualitätskontrolle',
     listenTitle: 'Aufnahme anhören',
     browserNoAudio: 'Ihr Browser unterstützt keine Audio-Wiedergabe.',
-    recordingInfo: '15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)',
+    recordingInfo: '{{total}} Sekunden Aufnahme (5s Stabilisierung + {{duration}}s Training)',
     positionImageTitle: 'Gespeichertes Positionsbild',
     savedPositionImage: 'Gespeichertes Positionsbild',
     positionImageCheck: 'Prüfen Sie, ob das Bild die korrekte Position zeigt.',

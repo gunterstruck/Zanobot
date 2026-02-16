@@ -158,7 +158,7 @@ export const en: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Record Reference',
-    tenSecondRecording: '10-second reference recording',
+    tenSecondRecording: '{{duration}}-second reference recording',
     noReferenceModel: 'No reference model available',
     trainedStates: 'Trained States',
     noModelsYet: 'No reference models available yet',
@@ -395,7 +395,7 @@ export const en: TranslationDict = {
   // ============================================================================
   router: {
     statesTrained: '{{count}} state{{plural}} trained (last: {{date}}) - Add more',
-    referenceRequired: '10-second reference recording (Required for diagnosis)',
+    referenceRequired: '{{duration}}-second reference recording (Required for diagnosis)',
     liveAnalysis: 'Run live analysis',
     lastCheck: 'Last check {{time}}',
   },
@@ -672,7 +672,7 @@ export const en: TranslationDict = {
     subtitle: 'Quality Control',
     listenTitle: 'Listen to Recording',
     browserNoAudio: 'Your browser does not support audio playback.',
-    recordingInfo: '15 seconds recording (5s stabilization + 10s training)',
+    recordingInfo: '{{total}} seconds recording (5s stabilization + {{duration}}s training)',
     positionImageTitle: 'Saved Position Image',
     savedPositionImage: 'Saved Position Image',
     positionImageCheck: 'Check if the image shows the correct position.',

@@ -138,6 +138,12 @@ export class ReferencePhase {
 
     this.isRecordingStarting = true;
 
+    // CRITICAL FIX: Reload recording duration from settings at recording start time
+    // Previously this was only loaded in the constructor, so settings changes were ignored
+    // until the phase was re-created (e.g., by restarting the PWA)
+    const currentSettings = getRecordingSettings();
+    this.recordingDuration = currentSettings.recordingDuration;
+
     try {
       logger.info('🎙️ Phase 2: Starting reference recording with Smart Start...');
 
@@ -1006,6 +1012,17 @@ export class ReferencePhase {
         duration: 0,
       });
       return;
+    }
+
+    // CRITICAL FIX: Update review recording info text with actual duration values
+    // This ensures the text reflects the current recording settings, not hardcoded values
+    const reviewRecordingInfo = document.getElementById('review-recording-info');
+    if (reviewRecordingInfo) {
+      const totalDuration = this.warmUpDuration + this.recordingDuration;
+      reviewRecordingInfo.textContent = t('review.recordingInfo', {
+        total: totalDuration,
+        duration: this.recordingDuration,
+      });
     }
 
     // Setup audio player with proper null checks
