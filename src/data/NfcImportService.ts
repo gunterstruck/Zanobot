@@ -299,9 +299,11 @@ export class NfcImportService {
       modal.id = 'nfc-import-modal';
       modal.style.display = 'flex';
 
-      const exportDateStr = metadata.exportDate
-        ? new Date(metadata.exportDate).toLocaleString(getLocale())
-        : t('common.unknown');
+      const exportDateStr = escapeHtml(
+        metadata.exportDate
+          ? new Date(metadata.exportDate).toLocaleString(getLocale())
+          : t('common.unknown')
+      );
 
       modal.innerHTML = `
         <div class="modal-content">
