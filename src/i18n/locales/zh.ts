@@ -288,6 +288,7 @@ export const zh: TranslationDict = {
   // ============================================================================
   opMonitor: {
     title: '\u8fd0\u884c\u70b9 / \u6d4b\u91cf\u8be6\u60c5',
+    initializingBaseline: '\u6b63\u5728\u6355\u83b7\u53c2\u8003\u8fd0\u884c\u70b9 \u2013 \u8bf7\u4fdd\u6301\u8bbe\u5907\u7a33\u5b9a\u2026',
     operatingPointChanged: '\u8fd0\u884c\u70b9\u5df2\u53d8\u66f4 \u2013 \u53c2\u8003\u6bd4\u8f83\u53d7\u9650\u3002',
     similarityP10: {
       shortLabel: '\u77ed\u671f\u6700\u5c0f\u503c',

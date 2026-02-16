@@ -291,6 +291,7 @@ export const de: TranslationDict = {
   // ============================================================================
   opMonitor: {
     title: 'Betriebspunkt / Messdetails',
+    initializingBaseline: 'Referenz-Betriebspunkt wird erfasst \u2013 bitte Ger\u00e4t konstant halten\u2026',
     operatingPointChanged: 'Betriebspunkt ge\u00e4ndert \u2013 Referenzvergleich eingeschr\u00e4nkt.',
     similarityP10: {
       shortLabel: 'Kurzzeit-Minimum',

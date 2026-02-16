@@ -10,7 +10,10 @@
  *  - Short label (2-3 words)
  *  - One-sentence explanation (as subtext)
  *
- * A banner appears when the operating point has changed significantly.
+ * During warmup (baseline capture), shows an initialization banner
+ * telling the user to hold the device steady.
+ *
+ * A warning banner appears when the operating point has changed significantly.
  *
  * This component is PURELY presentational — all calculations happen
  * in OperatingPointMetrics (DSP layer).
@@ -33,6 +36,8 @@ const CLS = {
   textBlock: 'op-monitor-text',
   banner: 'op-monitor-banner',
   bannerHidden: 'op-monitor-banner--hidden',
+  initBanner: 'op-monitor-init-banner',
+  initBannerHidden: 'op-monitor-init-banner--hidden',
 } as const;
 
 /**
@@ -59,6 +64,7 @@ export class OperatingPointMonitor {
   private stabValueEl: HTMLElement | null = null;
   private stabLightEl: HTMLElement | null = null;
   private bannerEl: HTMLElement | null = null;
+  private initBannerEl: HTMLElement | null = null;
 
   constructor(parentId: string) {
     this.parentId = parentId;
@@ -81,6 +87,9 @@ export class OperatingPointMonitor {
 
     this.containerEl.innerHTML = `
       <div class="${CLS.header}">${t('opMonitor.title')}</div>
+      <div class="${CLS.initBanner}" id="op-monitor-init-banner">
+        ${t('opMonitor.initializingBaseline')}
+      </div>
       ${this.renderRow('p10')}
       ${this.renderRow('energy')}
       ${this.renderRow('freq')}
@@ -102,6 +111,7 @@ export class OperatingPointMonitor {
     this.stabValueEl = this.containerEl.querySelector('#op-stab-value');
     this.stabLightEl = this.containerEl.querySelector('#op-stab-light');
     this.bannerEl = this.containerEl.querySelector('#op-monitor-banner');
+    this.initBannerEl = this.containerEl.querySelector('#op-monitor-init-banner');
   }
 
   /**
@@ -115,9 +125,18 @@ export class OperatingPointMonitor {
     this.updateMetric(this.freqValueEl, this.freqLightEl, result.frequencyDelta);
     this.updateMetric(this.stabValueEl, this.stabLightEl, result.stability);
 
-    // Banner visibility
+    // Initialization banner (warmup phase)
+    if (this.initBannerEl) {
+      if (result.isInitializing) {
+        this.initBannerEl.classList.remove(CLS.initBannerHidden);
+      } else {
+        this.initBannerEl.classList.add(CLS.initBannerHidden);
+      }
+    }
+
+    // Warning banner (operating point changed)
     if (this.bannerEl) {
-      if (result.operatingPointChanged) {
+      if (result.operatingPointChanged && !result.isInitializing) {
         this.bannerEl.classList.remove(CLS.bannerHidden);
       } else {
         this.bannerEl.classList.add(CLS.bannerHidden);
@@ -143,6 +162,7 @@ export class OperatingPointMonitor {
     this.stabValueEl = null;
     this.stabLightEl = null;
     this.bannerEl = null;
+    this.initBannerEl = null;
   }
 
   // ---------------------------------------------------------------------------

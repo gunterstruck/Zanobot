@@ -10,6 +10,13 @@
  *
  * ARCHITECTURE: Reads from the same data the existing pipeline produces.
  * No additional DSP pass, no changes to features.ts, gmia.ts, or scoring.ts.
+ *
+ * BASELINE STRATEGY:
+ * The reference baseline is NOT captured from the first chunk.
+ * Instead, a warmup buffer collects initial frames and only commits the
+ * baseline once the signal is stable (frame-to-frame cosine > threshold
+ * for a minimum number of consecutive frames). This prevents false
+ * baselines from microphone settling, user movement, or transient loads.
  */
 
 import { logger } from '@utils/logger.js';
@@ -49,6 +56,8 @@ export interface OperatingPointResult {
   stability: OperatingPointMetric;
   /** Whether operating point has changed significantly */
   operatingPointChanged: boolean;
+  /** Whether the baseline is still being captured (warmup phase) */
+  isInitializing: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,6 +76,23 @@ const CENTROID_SMOOTHING_ALPHA = 0.25;
 /** Band limits for robust centroid calculation (Hz) */
 const CENTROID_BAND_MIN_HZ = 50;
 const CENTROID_BAND_MAX_HZ = 8000;
+
+// Warmup / baseline capture ------------------------------------------------
+
+/** Minimum warmup frames before baseline can be committed */
+const WARMUP_MIN_FRAMES = 8;
+
+/** Maximum warmup frames — force-commit baseline after this many frames */
+const WARMUP_MAX_FRAMES = 30;
+
+/**
+ * Minimum consecutive stable frames required to commit baseline.
+ * "Stable" means frame-to-frame cosine similarity > WARMUP_STABILITY_THRESHOLD.
+ */
+const WARMUP_STABLE_STREAK_REQUIRED = 5;
+
+/** Cosine similarity threshold for a frame pair to count as "stable" during warmup */
+const WARMUP_STABILITY_THRESHOLD = 0.92;
 
 // Thresholds ------------------------------------------------------------------
 
@@ -87,9 +113,14 @@ const P10_THRESHOLD_YELLOW = 75; // %
  *
  * Instantiated once per diagnosis session.
  * Call `update()` with each new chunk's data, then read `getResult()`.
+ *
+ * Lifecycle:
+ *  1. Warmup phase — collects frames, checks stability
+ *  2. Baseline commit — when stable streak reached (or max frames exceeded)
+ *  3. Live phase — normal metric computation against the committed baseline
  */
 export class OperatingPointMetrics {
-  // Reference baselines (set once at start)
+  // Reference baselines (set once after warmup)
   private referenceRms: number = 0;
   private referenceCentroid: number = 0;
   private hasReference: boolean = false;
@@ -98,6 +129,13 @@ export class OperatingPointMetrics {
   private sampleRate: number;
   private fftSize: number;
   private frequencyBins: number;
+
+  // Warmup state
+  private warmupFrameCount: number = 0;
+  private warmupRmsBuffer: number[] = [];
+  private warmupCentroidBuffer: number[] = [];
+  private warmupStableStreak: number = 0;
+  private warmupPreviousFeatures: Float64Array | null = null;
 
   // Smoothed live values
   private smoothedEnergyDeltaDb: number = 0;
@@ -118,23 +156,16 @@ export class OperatingPointMetrics {
   }
 
   /**
-   * Set reference baselines from the first few seconds of live audio.
-   * Called once when the first valid chunk arrives.
+   * Whether the monitor is still in the warmup/initialization phase.
    */
-  public setReferenceFromLive(rmsAmplitude: number, features: Float64Array): void {
-    this.referenceRms = rmsAmplitude;
-    this.referenceCentroid = this.calculateBandLimitedCentroid(features);
-    this.hasReference = true;
-
-    logger.debug(
-      `[OpPoint] Reference set: RMS=${rmsAmplitude.toFixed(6)}, Centroid=${this.referenceCentroid.toFixed(1)}Hz`
-    );
+  public get isInitializing(): boolean {
+    return !this.hasReference;
   }
 
   /**
    * Update metrics with a new chunk's data.
    *
-   * @param features      - Normalised feature vector (512 bins, sum ≈ 1)
+   * @param features      - Normalised feature vector (512 bins, sum ~ 1)
    * @param rmsAmplitude  - RMS amplitude BEFORE standardisation
    * @param scoreHistory  - Current score history array (raw scores)
    */
@@ -143,16 +174,57 @@ export class OperatingPointMetrics {
     rmsAmplitude: number,
     scoreHistory: number[]
   ): void {
-    // Auto-initialise reference from first valid chunk
-    if (!this.hasReference && rmsAmplitude > 1e-8) {
-      this.setReferenceFromLive(rmsAmplitude, features);
-      this.smoothedCentroid = this.referenceCentroid;
-      this.smoothedEnergyDeltaDb = 0;
-      this.isFirstUpdate = false;
+    // Skip completely silent chunks
+    if (rmsAmplitude < 1e-8) return;
+
+    // -----------------------------------------------------------------------
+    // WARMUP PHASE: Collect frames and wait for stable signal
+    // -----------------------------------------------------------------------
+    if (!this.hasReference) {
+      this.warmupFrameCount++;
+
+      // Track RMS and centroid for median calculation
+      this.warmupRmsBuffer.push(rmsAmplitude);
+      this.warmupCentroidBuffer.push(this.calculateBandLimitedCentroid(features));
+
+      // Check frame-to-frame stability
+      if (this.warmupPreviousFeatures) {
+        const sim = this.cosineSim(this.warmupPreviousFeatures, features);
+        if (sim >= WARMUP_STABILITY_THRESHOLD) {
+          this.warmupStableStreak++;
+        } else {
+          this.warmupStableStreak = 0; // Reset streak on unstable transition
+        }
+      }
+      this.warmupPreviousFeatures = new Float64Array(features);
+
+      // Also track frame similarities for stability metric (carried over after warmup)
+      if (this.previousFeatures) {
+        const sim = this.cosineSim(this.previousFeatures, features);
+        this.frameSimilarities.push(sim);
+        if (this.frameSimilarities.length > STABILITY_WINDOW) {
+          this.frameSimilarities.shift();
+        }
+      }
       this.previousFeatures = new Float64Array(features);
-      this.lastResult = this.buildResult(scoreHistory);
+
+      // Decide whether to commit baseline
+      const hasEnoughFrames = this.warmupFrameCount >= WARMUP_MIN_FRAMES;
+      const isStable = this.warmupStableStreak >= WARMUP_STABLE_STREAK_REQUIRED;
+      const forceCommit = this.warmupFrameCount >= WARMUP_MAX_FRAMES;
+
+      if (hasEnoughFrames && (isStable || forceCommit)) {
+        this.commitBaseline(forceCommit);
+      }
+
+      // During warmup, emit a result with isInitializing = true
+      this.lastResult = this.buildWarmupResult(scoreHistory);
       return;
     }
+
+    // -----------------------------------------------------------------------
+    // LIVE PHASE: Normal metric computation
+    // -----------------------------------------------------------------------
 
     // --- 1. Energy Delta (dB) ---
     const rawDeltaDb = this.calculateEnergyDeltaDb(rmsAmplitude);
@@ -208,6 +280,93 @@ export class OperatingPointMetrics {
     this.previousFeatures = null;
     this.frameSimilarities = [];
     this.lastResult = null;
+
+    // Reset warmup state
+    this.warmupFrameCount = 0;
+    this.warmupRmsBuffer = [];
+    this.warmupCentroidBuffer = [];
+    this.warmupStableStreak = 0;
+    this.warmupPreviousFeatures = null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Warmup / Baseline
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Commit the baseline from the warmup buffer.
+   * Uses median values for robustness against outliers.
+   */
+  private commitBaseline(forced: boolean): void {
+    this.referenceRms = this.median(this.warmupRmsBuffer);
+    this.referenceCentroid = this.median(this.warmupCentroidBuffer);
+    this.hasReference = true;
+
+    // Initialise smoothed values to baseline
+    this.smoothedCentroid = this.referenceCentroid;
+    this.smoothedEnergyDeltaDb = 0;
+    this.isFirstUpdate = false;
+
+    const method = forced ? 'FORCED (max frames reached)' : 'STABLE';
+    logger.debug(
+      `[OpPoint] Baseline committed (${method}): ` +
+      `RMS=${this.referenceRms.toFixed(6)}, ` +
+      `Centroid=${this.referenceCentroid.toFixed(1)}Hz, ` +
+      `frames=${this.warmupFrameCount}, ` +
+      `stableStreak=${this.warmupStableStreak}`
+    );
+
+    // Free warmup buffers
+    this.warmupRmsBuffer = [];
+    this.warmupCentroidBuffer = [];
+    this.warmupPreviousFeatures = null;
+  }
+
+  /**
+   * Build a result during the warmup phase.
+   * Shows placeholder values and signals isInitializing = true.
+   */
+  private buildWarmupResult(scoreHistory: number[]): OperatingPointResult {
+    const p10 = this.calculateP10(scoreHistory);
+    const stabilityPercent = this.calculateStabilityPercent();
+
+    return {
+      similarityP10: {
+        value: p10,
+        displayValue: `${p10.toFixed(0)}%`,
+        status: p10 > P10_THRESHOLD_GREEN ? 'green' : p10 >= P10_THRESHOLD_YELLOW ? 'yellow' : 'red',
+        shortLabel: 'similarityP10.shortLabel',
+        description: 'similarityP10.description',
+      },
+      energyDelta: {
+        value: 0,
+        displayValue: '-- dB',
+        status: 'green',
+        shortLabel: 'energyDelta.shortLabel',
+        description: 'energyDelta.description',
+      },
+      frequencyDelta: {
+        value: 0,
+        displayValue: '--%',
+        status: 'green',
+        shortLabel: 'frequencyDelta.shortLabel',
+        description: 'frequencyDelta.description',
+      },
+      stability: {
+        value: stabilityPercent,
+        displayValue: `${stabilityPercent.toFixed(0)}%`,
+        status:
+          stabilityPercent >= STABILITY_THRESHOLD_GREEN
+            ? 'green'
+            : stabilityPercent >= STABILITY_THRESHOLD_YELLOW
+              ? 'yellow'
+              : 'red',
+        shortLabel: 'stability.shortLabel',
+        description: 'stability.description',
+      },
+      operatingPointChanged: false,
+      isInitializing: true,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -277,6 +436,7 @@ export class OperatingPointMetrics {
       frequencyDelta,
       stability,
       operatingPointChanged,
+      isInitializing: false,
     };
   }
 
@@ -304,7 +464,7 @@ export class OperatingPointMetrics {
 
   /**
    * Calculate band-limited spectral centroid from normalised features.
-   * Restricts to CENTROID_BAND_MIN_HZ – CENTROID_BAND_MAX_HZ to avoid
+   * Restricts to CENTROID_BAND_MIN_HZ - CENTROID_BAND_MAX_HZ to avoid
    * random high-frequency peaks biasing the result.
    */
   private calculateBandLimitedCentroid(features: Float64Array): number {
@@ -341,7 +501,7 @@ export class OperatingPointMetrics {
    * A frame pair is "stable" when cosine similarity > 0.95.
    */
   private calculateStabilityPercent(): number {
-    if (this.frameSimilarities.length === 0) return 100; // No data yet → assume stable
+    if (this.frameSimilarities.length === 0) return 100; // No data yet -> assume stable
     const stableCount = this.frameSimilarities.filter((s) => s > 0.95).length;
     return (stableCount / this.frameSimilarities.length) * 100;
   }
@@ -366,5 +526,17 @@ export class OperatingPointMetrics {
     const denom = Math.sqrt(magA) * Math.sqrt(magB);
     if (denom < 1e-12) return 0;
     return dot / denom;
+  }
+
+  /**
+   * Calculate median of a number array (robust against outliers).
+   */
+  private median(arr: number[]): number {
+    if (arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
   }
 }

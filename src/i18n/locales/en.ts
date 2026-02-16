@@ -289,6 +289,7 @@ export const en: TranslationDict = {
   // ============================================================================
   opMonitor: {
     title: 'Operating Point / Measurement Details',
+    initializingBaseline: 'Capturing reference operating point \u2013 please hold device steady\u2026',
     operatingPointChanged: 'Operating point changed \u2013 reference comparison limited.',
     similarityP10: {
       shortLabel: 'Short-term Minimum',

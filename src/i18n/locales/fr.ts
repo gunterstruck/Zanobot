@@ -289,6 +289,7 @@ export const fr: TranslationDict = {
   // ============================================================================
   opMonitor: {
     title: 'Point de fonctionnement / D\u00e9tails de mesure',
+    initializingBaseline: 'Capture du point de fonctionnement de r\u00e9f\u00e9rence \u2013 veuillez maintenir l\u2019appareil stable\u2026',
     operatingPointChanged: 'Point de fonctionnement modifi\u00e9 \u2013 comparaison de r\u00e9f\u00e9rence limit\u00e9e.',
     similarityP10: {
       shortLabel: 'Minimum court terme',

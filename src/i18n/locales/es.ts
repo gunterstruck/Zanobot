@@ -289,6 +289,7 @@ export const es: TranslationDict = {
   // ============================================================================
   opMonitor: {
     title: 'Punto de operaci\u00f3n / Detalles de medici\u00f3n',
+    initializingBaseline: 'Capturando punto de operaci\u00f3n de referencia \u2013 mantenga el dispositivo estable\u2026',
     operatingPointChanged: 'Punto de operaci\u00f3n cambiado \u2013 comparaci\u00f3n de referencia limitada.',
     similarityP10: {
       shortLabel: 'M\u00ednimo a corto plazo',
