@@ -264,7 +264,10 @@ export class Router {
 
     const computedDisplay = window.getComputedStyle(content).display;
     if (computedDisplay === 'none') {
-      content.style.display = content.dataset.originalDisplay || 'block';
+      // CRITICAL FIX: If originalDisplay was recorded as 'none' (e.g., collapseSection was
+      // called on an already-hidden section), fall back to 'block' to actually show the section.
+      const originalDisplay = content.dataset.originalDisplay;
+      content.style.display = (originalDisplay && originalDisplay !== 'none') ? originalDisplay : 'block';
     }
 
     const header = document.querySelector(`.section-header[data-target="${sectionId}"]`);
@@ -888,9 +891,13 @@ export class Router {
       return;
     }
 
+    // CRITICAL FIX: Only record originalDisplay if the section is currently visible.
+    // Recording 'none' would break expandSection() later, preventing the section from reopening.
     if (!content.dataset.originalDisplay) {
       const computedStyle = window.getComputedStyle(content);
-      content.dataset.originalDisplay = computedStyle.display;
+      if (computedStyle.display !== 'none') {
+        content.dataset.originalDisplay = computedStyle.display;
+      }
     }
 
     const computedDisplay = window.getComputedStyle(content).display;
