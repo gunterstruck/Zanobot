@@ -23,7 +23,8 @@ import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { notify } from '@utils/notifications.js';
 import { escapeHtml } from '@utils/sanitize.js';
-import { t, getLocale } from '../i18n/index.js';
+import { t, getLocale, LANGUAGE_CHANGE_EVENT } from '../i18n/index.js';
+import { getRecordingSettings, RECORDING_SETTINGS_EVENT } from '@utils/recordingSettings.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -81,6 +82,20 @@ export class Router {
     // ZERO-FRICTION: Initialize reference phase without machine for zero-friction recording
     // This allows users to start recording immediately without selecting a machine first
     this.initializeZeroFrictionReferencePhase();
+
+    // CRITICAL FIX: Update duration-dependent UI texts on init and when settings change
+    // This ensures the displayed recording duration always matches the user's settings
+    this.updateRecordingDurationTexts();
+
+    // Listen for recording settings changes to update duration texts immediately
+    window.addEventListener(RECORDING_SETTINGS_EVENT, () => {
+      this.updateRecordingDurationTexts();
+    });
+
+    // Listen for language changes to re-render duration texts with correct locale
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, () => {
+      this.updateRecordingDurationTexts();
+    });
   }
 
   /**
@@ -809,7 +824,8 @@ export class Router {
             : t('common.unknown');
           description.textContent = t('router.statesTrained', { count: String(count), plural: count > 1 ? 'e' : '', date: latestDate });
         } else {
-          description.textContent = t('router.referenceRequired');
+          const duration = getRecordingSettings().recordingDuration;
+          description.textContent = t('router.referenceRequired', { duration });
         }
       }
     }
@@ -822,9 +838,44 @@ export class Router {
         if (machine.referenceModels && machine.referenceModels.length > 0) {
           description.textContent = t('router.liveAnalysis');
         } else {
-          description.textContent = t('router.referenceRequired');
+          const duration = getRecordingSettings().recordingDuration;
+          description.textContent = t('router.referenceRequired', { duration });
         }
       }
+    }
+  }
+
+  /**
+   * Update all duration-dependent UI texts to reflect current recording settings
+   *
+   * Called on:
+   * - Router init (to set correct initial values)
+   * - Recording settings change (RECORDING_SETTINGS_EVENT)
+   * - Language change (LANGUAGE_CHANGE_EVENT)
+   */
+  private updateRecordingDurationTexts(): void {
+    const { recordingDuration } = getRecordingSettings();
+    const warmUpDuration = 5; // Fixed warmup duration
+    const totalDuration = warmUpDuration + recordingDuration;
+
+    // Update reference card sub-description (initial state before machine selection)
+    const referenceDurationText = document.getElementById('reference-duration-text');
+    if (referenceDurationText) {
+      // Only update if the router hasn't overwritten it with machine-specific info
+      // Check if a machine with models is selected - if so, don't overwrite the statesTrained text
+      const hasModels = this.currentMachine?.referenceModels && this.currentMachine.referenceModels.length > 0;
+      if (!hasModels) {
+        referenceDurationText.textContent = t('reference.tenSecondRecording', { duration: recordingDuration });
+      }
+    }
+
+    // Update review modal recording info text
+    const reviewRecordingInfo = document.getElementById('review-recording-info');
+    if (reviewRecordingInfo) {
+      reviewRecordingInfo.textContent = t('review.recordingInfo', {
+        total: totalDuration,
+        duration: recordingDuration,
+      });
     }
   }
 

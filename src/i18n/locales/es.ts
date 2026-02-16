@@ -158,7 +158,7 @@ export const es: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: 'Grabar referencia',
-    tenSecondRecording: 'Grabación de referencia de 10 segundos',
+    tenSecondRecording: 'Grabación de referencia de {{duration}} segundos',
     noReferenceModel: 'No hay modelo de referencia disponible',
     trainedStates: 'Estados entrenados',
     noModelsYet: 'Aún no hay modelos de referencia disponibles',
@@ -428,7 +428,7 @@ export const es: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} estado{{plural}} entrenado(s) (último: {{date}}) - Agregar más',
-    referenceRequired: 'Grabación de referencia de 10 segundos (requerido para diagnóstico)',
+    referenceRequired: 'Grabación de referencia de {{duration}} segundos (requerido para diagnóstico)',
     liveAnalysis: 'Realizar análisis en vivo',
     lastCheck: 'Última verificación {{time}}',
   },
@@ -577,7 +577,7 @@ export const es: TranslationDict = {
     title: 'Revisar grabación', subtitle: 'Control de calidad',
     listenTitle: 'Escuchar grabación',
     browserNoAudio: 'Su navegador no admite reproducción de audio.',
-    recordingInfo: '15 segundos de grabación (5s estabilización + 10s entrenamiento)',
+    recordingInfo: '{{total}} segundos de grabación (5s estabilización + {{duration}}s entrenamiento)',
     positionImageTitle: 'Imagen de posición guardada',
     savedPositionImage: 'Imagen de posición guardada',
     positionImageCheck: 'Verifique si la imagen muestra la posición correcta.',

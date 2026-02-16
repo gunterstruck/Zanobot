@@ -157,7 +157,7 @@ export const zh: TranslationDict = {
   // ============================================================================
   reference: {
     recordReference: '录制参考',
-    tenSecondRecording: '10秒参考录制',
+    tenSecondRecording: '{{duration}}秒参考录制',
     noReferenceModel: '无可用的参考模型',
     trainedStates: '已训练状态',
     noModelsYet: '尚无参考模型',
@@ -427,7 +427,7 @@ export const zh: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} 个状态已训练（最近：{{date}}）- 添加更多',
-    referenceRequired: '10秒参考录制（诊断必需）',
+    referenceRequired: '{{duration}}秒参考录制（诊断必需）',
     liveAnalysis: '执行实时分析',
     lastCheck: '上次检查 {{time}}',
   },
@@ -573,7 +573,7 @@ export const zh: TranslationDict = {
     title: '检查录制', subtitle: '质量控制',
     listenTitle: '听录制',
     browserNoAudio: '您的浏览器不支持音频播放。',
-    recordingInfo: '15秒录制（5秒稳定 + 10秒训练）',
+    recordingInfo: '{{total}}秒录制（5秒稳定 + {{duration}}秒训练）',
     positionImageTitle: '已保存的位置图像',
     savedPositionImage: '已保存的位置图像',
     positionImageCheck: '检查图像是否显示正确的位置。',
