@@ -287,6 +287,30 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // OPERATING POINT MONITOR (Expert Mode)
+  // ============================================================================
+  opMonitor: {
+    title: 'Betriebspunkt / Messdetails',
+    operatingPointChanged: 'Betriebspunkt ge\u00e4ndert \u2013 Referenzvergleich eingeschr\u00e4nkt.',
+    similarityP10: {
+      shortLabel: 'Kurzzeit-Minimum',
+      description: 'Niedrigster \u00c4hnlichkeitswert der letzten Sekunden. Reagiert empfindlicher auf kurzfristige \u00c4nderungen.',
+    },
+    energyDelta: {
+      shortLabel: 'Lautst\u00e4rke-\u00c4nderung',
+      description: 'Vergleicht den aktuellen Pegel mit der Referenz. Starke Abweichung kann auf Last- oder Abstand\u00e4nderung hinweisen.',
+    },
+    frequencyDelta: {
+      shortLabel: 'Drehzahl-Verschiebung',
+      description: 'Ver\u00e4nderung der dominanten Frequenz im Vergleich zur Referenz. Kann auf ge\u00e4nderten Betriebspunkt hinweisen.',
+    },
+    stability: {
+      shortLabel: 'Signal-Stabilit\u00e4t',
+      description: 'Anteil stabiler Signalabschnitte w\u00e4hrend der Messung.',
+    },
+  },
+
+  // ============================================================================
   // PHASE 4: SETTINGS
   // ============================================================================
   settings: {

@@ -280,8 +280,32 @@ export const fr: TranslationDict = {
     statesReady: '{{count}} état entraîné',
     noReference: 'Pas encore de référence',
     changeMachine: 'Changer de machine',
-    noMachinesYet: 'Aucune machine créée.',
-    noMachinesHint: 'Veuillez d\'abord créer une nouvelle machine.',
+    noMachinesYet: 'Aucune machine cr\u00e9\u00e9e.',
+    noMachinesHint: 'Veuillez d\'abord cr\u00e9er une nouvelle machine.',
+  },
+
+  // ============================================================================
+  // OPERATING POINT MONITOR (Expert Mode)
+  // ============================================================================
+  opMonitor: {
+    title: 'Point de fonctionnement / D\u00e9tails de mesure',
+    operatingPointChanged: 'Point de fonctionnement modifi\u00e9 \u2013 comparaison de r\u00e9f\u00e9rence limit\u00e9e.',
+    similarityP10: {
+      shortLabel: 'Minimum court terme',
+      description: 'Valeur de similarit\u00e9 la plus basse des derni\u00e8res secondes. Plus sensible aux changements \u00e0 court terme.',
+    },
+    energyDelta: {
+      shortLabel: 'Changement de volume',
+      description: 'Compare le niveau actuel avec la r\u00e9f\u00e9rence. Un \u00e9cart important peut indiquer un changement de charge ou de distance.',
+    },
+    frequencyDelta: {
+      shortLabel: 'D\u00e9calage de r\u00e9gime',
+      description: 'Changement de la fr\u00e9quence dominante par rapport \u00e0 la r\u00e9f\u00e9rence. Peut indiquer un changement de point de fonctionnement.',
+    },
+    stability: {
+      shortLabel: 'Stabilit\u00e9 du signal',
+      description: 'Proportion de segments de signal stables pendant la mesure.',
+    },
   },
 
   // ============================================================================

@@ -280,8 +280,32 @@ export const es: TranslationDict = {
     statesReady: '{{count}} estado entrenado',
     noReference: 'Sin referencia aún',
     changeMachine: 'Cambiar máquina',
-    noMachinesYet: 'No hay máquinas creadas aún.',
-    noMachinesHint: 'Cree una nueva máquina primero.',
+    noMachinesYet: 'No hay m\u00e1quinas creadas a\u00fan.',
+    noMachinesHint: 'Cree una nueva m\u00e1quina primero.',
+  },
+
+  // ============================================================================
+  // OPERATING POINT MONITOR (Expert Mode)
+  // ============================================================================
+  opMonitor: {
+    title: 'Punto de operaci\u00f3n / Detalles de medici\u00f3n',
+    operatingPointChanged: 'Punto de operaci\u00f3n cambiado \u2013 comparaci\u00f3n de referencia limitada.',
+    similarityP10: {
+      shortLabel: 'M\u00ednimo a corto plazo',
+      description: 'Valor de similitud m\u00e1s bajo de los \u00faltimos segundos. M\u00e1s sensible a cambios a corto plazo.',
+    },
+    energyDelta: {
+      shortLabel: 'Cambio de volumen',
+      description: 'Compara el nivel actual con la referencia. Una desviaci\u00f3n grande puede indicar cambio de carga o distancia.',
+    },
+    frequencyDelta: {
+      shortLabel: 'Desplazamiento de RPM',
+      description: 'Cambio en la frecuencia dominante comparada con la referencia. Puede indicar un cambio en el punto de operaci\u00f3n.',
+    },
+    stability: {
+      shortLabel: 'Estabilidad de se\u00f1al',
+      description: 'Proporci\u00f3n de segmentos de se\u00f1al estables durante la medici\u00f3n.',
+    },
   },
 
   // ============================================================================
