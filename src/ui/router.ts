@@ -444,7 +444,13 @@ export class Router {
     if (listEl) {
       listEl.innerHTML = '';
 
+      const ALLOWED_STATUSES = ['healthy', 'faulty', 'uncertain'] as const;
+
       candidates.forEach((candidate) => {
+        const safeStatus = ALLOWED_STATUSES.includes(candidate.status as any)
+          ? candidate.status
+          : 'uncertain';
+
         const item = document.createElement('button');
         item.className = 'candidate-item';
         item.innerHTML = `
@@ -452,8 +458,8 @@ export class Router {
             <span class="candidate-name">${escapeHtml(candidate.machine.name)}</span>
             <span class="candidate-similarity">${candidate.similarity.toFixed(0)}%</span>
           </div>
-          <div class="candidate-status status-${candidate.status}">
-            ${candidate.status === 'healthy' ? t('status.healthy') : candidate.status === 'faulty' ? t('status.faulty') : t('status.uncertain')}
+          <div class="candidate-status status-${safeStatus}">
+            ${safeStatus === 'healthy' ? t('status.healthy') : safeStatus === 'faulty' ? t('status.faulty') : t('status.uncertain')}
           </div>
         `;
         item.onclick = () => {
