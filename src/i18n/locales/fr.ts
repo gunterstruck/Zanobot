@@ -288,24 +288,33 @@ export const fr: TranslationDict = {
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {
-    title: 'Point de fonctionnement / D\u00e9tails de mesure',
+    title: '\u00c9tat de fonctionnement / Qualit\u00e9 du signal',
     initializingBaseline: 'Capture du point de fonctionnement de r\u00e9f\u00e9rence \u2013 veuillez maintenir l\u2019appareil stable\u2026',
     operatingPointChanged: 'Point de fonctionnement modifi\u00e9 \u2013 comparaison de r\u00e9f\u00e9rence limit\u00e9e.',
+    scoreInvalid: '\u26A0 Point de fonctionnement d\u00e9viant \u2013 score non comparable',
     similarityP10: {
-      shortLabel: 'Minimum court terme',
-      description: 'Valeur de similarit\u00e9 la plus basse des derni\u00e8res secondes. Plus sensible aux changements \u00e0 court terme.',
+      shortLabel: 'Stabilit\u00e9',
+      description: '\u00c9value les \u00ab\u00a0pires\u00a0\u00bb moments de l\u2019enregistrement (10e percentile).',
+      warning: '\u2139\uFE0F Signal instable : La moyenne est bonne, mais il y a de brefs d\u00e9crochages. Y a-t-il des bruits fluctuants ?',
+      explain: '\u00c9value les \u00ab\u00a0pires\u00a0\u00bb moments de l\u2019enregistrement. Une valeur basse indique que le son est instable, m\u00eame si la moyenne para\u00eet bonne.',
     },
     energyDelta: {
-      shortLabel: 'Changement de volume',
-      description: 'Compare le niveau actuel avec la r\u00e9f\u00e9rence. Un \u00e9cart important peut indiquer un changement de charge ou de distance.',
+      shortLabel: '\u00c9nergie \u0394',
+      description: 'Diff\u00e9rence de volume par rapport \u00e0 la r\u00e9f\u00e9rence en d\u00e9cibels.',
+      warning: '\u26A0\uFE0F Attention : Le signal est nettement plus fort/faible que la r\u00e9f\u00e9rence. La machine fonctionne-t-elle sous une charge diff\u00e9rente ? Le score peut ne pas \u00eatre comparable.',
+      explain: 'Montre la diff\u00e9rence de volume par rapport \u00e0 la r\u00e9f\u00e9rence. De grands \u00e9carts indiquent un changement de charge, de distance ou d\u2019environnement.',
     },
     frequencyDelta: {
-      shortLabel: 'D\u00e9calage de r\u00e9gime',
-      description: 'Changement de la fr\u00e9quence dominante par rapport \u00e0 la r\u00e9f\u00e9rence. Peut indiquer un changement de point de fonctionnement.',
+      shortLabel: 'Fr\u00e9quence \u0394',
+      description: 'D\u00e9calage du ton principal (fr\u00e9quence dominante).',
+      warning: '\u26A0\uFE0F Point de fonctionnement d\u00e9viant : La fr\u00e9quence fondamentale a chang\u00e9. La machine tourne probablement \u00e0 un r\u00e9gime diff\u00e9rent de la r\u00e9f\u00e9rence.',
+      explain: 'Compare le ton principal (ex. r\u00e9gime moteur) avec la r\u00e9f\u00e9rence. Un d\u00e9calage signifie g\u00e9n\u00e9ralement que la machine tourne plus vite ou plus lentement.',
     },
     stability: {
       shortLabel: 'Stabilit\u00e9 du signal',
       description: 'Proportion de segments de signal stables pendant la mesure.',
+      warning: '\u26A0\uFE0F Signal instable : Bruits fluctuants ou interruptions d\u00e9tect\u00e9s. R\u00e9p\u00e9ter la mesure dans des conditions stables.',
+      explain: 'Mesure la r\u00e9gularit\u00e9 du son dans le temps. Des valeurs basses indiquent des conditions de fonctionnement fluctuantes ou des interf\u00e9rences.',
     },
   },
 

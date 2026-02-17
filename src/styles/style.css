@@ -3644,6 +3644,105 @@ body {
     50% { opacity: 1; }
 }
 
+/* --- Operating Point Monitor: Clickable rows --- */
+.op-monitor-row {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
+    padding: 4px 4px 4px 0;
+}
+
+.op-monitor-row:active {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.op-monitor-row--expanded {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.op-monitor-row--warning .op-monitor-value {
+    color: var(--color-warning, #FFC107);
+}
+
+.op-monitor-row--critical .op-monitor-value {
+    color: var(--color-faulty, #F44336);
+}
+
+/* --- Tap hint arrow --- */
+.op-monitor-tap-hint {
+    display: none;
+    font-size: 0.5rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+/* --- Tooltip (Progressive Disclosure) --- */
+.op-monitor-tooltip {
+    padding: 8px 12px;
+    margin: 0 0 4px 18px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-left: 2px solid var(--text-muted);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.6rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    transition: opacity 0.2s ease, max-height 0.3s ease;
+    max-height: 200px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.op-monitor-tooltip--hidden {
+    opacity: 0;
+    max-height: 0;
+    padding: 0 12px;
+    margin: 0 0 0 18px;
+    border-left-color: transparent;
+    overflow: hidden;
+}
+
+.op-monitor-tooltip-warning {
+    color: var(--color-warning, #FFC107);
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.6rem;
+    line-height: 1.4;
+}
+
+.op-monitor-tooltip-explain {
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    line-height: 1.4;
+}
+
+/* --- Score Invalidation (Expert Mode) --- */
+.op-score-invalidated {
+    opacity: 0.35;
+    filter: grayscale(60%);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.op-invalid-badge {
+    text-align: center;
+    padding: 4px 12px;
+    margin-top: 4px;
+    background-color: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    border-radius: 6px;
+    color: var(--color-warning, #FF9800);
+    font-size: 0.65rem;
+    font-weight: 600;
+    animation: op-invalid-pulse 2s ease-in-out infinite;
+}
+
+@keyframes op-invalid-pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
 /* Hide elements that should only show in specific views */
 .diagnosis-active .recording-timer {
     display: none;
