@@ -110,7 +110,7 @@ describe('OperatingPointMetrics', () => {
       const result = metrics.getResult()!;
       expect(result.isInitializing).toBe(true);
       expect(result.energyDelta.displayValue).toBe('-- dB');
-      expect(result.frequencyDelta.displayValue).toBe('--%');
+      expect(result.frequencyDelta.displayValue).toBe('-- Hz');
     });
 
     it('should not show operatingPointChanged during warmup', () => {
@@ -163,7 +163,7 @@ describe('OperatingPointMetrics', () => {
       expect(result.isInitializing).toBe(false);
       // Energy and frequency should now show real values, not placeholders
       expect(result.energyDelta.displayValue).not.toBe('-- dB');
-      expect(result.frequencyDelta.displayValue).not.toBe('--%');
+      expect(result.frequencyDelta.displayValue).not.toBe('-- Hz');
     });
   });
 

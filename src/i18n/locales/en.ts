@@ -288,24 +288,33 @@ export const en: TranslationDict = {
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {
-    title: 'Operating Point / Measurement Details',
+    title: 'Operating Condition / Signal Quality',
     initializingBaseline: 'Capturing reference operating point \u2013 please hold device steady\u2026',
     operatingPointChanged: 'Operating point changed \u2013 reference comparison limited.',
+    scoreInvalid: '\u26A0 Operating point deviation \u2013 score not comparable',
     similarityP10: {
-      shortLabel: 'Short-term Minimum',
-      description: 'Lowest similarity value of the last seconds. More sensitive to short-term changes.',
+      shortLabel: 'Stability',
+      description: 'Evaluates the "worst" moments of the recording (10th percentile).',
+      warning: '\u2139\uFE0F Signal unstable: The average is good, but there are brief dips. Are there fluctuating noises or dropouts?',
+      explain: 'Evaluates the "worst" moments of the recording. A low value indicates that the sound is unstable, even if the average looks good.',
     },
     energyDelta: {
-      shortLabel: 'Volume Change',
-      description: 'Compares current level with reference. Large deviation may indicate load or distance change.',
+      shortLabel: 'Energy \u0394',
+      description: 'Volume difference to reference in decibels.',
+      warning: '\u26A0\uFE0F Caution: Signal is significantly louder/quieter than reference. Is the machine running under different load or has the microphone distance changed? The score may not be comparable.',
+      explain: 'Shows the volume difference to the reference. Large deviations indicate changed load, different distance, or a louder environment.',
     },
     frequencyDelta: {
-      shortLabel: 'RPM Shift',
-      description: 'Change in dominant frequency compared to reference. May indicate changed operating point.',
+      shortLabel: 'Frequency \u0394',
+      description: 'Shift of the strongest main tone (dominant frequency).',
+      warning: '\u26A0\uFE0F Deviating operating point: The fundamental frequency has shifted. The machine is likely running at a different speed than during the reference.',
+      explain: 'Compares the strongest main tone (e.g. motor RPM) with the reference. A shift usually means the machine is running faster or slower.',
     },
     stability: {
       shortLabel: 'Signal Stability',
       description: 'Proportion of stable signal segments during measurement.',
+      warning: '\u26A0\uFE0F Signal unstable: Fluctuating noises or interruptions detected. Repeat measurement under stable conditions.',
+      explain: 'Measures how consistent the sound is over time. Low values indicate fluctuating operating conditions or interference.',
     },
   },
 

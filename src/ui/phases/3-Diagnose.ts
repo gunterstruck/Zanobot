@@ -595,6 +595,7 @@ export class DiagnosePhase {
       }
 
       // Step 6b: Update operating point metrics (Expert mode only)
+      let operatingPointChanged = false;
       if (this.opMetrics && featureVector.rmsAmplitude !== undefined) {
         this.opMetrics.update(
           featureVector.features,
@@ -602,13 +603,16 @@ export class DiagnosePhase {
           this.scoreHistory.getAllScores()
         );
         const opResult = this.opMetrics.getResult();
-        if (opResult && this.opMonitor) {
-          this.opMonitor.update(opResult);
+        if (opResult) {
+          operatingPointChanged = opResult.operatingPointChanged;
+          if (this.opMonitor) {
+            this.opMonitor.update(opResult);
+          }
         }
       }
 
       // Step 7: Update UI in real-time with detected state and debug values
-      this.updateLiveDisplay(filteredScore, filteredStatus, detectedState);
+      this.updateLiveDisplay(filteredScore, filteredStatus, detectedState, operatingPointChanged);
       this.updateDebugDisplay();
 
       // Step 8: Store for final save (use filtered score/status for consistency)
@@ -767,7 +771,7 @@ export class DiagnosePhase {
    * - Simplified view: Updates large percentage, status label, quality hints
    * - Advanced view: Updates HealthGauge, live score display, status
    */
-  private updateLiveDisplay(score: number, status: string, detectedState?: string): void {
+  private updateLiveDisplay(score: number, status: string, detectedState?: string, operatingPointChanged?: boolean): void {
     const normalizedStatus = status.toLowerCase();
 
     if (this.useSimplifiedView) {
@@ -921,6 +925,36 @@ export class DiagnosePhase {
           statusElement.textContent = localizedStatus;
         }
         statusElement.className = `live-status status-${normalizedStatus}`;
+      }
+
+      // === SCORE INVALIDATION (Expert mode) ===
+      // When operating point has changed (energy or frequency red), visually
+      // invalidate the main score to signal: "Don't trust this score right now"
+      if (operatingPointChanged !== undefined) {
+        const scoreInvalidClass = 'op-score-invalidated';
+        const dashboardScoreEl = document.getElementById('live-dashboard-score-container');
+        const invalidBadge = document.getElementById('op-invalid-badge');
+
+        if (dashboardScoreEl) {
+          if (operatingPointChanged) {
+            dashboardScoreEl.classList.add(scoreInvalidClass);
+            // Create or show the invalid badge
+            if (!invalidBadge) {
+              const badge = document.createElement('div');
+              badge.id = 'op-invalid-badge';
+              badge.className = 'op-invalid-badge';
+              badge.textContent = t('opMonitor.scoreInvalid');
+              dashboardScoreEl.parentElement?.appendChild(badge);
+            } else {
+              invalidBadge.style.display = 'block';
+            }
+          } else {
+            dashboardScoreEl.classList.remove(scoreInvalidClass);
+            if (invalidBadge) {
+              invalidBadge.style.display = 'none';
+            }
+          }
+        }
       }
     }
   }

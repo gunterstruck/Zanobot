@@ -290,24 +290,33 @@ export const de: TranslationDict = {
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {
-    title: 'Betriebspunkt / Messdetails',
+    title: 'Betriebszustand / Signalqualit\u00e4t',
     initializingBaseline: 'Referenz-Betriebspunkt wird erfasst \u2013 bitte Ger\u00e4t konstant halten\u2026',
     operatingPointChanged: 'Betriebspunkt ge\u00e4ndert \u2013 Referenzvergleich eingeschr\u00e4nkt.',
+    scoreInvalid: '\u26A0 Betriebspunkt abweichend \u2013 Score nicht vergleichbar',
     similarityP10: {
-      shortLabel: 'Kurzzeit-Minimum',
-      description: 'Niedrigster \u00c4hnlichkeitswert der letzten Sekunden. Reagiert empfindlicher auf kurzfristige \u00c4nderungen.',
+      shortLabel: 'Stabilit\u00e4t',
+      description: 'Bewertet die \u201eschlechtesten\u201c Momente der Aufnahme (10. Perzentil).',
+      warning: '\u2139\uFE0F Signal unruhig: Der Durchschnitt ist gut, aber es gibt kurze Einbr\u00fcche. Gibt es schwankende Ger\u00e4usche oder Aussetzer?',
+      explain: 'Bewertet die \u201eschlechtesten\u201c Momente der Aufnahme. Ein niedriger Wert zeigt, dass das Ger\u00e4usch unruhig ist, auch wenn der Durchschnitt gut aussieht.',
     },
     energyDelta: {
-      shortLabel: 'Lautst\u00e4rke-\u00c4nderung',
-      description: 'Vergleicht den aktuellen Pegel mit der Referenz. Starke Abweichung kann auf Last- oder Abstand\u00e4nderung hinweisen.',
+      shortLabel: 'Energie \u0394',
+      description: 'Lautst\u00e4rke-Differenz zur Referenz in Dezibel.',
+      warning: '\u26A0\uFE0F Achtung: Signal ist deutlich lauter/leiser als die Referenz. L\u00e4uft die Maschine unter anderer Last oder wurde der Mikrofonabstand ge\u00e4ndert? Der Score ist daher evtl. nicht vergleichbar.',
+      explain: 'Zeigt die Lautst\u00e4rke-Differenz zur Referenz. Starke Abweichungen deuten auf ver\u00e4nderte Last, anderen Abstand oder eine lautere Umgebung hin.',
     },
     frequencyDelta: {
-      shortLabel: 'Drehzahl-Verschiebung',
-      description: 'Ver\u00e4nderung der dominanten Frequenz im Vergleich zur Referenz. Kann auf ge\u00e4nderten Betriebspunkt hinweisen.',
+      shortLabel: 'Frequenz \u0394',
+      description: 'Verschiebung des st\u00e4rksten Haupttons (dominante Frequenz).',
+      warning: '\u26A0\uFE0F Abweichender Betriebspunkt: Die Grundfrequenz hat sich verschoben. Die Maschine l\u00e4uft vermutlich mit einer anderen Drehzahl als bei der Referenz.',
+      explain: 'Vergleicht den st\u00e4rksten Hauptton (z.\u00A0B. Motordrehzahl) mit der Referenz. Eine Verschiebung bedeutet meist, dass die Maschine schneller oder langsamer l\u00e4uft.',
     },
     stability: {
       shortLabel: 'Signal-Stabilit\u00e4t',
       description: 'Anteil stabiler Signalabschnitte w\u00e4hrend der Messung.',
+      warning: '\u26A0\uFE0F Signal instabil: Schwankende Ger\u00e4usche oder Unterbrechungen erkannt. Messung unter stabilen Bedingungen wiederholen.',
+      explain: 'Misst, wie gleichm\u00e4\u00dfig das Ger\u00e4usch \u00fcber die Zeit ist. Niedrige Werte deuten auf schwankende Betriebsbedingungen oder St\u00f6rger\u00e4usche hin.',
     },
   },
 

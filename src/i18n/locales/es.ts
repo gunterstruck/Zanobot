@@ -288,24 +288,33 @@ export const es: TranslationDict = {
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {
-    title: 'Punto de operaci\u00f3n / Detalles de medici\u00f3n',
+    title: 'Estado operativo / Calidad de se\u00f1al',
     initializingBaseline: 'Capturando punto de operaci\u00f3n de referencia \u2013 mantenga el dispositivo estable\u2026',
     operatingPointChanged: 'Punto de operaci\u00f3n cambiado \u2013 comparaci\u00f3n de referencia limitada.',
+    scoreInvalid: '\u26A0 Punto de operaci\u00f3n desviado \u2013 puntuaci\u00f3n no comparable',
     similarityP10: {
-      shortLabel: 'M\u00ednimo a corto plazo',
-      description: 'Valor de similitud m\u00e1s bajo de los \u00faltimos segundos. M\u00e1s sensible a cambios a corto plazo.',
+      shortLabel: 'Estabilidad',
+      description: 'Eval\u00faa los \u00abpeores\u00bb momentos de la grabaci\u00f3n (percentil 10).',
+      warning: '\u2139\uFE0F Se\u00f1al inestable: El promedio es bueno, pero hay ca\u00eddas breves. \u00bfHay ruidos fluctuantes o interrupciones?',
+      explain: 'Eval\u00faa los \u00abpeores\u00bb momentos de la grabaci\u00f3n. Un valor bajo indica que el sonido es inestable, aunque el promedio se vea bien.',
     },
     energyDelta: {
-      shortLabel: 'Cambio de volumen',
-      description: 'Compara el nivel actual con la referencia. Una desviaci\u00f3n grande puede indicar cambio de carga o distancia.',
+      shortLabel: 'Energ\u00eda \u0394',
+      description: 'Diferencia de volumen respecto a la referencia en decibelios.',
+      warning: '\u26A0\uFE0F Atenci\u00f3n: La se\u00f1al es significativamente m\u00e1s fuerte/d\u00e9bil que la referencia. \u00bfLa m\u00e1quina funciona con diferente carga o se cambi\u00f3 la distancia del micr\u00f3fono? La puntuaci\u00f3n puede no ser comparable.',
+      explain: 'Muestra la diferencia de volumen respecto a la referencia. Grandes desviaciones indican cambio de carga, diferente distancia o un entorno m\u00e1s ruidoso.',
     },
     frequencyDelta: {
-      shortLabel: 'Desplazamiento de RPM',
-      description: 'Cambio en la frecuencia dominante comparada con la referencia. Puede indicar un cambio en el punto de operaci\u00f3n.',
+      shortLabel: 'Frecuencia \u0394',
+      description: 'Desplazamiento del tono principal (frecuencia dominante).',
+      warning: '\u26A0\uFE0F Punto de operaci\u00f3n desviado: La frecuencia fundamental ha cambiado. La m\u00e1quina probablemente funciona a una velocidad diferente a la de la referencia.',
+      explain: 'Compara el tono principal (ej. RPM del motor) con la referencia. Un desplazamiento generalmente significa que la m\u00e1quina funciona m\u00e1s r\u00e1pido o m\u00e1s lento.',
     },
     stability: {
       shortLabel: 'Estabilidad de se\u00f1al',
       description: 'Proporci\u00f3n de segmentos de se\u00f1al estables durante la medici\u00f3n.',
+      warning: '\u26A0\uFE0F Se\u00f1al inestable: Ruidos fluctuantes o interrupciones detectadas. Repetir la medici\u00f3n en condiciones estables.',
+      explain: 'Mide la consistencia del sonido a lo largo del tiempo. Valores bajos indican condiciones operativas fluctuantes o interferencias.',
     },
   },
 

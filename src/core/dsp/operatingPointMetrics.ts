@@ -17,6 +17,12 @@
  * baseline once the signal is stable (frame-to-frame cosine > threshold
  * for a minimum number of consecutive frames). This prevents false
  * baselines from microphone settling, user movement, or transient loads.
+ *
+ * METRICS:
+ *  A. RMS-Delta (Energy Check) — dB difference to baseline RMS
+ *  B. Dominant Frequency Shift (RPM Check) — peak frequency delta in Hz
+ *  C. P10-Similarity (Stability Check) — 10th percentile of rolling scores
+ *  D. Signal Stability — percentage of stable frame transitions
  */
 
 import { logger } from '@utils/logger.js';
@@ -32,7 +38,7 @@ export type TrafficLight = 'green' | 'yellow' | 'red';
 export interface OperatingPointMetric {
   /** Metric value (number for display) */
   value: number;
-  /** Formatted display string (e.g. "+2.8 dB", "93%", "-1.2%") */
+  /** Formatted display string (e.g. "+2.8 dB", "93%", "+12 Hz") */
   displayValue: string;
   /** Traffic light status */
   status: TrafficLight;
@@ -40,6 +46,8 @@ export interface OperatingPointMetric {
   shortLabel: string;
   /** One-sentence explanation */
   description: string;
+  /** Dynamic warning text (only set when status is yellow or red) */
+  warningText?: string;
 }
 
 /**
@@ -50,7 +58,7 @@ export interface OperatingPointResult {
   similarityP10: OperatingPointMetric;
   /** Energy delta - RMS difference to reference in dB */
   energyDelta: OperatingPointMetric;
-  /** Frequency delta - spectral centroid shift */
+  /** Frequency delta - dominant peak frequency shift in Hz */
   frequencyDelta: OperatingPointMetric;
   /** Signal stability - percentage of stable frames */
   stability: OperatingPointMetric;
@@ -70,12 +78,12 @@ const STABILITY_WINDOW = 10;
 /** EMA smoothing factor for energy delta */
 const ENERGY_SMOOTHING_ALPHA = 0.3;
 
-/** EMA smoothing factor for centroid */
-const CENTROID_SMOOTHING_ALPHA = 0.25;
+/** EMA smoothing factor for dominant peak frequency */
+const PEAK_FREQ_SMOOTHING_ALPHA = 0.25;
 
-/** Band limits for robust centroid calculation (Hz) */
-const CENTROID_BAND_MIN_HZ = 50;
-const CENTROID_BAND_MAX_HZ = 8000;
+/** Band limits for dominant peak search (Hz) */
+const PEAK_BAND_MIN_HZ = 50;
+const PEAK_BAND_MAX_HZ = 8000;
 
 // Warmup / baseline capture ------------------------------------------------
 
@@ -96,17 +104,22 @@ const WARMUP_STABILITY_THRESHOLD = 0.92;
 
 // Thresholds ------------------------------------------------------------------
 
-const ENERGY_THRESHOLD_GREEN = 2; // dB
-const ENERGY_THRESHOLD_YELLOW = 4; // dB
+const ENERGY_THRESHOLD_GREEN = 3; // dB (spec: ±3 dB)
+const ENERGY_THRESHOLD_YELLOW = 6; // dB
 
-const FREQ_THRESHOLD_GREEN = 5; // %
-const FREQ_THRESHOLD_YELLOW = 15; // %
+const FREQ_THRESHOLD_GREEN_HZ = 5; // Hz (spec: ±5 Hz)
+const FREQ_THRESHOLD_GREEN_PCT = 5; // % (spec: or > 5%)
+const FREQ_THRESHOLD_YELLOW_HZ = 15; // Hz
+const FREQ_THRESHOLD_YELLOW_PCT = 15; // %
 
 const STABILITY_THRESHOLD_GREEN = 85; // %
 const STABILITY_THRESHOLD_YELLOW = 60; // %
 
 const P10_THRESHOLD_GREEN = 90; // %
 const P10_THRESHOLD_YELLOW = 75; // %
+
+/** P10 is considered "unstable" when avg - p10 exceeds this threshold */
+const P10_INSTABILITY_THRESHOLD = 15; // percentage points
 
 /**
  * Operating Point Metrics Calculator
@@ -122,7 +135,7 @@ const P10_THRESHOLD_YELLOW = 75; // %
 export class OperatingPointMetrics {
   // Reference baselines (set once after warmup)
   private referenceRms: number = 0;
-  private referenceCentroid: number = 0;
+  private referencePeakFreq: number = 0;
   private hasReference: boolean = false;
 
   // DSP config
@@ -133,13 +146,13 @@ export class OperatingPointMetrics {
   // Warmup state
   private warmupFrameCount: number = 0;
   private warmupRmsBuffer: number[] = [];
-  private warmupCentroidBuffer: number[] = [];
+  private warmupPeakFreqBuffer: number[] = [];
   private warmupStableStreak: number = 0;
   private warmupPreviousFeatures: Float64Array | null = null;
 
   // Smoothed live values
   private smoothedEnergyDeltaDb: number = 0;
-  private smoothedCentroid: number = 0;
+  private smoothedPeakFreq: number = 0;
   private isFirstUpdate: boolean = true;
 
   // Rolling frame buffer for stability
@@ -183,9 +196,9 @@ export class OperatingPointMetrics {
     if (!this.hasReference) {
       this.warmupFrameCount++;
 
-      // Track RMS and centroid for median calculation
+      // Track RMS and dominant peak frequency for median calculation
       this.warmupRmsBuffer.push(rmsAmplitude);
-      this.warmupCentroidBuffer.push(this.calculateBandLimitedCentroid(features));
+      this.warmupPeakFreqBuffer.push(this.findDominantPeakFrequency(features));
 
       // Check frame-to-frame stability
       if (this.warmupPreviousFeatures) {
@@ -236,14 +249,14 @@ export class OperatingPointMetrics {
         (1 - ENERGY_SMOOTHING_ALPHA) * this.smoothedEnergyDeltaDb;
     }
 
-    // --- 2. Frequency Delta (Spectral Centroid) ---
-    const currentCentroid = this.calculateBandLimitedCentroid(features);
+    // --- 2. Dominant Peak Frequency ---
+    const currentPeakFreq = this.findDominantPeakFrequency(features);
     if (this.isFirstUpdate) {
-      this.smoothedCentroid = currentCentroid;
+      this.smoothedPeakFreq = currentPeakFreq;
     } else {
-      this.smoothedCentroid =
-        CENTROID_SMOOTHING_ALPHA * currentCentroid +
-        (1 - CENTROID_SMOOTHING_ALPHA) * this.smoothedCentroid;
+      this.smoothedPeakFreq =
+        PEAK_FREQ_SMOOTHING_ALPHA * currentPeakFreq +
+        (1 - PEAK_FREQ_SMOOTHING_ALPHA) * this.smoothedPeakFreq;
     }
 
     // --- 3. Stability (frame-to-frame cosine) ---
@@ -273,9 +286,9 @@ export class OperatingPointMetrics {
   public reset(): void {
     this.hasReference = false;
     this.referenceRms = 0;
-    this.referenceCentroid = 0;
+    this.referencePeakFreq = 0;
     this.smoothedEnergyDeltaDb = 0;
-    this.smoothedCentroid = 0;
+    this.smoothedPeakFreq = 0;
     this.isFirstUpdate = true;
     this.previousFeatures = null;
     this.frameSimilarities = [];
@@ -284,7 +297,7 @@ export class OperatingPointMetrics {
     // Reset warmup state
     this.warmupFrameCount = 0;
     this.warmupRmsBuffer = [];
-    this.warmupCentroidBuffer = [];
+    this.warmupPeakFreqBuffer = [];
     this.warmupStableStreak = 0;
     this.warmupPreviousFeatures = null;
   }
@@ -299,11 +312,11 @@ export class OperatingPointMetrics {
    */
   private commitBaseline(forced: boolean): void {
     this.referenceRms = this.median(this.warmupRmsBuffer);
-    this.referenceCentroid = this.median(this.warmupCentroidBuffer);
+    this.referencePeakFreq = this.median(this.warmupPeakFreqBuffer);
     this.hasReference = true;
 
     // Initialise smoothed values to baseline
-    this.smoothedCentroid = this.referenceCentroid;
+    this.smoothedPeakFreq = this.referencePeakFreq;
     this.smoothedEnergyDeltaDb = 0;
     this.isFirstUpdate = false;
 
@@ -311,14 +324,14 @@ export class OperatingPointMetrics {
     logger.debug(
       `[OpPoint] Baseline committed (${method}): ` +
       `RMS=${this.referenceRms.toFixed(6)}, ` +
-      `Centroid=${this.referenceCentroid.toFixed(1)}Hz, ` +
+      `PeakFreq=${this.referencePeakFreq.toFixed(1)}Hz, ` +
       `frames=${this.warmupFrameCount}, ` +
       `stableStreak=${this.warmupStableStreak}`
     );
 
     // Free warmup buffers
     this.warmupRmsBuffer = [];
-    this.warmupCentroidBuffer = [];
+    this.warmupPeakFreqBuffer = [];
     this.warmupPreviousFeatures = null;
   }
 
@@ -347,7 +360,7 @@ export class OperatingPointMetrics {
       },
       frequencyDelta: {
         value: 0,
-        displayValue: '--%',
+        displayValue: '-- Hz',
         status: 'green',
         shortLabel: 'frequencyDelta.shortLabel',
         description: 'frequencyDelta.description',
@@ -376,51 +389,80 @@ export class OperatingPointMetrics {
   private buildResult(scoreHistory: number[]): OperatingPointResult {
     const p10 = this.calculateP10(scoreHistory);
     const energyDb = this.smoothedEnergyDeltaDb;
+    const freqDeltaHz = this.calculateFrequencyDeltaHz();
     const freqDeltaPercent = this.calculateFrequencyDeltaPercent();
     const stabilityPercent = this.calculateStabilityPercent();
 
     const energyAbs = Math.abs(energyDb);
+    const freqAbsHz = Math.abs(freqDeltaHz);
+    const freqAbsPct = Math.abs(freqDeltaPercent);
 
-    const similarityP10: OperatingPointMetric = {
-      value: p10,
-      displayValue: `${p10.toFixed(0)}%`,
-      status: p10 > P10_THRESHOLD_GREEN ? 'green' : p10 >= P10_THRESHOLD_YELLOW ? 'yellow' : 'red',
-      shortLabel: 'similarityP10.shortLabel',
-      description: 'similarityP10.description',
-    };
+    // --- Energy Delta ---
+    const energyStatus: TrafficLight =
+      energyAbs < ENERGY_THRESHOLD_GREEN ? 'green'
+      : energyAbs <= ENERGY_THRESHOLD_YELLOW ? 'yellow'
+      : 'red';
 
     const energyDelta: OperatingPointMetric = {
       value: energyDb,
       displayValue: `${energyDb >= 0 ? '+' : ''}${energyDb.toFixed(1)} dB`,
-      status: energyAbs < ENERGY_THRESHOLD_GREEN ? 'green' : energyAbs <= ENERGY_THRESHOLD_YELLOW ? 'yellow' : 'red',
+      status: energyStatus,
       shortLabel: 'energyDelta.shortLabel',
       description: 'energyDelta.description',
+      warningText: energyStatus !== 'green' ? 'energyDelta.warning' : undefined,
     };
 
+    // --- Frequency Delta (dual threshold: Hz OR %) ---
+    const freqExceedsGreen = freqAbsHz > FREQ_THRESHOLD_GREEN_HZ || freqAbsPct > FREQ_THRESHOLD_GREEN_PCT;
+    const freqExceedsYellow = freqAbsHz > FREQ_THRESHOLD_YELLOW_HZ || freqAbsPct > FREQ_THRESHOLD_YELLOW_PCT;
+
+    const freqStatus: TrafficLight =
+      !freqExceedsGreen ? 'green'
+      : !freqExceedsYellow ? 'yellow'
+      : 'red';
+
     const frequencyDelta: OperatingPointMetric = {
-      value: freqDeltaPercent,
-      displayValue: `${freqDeltaPercent >= 0 ? '+' : ''}${freqDeltaPercent.toFixed(1)}%`,
-      status:
-        Math.abs(freqDeltaPercent) < FREQ_THRESHOLD_GREEN
-          ? 'green'
-          : Math.abs(freqDeltaPercent) <= FREQ_THRESHOLD_YELLOW
-            ? 'yellow'
-            : 'red',
+      value: freqDeltaHz,
+      displayValue: `${freqDeltaHz >= 0 ? '+' : ''}${freqDeltaHz.toFixed(0)} Hz`,
+      status: freqStatus,
       shortLabel: 'frequencyDelta.shortLabel',
       description: 'frequencyDelta.description',
+      warningText: freqStatus !== 'green' ? 'frequencyDelta.warning' : undefined,
     };
+
+    // --- P10 Similarity ---
+    const avgScore = scoreHistory.length > 0
+      ? scoreHistory.reduce((a, b) => a + b, 0) / scoreHistory.length
+      : p10;
+    const p10Unstable = (avgScore - p10) > P10_INSTABILITY_THRESHOLD;
+
+    const p10Status: TrafficLight =
+      p10 > P10_THRESHOLD_GREEN ? 'green'
+      : p10 >= P10_THRESHOLD_YELLOW ? 'yellow'
+      : 'red';
+
+    const similarityP10: OperatingPointMetric = {
+      value: p10,
+      displayValue: `P10: ${p10.toFixed(0)}%`,
+      status: p10Status,
+      shortLabel: 'similarityP10.shortLabel',
+      description: 'similarityP10.description',
+      warningText: (p10Status !== 'green' || p10Unstable) ? 'similarityP10.warning' : undefined,
+    };
+
+    // --- Stability ---
+    const stabStatus: TrafficLight =
+      stabilityPercent >= STABILITY_THRESHOLD_GREEN ? 'green'
+      : stabilityPercent >= STABILITY_THRESHOLD_YELLOW ? 'yellow'
+      : 'red';
 
     const stability: OperatingPointMetric = {
       value: stabilityPercent,
       displayValue: `${stabilityPercent.toFixed(0)}%`,
-      status:
-        stabilityPercent >= STABILITY_THRESHOLD_GREEN
-          ? 'green'
-          : stabilityPercent >= STABILITY_THRESHOLD_YELLOW
-            ? 'yellow'
-            : 'red',
+      status: stabStatus,
       shortLabel: 'stability.shortLabel',
       description: 'stability.description',
+      warningText: stabStatus !== 'green' ? 'stability.warning' : undefined,
     };
 
     // Operating point considered "changed" when energy OR frequency is red,
@@ -456,6 +498,7 @@ export class OperatingPointMetrics {
 
   /**
    * Calculate energy difference to reference in dB.
+   * Formula: Delta_dB = 20 * log10(RMS_curr / RMS_ref)
    */
   private calculateEnergyDeltaDb(currentRms: number): number {
     if (this.referenceRms <= 0 || currentRms <= 0) return 0;
@@ -463,37 +506,46 @@ export class OperatingPointMetrics {
   }
 
   /**
-   * Calculate band-limited spectral centroid from normalised features.
-   * Restricts to CENTROID_BAND_MIN_HZ - CENTROID_BAND_MAX_HZ to avoid
-   * random high-frequency peaks biasing the result.
+   * Find the dominant (highest amplitude) peak frequency within the analysis band.
+   * Scans the normalised feature vector for the bin with maximum energy
+   * in the range PEAK_BAND_MIN_HZ - PEAK_BAND_MAX_HZ and returns the
+   * centre frequency of that bin in Hz.
    */
-  private calculateBandLimitedCentroid(features: Float64Array): number {
+  private findDominantPeakFrequency(features: Float64Array): number {
     const nyquist = this.sampleRate / 2;
     const binWidth = nyquist / this.frequencyBins;
 
-    const minBin = Math.max(0, Math.floor(CENTROID_BAND_MIN_HZ / binWidth));
-    const maxBin = Math.min(this.frequencyBins - 1, Math.ceil(CENTROID_BAND_MAX_HZ / binWidth));
+    const minBin = Math.max(0, Math.floor(PEAK_BAND_MIN_HZ / binWidth));
+    const maxBin = Math.min(this.frequencyBins - 1, Math.ceil(PEAK_BAND_MAX_HZ / binWidth));
 
-    let weightedSum = 0;
-    let magnitudeSum = 0;
+    let peakBin = minBin;
+    let peakMag = -Infinity;
 
     for (let i = minBin; i <= maxBin; i++) {
-      const freq = (i + 0.5) * binWidth; // centre frequency of bin
-      const mag = features[i];
-      weightedSum += freq * mag;
-      magnitudeSum += mag;
+      if (features[i] > peakMag) {
+        peakMag = features[i];
+        peakBin = i;
+      }
     }
 
-    if (magnitudeSum < 1e-12) return 0;
-    return weightedSum / magnitudeSum;
+    // Return centre frequency of peak bin
+    return (peakBin + 0.5) * binWidth;
+  }
+
+  /**
+   * Calculate absolute frequency delta in Hz.
+   */
+  private calculateFrequencyDeltaHz(): number {
+    if (this.referencePeakFreq <= 0) return 0;
+    return this.smoothedPeakFreq - this.referencePeakFreq;
   }
 
   /**
    * Calculate relative frequency delta in percent.
    */
   private calculateFrequencyDeltaPercent(): number {
-    if (this.referenceCentroid <= 0) return 0;
-    return ((this.smoothedCentroid - this.referenceCentroid) / this.referenceCentroid) * 100;
+    if (this.referencePeakFreq <= 0) return 0;
+    return ((this.smoothedPeakFreq - this.referencePeakFreq) / this.referencePeakFreq) * 100;
   }
 
   /**
