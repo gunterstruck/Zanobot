@@ -14,96 +14,93 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = join(__dirname, '../src/i18n/locales');
 
 /**
- * Extract all key paths from a TypeScript translation file
- * Handles both expanded and inline object notation
+ * Extract all key paths from a TypeScript translation file.
+ *
+ * Uses a character-by-character state machine to correctly handle:
+ * - Expanded notation (one key per line)
+ * - Compact notation (multiple keys per line)
+ * - Inline objects: key: { a: 'x', b: 'y' }
+ * - Multi-line string values (value starts on the next line)
+ * - Escaped quotes inside strings
+ * - Quoted numeric keys like '0': { ... }
  */
 function extractKeyPaths(filePath) {
   const content = readFileSync(filePath, 'utf-8');
 
-  // Remove comments
-  const cleaned = content
-    .replace(/\/\/.*$/gm, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '');
+  // Remove block comments
+  const cleaned = content.replace(/\/\*[\s\S]*?\*\//g, '');
 
-  // Extract the object content
-  const match = cleaned.match(/export const \w+: TranslationDict = \{([\s\S]*)\};/);
+  // Extract the object content between the top-level braces
+  const match = cleaned.match(/export const \w+:\s*TranslationDict\s*=\s*\{([\s\S]*)\};/);
   if (!match) {
     throw new Error('Could not find TranslationDict export');
   }
 
-  const objContent = match[1];
+  const src = match[1];
   const keys = new Set();
+  const path = [];
+  let i = 0;
+  const len = src.length;
 
-  /**
-   * Parse inline objects like: key: { sub1: 'val1', sub2: 'val2' }
-   */
-  function parseInlineObject(parentKey, objString) {
-    // Match key-value pairs inside the inline object
-    const inlinePattern = /(\w+):\s*['\"`]([^'\"`]*)['\"`]/g;
-    let match;
+  while (i < len) {
+    // Skip whitespace and commas
+    while (i < len && /[\s,]/.test(src[i])) i++;
+    if (i >= len) break;
 
-    while ((match = inlinePattern.exec(objString)) !== null) {
-      const key = match[1];
-      const fullPath = `${parentKey}.${key}`;
-      keys.add(fullPath);
-    }
-  }
+    const ch = src[i];
 
-  /**
-   * Main parsing logic
-   */
-  const lines = objContent.split('\n');
-  const stack = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('//')) continue;
-
-    // Check for inline object notation: key: { ... }
-    const inlineObjMatch = trimmed.match(/^(\w+):\s*\{([^}]+)\}/);
-    if (inlineObjMatch) {
-      const parentKey = inlineObjMatch[1];
-      const objContent = inlineObjMatch[2];
-
-      // Build full path with stack
-      const fullParentPath = stack.length > 0 ? [...stack, parentKey].join('.') : parentKey;
-
-      // Parse the inline object
-      parseInlineObject(fullParentPath, objContent);
+    // Skip single-line comments
+    if (ch === '/' && i + 1 < len && src[i + 1] === '/') {
+      while (i < len && src[i] !== '\n') i++;
       continue;
     }
 
-    // Count indent level
-    const indent = line.match(/^\s*/)[0].length;
-    const currentLevel = Math.floor(indent / 2) - 1;
-
-    // Adjust stack to current level
-    while (stack.length > currentLevel) {
-      stack.pop();
+    // Closing brace → pop one nesting level
+    if (ch === '}') {
+      if (path.length > 0) path.pop();
+      i++;
+      continue;
     }
 
-    // Extract key name
-    const keyMatch = trimmed.match(/^(\w+):\s*(?:\{|['\"`]|[\w\d])/);
-    if (keyMatch) {
-      const keyName = keyMatch[1];
+    // Try to match a key (unquoted or quoted) followed by a colon
+    const remaining = src.slice(i);
+    const keyMatch = remaining.match(/^(?:'(\w+)'|"(\w+)"|(\w+))\s*:/);
+    if (!keyMatch) {
+      // Not a recognisable key – skip character
+      i++;
+      continue;
+    }
 
-      // Check if this starts a nested object block
-      const isObjectBlock = trimmed.match(/^(\w+):\s*\{?\s*$/);
+    const key = keyMatch[1] || keyMatch[2] || keyMatch[3];
+    i += keyMatch[0].length;
 
-      if (isObjectBlock) {
-        // This is a nested object (not inline)
-        stack.push(keyName);
-      } else if (!trimmed.includes('{')) {
-        // This is a leaf value - record the full path
-        const fullPath = stack.length > 0 ? [...stack, keyName].join('.') : keyName;
-        keys.add(fullPath);
+    // Skip whitespace after the colon (including newlines for multi-line values)
+    while (i < len && /\s/.test(src[i])) i++;
+    if (i >= len) break;
+
+    if (src[i] === '{') {
+      // Nested object – push key and descend
+      path.push(key);
+      i++; // skip '{'
+    } else if (src[i] === "'" || src[i] === '"' || src[i] === '`') {
+      // String value – consume until matching closing quote
+      const quote = src[i];
+      i++; // skip opening quote
+      while (i < len) {
+        if (src[i] === '\\') {
+          i += 2; // skip escaped character
+        } else if (src[i] === quote) {
+          i++; // skip closing quote
+          break;
+        } else {
+          i++;
+        }
       }
-    }
-
-    // Handle closing braces
-    const closeBraces = (trimmed.match(/\}/g) || []).length;
-    for (let i = 0; i < closeBraces && stack.length > 0; i++) {
-      stack.pop();
+      const fullPath = path.length > 0 ? [...path, key].join('.') : key;
+      keys.add(fullPath);
+    } else {
+      // Non-string value (number, boolean, identifier, etc.) – skip to next delimiter
+      while (i < len && src[i] !== ',' && src[i] !== '}' && src[i] !== '\n') i++;
     }
   }
 

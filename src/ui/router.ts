@@ -462,10 +462,10 @@ export class Router {
     if (listEl) {
       listEl.innerHTML = '';
 
-      const ALLOWED_STATUSES = ['healthy', 'faulty', 'uncertain'] as const;
+      const ALLOWED_STATUSES: readonly string[] = ['healthy', 'faulty', 'uncertain'];
 
       candidates.forEach((candidate) => {
-        const safeStatus = ALLOWED_STATUSES.includes(candidate.status as any)
+        const safeStatus = ALLOWED_STATUSES.includes(candidate.status)
           ? candidate.status
           : 'uncertain';
 

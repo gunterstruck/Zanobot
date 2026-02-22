@@ -933,6 +933,48 @@ export const zh: TranslationDict = {
       },
     },
 
+    // Use Cases
+    useCasesTitle: '使用场景',
+    useCasesIntro: 'Zanobo 提供两种基本的比较场景，它们在时间和空间结构上有所不同：',
+
+    // Serial Comparison
+    serialComparisonTitle: 'a) 串行比较（时间比较 / 趋势）',
+    serialComparisonPrinciple: '<strong>原理：</strong>将当前录音与之前创建的<strong>同一机器</strong>参考进行比较。',
+    serialComparisonGoal: '<strong>目标：</strong>使声学模式随时间的变化可见。',
+    serialComparisonApplication: '<strong>应用：</strong><ul><li>在机器被评估为"正常"的时间点创建参考录音</li><li>后续录音与此参考进行比较</li><li>与原始模式的偏差被量化（相似度评分）</li></ul>',
+    serialComparisonHint: '<strong>注意：</strong>Zanobo 仅显示当前声音<strong>是否以及偏离</strong>参考多少。偏差是否相关的解释由用户做出。系统不做任何诊断，也不提供任何预测。',
+
+    // Parallel Comparison
+    parallelComparisonTitle: 'b) 并行比较（相同机器比较 / 车队检查）',
+    parallelComparisonPrinciple: '<strong>原理：</strong>在相似操作条件下比较多台相同的机器。',
+    parallelComparisonGoal: '<strong>目标：</strong>在一组相同机器中识别声学异常值。',
+    parallelComparisonApplication: '<strong>应用：</strong><ul><li>创建多台相同机器的录音（例如在生产车间中）</li><li>Zanobo 计算各机器之间的声学相似度</li><li>声音特征明显偏离组群的机器变得可见</li></ul>',
+    parallelComparisonSpecial: '<strong>特点：</strong><strong>即使没有历史参考</strong>也能工作。组群本身构成比较基础。',
+    parallelComparisonHint: '<strong>注意：</strong>Zanobo 不判断哪台机器有缺陷或哪台代表"目标状态"。它仅显示组内的<strong>相对偏差</strong>。评估偏离的机器是否需要进一步调查由用户决定。',
+
+    // NFC Section
+    nfcTitle: '基于 NFC 的即时访问和基于上下文的比较',
+    nfcIntro: 'Zanobo 支持在机器上<strong>使用 NFC 标签</strong>，以简化应用访问并可选地提供特定于机器的上下文。',
+
+    nfcFunctionalityTitle: '工作原理',
+    nfcTagDescription: '<strong>机器上的 NFC 标签：</strong>放置在外壳或访问点的 NFC 标签可以包含以下信息：<ul><li>Zanobo PWA 的 URL（在浏览器中直接启动应用）</li><li>用于自动识别的机器 ID</li><li>可选：指向客户特定参考数据的引用（JSON 文件的 URL）</li></ul>',
+    nfcInstantAccess: '<strong>无需安装即可即时访问：</strong><ul><li>用户将智能手机靠近 NFC 标签</li><li>Zanobo PWA 直接在浏览器中打开（无需应用商店，无需注册）</li><li>可选：自动加载存储的机器 ID</li></ul>',
+
+    nfcReferenceDataTitle: '可选的基于上下文的参考数据',
+    nfcReferenceDataDescription: 'NFC 标签还可以包含指向<strong>参考数据库的 URL</strong>。该数据库由机器操作员或服务合作伙伴提供，可以包括：<ul><li>机器各种操作状态的<strong>参考录音</strong></li><li><strong>机器特定的元数据</strong>（例如类型、制造年份、位置）</li><li>用于相同机器车队检查的<strong>比较参数</strong></li></ul>',
+
+    nfcAdvantageTitle: '对新用户或外部用户的优势',
+    nfcAdvantageDescription: '首次检查机器的服务技术人员或操作员可以：<ul><li><strong>立即进行声学检查</strong>，无需自己录制参考</li><li><strong>直接与现有参考数据进行比较</strong>，这些数据由操作员提供</li><li><strong>无需事先知识</strong>即可初步评估当前声音是否偏离存储的参考</li></ul>',
+
+    nfcDataPrivacyTitle: '数据存储和隐私',
+    nfcDataPrivacyImportant: '<strong>重要：</strong>参考数据<strong>不存储在 Zanobo 云中</strong>。它们通过以下方式提供：<ul><li>在操作员的<strong>本地网络</strong>中（例如内部网络服务器）</li><li>在<strong>客户拥有的环境</strong>中（例如 GitHub Pages、自有网络服务器）</li><li>作为通过 HTTPS URL 访问的<strong>静态 JSON 文件</strong></li></ul>',
+    nfcDataPrivacyStorage: '参考数据库在首次 NFC 扫描时下载，然后<strong>本地存储在设备上</strong>（IndexedDB）。所有后续比较均离线进行。',
+
+    nfcFocusTitle: '重点和区分',
+    nfcFocusDescription: '基于 NFC 的访问仅用于<strong>可访问性和可比性</strong>。它支持：<ul><li>无需手动配置的快速启动</li><li>使用现有参考数据，无需自行录制</li><li>为多个用户或地点提供一致的比较基础</li></ul>',
+    nfcNoFeatures: '<strong>即使使用基于 NFC 的参考数据，Zanobo：</strong><ul><li><strong>不进行诊断</strong>（不对损坏原因或状况作出声明）</li><li><strong>不进行决策自动化</strong>（不作"好/坏"判断）</li><li><strong>不进行基于云的评估</strong>（所有计算均在本地进行）</li></ul>',
+    nfcInterpretation: '比较结果的解释始终由用户决定。',
+
     // Transparency
     transparencyTitle: '透明度和意图',
     transparencyText1: 'Zanobo <strong>不是诊断工具</strong>，<strong>不进行自动技术评估</strong>。它仅提供<strong>视觉和数学比较辅助</strong>。',
