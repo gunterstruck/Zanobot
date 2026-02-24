@@ -1441,19 +1441,19 @@ export class DiagnosePhase {
       expertStats.className = 'expert-stats-panel';
       expertStats.innerHTML = `
         <div class="reference-model-info">
-          <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
-          <div style="font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
-          <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
+          <div style="color: var(--text-muted); margin-bottom: 2px;">${t('diagnose.display.referenceModels')}</div>
+          <div style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">${refModelInfo}</div>
+          <div style="color: var(--text-muted); margin-top: 2px;">${t('diagnose.display.statesTrainedCount', { count: String(this.activeModels.length) })}</div>
         </div>
         <div class="debug-info" data-view-level="expert">
-          <div style="color: var(--text-muted); margin-bottom: 2px; font-weight: 600; font-size: 0.65rem;">${t('diagnose.display.debugValues')}</div>
+          <div style="color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">${t('diagnose.display.debugValues')}</div>
           <div id="debug-weight-magnitude">${t('diagnose.debug.weightMagnitude', { value: '--' })}</div>
           <div id="debug-feature-magnitude">${t('diagnose.debug.featureMagnitude', { value: '--' })}</div>
           <div id="debug-magnitude-factor">${t('diagnose.debug.magnitudeFactor', { value: '--' })}</div>
           <div id="debug-cosine">${t('diagnose.debug.cosine', { value: '--' })}</div>
           <div id="debug-adjusted-cosine">${t('diagnose.debug.adjustedCosine', { value: '--' })}</div>
           <div id="debug-scaling-constant">${t('diagnose.debug.scalingConstant', { value: '--' })}</div>
-          <div id="debug-raw-score" style="font-weight: 600; margin-top: 2px;">${t('diagnose.debug.rawScorePlaceholder')}</div>
+          <div id="debug-raw-score">${t('diagnose.debug.rawScorePlaceholder')}</div>
         </div>
       `;
       scrollableArea.appendChild(expertStats);
