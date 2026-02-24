@@ -3509,6 +3509,61 @@ body {
     gap: var(--spacing-md, 1.5rem);
 }
 
+/* ===================================
+   ADVANCED MODE: UX OVERRIDES
+   Larger score, bigger spectrum, better readability
+   for Vorarbeiter / Instandhalter
+   =================================== */
+
+/* A+F) Advanced mode: larger spectrum + visual separator from dashboard */
+[data-view-level="advanced"] .diagnosis-spectrum-container {
+    min-height: 100px;
+    max-height: 180px;
+    border-top: 1px solid var(--divider-color);
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+}
+
+[data-view-level="advanced"] .diagnosis-spectrum-container #waveform-canvas {
+    min-height: 90px;
+    max-height: 170px;
+}
+
+/* B) Advanced mode: score ring is THE key element — make it prominent */
+[data-view-level="advanced"] .dashboard-right-score .inspection-score-container {
+    width: clamp(130px, 32vw, 190px);
+    height: clamp(130px, 32vw, 190px);
+}
+
+[data-view-level="advanced"] .dashboard-right-score .inspection-score {
+    font-size: clamp(2.8rem, 13vw, 4.5rem);
+}
+
+[data-view-level="advanced"] .dashboard-right-score .inspection-status {
+    font-size: clamp(0.95rem, 3vw, 1.15rem);
+    font-weight: 700;
+}
+
+/* C) Advanced mode: moderately larger text for readability with gloves */
+[data-view-level="advanced"] .diagnosis-active #recording-modal .modal-subtitle {
+    font-size: clamp(0.85rem, 2.8vw, 1rem);
+}
+
+[data-view-level="advanced"] .dashboard-right-score .inspection-ref-info {
+    font-size: 0.85rem;
+}
+
+/* D) Advanced mode: allow scrolling on short screens */
+[data-view-level="advanced"] .diagnosis-active #recording-modal .modal-body {
+    overflow-y: auto;
+}
+
+/* E) Advanced mode: dashboard grid takes more space (no debug/OP-Monitor below) */
+[data-view-level="advanced"] .diagnosis-dashboard-grid {
+    flex: 1.5 1 auto;
+    min-height: 45%;
+}
+
 /* === DIAGNOSIS CONTROLS: Stop button === */
 .diagnosis-controls {
     flex: 0 0 auto;
@@ -4021,6 +4076,48 @@ html[data-view-level="basic"] .dashboard-right-score .inspection-ref-info {
 /* Scaled Diagnosis Controls */
 .diagnosis-controls {
     padding: calc(var(--spacing-xs) * var(--test-ui-scale)) 0;
+}
+
+/* ===================================
+   TEST UI SCALE - ADVANCED MODE OVERRIDES
+   Scaled variants of advanced-specific values
+   =================================== */
+
+/* Scaled Advanced Spectrum + separator */
+[data-view-level="advanced"] .diagnosis-spectrum-container {
+    min-height: calc(100px * var(--test-ui-scale));
+    max-height: calc(180px * var(--test-ui-scale));
+    padding-top: calc(var(--spacing-sm) * var(--test-ui-scale));
+    margin-top: calc(var(--spacing-xs) * var(--test-ui-scale));
+}
+
+[data-view-level="advanced"] .diagnosis-spectrum-container #waveform-canvas {
+    min-height: calc(90px * var(--test-ui-scale));
+    max-height: calc(170px * var(--test-ui-scale));
+}
+
+/* Scaled Advanced Score Ring */
+[data-view-level="advanced"] .dashboard-right-score .inspection-score-container {
+    width: clamp(calc(130px * var(--test-ui-scale)), calc(32vw * var(--test-ui-scale)), calc(190px * var(--test-ui-scale)));
+    height: clamp(calc(130px * var(--test-ui-scale)), calc(32vw * var(--test-ui-scale)), calc(190px * var(--test-ui-scale)));
+}
+
+[data-view-level="advanced"] .dashboard-right-score .inspection-score {
+    font-size: clamp(calc(2.8rem * var(--test-ui-scale)), calc(13vw * var(--test-ui-scale)), calc(4.5rem * var(--test-ui-scale)));
+}
+
+[data-view-level="advanced"] .dashboard-right-score .inspection-status {
+    font-size: clamp(calc(0.95rem * var(--test-ui-scale)), calc(3vw * var(--test-ui-scale)), calc(1.15rem * var(--test-ui-scale)));
+}
+
+/* Scaled Advanced Subtitle */
+[data-view-level="advanced"] .diagnosis-active #recording-modal .modal-subtitle {
+    font-size: clamp(calc(0.85rem * var(--test-ui-scale)), calc(2.8vw * var(--test-ui-scale)), calc(1rem * var(--test-ui-scale)));
+}
+
+/* Scaled Advanced Ref Info */
+[data-view-level="advanced"] .dashboard-right-score .inspection-ref-info {
+    font-size: calc(0.85rem * var(--test-ui-scale));
 }
 
 /* ===================================
