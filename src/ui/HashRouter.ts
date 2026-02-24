@@ -64,10 +64,12 @@ export class HashRouter {
   private onDownloadProgress?: (status: string, progress?: number) => void;
   private onDownloadError?: (error: string) => void;
   private onImportRequested?: (importUrl: string) => void;
+  private boundHandleHashChange: () => void;
 
   constructor() {
-    // Listen for hash changes
-    window.addEventListener('hashchange', () => this.handleHashChange());
+    // Store bound handler so we can remove it later in destroy()
+    this.boundHandleHashChange = () => this.handleHashChange();
+    window.addEventListener('hashchange', this.boundHandleHashChange);
   }
 
   /**
@@ -558,6 +560,6 @@ export class HashRouter {
    * Clean up router
    */
   public destroy(): void {
-    window.removeEventListener('hashchange', () => this.handleHashChange());
+    window.removeEventListener('hashchange', this.boundHandleHashChange);
   }
 }

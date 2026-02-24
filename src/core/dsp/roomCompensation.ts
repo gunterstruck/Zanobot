@@ -161,7 +161,8 @@ export function generateChirp(sampleRate: number, duration: number = 0.06): Floa
   const L = duration / Math.log(CHIRP_F1 / CHIRP_F0);
 
   // Tukey window: 10% fade-in, 10% fade-out, flat in the middle
-  const fadeLength = Math.floor(N * 0.1);
+  // Guard against fadeLength=0 (when N < 10) to prevent division by zero
+  const fadeLength = Math.max(1, Math.floor(N * 0.1));
 
   for (let i = 0; i < N; i++) {
     const t = i / sampleRate;
