@@ -618,6 +618,13 @@ export const de: TranslationDict = {
     t60Hint: 'Spielt automatisch einen kurzen Ton ab, um die Nachhallzeit zu messen',
     betaLabel: 'Kompensationsstärke (β)',
     roomCompActiveHint: '🔧 Raumkompensation aktiv',
+    // Cherry-Picking (Expert only)
+    cherryPickTitle: 'Cherry-Picking',
+    cherryPickDescription: 'Filtert transiente Störgeräusche (Hupen, Hämmern, Türen) automatisch aus der Aufnahme.',
+    cherryPickEnabled: 'Cherry-Picking aktiviert',
+    sigmaLabel: 'Empfindlichkeit (σ)',
+    sigmaHint: 'Niedrig = strenger (mehr Frames verworfen), Hoch = toleranter',
+    cherryPickActiveHint: 'Cherry-Picking aktiv: Transiente Störgeräusche werden automatisch erkannt und verworfen.',
   },
 
   // ============================================================================
