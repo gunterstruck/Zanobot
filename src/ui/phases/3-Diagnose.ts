@@ -44,6 +44,7 @@ import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
+import { getRoomCompSettings, RealtimeCMN } from '@core/dsp/roomCompensation.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -108,6 +109,10 @@ export class DiagnosePhase {
   // Operating Point Monitor (Expert mode only)
   private opMetrics: OperatingPointMetrics | null = null;
   private opMonitor: OperatingPointMonitor | null = null;
+
+  // Room Compensation (real-time CMN)
+  private realtimeCMN: RealtimeCMN | null = null;
+  private roomCompEnabled: boolean = false;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -314,6 +319,16 @@ export class DiagnosePhase {
         `📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`
       );
 
+      // Room Compensation: Initialize real-time CMN if enabled
+      const roomCompSettings = getRoomCompSettings();
+      this.roomCompEnabled = roomCompSettings.enabled && roomCompSettings.cmnEnabled;
+      if (this.roomCompEnabled) {
+        this.realtimeCMN = new RealtimeCMN(this.dspConfig.frequencyBins);
+        logger.info('🔧 Room compensation (real-time CMN) initialized');
+      } else {
+        this.realtimeCMN = null;
+      }
+
       // GMIA = "Schnelltest" ALWAYS uses simplified view
       // This is the quick test mode for instant diagnosis
       // IMPORTANT: This must happen BEFORE showRecordingModal() to display the correct modal
@@ -439,6 +454,13 @@ export class DiagnosePhase {
     this.scoreHistory.clear();
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
+    // Cleanup Room Compensation state
+    if (this.realtimeCMN) {
+      this.realtimeCMN.reset();
+      this.realtimeCMN = null;
+    }
+    this.roomCompEnabled = false;
+
     // Cleanup Operating Point Monitor (Expert mode)
     if (this.opMetrics) {
       this.opMetrics.reset();
@@ -540,7 +562,12 @@ export class DiagnosePhase {
 
       // Step 1: Extract features (Energy Spectral Densities)
       // CRITICAL FIX: Use actual sample rate from dspConfig (not hardcoded DEFAULT_DSP_CONFIG)
-      const featureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
+      const rawFeatureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
+
+      // Step 1b: Room Compensation - Apply real-time CMN if enabled
+      const featureVector = (this.roomCompEnabled && this.realtimeCMN)
+        ? this.realtimeCMN.process(rawFeatureVector)
+        : rawFeatureVector;
 
       // Store last feature vector for ranking calculation in showResults
       this.lastFeatureVector = featureVector;

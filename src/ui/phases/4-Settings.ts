@@ -22,6 +22,10 @@ import {
   setRecordingSettings,
 } from '@utils/recordingSettings.js';
 import { t } from '../../i18n/index.js';
+import {
+  getRoomCompSettings,
+  setRoomCompSettings,
+} from '@core/dsp/roomCompensation.js';
 
 export class SettingsPhase {
 
@@ -54,6 +58,9 @@ export class SettingsPhase {
 
     // Initialize banner settings (advanced/expert only)
     this.initBannerSettings();
+
+    // Initialize room compensation settings (expert only)
+    this.initRoomCompSettings();
 
     // Load stats on init
     this.showStats();
@@ -307,6 +314,58 @@ export class SettingsPhase {
     window.addEventListener('themechange', () => {
       void updateBannerPreview();
     });
+  }
+
+  /**
+   * Initialize room compensation settings (Expert only)
+   * Reads settings from localStorage and binds UI toggles.
+   */
+  private initRoomCompSettings(): void {
+    const masterToggle = document.getElementById('room-comp-toggle') as HTMLInputElement | null;
+    const cmnToggle = document.getElementById('cmn-toggle') as HTMLInputElement | null;
+    const detailsContainer = document.getElementById('room-comp-details');
+
+    if (!masterToggle) {
+      return;
+    }
+
+    const settings = getRoomCompSettings();
+
+    // Initialize master toggle
+    masterToggle.checked = settings.enabled;
+
+    // Show/hide sub-settings based on master toggle
+    if (detailsContainer) {
+      detailsContainer.style.display = settings.enabled ? '' : 'none';
+    }
+
+    // Initialize CMN toggle
+    if (cmnToggle) {
+      cmnToggle.checked = settings.cmnEnabled;
+    }
+
+    // Master toggle event
+    masterToggle.addEventListener('change', () => {
+      const enabled = masterToggle.checked;
+      setRoomCompSettings({ enabled });
+
+      if (detailsContainer) {
+        detailsContainer.style.display = enabled ? '' : 'none';
+      }
+
+      logger.info(`🔧 Room compensation ${enabled ? 'enabled' : 'disabled'}`);
+    });
+
+    // CMN toggle event
+    if (cmnToggle) {
+      cmnToggle.addEventListener('change', () => {
+        setRoomCompSettings({ cmnEnabled: cmnToggle.checked });
+        logger.info(`🔧 CMN ${cmnToggle.checked ? 'enabled' : 'disabled'}`);
+      });
+    }
+
+    // Phase 2: T60 and Beta slider would be initialized here
+    // Currently hidden via style="display: none" in HTML
   }
 
   /**

@@ -1493,6 +1493,65 @@
                     <!-- Divider (Expert) -->
                     <div class="settings-divider" data-view-level="expert"></div>
 
+                    <!-- Room Compensation (Expert only) -->
+                    <div class="setting-category" data-view-level="expert">
+                        <h4 class="setting-category-title" data-i18n="settingsUI.roomCompTitle">Raumkompensation</h4>
+                        <p class="setting-category-description" data-i18n="settingsUI.roomCompDescription">
+                            Kompensiert akustische Raumeinflüsse (Nachhall) für stabilere Ergebnisse in verschiedenen Umgebungen.
+                        </p>
+
+                        <!-- Master Toggle -->
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span data-i18n="settingsUI.roomCompEnabled">Raumkompensation aktivieren</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="room-comp-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Sub-settings (nur sichtbar wenn Master-Toggle AN) -->
+                        <div id="room-comp-details" style="display: none;">
+
+                            <!-- CMN Toggle -->
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <span data-i18n="settingsUI.cmnEnabled">Cepstral Mean Normalization (CMN)</span>
+                                    <small data-i18n="settingsUI.cmnHint">Entfernt systematische Raumfärbung aus dem Spektrum</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cmn-toggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- T60 Chirp Toggle (Phase 2 – hidden until implemented) -->
+                            <div class="setting-item" id="t60-setting" style="display: none;">
+                                <div class="setting-label">
+                                    <span data-i18n="settingsUI.t60Enabled">Raumvermessung per Chirp</span>
+                                    <small data-i18n="settingsUI.t60Hint">Spielt automatisch einen kurzen Ton ab, um die Nachhallzeit zu messen</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="t60-toggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Beta Slider (Phase 2 – hidden until T60 is active) -->
+                            <div class="setting-item" id="beta-setting" style="display: none;">
+                                <div class="setting-label">
+                                    <span data-i18n="settingsUI.betaLabel">Kompensationsstärke (β)</span>
+                                    <small id="beta-value">1.0</small>
+                                </div>
+                                <input type="range" id="beta-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divider (Expert) -->
+                    <div class="settings-divider" data-view-level="expert"></div>
+
                     <!-- Database Management (Expert only) -->
                     <div class="setting-category" data-view-level="expert">
                         <h4 class="setting-category-title" data-i18n="settingsUI.dataManagement">Datenverwaltung</h4>
