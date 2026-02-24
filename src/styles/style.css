@@ -3754,6 +3754,71 @@ html[data-view-level="expert"] .ghost-overlay-hint {
     display: none;
 }
 
+/* === BASIC MODE: Vertical stacked layout (Camera above, Score below) ===
+   Only affects basic view level in the inspection modal.
+   Advanced/Expert keep the side-by-side 2-column layout.
+   Goal: Fill the mobile screen with camera on top (~55%) and score below (~45%). */
+
+html[data-view-level="basic"] .inspection-content {
+    justify-content: stretch;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+html[data-view-level="basic"] .diagnosis-dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1.2fr 1fr;
+    flex: 1 1 0;
+    min-height: 0;
+    gap: var(--spacing-sm);
+}
+
+/* Camera: fill the top cell, let video scale within */
+html[data-view-level="basic"] .dashboard-left-cam {
+    min-height: 0;
+    overflow: hidden;
+}
+
+html[data-view-level="basic"] .dashboard-left-cam .diagnosis-middle-camera {
+    height: 100%;
+}
+
+html[data-view-level="basic"] .dashboard-left-cam .ghost-overlay-container {
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+html[data-view-level="basic"] .dashboard-left-cam .ghost-overlay-wrapper {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+}
+
+/* Score: larger circle and text for prominent display */
+html[data-view-level="basic"] .dashboard-right-score {
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
+}
+
+html[data-view-level="basic"] .dashboard-right-score .inspection-score-container {
+    width: clamp(130px, 30vw, 200px);
+    height: clamp(130px, 30vw, 200px);
+}
+
+html[data-view-level="basic"] .dashboard-right-score .inspection-score {
+    font-size: clamp(2.5rem, 12vw, 4.5rem);
+}
+
+html[data-view-level="basic"] .dashboard-right-score .inspection-status {
+    font-size: clamp(0.85rem, 3vw, 1.1rem);
+}
+
+html[data-view-level="basic"] .dashboard-right-score .inspection-ref-info {
+    font-size: 0.7rem;
+}
+
 /* === MOBILE: Keep side-by-side grid, shrink elements to fit === */
 @media (max-width: 600px) {
     .diagnosis-dashboard-grid {
