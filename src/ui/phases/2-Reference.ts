@@ -30,6 +30,7 @@ import {
   estimateT60FromChirp,
 } from '@core/dsp/roomCompensation.js';
 import type { T60Estimate } from '@core/dsp/roomCompensation.js';
+import { getCherryPickSettings, cherryPickFeatures } from '@core/dsp/cherryPicking.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -664,15 +665,38 @@ export class ReferencePhase {
       const features = extractFeatures(trainingBuffer, dspConfig);
       logger.info(`   Extracted ${features.length} feature vectors`);
 
-      // PHASE 2: Assess recording quality (on raw features, before room compensation)
-      const qualityResult = assessRecordingQuality(features);
+      // Cherry-Picking (Pipeline-Stufe 1): Filter transient interference frames
+      // Applied BEFORE quality check and room compensation so GMIA only sees clean frames.
+      const cherryPickSettings = getCherryPickSettings();
+      let cherryPickedFeatures = features;
+
+      if (cherryPickSettings.enabled) {
+        const cpResult = cherryPickFeatures(features, cherryPickSettings);
+        logger.info(`🍒 Cherry-Picking: ${cpResult.removedCount}/${cpResult.totalCount} Frames verworfen`);
+        if (cpResult.removedCount > 0) {
+          logger.info(`   Entfernte Indizes: [${cpResult.removedIndices.join(', ')}]`);
+          logger.info(`   Energie-Schwellen: [${cpResult.energyStats.threshold[0].toFixed(4)}, ${cpResult.energyStats.threshold[1].toFixed(4)}]`);
+          logger.info(`   Entropie-Schwellen: [${cpResult.entropyStats.threshold[0].toFixed(4)}, ${cpResult.entropyStats.threshold[1].toFixed(4)}]`);
+        }
+        cherryPickedFeatures = cpResult.filteredFeatures;
+
+        // Safety check: enough frames remaining for training?
+        if (cherryPickedFeatures.length < 5) {
+          logger.error('Cherry-Picking: Too few frames remaining for training');
+          cherryPickedFeatures = features;
+          logger.warn('Fallback: Using all frames');
+        }
+      }
+
+      // PHASE 2: Assess recording quality (on cherry-picked features, before room compensation)
+      const qualityResult = assessRecordingQuality(cherryPickedFeatures);
 
       // Room Compensation: Apply CMN + optional T60 subtraction (Pipeline-Stufe 3.5)
-      // IMPORTANT: Quality assessment uses raw features; training uses compensated features.
+      // IMPORTANT: Quality assessment uses cherry-picked features; training uses compensated features.
       const roomCompSettings = getRoomCompSettings();
       const processedFeatures = roomCompSettings.enabled
-        ? applyRoomCompensation(features, roomCompSettings, this.currentT60 ?? undefined)
-        : features;
+        ? applyRoomCompensation(cherryPickedFeatures, roomCompSettings, this.currentT60 ?? undefined)
+        : cherryPickedFeatures;
 
       // Prepare training data (but don't train yet - wait for user approval)
       // CRITICAL FIX: Store actual DSP config used for feature extraction

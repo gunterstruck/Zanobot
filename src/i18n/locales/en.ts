@@ -592,6 +592,13 @@ export const en: TranslationDict = {
     t60Hint: 'Automatically plays a short tone to measure reverberation time',
     betaLabel: 'Compensation Strength (β)',
     roomCompActiveHint: '🔧 Room compensation active',
+    // Cherry-Picking (Expert only)
+    cherryPickTitle: 'Cherry-Picking',
+    cherryPickDescription: 'Automatically filters transient interference (horns, hammering, doors) from recordings.',
+    cherryPickEnabled: 'Cherry-Picking enabled',
+    sigmaLabel: 'Sensitivity (σ)',
+    sigmaHint: 'Low = stricter (more frames rejected), High = more tolerant',
+    cherryPickActiveHint: 'Cherry-Picking active: Transient interference is automatically detected and removed.',
   },
 
   // ============================================================================

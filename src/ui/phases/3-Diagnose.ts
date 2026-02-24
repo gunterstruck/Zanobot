@@ -52,6 +52,7 @@ import {
   estimateT60FromChirp,
 } from '@core/dsp/roomCompensation.js';
 import type { T60Estimate } from '@core/dsp/roomCompensation.js';
+import { getCherryPickSettings, RealtimeCherryPick } from '@core/dsp/cherryPicking.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -122,6 +123,9 @@ export class DiagnosePhase {
   private realtimeT60: RealtimeT60Subtraction | null = null;
   private roomCompEnabled: boolean = false;
   private currentT60: T60Estimate | null = null;
+
+  // Cherry-Picking (real-time Energy-Entropy Gate)
+  private realtimeCherryPick: RealtimeCherryPick | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -365,6 +369,15 @@ export class DiagnosePhase {
         }
       }
 
+      // Cherry-Picking: Initialize real-time Energy-Entropy Gate if enabled
+      const cherryPickSettings = getCherryPickSettings();
+      if (cherryPickSettings.enabled) {
+        this.realtimeCherryPick = new RealtimeCherryPick(cherryPickSettings, DEFAULT_DSP_CONFIG.hopSize);
+        logger.info(`🍒 Cherry-Picking Gate activated (σ=${cherryPickSettings.sigmaThreshold})`);
+      } else {
+        this.realtimeCherryPick = null;
+      }
+
       // GMIA = "Schnelltest" ALWAYS uses simplified view
       // This is the quick test mode for instant diagnosis
       // IMPORTANT: This must happen BEFORE showRecordingModal() to display the correct modal
@@ -490,6 +503,12 @@ export class DiagnosePhase {
     this.scoreHistory.clear();
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
+    // Cleanup Cherry-Picking state
+    if (this.realtimeCherryPick) {
+      this.realtimeCherryPick.reset();
+      this.realtimeCherryPick = null;
+    }
+
     // Cleanup Room Compensation state
     if (this.realtimeT60) {
       this.realtimeT60.reset();
@@ -604,6 +623,12 @@ export class DiagnosePhase {
       // Step 1: Extract features (Energy Spectral Densities)
       // CRITICAL FIX: Use actual sample rate from dspConfig (not hardcoded DEFAULT_DSP_CONFIG)
       const rawFeatureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
+
+      // Step 1a: Cherry-Picking Gate - reject transient frames before scoring
+      if (this.realtimeCherryPick && !this.realtimeCherryPick.processFrame(rawFeatureVector)) {
+        logger.debug('🍒 Frame rejected (transient)');
+        return; // Skip this frame – do not score. Score stays at last good value.
+      }
 
       // Step 1b: Room Compensation - Apply T60 subtraction then CMN if enabled
       let featureVector = rawFeatureVector;

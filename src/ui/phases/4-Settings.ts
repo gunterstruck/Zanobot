@@ -26,6 +26,10 @@ import {
   getRoomCompSettings,
   setRoomCompSettings,
 } from '@core/dsp/roomCompensation.js';
+import {
+  getCherryPickSettings,
+  setCherryPickSettings,
+} from '@core/dsp/cherryPicking.js';
 
 export class SettingsPhase {
 
@@ -61,6 +65,9 @@ export class SettingsPhase {
 
     // Initialize room compensation settings (expert only)
     this.initRoomCompSettings();
+
+    // Initialize cherry-picking settings (expert only)
+    this.initCherryPickSettings();
 
     // Load stats on init
     this.showStats();
@@ -406,6 +413,60 @@ export class SettingsPhase {
           betaValue.textContent = val.toFixed(1);
         }
         setRoomCompSettings({ beta: val });
+      });
+    }
+  }
+
+  /**
+   * Initialize cherry-picking settings (Expert only)
+   * Reads settings from localStorage and binds UI toggle + slider.
+   */
+  private initCherryPickSettings(): void {
+    const cherryPickToggle = document.getElementById('cherry-pick-toggle') as HTMLInputElement | null;
+    const cherryPickDetails = document.getElementById('cherry-pick-details');
+
+    if (!cherryPickToggle) {
+      return;
+    }
+
+    const cpSettings = getCherryPickSettings();
+
+    // Initialize master toggle
+    cherryPickToggle.checked = cpSettings.enabled;
+
+    // Show/hide sub-settings based on toggle
+    if (cherryPickDetails) {
+      cherryPickDetails.style.display = cpSettings.enabled ? '' : 'none';
+    }
+
+    // Toggle event
+    cherryPickToggle.addEventListener('change', () => {
+      const enabled = cherryPickToggle.checked;
+      setCherryPickSettings({ enabled });
+
+      if (cherryPickDetails) {
+        cherryPickDetails.style.display = enabled ? '' : 'none';
+      }
+
+      logger.info(`🍒 Cherry-Picking ${enabled ? 'enabled' : 'disabled'}`);
+    });
+
+    // Sigma slider
+    const sigmaSlider = document.getElementById('sigma-slider') as HTMLInputElement | null;
+    const sigmaValue = document.getElementById('sigma-value');
+
+    if (sigmaSlider) {
+      sigmaSlider.value = String(cpSettings.sigmaThreshold);
+      if (sigmaValue) {
+        sigmaValue.textContent = cpSettings.sigmaThreshold.toFixed(1);
+      }
+
+      sigmaSlider.addEventListener('input', () => {
+        const val = parseFloat(sigmaSlider.value);
+        if (sigmaValue) {
+          sigmaValue.textContent = val.toFixed(1);
+        }
+        setCherryPickSettings({ sigmaThreshold: val });
       });
     }
   }

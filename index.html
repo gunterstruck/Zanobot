@@ -1552,6 +1552,42 @@
                     <!-- Divider (Expert) -->
                     <div class="settings-divider" data-view-level="expert"></div>
 
+                    <!-- Cherry-Picking Settings (Expert only) -->
+                    <div class="setting-category" data-view-level="expert">
+                        <h4 class="setting-category-title" data-i18n="settingsUI.cherryPickTitle">Cherry-Picking</h4>
+                        <p class="setting-category-description" data-i18n="settingsUI.cherryPickDescription">
+                            Filtert transiente Störgeräusche (Hupen, Hämmern, Türen) automatisch aus der Aufnahme.
+                        </p>
+
+                        <!-- Master Toggle -->
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span data-i18n="settingsUI.cherryPickEnabled">Cherry-Picking aktiviert</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cherry-pick-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Sub-settings (hidden when toggle off) -->
+                        <div id="cherry-pick-details" style="display: none;">
+                            <div class="setting-item" id="sigma-setting">
+                                <div class="setting-label">
+                                    <span data-i18n="settingsUI.sigmaLabel">Empfindlichkeit (σ)</span>
+                                    <small id="sigma-value">2.0</small>
+                                </div>
+                                <input type="range" id="sigma-slider" min="1.0" max="4.0" step="0.5" value="2.0">
+                                <small data-i18n="settingsUI.sigmaHint">
+                                    Niedrig = strenger (mehr Frames verworfen), Hoch = toleranter
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divider (Expert) -->
+                    <div class="settings-divider" data-view-level="expert"></div>
+
                     <!-- Database Management (Expert only) -->
                     <div class="setting-category" data-view-level="expert">
                         <h4 class="setting-category-title" data-i18n="settingsUI.dataManagement">Datenverwaltung</h4>
