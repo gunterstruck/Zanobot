@@ -608,6 +608,16 @@ export const de: TranslationDict = {
     bannerResetError: 'Fehler beim Zurücksetzen des Banners.',
     themeToggle: 'Theme wechseln',
     closeSettings: 'Einstellungen schließen',
+    // Room Compensation (Expert only)
+    roomCompTitle: 'Raumkompensation',
+    roomCompDescription: 'Kompensiert akustische Raumeinflüsse (Nachhall) für stabilere Ergebnisse in verschiedenen Umgebungen.',
+    roomCompEnabled: 'Raumkompensation aktivieren',
+    cmnEnabled: 'Cepstral Mean Normalization (CMN)',
+    cmnHint: 'Entfernt systematische Raumfärbung aus dem Spektrum',
+    t60Enabled: 'Raumvermessung per Chirp',
+    t60Hint: 'Spielt automatisch einen kurzen Ton ab, um die Nachhallzeit zu messen',
+    betaLabel: 'Kompensationsstärke (β)',
+    roomCompActiveHint: '🔧 Raumkompensation aktiv',
   },
 
   // ============================================================================

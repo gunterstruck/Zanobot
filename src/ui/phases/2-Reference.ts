@@ -23,6 +23,7 @@ import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
+import { applyRoomCompensation, getRoomCompSettings } from '@core/dsp/roomCompensation.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -632,23 +633,30 @@ export class ReferencePhase {
       const features = extractFeatures(trainingBuffer, dspConfig);
       logger.info(`   Extracted ${features.length} feature vectors`);
 
-      // PHASE 2: Assess recording quality
+      // PHASE 2: Assess recording quality (on raw features, before room compensation)
       const qualityResult = assessRecordingQuality(features);
+
+      // Room Compensation: Apply CMN if enabled (Pipeline-Stufe 3.5)
+      // IMPORTANT: Quality assessment uses raw features; training uses compensated features.
+      const roomCompSettings = getRoomCompSettings();
+      const processedFeatures = roomCompSettings.enabled
+        ? applyRoomCompensation(features, roomCompSettings)
+        : features;
 
       // Prepare training data (but don't train yet - wait for user approval)
       // CRITICAL FIX: Store actual DSP config used for feature extraction
       // ZERO-FRICTION: Use placeholder ID if no machine selected (will be updated when machine is created)
       const trainingData: TrainingData = {
-        featureVectors: features.map((f) => f.features),
+        featureVectors: processedFeatures.map((f) => f.features),
         machineId: this.machine?.id || 'pending-auto-create',
         recordingId: `ref-${Date.now()}`,
-        numSamples: features.length,
+        numSamples: processedFeatures.length,
         config: dspConfig, // Use actual config with correct sample rate
       };
 
       // Store for later use
       this.currentAudioBuffer = audioBuffer;
-      this.currentFeatures = features;
+      this.currentFeatures = processedFeatures;
       this.currentQualityResult = qualityResult;
       this.currentTrainingData = trainingData;
 

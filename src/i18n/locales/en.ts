@@ -582,6 +582,16 @@ export const en: TranslationDict = {
     bannerResetError: 'Error resetting the banner.',
     themeToggle: 'Toggle theme',
     closeSettings: 'Close settings',
+    // Room Compensation (Expert only)
+    roomCompTitle: 'Room Compensation',
+    roomCompDescription: 'Compensates acoustic room effects (reverberation) for more stable results across different environments.',
+    roomCompEnabled: 'Enable Room Compensation',
+    cmnEnabled: 'Cepstral Mean Normalization (CMN)',
+    cmnHint: 'Removes systematic room coloration from the spectrum',
+    t60Enabled: 'Room measurement via chirp',
+    t60Hint: 'Automatically plays a short tone to measure reverberation time',
+    betaLabel: 'Compensation Strength (β)',
+    roomCompActiveHint: '🔧 Room compensation active',
   },
 
   // ============================================================================
