@@ -7,7 +7,6 @@
  * Zwei Stufen:
  * 1. CMN (Cepstral Mean Normalization) - entfernt systematischen spektralen Bias
  * 2. T60-basierte Late Reverberation Subtraction - entfernt geschätzte Nachhallenergie
- *    (Phase 2 – derzeit nicht implementiert)
  *
  * WICHTIG: Diese Funktionen werden NUR aufgerufen wenn die Einstellung aktiv ist.
  * Sie operieren auf den BEREITS EXTRAHIERTEN FeatureVector-Arrays und geben
@@ -125,56 +124,440 @@ export function applyCMN(features: FeatureVector[]): FeatureVector[] {
 }
 
 // ============================================================================
-// PHASE 2 STUBS (T60 – nicht implementiert, vorbereitet)
+// PHASE 2: CHIRP GENERATION + T60 ESTIMATION + LATE REVERB SUBTRACTION
 // ============================================================================
+
+/** Chirp sweep start frequency (Hz) */
+const CHIRP_F0 = 200;
+/** Chirp sweep end frequency (Hz) */
+const CHIRP_F1 = 8000;
+/** Chirp amplitude (loud enough for room reflections, quiet enough not to disturb) */
+const CHIRP_AMPLITUDE = 0.4;
+/** Extra recording time after chirp to capture room decay (ms) */
+const CHIRP_TAIL_MS = 500;
+/** Minimum peak-to-noise ratio for valid chirp detection (~12 dB) */
+const MIN_PEAK_RATIO = 4;
+/** Minimum plausible T60 (seconds) */
+const MIN_T60 = 0.1;
+/** Maximum plausible T60 (seconds) */
+const MAX_T60 = 5.0;
 
 /**
  * Generate a logarithmic sine sweep (chirp) signal.
- * Phase 2 – not yet implemented.
  *
- * @param _sampleRate - Sample rate in Hz
- * @param _duration - Duration in seconds (default: 0.06)
+ * Produces a Tukey-windowed log sweep from 200 Hz to 8000 Hz.
+ * Used to excite the room so the impulse response can be extracted
+ * via cross-correlation with the recorded signal.
+ *
+ * @param sampleRate - Sample rate in Hz (e.g. 48000)
+ * @param duration - Duration in seconds (default: 0.06 = 60ms)
  * @returns Chirp signal as Float32Array
  */
-export function generateChirp(_sampleRate: number, _duration: number = 0.06): Float32Array {
-  // Phase 2: Logarithmic sweep 200 Hz → 8000 Hz
-  throw new Error('generateChirp() is not yet implemented (Phase 2)');
+export function generateChirp(sampleRate: number, duration: number = 0.06): Float32Array {
+  const N = Math.floor(sampleRate * duration);
+  const chirp = new Float32Array(N);
+
+  // Logarithmic sweep parameter: L = duration / ln(f1/f0)
+  const L = duration / Math.log(CHIRP_F1 / CHIRP_F0);
+
+  // Tukey window: 10% fade-in, 10% fade-out, flat in the middle
+  const fadeLength = Math.floor(N * 0.1);
+
+  for (let i = 0; i < N; i++) {
+    const t = i / sampleRate;
+
+    // Logarithmic instantaneous phase
+    const phase = 2 * Math.PI * CHIRP_F0 * L * (Math.exp(t / L) - 1);
+
+    // Tukey window
+    let window = 1.0;
+    if (i < fadeLength) {
+      window = 0.5 * (1 - Math.cos(Math.PI * i / fadeLength));
+    } else if (i >= N - fadeLength) {
+      window = 0.5 * (1 - Math.cos(Math.PI * (N - 1 - i) / fadeLength));
+    }
+
+    chirp[i] = CHIRP_AMPLITUDE * window * Math.sin(phase);
+  }
+
+  return chirp;
 }
 
 /**
- * Estimate T60 reverberation time from a played chirp signal.
- * Phase 2 – not yet implemented.
+ * Play a chirp through the speaker and simultaneously record via microphone.
  *
- * @param _playedChirp - The known chirp signal
- * @param _recordedAudio - The recorded audio containing chirp + room response
- * @param _sampleRate - Sample rate in Hz
+ * Uses ScriptProcessorNode (deprecated but universally supported) to capture
+ * raw samples synchronously. The recording includes the chirp duration plus
+ * 500ms tail for room decay.
+ *
+ * @param audioContext - Active AudioContext (state === 'running')
+ * @param stream - Active MediaStream from getUserMedia
+ * @param duration - Chirp duration in seconds (default: 0.06)
+ * @returns Object with original chirp and recorded microphone signal
+ */
+export async function playChirpAndRecord(
+  audioContext: AudioContext,
+  stream: MediaStream,
+  duration: number = 0.06
+): Promise<{ chirp: Float32Array; recorded: Float32Array }> {
+  const sampleRate = audioContext.sampleRate;
+  const chirp = generateChirp(sampleRate, duration);
+
+  // Total capture duration: chirp + tail for room reflections
+  const totalDurationMs = duration * 1000 + CHIRP_TAIL_MS;
+  const expectedSamples = Math.ceil(sampleRate * totalDurationMs / 1000);
+
+  // Create AudioBuffer from chirp and play through speakers
+  const buffer = audioContext.createBuffer(1, chirp.length, sampleRate);
+  const channelData = buffer.getChannelData(0);
+  channelData.set(chirp);
+  const source = audioContext.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioContext.destination);
+
+  // Set up recording via ScriptProcessorNode
+  const scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+  const micSource = audioContext.createMediaStreamSource(stream);
+  const chunks: Float32Array[] = [];
+  let totalSamples = 0;
+
+  scriptNode.onaudioprocess = (event: AudioProcessingEvent) => {
+    const input = event.inputBuffer.getChannelData(0);
+    chunks.push(new Float32Array(input));
+    totalSamples += input.length;
+  };
+
+  // Connect: mic → scriptNode → destination (must be connected to fire events)
+  micSource.connect(scriptNode);
+  scriptNode.connect(audioContext.destination);
+
+  // Start playback
+  source.start();
+
+  // Wait for total capture duration
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, totalDurationMs + 50); // +50ms safety margin
+  });
+
+  // Disconnect and clean up
+  scriptNode.onaudioprocess = null;
+  try { micSource.disconnect(scriptNode); } catch { /* already disconnected */ }
+  try { scriptNode.disconnect(audioContext.destination); } catch { /* already disconnected */ }
+  try { source.disconnect(audioContext.destination); } catch { /* already disconnected */ }
+
+  // Concatenate recorded chunks into a single Float32Array
+  const recorded = new Float32Array(totalSamples);
+  let offset = 0;
+  for (const chunk of chunks) {
+    recorded.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  // Trim or pad to expected length
+  const finalRecorded = recorded.length >= expectedSamples
+    ? recorded.slice(0, expectedSamples)
+    : recorded;
+
+  logger.info(`🔊 Chirp played (${chirp.length} samples) + recorded (${finalRecorded.length} samples)`);
+
+  return { chirp, recorded: finalRecorded };
+}
+
+/**
+ * Estimate T60 reverberation time from a played chirp and its recording.
+ *
+ * Pipeline:
+ * 1. Cross-correlation → Room Impulse Response (RIR)
+ * 2. Peak detection + SNR validation
+ * 3. Schroeder backward integration
+ * 4. Linear regression on -5dB to -25dB decay range
+ * 5. T60 = -60 / slope
+ *
+ * @param chirp - The known chirp signal that was played
+ * @param recorded - The recorded signal containing chirp + room response
+ * @param sampleRate - Sample rate in Hz
  * @returns T60 estimate or null if measurement failed
  */
 export function estimateT60FromChirp(
-  _playedChirp: Float32Array,
-  _recordedAudio: AudioBuffer,
-  _sampleRate: number
+  chirp: Float32Array,
+  recorded: Float32Array,
+  sampleRate: number
 ): T60Estimate | null {
-  // Phase 2: Cross-correlation → RIR → Schroeder integration → T60
-  throw new Error('estimateT60FromChirp() is not yet implemented (Phase 2)');
+  // Step 1: Cross-correlation to extract Room Impulse Response
+  const correlation = crossCorrelation(recorded, chirp);
+
+  // Step 2: Find peak (direct sound arrival) and validate
+  let peakIndex = 0;
+  let peakValue = 0;
+  for (let i = 0; i < correlation.length; i++) {
+    const absVal = Math.abs(correlation[i]);
+    if (absVal > peakValue) {
+      peakValue = absVal;
+      peakIndex = i;
+    }
+  }
+
+  // Calculate noise floor as median of absolute correlation values
+  const absCorrelation = new Float64Array(correlation.length);
+  for (let i = 0; i < correlation.length; i++) {
+    absCorrelation[i] = Math.abs(correlation[i]);
+  }
+  const sorted = Array.from(absCorrelation).sort((a, b) => a - b);
+  const medianNoise = sorted[Math.floor(sorted.length / 2)];
+
+  // Peak-to-noise ratio check
+  const peakRatio = medianNoise > 0 ? peakValue / medianNoise : 0;
+  if (peakRatio < MIN_PEAK_RATIO) {
+    logger.warn(`⚠️ Chirp: Peak-to-noise ratio too low (${peakRatio.toFixed(1)} < ${MIN_PEAK_RATIO})`);
+    return null;
+  }
+
+  // Extract RIR from peak onwards
+  const rirLength = Math.min(correlation.length - peakIndex, Math.floor(sampleRate * 2));
+  if (rirLength < Math.floor(sampleRate * 0.05)) {
+    logger.warn('⚠️ Chirp: RIR too short for T60 estimation');
+    return null;
+  }
+
+  // Step 3: Schroeder backward integration on squared RIR
+  // E[n] = Σ(k=n..N-1) h²[k], in dB: 10·log10(E[n] / E[0])
+  const schroeder = new Float64Array(rirLength);
+  let cumSum = 0;
+  for (let n = rirLength - 1; n >= 0; n--) {
+    const h = correlation[peakIndex + n];
+    cumSum += h * h;
+    schroeder[n] = cumSum;
+  }
+
+  // Convert to dB relative to total energy
+  const totalEnergy = schroeder[0];
+  if (totalEnergy <= 0) {
+    logger.warn('⚠️ Chirp: Zero energy in RIR');
+    return null;
+  }
+
+  const schroederDB = new Float64Array(rirLength);
+  for (let n = 0; n < rirLength; n++) {
+    schroederDB[n] = 10 * Math.log10(schroeder[n] / totalEnergy + 1e-30);
+  }
+
+  // Step 4: Find -5dB and -25dB crossing points for linear regression
+  let nStart = -1;
+  let nEnd = -1;
+  for (let n = 0; n < rirLength; n++) {
+    if (nStart < 0 && schroederDB[n] < -5) {
+      nStart = n;
+    }
+    if (nEnd < 0 && schroederDB[n] < -25) {
+      nEnd = n;
+      break;
+    }
+  }
+
+  if (nStart < 0 || nEnd < 0 || nEnd - nStart < 10) {
+    logger.warn(`⚠️ Chirp: Insufficient decay range for regression (start=${nStart}, end=${nEnd})`);
+    return null;
+  }
+
+  // Step 5: Linear regression y = mx + b on the -5dB to -25dB segment
+  const count = nEnd - nStart;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (let i = 0; i < count; i++) {
+    const x = nStart + i;
+    const y = schroederDB[x];
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumXX += x * x;
+  }
+
+  const denominator = count * sumXX - sumX * sumX;
+  if (Math.abs(denominator) < 1e-30) {
+    logger.warn('⚠️ Chirp: Degenerate regression (zero denominator)');
+    return null;
+  }
+
+  // Slope in dB/sample
+  const slopePerSample = (count * sumXY - sumX * sumY) / denominator;
+
+  // Convert slope to dB/second and compute T60
+  const slopePerSecond = slopePerSample * sampleRate;
+  if (slopePerSecond >= 0) {
+    logger.warn('⚠️ Chirp: Non-negative decay slope (no reverberation detected)');
+    return null;
+  }
+
+  const t60 = -60 / slopePerSecond;
+
+  // Step 6: Plausibility check
+  if (t60 < MIN_T60 || t60 > MAX_T60) {
+    logger.warn(`⚠️ Chirp: T60 out of plausible range (${t60.toFixed(2)}s, expected ${MIN_T60}–${MAX_T60}s)`);
+    return null;
+  }
+
+  logger.info(`🔊 T60 estimated: ${t60.toFixed(2)}s (peak ratio: ${peakRatio.toFixed(1)}, regression ${nStart}–${nEnd} samples)`);
+
+  return {
+    broadband: t60,
+    subbands: new Map([[500, t60]]),
+    timestamp: Date.now(),
+  };
+}
+
+/** Configuration for late reverberation subtraction */
+interface ReverbSubtractionConfig {
+  beta: number;
+  spectralFloor: number;
+  hopSize: number;
 }
 
 /**
  * Apply late reverberation subtraction to feature vectors.
- * Phase 2 – not yet implemented.
  *
- * @param _features - Input feature vectors
- * @param _t60 - T60 estimate from chirp measurement
- * @param _settings - Room compensation settings
- * @returns New array of processed FeatureVectors
+ * Implements Lebart et al. (2001): estimates late reverberant energy
+ * from delayed frames and subtracts it from the current frame's spectrum.
+ *
+ * For each frame n and frequency bin k:
+ *   Φ_late(n,k) = decayFactor · |X(n-Δ, k)|²
+ *   G(n,k) = max(1 - β · Φ_late / (|X(n,k)|² + ε), spectralFloor)
+ *   ESD_clean(n,k) = G(n,k) · ESD_raw(n,k)
+ *
+ * @param features - Input feature vectors
+ * @param t60 - T60 estimate from chirp measurement
+ * @param config - Subtraction parameters (beta, spectralFloor, hopSize)
+ * @returns New array of processed FeatureVectors (originals untouched)
  */
 export function applyLateReverbSubtraction(
-  _features: FeatureVector[],
-  _t60: T60Estimate,
-  _settings: RoomCompSettings
+  features: FeatureVector[],
+  t60: T60Estimate,
+  config: ReverbSubtractionConfig
 ): FeatureVector[] {
-  // Phase 2: Spectral subtraction of late reverberation energy
-  throw new Error('applyLateReverbSubtraction() is not yet implemented (Phase 2)');
+  if (features.length === 0) {
+    return [];
+  }
+
+  // Prediction delay in frames (~50ms worth of hop-size frames)
+  const delta = Math.max(1, Math.round(0.05 / config.hopSize));
+
+  // Exponential decay factor: exp(-2·Δ·hopSize / T60)
+  const decayFactor = Math.exp(-2 * delta * config.hopSize / t60.broadband);
+
+  const numFrames = features.length;
+  const result: FeatureVector[] = new Array(numFrames);
+
+  for (let n = 0; n < numFrames; n++) {
+    const K = features[n].absoluteFeatures.length;
+    const newAbsolute = new Float64Array(K);
+
+    for (let k = 0; k < K; k++) {
+      const currEnergy = features[n].absoluteFeatures[k];
+
+      if (n < delta) {
+        // No delayed frame available → pass through unchanged
+        newAbsolute[k] = currEnergy;
+      } else {
+        const prevEnergy = features[n - delta].absoluteFeatures[k];
+        const reverbEstimate = decayFactor * prevEnergy;
+        const gain = Math.max(
+          1.0 - config.beta * reverbEstimate / (currEnergy + 1e-30),
+          config.spectralFloor
+        );
+        newAbsolute[k] = gain * currEnergy;
+      }
+    }
+
+    // Re-normalize (sum = 1)
+    const newFeatures = normalizeToSum1(newAbsolute);
+
+    result[n] = {
+      features: newFeatures,
+      normalizedFeatures: newFeatures,
+      absoluteFeatures: newAbsolute,
+      bins: features[n].bins,
+      frequencyRange: features[n].frequencyRange,
+      rmsAmplitude: features[n].rmsAmplitude,
+    };
+  }
+
+  logger.info(`🔧 Late reverb subtraction applied: Δ=${delta} frames, decay=${decayFactor.toFixed(4)}, β=${config.beta}, T60=${t60.broadband.toFixed(2)}s`);
+  return result;
+}
+
+// ============================================================================
+// REAL-TIME T60 SUBTRACTION (for Diagnose phase – single-frame streaming)
+// ============================================================================
+
+/**
+ * Maintains a buffer of previous frame energies for real-time late reverb
+ * subtraction during streaming diagnosis.
+ *
+ * With hopSize=66ms and a prediction delay of ~50ms, Δ=1 frame. This class
+ * stores the previous frame's absoluteFeatures and applies the Lebart et al.
+ * gain formula to each incoming frame.
+ *
+ * Usage:
+ *   const rtT60 = new RealtimeT60Subtraction(512, t60Estimate, settings);
+ *   const cleaned = rtT60.process(featureVector);
+ */
+export class RealtimeT60Subtraction {
+  private numBins: number;
+  private prevAbsolute: Float64Array | null = null;
+  private decayFactor: number;
+  private beta: number;
+  private spectralFloor: number;
+
+  constructor(numBins: number, t60: T60Estimate, beta: number, spectralFloor: number) {
+    this.numBins = numBins;
+    this.beta = beta;
+    this.spectralFloor = spectralFloor;
+
+    // Prediction delay Δ=1 frame (≈66ms hop, closest to 50ms target)
+    const hopSize = 0.066;
+    const delta = 1;
+    this.decayFactor = Math.exp(-2 * delta * hopSize / t60.broadband);
+  }
+
+  /**
+   * Process a single feature vector with late reverb subtraction.
+   * Returns the input unchanged for the first frame (no previous frame available).
+   */
+  process(fv: FeatureVector): FeatureVector {
+    if (!this.prevAbsolute) {
+      // First frame: no delayed reference, store and pass through
+      this.prevAbsolute = new Float64Array(fv.absoluteFeatures);
+      return fv;
+    }
+
+    const newAbsolute = new Float64Array(this.numBins);
+    for (let k = 0; k < this.numBins; k++) {
+      const currEnergy = fv.absoluteFeatures[k];
+      const prevEnergy = this.prevAbsolute[k];
+      const reverbEstimate = this.decayFactor * prevEnergy;
+      const gain = Math.max(
+        1.0 - this.beta * reverbEstimate / (currEnergy + 1e-30),
+        this.spectralFloor
+      );
+      newAbsolute[k] = gain * currEnergy;
+    }
+
+    // Store current frame for next iteration
+    this.prevAbsolute = new Float64Array(fv.absoluteFeatures);
+
+    const newFeatures = normalizeToSum1(newAbsolute);
+
+    return {
+      features: newFeatures,
+      normalizedFeatures: newFeatures,
+      absoluteFeatures: newAbsolute,
+      bins: fv.bins,
+      frequencyRange: fv.frequencyRange,
+      rmsAmplitude: fv.rmsAmplitude,
+    };
+  }
+
+  reset(): void {
+    this.prevAbsolute = null;
+  }
 }
 
 // ============================================================================
@@ -294,7 +677,11 @@ export function applyRoomCompensation(
 
   // Phase 2: Apply late reverberation subtraction if T60 is available
   if (settings.t60Enabled && t60) {
-    processed = applyLateReverbSubtraction(processed, t60, settings);
+    processed = applyLateReverbSubtraction(processed, t60, {
+      beta: settings.beta,
+      spectralFloor: settings.spectralFloor,
+      hopSize: 0.066, // DSP hop size in seconds
+    });
   }
 
   // Phase 1: Apply CMN
@@ -358,4 +745,31 @@ function normalizeToSum1(values: Float64Array): Float64Array {
     }
   }
   return normalized;
+}
+
+/**
+ * Time-domain cross-correlation between a signal and a template.
+ *
+ * For a 60ms chirp at 48kHz (2880 samples) and a 600ms recording (28800 samples),
+ * this requires ~83M multiplications — well under 100ms on modern smartphones.
+ *
+ * @param signal - Recorded signal (longer)
+ * @param template - Known chirp signal (shorter)
+ * @returns Cross-correlation values for each lag position
+ */
+function crossCorrelation(signal: Float32Array, template: Float32Array): Float64Array {
+  const N = signal.length;
+  const M = template.length;
+  const result = new Float64Array(N);
+
+  for (let lag = 0; lag < N; lag++) {
+    let sum = 0;
+    const limit = Math.min(M, N - lag);
+    for (let j = 0; j < limit; j++) {
+      sum += signal[lag + j] * template[j];
+    }
+    result[lag] = sum;
+  }
+
+  return result;
 }

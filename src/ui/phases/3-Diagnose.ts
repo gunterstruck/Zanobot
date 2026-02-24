@@ -44,7 +44,14 @@ import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
-import { getRoomCompSettings, RealtimeCMN } from '@core/dsp/roomCompensation.js';
+import {
+  getRoomCompSettings,
+  RealtimeCMN,
+  RealtimeT60Subtraction,
+  playChirpAndRecord,
+  estimateT60FromChirp,
+} from '@core/dsp/roomCompensation.js';
+import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -110,9 +117,11 @@ export class DiagnosePhase {
   private opMetrics: OperatingPointMetrics | null = null;
   private opMonitor: OperatingPointMonitor | null = null;
 
-  // Room Compensation (real-time CMN)
+  // Room Compensation (real-time CMN + T60)
   private realtimeCMN: RealtimeCMN | null = null;
+  private realtimeT60: RealtimeT60Subtraction | null = null;
   private roomCompEnabled: boolean = false;
+  private currentT60: T60Estimate | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -329,6 +338,33 @@ export class DiagnosePhase {
         this.realtimeCMN = null;
       }
 
+      // Room Compensation: Chirp measurement for T60 estimation
+      // Plays a short ~60ms tone through the speaker BEFORE Smart Start begins.
+      this.currentT60 = null;
+      this.realtimeT60 = null;
+      if (roomCompSettings.enabled && roomCompSettings.t60Enabled && this.audioContext && this.mediaStream) {
+        try {
+          logger.info('🔊 Chirp calibration for diagnosis...');
+          const { chirp, recorded } = await playChirpAndRecord(this.audioContext, this.mediaStream);
+          this.currentT60 = estimateT60FromChirp(chirp, recorded, this.audioContext.sampleRate);
+          if (this.currentT60) {
+            logger.info(`🔊 Room T60: ${this.currentT60.broadband.toFixed(2)}s`);
+            // Initialize real-time T60 subtraction processor
+            this.realtimeT60 = new RealtimeT60Subtraction(
+              this.dspConfig.frequencyBins,
+              this.currentT60,
+              roomCompSettings.beta,
+              roomCompSettings.spectralFloor
+            );
+          } else {
+            logger.warn('⚠️ Chirp: No clear peak – falling back to CMN only');
+          }
+        } catch (e) {
+          logger.warn('⚠️ Chirp measurement failed:', e);
+          this.currentT60 = null;
+        }
+      }
+
       // GMIA = "Schnelltest" ALWAYS uses simplified view
       // This is the quick test mode for instant diagnosis
       // IMPORTANT: This must happen BEFORE showRecordingModal() to display the correct modal
@@ -455,11 +491,16 @@ export class DiagnosePhase {
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
     // Cleanup Room Compensation state
+    if (this.realtimeT60) {
+      this.realtimeT60.reset();
+      this.realtimeT60 = null;
+    }
     if (this.realtimeCMN) {
       this.realtimeCMN.reset();
       this.realtimeCMN = null;
     }
     this.roomCompEnabled = false;
+    this.currentT60 = null;
 
     // Cleanup Operating Point Monitor (Expert mode)
     if (this.opMetrics) {
@@ -564,10 +605,14 @@ export class DiagnosePhase {
       // CRITICAL FIX: Use actual sample rate from dspConfig (not hardcoded DEFAULT_DSP_CONFIG)
       const rawFeatureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
 
-      // Step 1b: Room Compensation - Apply real-time CMN if enabled
-      const featureVector = (this.roomCompEnabled && this.realtimeCMN)
-        ? this.realtimeCMN.process(rawFeatureVector)
-        : rawFeatureVector;
+      // Step 1b: Room Compensation - Apply T60 subtraction then CMN if enabled
+      let featureVector = rawFeatureVector;
+      if (this.realtimeT60) {
+        featureVector = this.realtimeT60.process(featureVector);
+      }
+      if (this.roomCompEnabled && this.realtimeCMN) {
+        featureVector = this.realtimeCMN.process(featureVector);
+      }
 
       // Store last feature vector for ranking calculation in showResults
       this.lastFeatureVector = featureVector;

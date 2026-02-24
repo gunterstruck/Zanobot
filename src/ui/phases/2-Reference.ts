@@ -23,7 +23,13 @@ import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { classifyDiagnosticState } from '@core/ml/scoring.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
-import { applyRoomCompensation, getRoomCompSettings } from '@core/dsp/roomCompensation.js';
+import {
+  applyRoomCompensation,
+  getRoomCompSettings,
+  playChirpAndRecord,
+  estimateT60FromChirp,
+} from '@core/dsp/roomCompensation.js';
+import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -47,6 +53,9 @@ export class ReferencePhase {
   private isRecordingStarting: boolean = false;
   private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
   private smartStartWasUsed: boolean = false; // Track if Smart Start completed successfully
+
+  // Room Compensation: T60 estimate from chirp measurement
+  private currentT60: T60Estimate | null = null;
 
   // Phase 2: Review Modal State
   private currentAudioBuffer: AudioBuffer | null = null;
@@ -201,6 +210,27 @@ export class ReferencePhase {
         logger.info(`✅ Feature extraction will use actual sample rate: ${actualSampleRate}Hz`);
       }
 
+      // Room Compensation: Chirp measurement (automatic, before recording starts)
+      // Plays a short ~60ms tone through the speaker and records the room response.
+      // Must happen BEFORE Smart Start so the chirp doesn't interfere with the machine recording.
+      this.currentT60 = null;
+      const roomSettings = getRoomCompSettings();
+      if (roomSettings.enabled && roomSettings.t60Enabled && this.audioContext && this.mediaStream) {
+        try {
+          logger.info('🔊 Chirp calibration: Automatic room measurement...');
+          const { chirp, recorded } = await playChirpAndRecord(this.audioContext, this.mediaStream);
+          this.currentT60 = estimateT60FromChirp(chirp, recorded, this.audioContext.sampleRate);
+          if (this.currentT60) {
+            logger.info(`🔊 Room T60: ${this.currentT60.broadband.toFixed(2)}s`);
+          } else {
+            logger.warn('⚠️ Chirp: No clear peak – falling back to CMN only');
+          }
+        } catch (e) {
+          logger.warn('⚠️ Chirp measurement failed:', e);
+          this.currentT60 = null;
+        }
+      }
+
       // Show recording modal
       this.showRecordingModal();
 
@@ -297,6 +327,7 @@ export class ReferencePhase {
     // Reset state flags to prevent memory leaks
     this.isRecordingActive = false;
     this.isRecordingStarting = false;
+    this.currentT60 = null;
     this.smartStartWasUsed = false; // Reset Smart Start flag for next recording
 
     // Clear timer interval to prevent memory leaks
@@ -636,11 +667,11 @@ export class ReferencePhase {
       // PHASE 2: Assess recording quality (on raw features, before room compensation)
       const qualityResult = assessRecordingQuality(features);
 
-      // Room Compensation: Apply CMN if enabled (Pipeline-Stufe 3.5)
+      // Room Compensation: Apply CMN + optional T60 subtraction (Pipeline-Stufe 3.5)
       // IMPORTANT: Quality assessment uses raw features; training uses compensated features.
       const roomCompSettings = getRoomCompSettings();
       const processedFeatures = roomCompSettings.enabled
-        ? applyRoomCompensation(features, roomCompSettings)
+        ? applyRoomCompensation(features, roomCompSettings, this.currentT60 ?? undefined)
         : features;
 
       // Prepare training data (but don't train yet - wait for user approval)

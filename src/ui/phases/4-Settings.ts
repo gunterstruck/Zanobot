@@ -364,8 +364,50 @@ export class SettingsPhase {
       });
     }
 
-    // Phase 2: T60 and Beta slider would be initialized here
-    // Currently hidden via style="display: none" in HTML
+    // T60 Chirp Toggle (Phase 2)
+    const t60Setting = document.getElementById('t60-setting');
+    const t60Toggle = document.getElementById('t60-toggle') as HTMLInputElement | null;
+    const betaSetting = document.getElementById('beta-setting');
+    const betaSlider = document.getElementById('beta-slider') as HTMLInputElement | null;
+    const betaValue = document.getElementById('beta-value');
+
+    // Make T60 setting visible (was hidden during Phase 1)
+    if (t60Setting) {
+      t60Setting.style.display = '';
+    }
+
+    if (t60Toggle) {
+      t60Toggle.checked = settings.t60Enabled;
+
+      // Show/hide beta slider based on T60 toggle
+      if (betaSetting) {
+        betaSetting.style.display = settings.t60Enabled ? '' : 'none';
+      }
+
+      t60Toggle.addEventListener('change', () => {
+        setRoomCompSettings({ t60Enabled: t60Toggle.checked });
+        if (betaSetting) {
+          betaSetting.style.display = t60Toggle.checked ? '' : 'none';
+        }
+        logger.info(`🔧 T60 chirp ${t60Toggle.checked ? 'enabled' : 'disabled'}`);
+      });
+    }
+
+    // Beta slider
+    if (betaSlider) {
+      betaSlider.value = String(settings.beta);
+      if (betaValue) {
+        betaValue.textContent = settings.beta.toFixed(1);
+      }
+
+      betaSlider.addEventListener('input', () => {
+        const val = parseFloat(betaSlider.value);
+        if (betaValue) {
+          betaValue.textContent = val.toFixed(1);
+        }
+        setRoomCompSettings({ beta: val });
+      });
+    }
   }
 
   /**
