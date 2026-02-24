@@ -482,6 +482,13 @@ export async function deleteMachine(id: string): Promise<void> {
     await db.delete('diagnoses', diagnosis.id); // id is the key
   }
 
+  // Delete associated reference database (if exists)
+  try {
+    await db.delete('reference_data', id);
+  } catch {
+    // reference_data entry may not exist - that's fine
+  }
+
   logger.info(`🗑️ Machine deleted: ${id}`);
 }
 

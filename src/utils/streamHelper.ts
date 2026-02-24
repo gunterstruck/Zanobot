@@ -64,7 +64,10 @@ export function closeAudioContext(audioContext: AudioContext | null): boolean {
   }
 
   try {
-    audioContext.close();
+    // AudioContext.close() returns a Promise - catch rejection to prevent unhandled errors
+    audioContext.close().catch((error) => {
+      logger.warn('⚠️ Error closing AudioContext (async):', error);
+    });
     return true;
   } catch (error) {
     logger.warn('⚠️ Error closing AudioContext:', error);

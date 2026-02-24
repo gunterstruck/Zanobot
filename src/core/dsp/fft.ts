@@ -213,6 +213,12 @@ export function applyHanningWindow(signal: Float32Array): Float32Array {
   const n = signal.length;
   const windowed = new Float32Array(n);
 
+  // Guard: single-sample signal would cause division by zero (n-1 = 0)
+  if (n <= 1) {
+    windowed.set(signal);
+    return windowed;
+  }
+
   for (let i = 0; i < n; i++) {
     const windowValue = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (n - 1)));
     windowed[i] = signal[i] * windowValue;

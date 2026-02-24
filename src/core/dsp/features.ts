@@ -355,12 +355,14 @@ function standardizeSignal(signal: Float32Array): Float32Array {
  * @returns Binned energy values
  */
 function binFrequencies(magnitudes: Float64Array, numBins: number): Float64Array {
+  // Guard: if magnitudes has fewer elements than bins, clamp numBins
+  const effectiveBins = Math.min(numBins, magnitudes.length);
   const binnedEnergy = new Float64Array(numBins);
-  const binSize = Math.floor(magnitudes.length / numBins);
+  const binSize = Math.max(1, Math.floor(magnitudes.length / effectiveBins));
 
-  for (let bin = 0; bin < numBins; bin++) {
+  for (let bin = 0; bin < effectiveBins; bin++) {
     const startIdx = bin * binSize;
-    const endIdx = bin === numBins - 1 ? magnitudes.length : (bin + 1) * binSize;
+    const endIdx = bin === effectiveBins - 1 ? magnitudes.length : (bin + 1) * binSize;
 
     // Calculate Square Root Mean Value
     let sum = 0;
