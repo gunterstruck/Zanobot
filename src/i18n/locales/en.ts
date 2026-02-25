@@ -638,6 +638,36 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // ROOM MEASUREMENT (Standalone T60 in Settings)
+  // ============================================================================
+  roomMeasure: {
+    title: 'Room Measurement',
+    description: 'Measures the reverberation time (T60) of your current environment using a chirp signal. Hold the smartphone freely in the room (don\'t cover it).',
+    measureBtn: 'Measure room',
+    measureAgain: 'Measure again',
+    measuring: 'Measuring...',
+    chirpProgress: 'Chirp {{current}}/{{total}}...',
+    individual: 'Individual measurements',
+    stddev: 'Standard deviation',
+    stable: 'stable',
+    unstable: 'unstable',
+    veryDry: 'very dry',
+    dry: 'dry',
+    medium: 'medium reverberant',
+    reverberant: 'reverberant',
+    veryReverberant: 'very reverberant',
+    classVeryDry: 'Very dry room – ideal for measurements',
+    classDry: 'Dry room – good conditions',
+    classMedium: 'Medium reverberant – acceptable conditions',
+    classReverberant: 'Reverberant – results may be affected',
+    classVeryReverberant: 'Very reverberant – move closer to the machine',
+    errorNoResult: 'Measurement failed. Possible causes:\n• Environment too loud (turn off machine)\n• Smartphone speaker too quiet\n• Increase device volume',
+    errorMicPermission: 'No microphone access. Please allow access in browser settings.',
+    errorNoMic: 'No microphone found.',
+    errorGeneric: 'Measurement failed. Please try again.',
+  },
+
+  // ============================================================================
   // ZERO-FRICTION RECORDING (Auto-Machine Creation)
   // ============================================================================
   zeroFriction: {
