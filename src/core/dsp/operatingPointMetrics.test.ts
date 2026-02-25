@@ -223,8 +223,9 @@ describe('OperatingPointMetrics', () => {
     });
 
     it('should flag frequency delta when spectrum shifts significantly', () => {
-      // Shift peak from bin 50 to bin 200 — big spectral shift
-      const shifted = makeShiftedFeatures(200, 5);
+      // Shift peak from bin 50 to bin 65 — within PEAK_MATCH_MAX_DISTANCE (20 bins)
+      // but still a ~30% frequency shift (~646 Hz)
+      const shifted = makeShiftedFeatures(65, 5);
       for (let i = 0; i < 10; i++) {
         metrics.update(shifted, 0.05, [90]);
       }
@@ -266,6 +267,39 @@ describe('OperatingPointMetrics', () => {
       expect(metrics.isInitializing).toBe(false);
       const result = metrics.getResult()!;
       expect(result.isInitializing).toBe(false);
+    });
+
+    it('should remain stable when peak amplitudes change but positions stay', () => {
+      // Feed frames where two peaks stay at the same position (bin 50 and bin 200)
+      // but their amplitudes fluctuate inversely.
+      // With the old centroid approach this would cause large jumps.
+      // With multi-peak tracking the shift should stay near 0%.
+      for (let i = 0; i < 10; i++) {
+        const features = new Float64Array(FREQUENCY_BINS);
+        // Peak at bin 50 with varying amplitude
+        const amp = 0.3 + 0.4 * Math.sin(i);
+        for (let j = 0; j < FREQUENCY_BINS; j++) {
+          const dist = Math.abs(j - 50);
+          features[j] = amp * Math.exp(-(dist * dist) / 50);
+        }
+        // Second peak at bin 200 with inverse amplitude
+        const amp2 = 0.7 - 0.4 * Math.sin(i);
+        for (let j = 0; j < FREQUENCY_BINS; j++) {
+          const dist = Math.abs(j - 200);
+          features[j] += amp2 * Math.exp(-(dist * dist) / 50);
+        }
+        // Normalize
+        let sum = 0;
+        for (let j = 0; j < FREQUENCY_BINS; j++) sum += features[j];
+        for (let j = 0; j < FREQUENCY_BINS; j++) features[j] /= sum;
+
+        metrics.update(features, 0.05, [90]);
+      }
+
+      const result = metrics.getResult()!;
+      // With multi-peak tracking: shift should be near 0 Hz (peaks didn't move)
+      expect(Math.abs(result.frequencyDelta.value)).toBeLessThan(3);
+      expect(result.frequencyDelta.status).toBe('green');
     });
   });
 
