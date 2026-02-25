@@ -78,8 +78,17 @@ const STABILITY_WINDOW = 10;
 /** EMA smoothing factor for energy delta */
 const ENERGY_SMOOTHING_ALPHA = 0.3;
 
-/** EMA smoothing factor for dominant peak frequency */
-const PEAK_FREQ_SMOOTHING_ALPHA = 0.25;
+/** Number of strongest peaks to track for multi-peak frequency shift */
+const NUM_TRACKED_PEAKS = 5;
+
+/** Minimum peak prominence (relative to strongest peak) */
+const MIN_PEAK_PROMINENCE = 0.1;
+
+/** Maximum search width for peak matching (in bins) */
+const PEAK_MATCH_MAX_DISTANCE = 20;
+
+/** EMA smoothing factor for frequency shift */
+const FREQ_SHIFT_SMOOTHING_ALPHA = 0.2;
 
 /** Band limits for dominant peak search (Hz) */
 const PEAK_BAND_MIN_HZ = 50;
@@ -135,7 +144,7 @@ const P10_INSTABILITY_THRESHOLD = 15; // percentage points
 export class OperatingPointMetrics {
   // Reference baselines (set once after warmup)
   private referenceRms: number = 0;
-  private referencePeakFreq: number = 0;
+  private referencePeaks: { bin: number; freq: number; amplitude: number }[] = [];
   private hasReference: boolean = false;
 
   // DSP config
@@ -146,13 +155,13 @@ export class OperatingPointMetrics {
   // Warmup state
   private warmupFrameCount: number = 0;
   private warmupRmsBuffer: number[] = [];
-  private warmupPeakFreqBuffer: number[] = [];
+  private warmupLastFeatures: Float64Array | null = null;
   private warmupStableStreak: number = 0;
   private warmupPreviousFeatures: Float64Array | null = null;
 
   // Smoothed live values
   private smoothedEnergyDeltaDb: number = 0;
-  private smoothedPeakFreq: number = 0;
+  private smoothedFrequencyShiftPercent: number = 0;
   private isFirstUpdate: boolean = true;
 
   // Rolling frame buffer for stability
@@ -196,9 +205,9 @@ export class OperatingPointMetrics {
     if (!this.hasReference) {
       this.warmupFrameCount++;
 
-      // Track RMS and dominant peak frequency for median calculation
+      // Track RMS for median calculation; save features for peak extraction at commit
       this.warmupRmsBuffer.push(rmsAmplitude);
-      this.warmupPeakFreqBuffer.push(this.findDominantPeakFrequency(features));
+      this.warmupLastFeatures = new Float64Array(features);
 
       // Check frame-to-frame stability
       if (this.warmupPreviousFeatures) {
@@ -249,14 +258,14 @@ export class OperatingPointMetrics {
         (1 - ENERGY_SMOOTHING_ALPHA) * this.smoothedEnergyDeltaDb;
     }
 
-    // --- 2. Dominant Peak Frequency ---
-    const currentPeakFreq = this.findDominantPeakFrequency(features);
+    // --- 2. Multi-Peak Frequency Shift ---
+    const rawShift = this.calculateMultiPeakShift(features);
     if (this.isFirstUpdate) {
-      this.smoothedPeakFreq = currentPeakFreq;
+      this.smoothedFrequencyShiftPercent = rawShift;
     } else {
-      this.smoothedPeakFreq =
-        PEAK_FREQ_SMOOTHING_ALPHA * currentPeakFreq +
-        (1 - PEAK_FREQ_SMOOTHING_ALPHA) * this.smoothedPeakFreq;
+      this.smoothedFrequencyShiftPercent =
+        FREQ_SHIFT_SMOOTHING_ALPHA * rawShift +
+        (1 - FREQ_SHIFT_SMOOTHING_ALPHA) * this.smoothedFrequencyShiftPercent;
     }
 
     // --- 3. Stability (frame-to-frame cosine) ---
@@ -286,9 +295,9 @@ export class OperatingPointMetrics {
   public reset(): void {
     this.hasReference = false;
     this.referenceRms = 0;
-    this.referencePeakFreq = 0;
+    this.referencePeaks = [];
     this.smoothedEnergyDeltaDb = 0;
-    this.smoothedPeakFreq = 0;
+    this.smoothedFrequencyShiftPercent = 0;
     this.isFirstUpdate = true;
     this.previousFeatures = null;
     this.frameSimilarities = [];
@@ -297,7 +306,7 @@ export class OperatingPointMetrics {
     // Reset warmup state
     this.warmupFrameCount = 0;
     this.warmupRmsBuffer = [];
-    this.warmupPeakFreqBuffer = [];
+    this.warmupLastFeatures = null;
     this.warmupStableStreak = 0;
     this.warmupPreviousFeatures = null;
   }
@@ -312,11 +321,13 @@ export class OperatingPointMetrics {
    */
   private commitBaseline(forced: boolean): void {
     this.referenceRms = this.median(this.warmupRmsBuffer);
-    this.referencePeakFreq = this.median(this.warmupPeakFreqBuffer);
+    this.referencePeaks = this.warmupLastFeatures
+      ? this.findDominantPeaks(this.warmupLastFeatures)
+      : [];
     this.hasReference = true;
 
     // Initialise smoothed values to baseline
-    this.smoothedPeakFreq = this.referencePeakFreq;
+    this.smoothedFrequencyShiftPercent = 0;
     this.smoothedEnergyDeltaDb = 0;
     this.isFirstUpdate = false;
 
@@ -324,14 +335,14 @@ export class OperatingPointMetrics {
     logger.debug(
       `[OpPoint] Baseline committed (${method}): ` +
       `RMS=${this.referenceRms.toFixed(6)}, ` +
-      `PeakFreq=${this.referencePeakFreq.toFixed(1)}Hz, ` +
+      `peaks=[${this.referencePeaks.map(p => p.freq.toFixed(0) + 'Hz').join(', ')}], ` +
       `frames=${this.warmupFrameCount}, ` +
       `stableStreak=${this.warmupStableStreak}`
     );
 
     // Free warmup buffers
     this.warmupRmsBuffer = [];
-    this.warmupPeakFreqBuffer = [];
+    this.warmupLastFeatures = null;
     this.warmupPreviousFeatures = null;
   }
 
@@ -506,46 +517,128 @@ export class OperatingPointMetrics {
   }
 
   /**
-   * Find the dominant (highest amplitude) peak frequency within the analysis band.
-   * Scans the normalised feature vector for the bin with maximum energy
-   * in the range PEAK_BAND_MIN_HZ - PEAK_BAND_MAX_HZ and returns the
-   * centre frequency of that bin in Hz.
+   * Find the N most dominant peaks in the spectrum.
+   *
+   * A peak is a local maximum that is higher than both neighbours and
+   * has at least MIN_PEAK_PROMINENCE × maxAmplitude.
+   * Parabolic interpolation provides sub-bin accuracy.
+   *
+   * @returns Top N peaks sorted by frequency (ascending).
    */
-  private findDominantPeakFrequency(features: Float64Array): number {
+  private findDominantPeaks(features: Float64Array): { bin: number; freq: number; amplitude: number }[] {
     const nyquist = this.sampleRate / 2;
     const binWidth = nyquist / this.frequencyBins;
 
-    const minBin = Math.max(0, Math.floor(PEAK_BAND_MIN_HZ / binWidth));
-    const maxBin = Math.min(this.frequencyBins - 1, Math.ceil(PEAK_BAND_MAX_HZ / binWidth));
+    const minBin = Math.max(1, Math.floor(PEAK_BAND_MIN_HZ / binWidth));
+    const maxBin = Math.min(this.frequencyBins - 2, Math.ceil(PEAK_BAND_MAX_HZ / binWidth));
 
-    let peakBin = minBin;
-    let peakMag = -Infinity;
+    // Find global maximum for prominence threshold
+    let maxAmplitude = 0;
+    for (let i = minBin; i <= maxBin; i++) {
+      if (features[i] > maxAmplitude) maxAmplitude = features[i];
+    }
+
+    const prominenceThreshold = maxAmplitude * MIN_PEAK_PROMINENCE;
+
+    // Find all local maxima
+    const peaks: { bin: number; freq: number; amplitude: number }[] = [];
 
     for (let i = minBin; i <= maxBin; i++) {
-      if (features[i] > peakMag) {
-        peakMag = features[i];
-        peakBin = i;
+      if (features[i] > features[i - 1] &&
+          features[i] > features[i + 1] &&
+          features[i] >= prominenceThreshold) {
+
+        // Parabolic interpolation for sub-bin accuracy
+        const alpha = features[i - 1];
+        const beta = features[i];
+        const gamma = features[i + 1];
+        const denom = alpha - 2 * beta + gamma;
+
+        let refinedBin = i;
+        if (Math.abs(denom) > 1e-12) {
+          const correction = 0.5 * (alpha - gamma) / denom;
+          refinedBin = i + Math.max(-0.5, Math.min(0.5, correction));
+        }
+
+        const freq = (refinedBin + 0.5) * binWidth;
+        peaks.push({ bin: refinedBin, freq, amplitude: features[i] });
       }
     }
 
-    // Return centre frequency of peak bin
-    return (peakBin + 0.5) * binWidth;
+    // Sort by amplitude (strongest first), take top N
+    peaks.sort((a, b) => b.amplitude - a.amplitude);
+    const topPeaks = peaks.slice(0, NUM_TRACKED_PEAKS);
+
+    // Sort by frequency for stable matching
+    topPeaks.sort((a, b) => a.freq - b.freq);
+
+    return topPeaks;
+  }
+
+  /**
+   * Calculate the median relative frequency shift across all tracked peaks.
+   *
+   * For each reference peak, find the nearest current peak within
+   * PEAK_MATCH_MAX_DISTANCE bins. Compute relative shift for each match
+   * and return the median (robust against single false matches).
+   *
+   * @returns Median relative shift in percent. 0 if no peaks could be matched.
+   */
+  private calculateMultiPeakShift(features: Float64Array): number {
+    if (this.referencePeaks.length === 0) return 0;
+
+    const currentPeaks = this.findDominantPeaks(features);
+    if (currentPeaks.length === 0) return 0;
+
+    // Match each reference peak to the nearest current peak
+    const shifts: number[] = [];
+
+    for (const refPeak of this.referencePeaks) {
+      let bestMatch: { bin: number; freq: number; amplitude: number } | null = null;
+      let bestDistance = Infinity;
+
+      for (const curPeak of currentPeaks) {
+        const distance = Math.abs(curPeak.bin - refPeak.bin);
+        if (distance < bestDistance && distance <= PEAK_MATCH_MAX_DISTANCE) {
+          bestDistance = distance;
+          bestMatch = curPeak;
+        }
+      }
+
+      if (bestMatch && refPeak.freq > 0) {
+        const relativeShift = ((bestMatch.freq - refPeak.freq) / refPeak.freq) * 100;
+        shifts.push(relativeShift);
+      }
+    }
+
+    // Median of shifts (robust against single false matches)
+    if (shifts.length === 0) return 0;
+
+    shifts.sort((a, b) => a - b);
+    const mid = Math.floor(shifts.length / 2);
+    return shifts.length % 2 === 0
+      ? (shifts[mid - 1] + shifts[mid]) / 2
+      : shifts[mid];
   }
 
   /**
    * Calculate absolute frequency delta in Hz.
+   * Derives Hz from the percent shift using the strongest reference peak.
    */
   private calculateFrequencyDeltaHz(): number {
-    if (this.referencePeakFreq <= 0) return 0;
-    return this.smoothedPeakFreq - this.referencePeakFreq;
+    if (this.referencePeaks.length === 0) return 0;
+    const strongestPeak = this.referencePeaks.reduce(
+      (a, b) => (a.amplitude > b.amplitude ? a : b)
+    );
+    return strongestPeak.freq * this.smoothedFrequencyShiftPercent / 100;
   }
 
   /**
    * Calculate relative frequency delta in percent.
+   * Returns the smoothed multi-peak shift directly.
    */
   private calculateFrequencyDeltaPercent(): number {
-    if (this.referencePeakFreq <= 0) return 0;
-    return ((this.smoothedPeakFreq - this.referencePeakFreq) / this.referencePeakFreq) * 100;
+    return this.smoothedFrequencyShiftPercent;
   }
 
   /**
