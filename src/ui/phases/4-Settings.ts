@@ -35,6 +35,10 @@ import {
   getCherryPickSettings,
   setCherryPickSettings,
 } from '@core/dsp/cherryPicking.js';
+import {
+  getDriftSettings,
+  setDriftSettings,
+} from '@core/dsp/driftDetector.js';
 
 export class SettingsPhase {
 
@@ -76,6 +80,9 @@ export class SettingsPhase {
 
     // Initialize cherry-picking settings (expert only)
     this.initCherryPickSettings();
+
+    // Initialize drift detector settings (expert only)
+    this.initDriftDetectorSettings();
 
     // Load stats on init
     this.showStats();
@@ -746,6 +753,100 @@ export class SettingsPhase {
           sigmaValue.textContent = val.toFixed(1);
         }
         setCherryPickSettings({ sigmaThreshold: val });
+      });
+    }
+  }
+
+  /**
+   * Initialize drift detector settings (Expert only)
+   * Reads settings from localStorage and binds UI toggle + sliders.
+   */
+  private initDriftDetectorSettings(): void {
+    const driftToggle = document.getElementById('drift-toggle') as HTMLInputElement | null;
+    const driftDetails = document.getElementById('drift-details-settings');
+
+    if (!driftToggle) {
+      return;
+    }
+
+    const dSettings = getDriftSettings();
+
+    // Initialize master toggle
+    driftToggle.checked = dSettings.enabled;
+
+    // Show/hide sub-settings based on toggle
+    if (driftDetails) {
+      driftDetails.style.display = dSettings.enabled ? '' : 'none';
+    }
+
+    // Toggle event
+    driftToggle.addEventListener('change', () => {
+      const enabled = driftToggle.checked;
+      setDriftSettings({ enabled });
+
+      if (driftDetails) {
+        driftDetails.style.display = enabled ? '' : 'none';
+      }
+
+      logger.info(`🔍 Drift detector ${enabled ? 'enabled' : 'disabled'}`);
+    });
+
+    // Smoothing window slider
+    const smoothSlider = document.getElementById('drift-smooth-slider') as HTMLInputElement | null;
+    const smoothValue = document.getElementById('drift-smooth-value');
+
+    if (smoothSlider) {
+      smoothSlider.value = String(dSettings.smoothWindow);
+      if (smoothValue) {
+        smoothValue.textContent = String(dSettings.smoothWindow);
+      }
+
+      smoothSlider.addEventListener('input', () => {
+        const val = parseInt(smoothSlider.value);
+        if (smoothValue) {
+          smoothValue.textContent = String(val);
+        }
+        setDriftSettings({ smoothWindow: val });
+      });
+    }
+
+    // Global threshold slider (Room sensitivity)
+    const globalSlider = document.getElementById('drift-global-slider') as HTMLInputElement | null;
+    const globalValue = document.getElementById('drift-global-value');
+
+    if (globalSlider) {
+      globalSlider.value = String(dSettings.globalWarning);
+      if (globalValue) {
+        globalValue.textContent = dSettings.globalWarning.toFixed(2);
+      }
+
+      globalSlider.addEventListener('input', () => {
+        const val = parseFloat(globalSlider.value);
+        if (globalValue) {
+          globalValue.textContent = val.toFixed(2);
+        }
+        // Critical = Warning × 2
+        setDriftSettings({ globalWarning: val, globalCritical: val * 2 });
+      });
+    }
+
+    // Local threshold slider (Machine sensitivity)
+    const localSlider = document.getElementById('drift-local-slider') as HTMLInputElement | null;
+    const localValue = document.getElementById('drift-local-value');
+
+    if (localSlider) {
+      localSlider.value = String(dSettings.localWarning);
+      if (localValue) {
+        localValue.textContent = dSettings.localWarning.toFixed(2);
+      }
+
+      localSlider.addEventListener('input', () => {
+        const val = parseFloat(localSlider.value);
+        if (localValue) {
+          localValue.textContent = val.toFixed(2);
+        }
+        // Critical = Warning × 2
+        setDriftSettings({ localWarning: val, localCritical: val * 2 });
       });
     }
   }

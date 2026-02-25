@@ -1231,4 +1231,58 @@ export const de: TranslationDict = {
     guidingPrincipleQuestion: 'Hört sich die Maschine normal an?',
     guidingPrincipleStatement: 'Smartphones hören Maschinenklänge.',
   },
+
+  // ============================================================================
+  // DRIFT DETECTOR (Change Analysis)
+  // ============================================================================
+  drift: {
+    // Settings
+    settingsTitle: 'Änderungsanalyse',
+    settingsDescription: 'Analysiert ob Score-Änderungen durch die Umgebung (Raum) oder die Maschine verursacht werden. Zeigt während der Diagnose eine separate Bewertung an.',
+    enabled: 'Änderungsanalyse aktiviert',
+    howItWorks: 'Das System trennt spektrale Änderungen in zwei Komponenten: Glatte, breitbandige Drift (= Raum/Umgebung) und lokale, schmalbandige Änderungen (= Maschine). So siehst du, ob ein Score-Abfall vom Raum oder von der Maschine kommt.',
+    smoothWindow: 'Glättungsfenster',
+    smoothHint: 'Größer = mehr Trennung zwischen Raum und Maschine. Kleiner = empfindlicher für Raumeigenheiten.',
+    globalThreshold: 'Raum-Empfindlichkeit',
+    globalThresholdHint: 'Niedrig = warnt früher bei Umgebungswechsel. Hoch = toleranter.',
+    localThreshold: 'Maschinen-Empfindlichkeit',
+    localThresholdHint: 'Niedrig = erkennt kleine Maschinenänderungen. Hoch = toleranter.',
+
+    // Diagnose Panel
+    title: 'Änderungsanalyse',
+    environment: 'Umgebung',
+    machine: 'Maschine',
+
+    // Global Status
+    globalOk: 'Umgebung konsistent',
+    globalWarning: 'Umgebung leicht verändert',
+    globalCritical: 'Umgebung stark verändert',
+
+    // Local Status
+    localOk: 'Keine strukturelle Änderung',
+    localWarning: 'Leichte Änderung erkannt',
+    localCritical: 'Deutliche Änderung erkannt',
+
+    // Interpretations
+    allOk: 'Umgebung und Maschine konsistent zur Referenz',
+    roomChange: 'Umgebungsänderung erkannt – Maschine unverändert',
+    machineChange: 'Maschinenänderung erkannt – Maschine prüfen',
+    both: 'Umgebung und Maschine verändert – Ergebnis mit Vorsicht interpretieren',
+    uncertain: 'Unklare Situation – näher an Maschine messen oder neue Referenz erstellen',
+
+    // Recommendations
+    recommendRoom: 'Score-Abfall wahrscheinlich durch Umgebung oder Mikrofonposition verursacht. Näher an Maschine messen, gleiche Position wie bei Referenz wählen, oder Referenz in dieser Umgebung neu erstellen.',
+    recommendMachine: 'Strukturelle Änderung an der Maschine erkannt. Wartung prüfen.',
+    recommendBoth: 'Sowohl Umgebung als auch Maschine verändert. Für zuverlässiges Ergebnis: Referenz in aktueller Umgebung neu erstellen.',
+    recommendUncertain: 'Für klareres Ergebnis: Näher an Maschine messen, gleiche Position wie bei Referenz wählen, oder Referenz in aktueller Umgebung erstellen.',
+
+    // Contextual hints
+    roomChangeButScoreOk: 'Umgebungsänderung erkannt, aber Score stabil – das ist ein gutes Zeichen.',
+    roomChangeMayCauseScoreDrop: 'Score-Abfall könnte durch Umgebung oder Mikrofonposition verursacht sein, nicht durch die Maschine. Gleiche Position wie bei Referenz wählen oder Referenz hier neu erstellen.',
+    machineChangeDetected: 'Strukturelle Änderung an der Maschine erkannt. Bitte prüfen.',
+
+    // Reference phase
+    referenceHint: 'Änderungsanalyse aktiv: Diese Aufnahme definiert auch die Referenz-Umgebung und Mikrofonposition. Spätere Diagnosen zeigen ob sich die Umgebung oder die Maschine verändert hat.',
+    referenceStored: 'Umgebungsprofil gespeichert. Bei zukünftigen Diagnosen wird automatisch analysiert ob Änderungen von der Umgebung oder der Maschine kommen.',
+  },
 };

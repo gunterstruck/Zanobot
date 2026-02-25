@@ -79,6 +79,7 @@ export class ReferencePhase {
 
   // Reference environment data (for Session Bias Match + T60 environment comparison)
   private currentRefLogMean: number[] | null = null;
+  private currentRefLogStd: number[] | null = null;
   private currentRefT60: number | null = null;
   private currentRefT60Classification: string | null = null;
 
@@ -766,6 +767,26 @@ export class ReferencePhase {
 
       this.currentRefLogMean = Array.from(refLogMeanArr);
       logger.info(`📊 refLogMean computed (${K} bins, ${processedFeatures.length} frames)`);
+
+      // Standard deviation (refLogStd) – for Drift Detector variance normalization
+      const N = processedFeatures.length;
+      if (N >= 2) {
+        const refLogStdArr = new Float64Array(K);
+        for (const fv of processedFeatures) {
+          for (let k = 0; k < K; k++) {
+            const logVal = Math.log(fv.absoluteFeatures[k] + LOG_EPSILON);
+            const diff = logVal - refLogMeanArr[k];
+            refLogStdArr[k] += diff * diff;
+          }
+        }
+        for (let k = 0; k < K; k++) {
+          refLogStdArr[k] = Math.sqrt(refLogStdArr[k] / (N - 1)); // Bessel correction
+        }
+        this.currentRefLogStd = Array.from(refLogStdArr);
+        logger.info(`📊 refLogStd computed (${K} bins, ${N} frames)`);
+      } else {
+        this.currentRefLogStd = null;
+      }
 
       // Store reference T60 (measured during chirp warmup)
       this.currentRefT60 = this.currentT60?.broadband ?? null;
@@ -1671,6 +1692,10 @@ export class ReferencePhase {
         machineToUpdate.refLogMean = this.currentRefLogMean;
         logger.info(`📊 refLogMean saved (${this.currentRefLogMean.length} bins)`);
       }
+      if (this.currentRefLogStd) {
+        machineToUpdate.refLogStd = this.currentRefLogStd;
+        logger.info(`📊 refLogStd saved (${this.currentRefLogStd.length} bins)`);
+      }
       machineToUpdate.refT60 = this.currentRefT60;
       machineToUpdate.refT60Classification = this.currentRefT60Classification;
       if (this.currentRefT60 !== null) {
@@ -1713,6 +1738,7 @@ export class ReferencePhase {
       this.currentQualityResult = null;
       this.currentTrainingData = null;
       this.currentRefLogMean = null;
+      this.currentRefLogStd = null;
       this.currentRefT60 = null;
       this.currentRefT60Classification = null;
     } catch (error) {
