@@ -34,7 +34,12 @@ import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, cherryPickFeatures } from '@core/dsp/cherryPicking.js';
 import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
-import { getDriftSettings } from '@core/dsp/driftDetector.js';
+import {
+  getDriftSettings,
+  computeRefLogResidualStd,
+  calibrateAdaptiveThresholds,
+  type RefDriftBaseline,
+} from '@core/dsp/driftDetector.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -81,6 +86,8 @@ export class ReferencePhase {
   // Reference environment data (for Session Bias Match + T60 environment comparison)
   private currentRefLogMean: number[] | null = null;
   private currentRefLogStd: number[] | null = null;
+  private currentRefLogResidualStd: number[] | null = null;
+  private currentRefDriftBaseline: RefDriftBaseline | null = null;
   private currentRefT60: number | null = null;
   private currentRefT60Classification: string | null = null;
 
@@ -793,6 +800,25 @@ export class ReferencePhase {
         logger.info(`📊 refLogStd computed (${K} bins, ${N} frames)`);
       } else {
         this.currentRefLogStd = null;
+      }
+
+      // Residual standard deviation (refLogResidualStd) – Drift Detector V2
+      // Measures variance of the FINE STRUCTURE (not overall spectrum).
+      const driftSettings = getDriftSettings();
+      const residualStd = computeRefLogResidualStd(processedFeatures, refLogMeanArr, driftSettings.smoothWindow);
+      if (residualStd) {
+        this.currentRefLogResidualStd = Array.from(residualStd);
+        logger.info(`📊 refLogResidualStd computed (${K} bins, ${N} frames)`);
+      } else {
+        this.currentRefLogResidualStd = null;
+      }
+
+      // Adaptive threshold calibration via reference partitions – Drift Detector V2
+      this.currentRefDriftBaseline = calibrateAdaptiveThresholds(processedFeatures, driftSettings);
+      if (this.currentRefDriftBaseline) {
+        logger.info('📊 Adaptive drift thresholds calibrated:', this.currentRefDriftBaseline);
+      } else {
+        logger.info('📊 Too few frames for drift calibration, fallback thresholds will be used');
       }
 
       // Store reference T60 (measured during chirp warmup)
@@ -1703,6 +1729,14 @@ export class ReferencePhase {
         machineToUpdate.refLogStd = this.currentRefLogStd;
         logger.info(`📊 refLogStd saved (${this.currentRefLogStd.length} bins)`);
       }
+      if (this.currentRefLogResidualStd) {
+        machineToUpdate.refLogResidualStd = this.currentRefLogResidualStd;
+        logger.info(`📊 refLogResidualStd saved (${this.currentRefLogResidualStd.length} bins)`);
+      }
+      machineToUpdate.refDriftBaseline = this.currentRefDriftBaseline;
+      if (this.currentRefDriftBaseline) {
+        logger.info('📊 refDriftBaseline saved (adaptive thresholds)');
+      }
       machineToUpdate.refT60 = this.currentRefT60;
       machineToUpdate.refT60Classification = this.currentRefT60Classification;
       if (this.currentRefT60 !== null) {
@@ -1751,6 +1785,8 @@ export class ReferencePhase {
       this.currentTrainingData = null;
       this.currentRefLogMean = null;
       this.currentRefLogStd = null;
+      this.currentRefLogResidualStd = null;
+      this.currentRefDriftBaseline = null;
       this.currentRefT60 = null;
       this.currentRefT60Classification = null;
     } catch (error) {

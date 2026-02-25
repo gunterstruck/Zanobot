@@ -63,6 +63,7 @@ import {
   getDriftSettings,
   type DriftResult,
   type DriftDetectorSettings,
+  type RefDriftBaseline,
 } from '@core/dsp/driftDetector.js';
 
 export class DiagnosePhase {
@@ -426,16 +427,24 @@ export class DiagnosePhase {
         this.realtimeCherryPick = null;
       }
 
-      // Drift Detector: Initialize if enabled and refLogMean available
+      // Drift Detector V2: Initialize if enabled and refLogMean available
       this.driftSettings = getDriftSettings();
       this.realtimeDrift = null;
       if (this.driftSettings.enabled && this.machine.refLogMean) {
         const muRef = new Float64Array(this.machine.refLogMean);
-        const sigmaRef = this.machine.refLogStd
-          ? new Float64Array(this.machine.refLogStd)
-          : undefined;
-        this.realtimeDrift = new RealtimeDriftDetector(muRef, this.driftSettings, sigmaRef);
-        logger.info('🔍 Drift detector activated' + (sigmaRef ? ' (with σ normalization)' : ''));
+        // Prefer refLogResidualStd (fine structure variance) over refLogStd (overall σ)
+        const sigmaRef = this.machine.refLogResidualStd
+          ? new Float64Array(this.machine.refLogResidualStd)
+          : this.machine.refLogStd
+            ? new Float64Array(this.machine.refLogStd)
+            : undefined;
+        const baseline = (this.machine.refDriftBaseline as RefDriftBaseline | undefined) ?? undefined;
+        this.realtimeDrift = new RealtimeDriftDetector(muRef, this.driftSettings, sigmaRef, baseline);
+        logger.info(
+          '🔍 Drift detector V2 activated'
+          + (sigmaRef ? (this.machine.refLogResidualStd ? ' (residual-σ)' : ' (σ)') : '')
+          + (baseline ? ' (adaptive thresholds)' : ' (fallback thresholds)')
+        );
       }
 
       // Pipeline Status Dashboard: Initialize if expert mode and features active
@@ -1083,7 +1092,7 @@ export class DiagnosePhase {
     const detailsContainer = document.getElementById('drift-details');
     if (detailGlobal && detailLocal && detailsContainer) {
       detailsContainer.style.display = '';
-      detailGlobal.textContent = `D_global = ${result.globalDrift.toFixed(4)}`;
+      detailGlobal.textContent = `D_global = ${result.globalDrift.toFixed(4)} [${result.thresholdsUsed}]`;
       let localText = `D_local = ${result.localDrift.toFixed(4)}`;
       if (result.localDriftNormalized !== null) {
         localText += ` (norm: ${result.localDriftNormalized.toFixed(4)})`;

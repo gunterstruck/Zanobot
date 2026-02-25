@@ -1704,6 +1704,18 @@
                                 </small>
                             </div>
 
+                            <!-- Low-frequency cutoff (Room mode protection) -->
+                            <div class="setting-item" id="drift-lowfreq-setting">
+                                <div class="setting-label">
+                                    <span data-i18n="drift.lowFreqCutoff">Tieffrequenz-Schutz</span>
+                                    <small id="drift-lowfreq-value">3</small> Bins (<small id="drift-lowfreq-hz">&asymp;140</small> Hz)
+                                </div>
+                                <input type="range" id="drift-lowfreq-slider" min="0" max="10" step="1" value="3">
+                                <small data-i18n="drift.lowFreqHint">
+                                    Bins unterhalb werden für die Maschinen-Analyse ignoriert. Schützt vor Raummoden im Bass. 0 = kein Schutz.
+                                </small>
+                            </div>
+
                             <!-- Global threshold (Room) -->
                             <div class="setting-item" id="drift-global-setting">
                                 <div class="setting-label">
