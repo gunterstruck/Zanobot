@@ -330,6 +330,7 @@ export class SettingsPhase {
   private initRoomCompSettings(): void {
     const masterToggle = document.getElementById('room-comp-toggle') as HTMLInputElement | null;
     const cmnToggle = document.getElementById('cmn-toggle') as HTMLInputElement | null;
+    const biasMatchToggle = document.getElementById('bias-match-toggle') as HTMLInputElement | null;
     const detailsContainer = document.getElementById('room-comp-details');
 
     if (!masterToggle) {
@@ -344,6 +345,11 @@ export class SettingsPhase {
     // Show/hide sub-settings based on master toggle
     if (detailsContainer) {
       detailsContainer.style.display = settings.enabled ? '' : 'none';
+    }
+
+    // Initialize Bias Match toggle
+    if (biasMatchToggle) {
+      biasMatchToggle.checked = settings.biasMatchEnabled;
     }
 
     // Initialize CMN toggle
@@ -363,10 +369,32 @@ export class SettingsPhase {
       logger.info(`🔧 Room compensation ${enabled ? 'enabled' : 'disabled'}`);
     });
 
-    // CMN toggle event
+    // Bias Match toggle event (mutually exclusive with CMN)
+    if (biasMatchToggle) {
+      biasMatchToggle.addEventListener('change', () => {
+        setRoomCompSettings({ biasMatchEnabled: biasMatchToggle.checked });
+
+        // If Bias Match ON → CMN automatically OFF (mutually exclusive)
+        if (biasMatchToggle.checked && cmnToggle) {
+          cmnToggle.checked = false;
+          setRoomCompSettings({ cmnEnabled: false });
+        }
+
+        logger.info(`🔄 Session Bias Match ${biasMatchToggle.checked ? 'enabled' : 'disabled'}`);
+      });
+    }
+
+    // CMN toggle event (mutually exclusive with Bias Match)
     if (cmnToggle) {
       cmnToggle.addEventListener('change', () => {
         setRoomCompSettings({ cmnEnabled: cmnToggle.checked });
+
+        // If CMN ON → Bias Match automatically OFF (mutually exclusive)
+        if (cmnToggle.checked && biasMatchToggle) {
+          biasMatchToggle.checked = false;
+          setRoomCompSettings({ biasMatchEnabled: false });
+        }
+
         logger.info(`🔧 CMN ${cmnToggle.checked ? 'enabled' : 'disabled'}`);
       });
     }

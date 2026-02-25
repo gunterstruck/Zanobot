@@ -1514,14 +1514,26 @@
                         <!-- Sub-settings (nur sichtbar wenn Master-Toggle AN) -->
                         <div id="room-comp-details" style="display: none;">
 
-                            <!-- CMN Toggle -->
+                            <!-- Session Bias Match Toggle (recommended) -->
                             <div class="setting-item">
                                 <div class="setting-label">
-                                    <span data-i18n="settingsUI.cmnEnabled">Cepstral Mean Normalization (CMN)</span>
-                                    <small data-i18n="settingsUI.cmnHint">Entfernt systematische Raumfärbung aus dem Spektrum</small>
+                                    <span data-i18n="settingsUI.biasMatchEnabled">Session Bias Match</span>
+                                    <small data-i18n="settingsUI.biasMatchHint">Kompensiert spektrale Unterschiede zwischen Aufnahme-Sessions (verschiedene Räume, Mikro-Positionen). Empfohlen für Raumwechsel.</small>
                                 </div>
                                 <label class="toggle-switch">
-                                    <input type="checkbox" id="cmn-toggle" checked>
+                                    <input type="checkbox" id="bias-match-toggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- CMN Toggle (experimental) -->
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <span data-i18n="settingsUI.cmnEnabled">CMN (experimentell)</span>
+                                    <small data-i18n="settingsUI.cmnWarning">⚠️ Kann bei stationären Maschinen den Score verschlechtern. Nutze bevorzugt "Session Bias Match" oder T60/Dereverb.</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cmn-toggle">
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
