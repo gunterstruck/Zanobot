@@ -285,6 +285,22 @@ export const fr: TranslationDict = {
   },
 
   // ============================================================================
+  // PIPELINE STATUS DASHBOARD (Expert Mode)
+  pipelineStatus: {
+    title: 'Statut du pipeline',
+    room: 'Salle',
+    rejected: 'rejetés',
+    active: 'actif',
+    waiting: 'prêt',
+    chirpPending: 'Exécution du chirp...',
+    chirpFailed: 'Chirp échoué – CMN uniquement',
+    t60VeryDry: 'très sec',
+    t60Dry: 'sec',
+    t60Medium: 'moyennement réverbérant',
+    t60Reverberant: 'réverbérant',
+    t60VeryReverberant: 'très réverbérant',
+  },
+
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {

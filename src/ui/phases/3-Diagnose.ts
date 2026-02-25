@@ -53,6 +53,7 @@ import {
 } from '@core/dsp/roomCompensation.js';
 import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, RealtimeCherryPick } from '@core/dsp/cherryPicking.js';
+import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -126,6 +127,9 @@ export class DiagnosePhase {
 
   // Cherry-Picking (real-time Energy-Entropy Gate)
   private realtimeCherryPick: RealtimeCherryPick | null = null;
+
+  // Pipeline Status Dashboard (Expert mode, shows DSP pipeline state)
+  private pipelineStatus: PipelineStatusDashboard | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -378,6 +382,32 @@ export class DiagnosePhase {
         this.realtimeCherryPick = null;
       }
 
+      // Pipeline Status Dashboard: Initialize if expert mode and features active
+      const viewLevelForDashboard = getViewLevel();
+      if (viewLevelForDashboard === 'expert' && (cherryPickSettings.enabled || roomCompSettings.enabled)) {
+        this.pipelineStatus = new PipelineStatusDashboard();
+        this.pipelineStatus.loadFromSettings(
+          cherryPickSettings.enabled,
+          roomCompSettings.enabled,
+          roomCompSettings.cmnEnabled,
+          roomCompSettings.t60Enabled,
+          cherryPickSettings.sigmaThreshold,
+          roomCompSettings.beta
+        );
+
+        // Set T60 result if chirp was already performed
+        if (this.currentT60) {
+          this.pipelineStatus.setT60Result(this.currentT60.broadband, true);
+        } else if (roomCompSettings.enabled && roomCompSettings.t60Enabled) {
+          this.pipelineStatus.setT60Result(null, this.currentT60 !== null);
+        }
+
+        // Set CMN status
+        if (this.roomCompEnabled) {
+          this.pipelineStatus.setCmnActive(false); // Will be set to true after first CMN application
+        }
+      }
+
       // GMIA = "Schnelltest" ALWAYS uses simplified view
       // This is the quick test mode for instant diagnosis
       // IMPORTANT: This must happen BEFORE showRecordingModal() to display the correct modal
@@ -503,6 +533,12 @@ export class DiagnosePhase {
     this.scoreHistory.clear();
     this.labelHistory.clear(); // CRITICAL FIX: Clear label history
 
+    // Cleanup Pipeline Status Dashboard
+    if (this.pipelineStatus) {
+      this.pipelineStatus.destroy();
+      this.pipelineStatus = null;
+    }
+
     // Cleanup Cherry-Picking state
     if (this.realtimeCherryPick) {
       this.realtimeCherryPick.reset();
@@ -625,9 +661,15 @@ export class DiagnosePhase {
       const rawFeatureVector = extractFeaturesFromChunk(processingChunk, this.dspConfig);
 
       // Step 1a: Cherry-Picking Gate - reject transient frames before scoring
-      if (this.realtimeCherryPick && !this.realtimeCherryPick.processFrame(rawFeatureVector)) {
-        logger.debug('🍒 Frame rejected (transient)');
-        return; // Skip this frame – do not score. Score stays at last good value.
+      if (this.realtimeCherryPick) {
+        const accepted = this.realtimeCherryPick.processFrame(rawFeatureVector);
+        if (this.pipelineStatus) {
+          this.pipelineStatus.updateCherryPick(accepted);
+        }
+        if (!accepted) {
+          logger.debug('🍒 Frame rejected (transient)');
+          return; // Skip this frame – do not score. Score stays at last good value.
+        }
       }
 
       // Step 1b: Room Compensation - Apply T60 subtraction then CMN if enabled
@@ -637,6 +679,9 @@ export class DiagnosePhase {
       }
       if (this.roomCompEnabled && this.realtimeCMN) {
         featureVector = this.realtimeCMN.process(featureVector);
+        if (this.pipelineStatus) {
+          this.pipelineStatus.setCmnActive(true);
+        }
       }
 
       // Store last feature vector for ranking calculation in showResults
@@ -1569,6 +1614,12 @@ export class DiagnosePhase {
     }
 
     structuredContent.appendChild(scrollableArea);
+
+    // === PIPELINE STATUS DASHBOARD (Expert mode) ===
+    if (this.pipelineStatus) {
+      this.pipelineStatus.mount(scrollableArea);
+      this.pipelineStatus.show();
+    }
 
     // === CONTROLS: Stop Button ===
     const controlsSection = document.createElement('div');
