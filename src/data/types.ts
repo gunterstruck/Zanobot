@@ -50,6 +50,32 @@ export interface Machine {
   refLogStd?: number[] | null;
 
   /**
+   * Residual standard deviation of log-energy per frequency bin (fine structure variance).
+   * 512 values: For each frame, residual = frame_log - smoothed_ref_mean, then std over frames.
+   * Measures variance of the FINE STRUCTURE (not overall spectrum).
+   * Preferred over refLogStd for Drift Detector D_local normalization (V2).
+   * null/undefined for old references – falls back to refLogStd.
+   */
+  refLogResidualStd?: number[] | null;
+
+  /**
+   * Calibrated drift baseline from reference partition analysis.
+   * Computed during reference creation by splitting frames into partitions,
+   * computing drift between all pairs, then deriving thresholds from median + MAD.
+   * null when calibration was skipped (too few frames) or old reference.
+   */
+  refDriftBaseline?: {
+    globalMedian: number;
+    globalMAD: number;
+    localMedian: number;
+    localMAD: number;
+    adaptiveGlobalWarning: number;
+    adaptiveGlobalCritical: number;
+    adaptiveLocalWarning: number;
+    adaptiveLocalCritical: number;
+  } | null;
+
+  /**
    * Reverberation time (T60) of the reference environment in seconds.
    * Measured via chirp at reference creation.
    * null when T60 measurement was disabled or chirp failed.

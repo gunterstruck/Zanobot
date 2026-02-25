@@ -810,6 +810,33 @@ export class SettingsPhase {
       });
     }
 
+    // Low-frequency cutoff slider (Room mode protection)
+    const lowFreqSlider = document.getElementById('drift-lowfreq-slider') as HTMLInputElement | null;
+    const lowFreqValue = document.getElementById('drift-lowfreq-value');
+    const lowFreqHz = document.getElementById('drift-lowfreq-hz');
+
+    if (lowFreqSlider) {
+      lowFreqSlider.value = String(dSettings.lowFreqCutoffBin);
+      if (lowFreqValue) {
+        lowFreqValue.textContent = String(dSettings.lowFreqCutoffBin);
+      }
+      // Approximation: Bin × (sampleRate / fftSize) ≈ 46.9 Hz/Bin
+      if (lowFreqHz) {
+        lowFreqHz.textContent = `\u2248${Math.round(dSettings.lowFreqCutoffBin * 46.9)}`;
+      }
+
+      lowFreqSlider.addEventListener('input', () => {
+        const val = parseInt(lowFreqSlider.value);
+        if (lowFreqValue) {
+          lowFreqValue.textContent = String(val);
+        }
+        if (lowFreqHz) {
+          lowFreqHz.textContent = `\u2248${Math.round(val * 46.9)}`;
+        }
+        setDriftSettings({ lowFreqCutoffBin: val });
+      });
+    }
+
     // Global threshold slider (Room sensitivity)
     const globalSlider = document.getElementById('drift-global-slider') as HTMLInputElement | null;
     const globalValue = document.getElementById('drift-global-value');
