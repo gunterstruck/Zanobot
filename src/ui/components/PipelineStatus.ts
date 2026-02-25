@@ -31,6 +31,8 @@ export interface PipelineStatusData {
     enabled: boolean;
     cmnEnabled: boolean;
     cmnActive: boolean;           // Was CMN actually applied?
+    biasMatchEnabled: boolean;
+    biasMatchActive: boolean;     // Was Bias Match actually applied?
     t60Enabled: boolean;
     t60Value: number | null;      // Measured T60 value (null = not measured / failed)
     t60Classification: string;    // Classification label
@@ -69,6 +71,8 @@ export class PipelineStatusDashboard {
         enabled: false,
         cmnEnabled: false,
         cmnActive: false,
+        biasMatchEnabled: false,
+        biasMatchActive: false,
         t60Enabled: false,
         t60Value: null,
         t60Classification: '',
@@ -104,6 +108,10 @@ export class PipelineStatusDashboard {
         <div class="pipeline-item" id="ps-cherry" style="display:none;">
           <span class="pipeline-item-icon">\u{1F352}</span>
           <span class="pipeline-item-label" id="ps-cherry-label">\u2014</span>
+        </div>
+        <div class="pipeline-item" id="ps-bias" style="display:none;">
+          <span class="pipeline-item-icon">\u{1F504}</span>
+          <span class="pipeline-item-label" id="ps-bias-label">\u2014</span>
         </div>
         <div class="pipeline-item" id="ps-cmn" style="display:none;">
           <span class="pipeline-item-icon">\u{1F4CA}</span>
@@ -205,6 +213,14 @@ export class PipelineStatusDashboard {
   }
 
   /**
+   * Set Bias Match active status
+   */
+  public setBiasMatchActive(active: boolean): void {
+    this.data.roomComp.biasMatchActive = active;
+    this.render();
+  }
+
+  /**
    * Load settings and initialize data
    */
   public loadFromSettings(
@@ -213,12 +229,14 @@ export class PipelineStatusDashboard {
     cmnEnabled: boolean,
     t60Enabled: boolean,
     sigma: number,
-    beta: number
+    beta: number,
+    biasMatchEnabled: boolean = false
   ): void {
     this.data.cherryPick.enabled = cherryPickEnabled;
     this.data.cherryPick.sigmaThreshold = sigma;
     this.data.roomComp.enabled = roomCompEnabled;
     this.data.roomComp.cmnEnabled = cmnEnabled;
+    this.data.roomComp.biasMatchEnabled = biasMatchEnabled;
     this.data.roomComp.t60Enabled = t60Enabled;
     this.data.roomComp.beta = beta;
   }
@@ -289,6 +307,20 @@ export class PipelineStatusDashboard {
         }
       } else {
         cherryRow.style.display = 'none';
+      }
+    }
+
+    // --- Bias Match Row ---
+    const biasRow = this.container.querySelector('#ps-bias') as HTMLElement;
+    const biasLabel = this.container.querySelector('#ps-bias-label') as HTMLElement;
+    if (biasRow && biasLabel) {
+      if (this.data.roomComp.enabled && this.data.roomComp.biasMatchEnabled) {
+        biasRow.style.display = '';
+        biasLabel.textContent = this.data.roomComp.biasMatchActive
+          ? `Bias Match: ${t('pipelineStatus.active')}`
+          : `Bias Match: ${t('pipelineStatus.waiting')}`;
+      } else {
+        biasRow.style.display = 'none';
       }
     }
 

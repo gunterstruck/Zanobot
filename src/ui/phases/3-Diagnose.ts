@@ -47,6 +47,7 @@ import { getRecordingSettings } from '@utils/recordingSettings.js';
 import {
   getRoomCompSettings,
   RealtimeCMN,
+  RealtimeBiasMatch,
   RealtimeT60Subtraction,
   playChirpAndRecord,
   estimateT60FromChirp,
@@ -119,8 +120,9 @@ export class DiagnosePhase {
   private opMetrics: OperatingPointMetrics | null = null;
   private opMonitor: OperatingPointMonitor | null = null;
 
-  // Room Compensation (real-time CMN + T60)
+  // Room Compensation (real-time CMN + T60 + Bias Match)
   private realtimeCMN: RealtimeCMN | null = null;
+  private realtimeBiasMatch: RealtimeBiasMatch | null = null;
   private realtimeT60: RealtimeT60Subtraction | null = null;
   private roomCompEnabled: boolean = false;
   private currentT60: T60Estimate | null = null;
@@ -336,9 +338,20 @@ export class DiagnosePhase {
         `📊 DSP Config: sampleRate=${this.dspConfig.sampleRate}Hz, chunkSize=${this.chunkSize} samples, windowSize=${DEFAULT_DSP_CONFIG.windowSize}s`
       );
 
-      // Room Compensation: Initialize real-time CMN if enabled
+      // Room Compensation: Initialize real-time processors
       const roomCompSettings = getRoomCompSettings();
-      this.roomCompEnabled = roomCompSettings.enabled && roomCompSettings.cmnEnabled;
+
+      // Session Bias Match: Preferred over CMN for stationary machine signals.
+      // Requires reference features – currently not stored in GMIAModel,
+      // so this is prepared for future use when reference features become available.
+      this.realtimeBiasMatch = null;
+      // Note: RealtimeBiasMatch would be initialized here if reference features were available:
+      // if (roomCompSettings.enabled && roomCompSettings.biasMatchEnabled && referenceFeatures) {
+      //   this.realtimeBiasMatch = new RealtimeBiasMatch(referenceFeatures);
+      // }
+
+      // CMN: Only if explicitly enabled AND bias match is NOT active
+      this.roomCompEnabled = roomCompSettings.enabled && roomCompSettings.cmnEnabled && !roomCompSettings.biasMatchEnabled;
       if (this.roomCompEnabled) {
         this.realtimeCMN = new RealtimeCMN(this.dspConfig.frequencyBins);
         logger.info('🔧 Room compensation (real-time CMN) initialized');
@@ -392,7 +405,8 @@ export class DiagnosePhase {
           roomCompSettings.cmnEnabled,
           roomCompSettings.t60Enabled,
           cherryPickSettings.sigmaThreshold,
-          roomCompSettings.beta
+          roomCompSettings.beta,
+          roomCompSettings.biasMatchEnabled
         );
 
         // Set T60 result if chirp was already performed
@@ -550,6 +564,10 @@ export class DiagnosePhase {
       this.realtimeT60.reset();
       this.realtimeT60 = null;
     }
+    if (this.realtimeBiasMatch) {
+      this.realtimeBiasMatch.reset();
+      this.realtimeBiasMatch = null;
+    }
     if (this.realtimeCMN) {
       this.realtimeCMN.reset();
       this.realtimeCMN = null;
@@ -672,12 +690,17 @@ export class DiagnosePhase {
         }
       }
 
-      // Step 1b: Room Compensation - Apply T60 subtraction then CMN if enabled
+      // Step 1b: Room Compensation - Apply T60 subtraction, then Bias Match or CMN
       let featureVector = rawFeatureVector;
       if (this.realtimeT60) {
         featureVector = this.realtimeT60.process(featureVector);
       }
-      if (this.roomCompEnabled && this.realtimeCMN) {
+      if (this.realtimeBiasMatch) {
+        featureVector = this.realtimeBiasMatch.processFrame(featureVector);
+        if (this.pipelineStatus) {
+          this.pipelineStatus.setBiasMatchActive(true);
+        }
+      } else if (this.roomCompEnabled && this.realtimeCMN) {
         featureVector = this.realtimeCMN.process(featureVector);
         if (this.pipelineStatus) {
           this.pipelineStatus.setCmnActive(true);

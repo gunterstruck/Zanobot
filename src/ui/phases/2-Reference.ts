@@ -700,11 +700,13 @@ export class ReferencePhase {
       // PHASE 2: Assess recording quality (on cherry-picked features, before room compensation)
       const qualityResult = assessRecordingQuality(cherryPickedFeatures);
 
-      // Room Compensation: Apply CMN + optional T60 subtraction (Pipeline-Stufe 3.5)
+      // Room Compensation: Apply T60 subtraction + optional CMN (Pipeline-Stufe 3.5)
       // IMPORTANT: Quality assessment uses cherry-picked features; training uses compensated features.
+      // NOTE: During reference creation, Bias-Match is not applicable (no prior reference exists).
+      //       Only T60 subtraction is meaningful here. CMN is off by default.
       const roomCompSettings = getRoomCompSettings();
       const processedFeatures = roomCompSettings.enabled
-        ? applyRoomCompensation(cherryPickedFeatures, roomCompSettings, this.currentT60 ?? undefined)
+        ? applyRoomCompensation(cherryPickedFeatures, roomCompSettings, this.currentT60 ?? undefined, undefined)
         : cherryPickedFeatures;
 
       // Pipeline Status Dashboard: Prepare for review modal (Expert mode only)
@@ -721,7 +723,8 @@ export class ReferencePhase {
           roomCompSettings.cmnEnabled,
           roomCompSettings.t60Enabled,
           cherryPickSettings.sigmaThreshold,
-          roomCompSettings.beta
+          roomCompSettings.beta,
+          roomCompSettings.biasMatchEnabled
         );
 
         if (cherryPickSettings.enabled) {

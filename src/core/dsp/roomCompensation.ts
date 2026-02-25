@@ -28,7 +28,8 @@ export interface T60Estimate {
 
 export interface RoomCompSettings {
   enabled: boolean;            // Master-Toggle (Standard: false)
-  cmnEnabled: boolean;         // CMN aktiv (Standard: true wenn enabled)
+  cmnEnabled: boolean;         // Legacy CMN (experimentell, default OFF – destruktiv bei stationären Signalen)
+  biasMatchEnabled: boolean;   // Session Bias Match (empfohlen, default OFF bis getestet)
   t60Enabled: boolean;         // T60-Entzerrung aktiv (Standard: false, braucht Kalibrierung)
   beta: number;                // Over-Subtraction Factor (0.5–2.0, Standard: 1.0)
   spectralFloor: number;       // Spectral Floor ε (0.01–0.1, Standard: 0.05)
@@ -37,7 +38,8 @@ export interface RoomCompSettings {
 
 export const DEFAULT_ROOM_COMP_SETTINGS: RoomCompSettings = {
   enabled: false,
-  cmnEnabled: true,
+  cmnEnabled: false,           // CMN Default AUS (destruktiv bei stationären Signalen)
+  biasMatchEnabled: false,     // Noch nicht getestet, default OFF
   t60Enabled: false,
   beta: 1.0,
   spectralFloor: 0.05,
@@ -121,6 +123,184 @@ export function applyCMN(features: FeatureVector[]): FeatureVector[] {
 
   logger.info(`🔧 CMN applied to ${numFrames} frames (${numBins} bins)`);
   return result;
+}
+
+// ============================================================================
+// SESSION BIAS MATCH (Cross-Session Room Compensation)
+// ============================================================================
+
+/**
+ * Session Bias Match – Room compensation for quasi-stationary signals.
+ *
+ * Instead of removing the per-session mean (CMN, destructive for machines),
+ * only the DIFFERENCE between reference and measurement session is compensated.
+ *
+ * Math:
+ *   µ_ref[k] = (1/N) · Σ log(ESD_ref[k])     // Mean log-spectrum of reference
+ *   µ_meas[k] = (1/N) · Σ log(ESD_meas[k])   // Mean log-spectrum of measurement
+ *   bias[k] = µ_ref[k] - µ_meas[k]            // Spectral coloring difference
+ *   ESD_meas_corr[k] = exp(log(ESD_meas[k]) + bias[k])  // Align measurement to reference
+ *
+ * Effect: Compensates constant spectral differences between sessions
+ *         (different mic position, different room, different temperature),
+ *         WITHOUT destroying the machine signature.
+ *
+ * @param measurementFeatures - Feature vectors of the CURRENT measurement
+ * @param referenceFeatures - Feature vectors of the stored REFERENCE
+ * @returns Corrected measurement features (only measurement is adjusted, reference stays unchanged)
+ */
+export function applySessionBiasMatch(
+  measurementFeatures: FeatureVector[],
+  referenceFeatures: FeatureVector[]
+): FeatureVector[] {
+  if (measurementFeatures.length === 0 || referenceFeatures.length === 0) {
+    return measurementFeatures;
+  }
+
+  const K = measurementFeatures[0].absoluteFeatures.length; // 512 bins
+  const epsilon = 1e-30; // Floor for log(0)
+
+  // Step 1: Compute mean log-spectrum of reference
+  const muRef = new Float64Array(K);
+  for (const fv of referenceFeatures) {
+    for (let k = 0; k < K; k++) {
+      muRef[k] += Math.log(fv.absoluteFeatures[k] + epsilon);
+    }
+  }
+  for (let k = 0; k < K; k++) {
+    muRef[k] /= referenceFeatures.length;
+  }
+
+  // Step 2: Compute mean log-spectrum of measurement
+  const muMeas = new Float64Array(K);
+  for (const fv of measurementFeatures) {
+    for (let k = 0; k < K; k++) {
+      muMeas[k] += Math.log(fv.absoluteFeatures[k] + epsilon);
+    }
+  }
+  for (let k = 0; k < K; k++) {
+    muMeas[k] /= measurementFeatures.length;
+  }
+
+  // Step 3: Compute bias (reference minus measurement)
+  const bias = new Float64Array(K);
+  for (let k = 0; k < K; k++) {
+    bias[k] = muRef[k] - muMeas[k];
+  }
+
+  // Step 4: Correct measurement
+  const result: FeatureVector[] = [];
+  for (const fv of measurementFeatures) {
+    const newAbsolute = new Float64Array(K);
+    for (let k = 0; k < K; k++) {
+      const logVal = Math.log(fv.absoluteFeatures[k] + epsilon);
+      newAbsolute[k] = Math.exp(logVal + bias[k]);
+    }
+
+    // Re-normalize (sum = 1)
+    const newNormalized = normalizeToSum1(newAbsolute);
+
+    result.push({
+      features: newNormalized,
+      normalizedFeatures: newNormalized,
+      absoluteFeatures: newAbsolute,
+      bins: fv.bins,
+      frequencyRange: fv.frequencyRange,
+      rmsAmplitude: fv.rmsAmplitude,
+    });
+  }
+
+  logger.info(`🔄 Session Bias Match applied to ${measurementFeatures.length} frames (${K} bins)`);
+  return result;
+}
+
+/**
+ * Realtime Session Bias Match for live diagnosis.
+ *
+ * Receives the reference mean once at initialization and builds
+ * the measurement mean incrementally (exponential smoothing).
+ */
+export class RealtimeBiasMatch {
+  private muRef: Float64Array;           // Log mean of reference (fixed)
+  private muMeas: Float64Array;          // Running log mean of measurement
+  private frameCount: number = 0;
+  private readonly alpha: number;        // Smoothing factor (0.02 = slow, robust)
+  private readonly minFrames: number = 3; // Minimum frames before correction activates
+  private readonly K: number;
+  private readonly epsilon: number = 1e-30;
+
+  /**
+   * @param referenceFeatures - The reference FeatureVectors (from training)
+   * @param alpha - Exponential smoothing factor (default: 0.02)
+   */
+  constructor(referenceFeatures: FeatureVector[], alpha: number = 0.02) {
+    this.K = referenceFeatures[0]?.absoluteFeatures.length ?? 512;
+    this.alpha = alpha;
+    this.muRef = new Float64Array(this.K);
+    this.muMeas = new Float64Array(this.K);
+
+    // Compute reference mean once
+    for (const fv of referenceFeatures) {
+      for (let k = 0; k < this.K; k++) {
+        this.muRef[k] += Math.log(fv.absoluteFeatures[k] + this.epsilon);
+      }
+    }
+    for (let k = 0; k < this.K; k++) {
+      this.muRef[k] /= referenceFeatures.length;
+    }
+  }
+
+  /**
+   * Process a single measurement frame and return the corrected frame.
+   * The first `minFrames` frames are passed through uncorrected
+   * (mean needs to build up first).
+   */
+  processFrame(featureVector: FeatureVector): FeatureVector {
+    this.frameCount++;
+
+    // Update running mean of measurement (exponential smoothing)
+    if (this.frameCount === 1) {
+      // First frame: initialize muMeas
+      for (let k = 0; k < this.K; k++) {
+        this.muMeas[k] = Math.log(featureVector.absoluteFeatures[k] + this.epsilon);
+      }
+    } else {
+      for (let k = 0; k < this.K; k++) {
+        const logVal = Math.log(featureVector.absoluteFeatures[k] + this.epsilon);
+        this.muMeas[k] = (1 - this.alpha) * this.muMeas[k] + this.alpha * logVal;
+      }
+    }
+
+    // Not enough frames yet → pass through uncorrected
+    if (this.frameCount < this.minFrames) {
+      return featureVector;
+    }
+
+    // Compute and apply bias
+    const newAbsolute = new Float64Array(this.K);
+    for (let k = 0; k < this.K; k++) {
+      const bias = this.muRef[k] - this.muMeas[k];
+      const logVal = Math.log(featureVector.absoluteFeatures[k] + this.epsilon);
+      newAbsolute[k] = Math.exp(logVal + bias);
+    }
+
+    // Re-normalize
+    const newNormalized = normalizeToSum1(newAbsolute);
+
+    return {
+      features: newNormalized,
+      normalizedFeatures: newNormalized,
+      absoluteFeatures: newAbsolute,
+      bins: featureVector.bins,
+      frequencyRange: featureVector.frequencyRange,
+      rmsAmplitude: featureVector.rmsAmplitude,
+    };
+  }
+
+  reset(): void {
+    this.frameCount = 0;
+    this.muMeas.fill(0);
+  }
 }
 
 // ============================================================================
@@ -656,19 +836,22 @@ export class RealtimeCMN {
  *
  * This is the main entry point called from Reference and Diagnose phases.
  * Depending on settings, it applies:
- * - CMN only (Phase 1)
- * - Late reverberation subtraction + CMN (Phase 2, when T60 available)
+ * - T60-based late reverberation subtraction (if calibrated)
+ * - Session Bias Match (recommended, needs reference features)
+ * - CMN (experimental, only if explicitly activated and bias match is OFF)
  * - Nothing (if disabled)
  *
  * @param features - Array of FeatureVectors from extractFeatures()
  * @param settings - Room compensation settings from localStorage
- * @param t60 - Optional T60 estimate (Phase 2)
+ * @param t60 - Optional T60 estimate
+ * @param referenceFeatures - Optional reference features (for Session Bias Match)
  * @returns Processed FeatureVectors (new array, originals untouched)
  */
 export function applyRoomCompensation(
   features: FeatureVector[],
   settings: RoomCompSettings,
-  t60?: T60Estimate
+  t60?: T60Estimate,
+  referenceFeatures?: FeatureVector[]
 ): FeatureVector[] {
   if (!settings.enabled) {
     return features;
@@ -676,7 +859,7 @@ export function applyRoomCompensation(
 
   let processed = features;
 
-  // Phase 2: Apply late reverberation subtraction if T60 is available
+  // Stage 1: T60-based late reverb subtraction (physically correct, if available)
   if (settings.t60Enabled && t60) {
     processed = applyLateReverbSubtraction(processed, t60, {
       beta: settings.beta,
@@ -685,8 +868,15 @@ export function applyRoomCompensation(
     });
   }
 
-  // Phase 1: Apply CMN
-  if (settings.cmnEnabled) {
+  // Stage 2a: Session Bias Match (recommended, needs reference features)
+  if (settings.biasMatchEnabled && referenceFeatures && referenceFeatures.length > 0) {
+    processed = applySessionBiasMatch(processed, referenceFeatures);
+  }
+
+  // Stage 2b: CMN (experimental, only if explicitly activated)
+  // WARNING: CMN and Bias-Match should NOT be active simultaneously.
+  // If both are on, CMN is ignored (Bias-Match takes priority).
+  if (settings.cmnEnabled && !settings.biasMatchEnabled) {
     processed = applyCMN(processed);
   }
 
