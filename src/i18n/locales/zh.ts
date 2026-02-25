@@ -284,6 +284,22 @@ export const zh: TranslationDict = {
   },
 
   // ============================================================================
+  // PIPELINE STATUS DASHBOARD (Expert Mode)
+  pipelineStatus: {
+    title: '管道状态',
+    room: '房间',
+    rejected: '已拒绝',
+    active: '活跃',
+    waiting: '就绪',
+    chirpPending: '正在执行啁啾信号...',
+    chirpFailed: '啁啾信号失败 – 仅使用CMN',
+    t60VeryDry: '非常干燥',
+    t60Dry: '干燥',
+    t60Medium: '中等混响',
+    t60Reverberant: '混响',
+    t60VeryReverberant: '强混响',
+  },
+
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {

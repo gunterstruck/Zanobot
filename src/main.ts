@@ -11,6 +11,7 @@
 // Import CSS styles (processed by Vite for proper bundling)
 import './styles/style.css';
 import './styles/toast.css';
+import './styles/pipeline-status.css';
 
 import { initDB, getDBStats } from '@data/db.js';
 import { toast } from '@ui/components/Toast.js';

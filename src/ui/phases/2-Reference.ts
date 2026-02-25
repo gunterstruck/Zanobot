@@ -31,6 +31,8 @@ import {
 } from '@core/dsp/roomCompensation.js';
 import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, cherryPickFeatures } from '@core/dsp/cherryPicking.js';
+import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
+import { getViewLevel } from '@utils/viewLevelSettings.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -70,6 +72,9 @@ export class ReferencePhase {
   // VISUAL POSITIONING: Reference image captured during recording
   private capturedReferenceImage: Blob | null = null;
   private reviewImageUrl: string | null = null;
+
+  // Pipeline Status Dashboard (Expert mode, shows batch DSP results in review modal)
+  private pipelineStatus: PipelineStatusDashboard | null = null;
 
   constructor(machine?: Machine | null, selectedDeviceId?: string) {
     this.machine = machine || null;
@@ -669,9 +674,13 @@ export class ReferencePhase {
       // Applied BEFORE quality check and room compensation so GMIA only sees clean frames.
       const cherryPickSettings = getCherryPickSettings();
       let cherryPickedFeatures = features;
+      let cpTotalCount = features.length;
+      let cpRemovedCount = 0;
 
       if (cherryPickSettings.enabled) {
         const cpResult = cherryPickFeatures(features, cherryPickSettings);
+        cpTotalCount = cpResult.totalCount;
+        cpRemovedCount = cpResult.removedCount;
         logger.info(`🍒 Cherry-Picking: ${cpResult.removedCount}/${cpResult.totalCount} Frames verworfen`);
         if (cpResult.removedCount > 0) {
           logger.info(`   Entfernte Indizes: [${cpResult.removedIndices.join(', ')}]`);
@@ -697,6 +706,38 @@ export class ReferencePhase {
       const processedFeatures = roomCompSettings.enabled
         ? applyRoomCompensation(cherryPickedFeatures, roomCompSettings, this.currentT60 ?? undefined)
         : cherryPickedFeatures;
+
+      // Pipeline Status Dashboard: Prepare for review modal (Expert mode only)
+      if (this.pipelineStatus) {
+        this.pipelineStatus.destroy();
+        this.pipelineStatus = null;
+      }
+      const currentViewLevel = getViewLevel();
+      if (currentViewLevel === 'expert' && (cherryPickSettings.enabled || roomCompSettings.enabled)) {
+        this.pipelineStatus = new PipelineStatusDashboard();
+        this.pipelineStatus.loadFromSettings(
+          cherryPickSettings.enabled,
+          roomCompSettings.enabled,
+          roomCompSettings.cmnEnabled,
+          roomCompSettings.t60Enabled,
+          cherryPickSettings.sigmaThreshold,
+          roomCompSettings.beta
+        );
+
+        if (cherryPickSettings.enabled) {
+          this.pipelineStatus.setCherryPickBatchResult(cpTotalCount, cpRemovedCount);
+        }
+
+        if (this.currentT60) {
+          this.pipelineStatus.setT60Result(this.currentT60.broadband, true);
+        } else if (roomCompSettings.enabled && roomCompSettings.t60Enabled) {
+          this.pipelineStatus.setT60Result(null, false);
+        }
+
+        if (roomCompSettings.enabled && roomCompSettings.cmnEnabled) {
+          this.pipelineStatus.setCmnActive(true);
+        }
+      }
 
       // Prepare training data (but don't train yet - wait for user approval)
       // CRITICAL FIX: Store actual DSP config used for feature extraction
@@ -1146,6 +1187,18 @@ export class ReferencePhase {
       saveBtn.onclick = () => this.handleReviewSave();
     }
 
+    // Mount Pipeline Status Dashboard into review modal (Expert mode)
+    if (this.pipelineStatus) {
+      const qualitySection = modal.querySelector('.review-quality');
+      if (qualitySection && qualitySection.parentElement) {
+        this.pipelineStatus.mount(
+          qualitySection.parentElement,
+          qualitySection.nextSibling as HTMLElement
+        );
+        this.pipelineStatus.show();
+      }
+    }
+
     // Show modal
     modal.style.display = 'flex';
 
@@ -1156,6 +1209,12 @@ export class ReferencePhase {
    * Hide review modal
    */
   private hideReviewModal(): void {
+    // Cleanup Pipeline Status Dashboard
+    if (this.pipelineStatus) {
+      this.pipelineStatus.destroy();
+      this.pipelineStatus = null;
+    }
+
     const modal = document.getElementById('review-modal');
     if (modal) {
       modal.style.display = 'none';
