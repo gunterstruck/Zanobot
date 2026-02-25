@@ -41,6 +41,15 @@ export interface Machine {
   refLogMean?: number[] | null;
 
   /**
+   * Standard deviation of log-energy per frequency bin of the reference session.
+   * 512 values: refLogStd[k] = std( ln(absoluteFeatures[n][k] + ε) )
+   * Computed at reference creation alongside refLogMean.
+   * Used by the Drift Detector for variance-normalized local drift (D_local / σ_ref_mean).
+   * null/undefined for old references (before this update) – drift works without it.
+   */
+  refLogStd?: number[] | null;
+
+  /**
    * Reverberation time (T60) of the reference environment in seconds.
    * Measured via chirp at reference creation.
    * null when T60 measurement was disabled or chirp failed.

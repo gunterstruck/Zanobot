@@ -12,6 +12,7 @@
 import './styles/style.css';
 import './styles/toast.css';
 import './styles/pipeline-status.css';
+import './styles/drift-panel.css';
 
 import { initDB, getDBStats } from '@data/db.js';
 import { toast } from '@ui/components/Toast.js';

@@ -1188,4 +1188,58 @@ export const en: TranslationDict = {
     guidingPrincipleQuestion: 'Does the machine sound normal?',
     guidingPrincipleStatement: 'Smartphones hear machine sounds.',
   },
+
+  // ============================================================================
+  // DRIFT DETECTOR (Change Analysis)
+  // ============================================================================
+  drift: {
+    // Settings
+    settingsTitle: 'Change Analysis',
+    settingsDescription: 'Analyzes whether score changes are caused by the environment (room) or the machine. Shows a separate assessment during diagnosis.',
+    enabled: 'Change analysis enabled',
+    howItWorks: 'The system separates spectral changes into two components: Smooth, broadband drift (= room/environment) and local, narrowband changes (= machine). This helps you see whether a score drop comes from the room or the machine.',
+    smoothWindow: 'Smoothing window',
+    smoothHint: 'Larger = more separation between room and machine. Smaller = more sensitive to room characteristics.',
+    globalThreshold: 'Room sensitivity',
+    globalThresholdHint: 'Low = warns earlier on room change. High = more tolerant.',
+    localThreshold: 'Machine sensitivity',
+    localThresholdHint: 'Low = detects small machine changes. High = more tolerant.',
+
+    // Diagnose Panel
+    title: 'Change Analysis',
+    environment: 'Environment',
+    machine: 'Machine',
+
+    // Global Status
+    globalOk: 'Environment consistent',
+    globalWarning: 'Environment slightly changed',
+    globalCritical: 'Environment strongly changed',
+
+    // Local Status
+    localOk: 'No structural change',
+    localWarning: 'Minor change detected',
+    localCritical: 'Significant change detected',
+
+    // Interpretations
+    allOk: 'Environment and machine consistent with reference',
+    roomChange: 'Environment change detected – machine unchanged',
+    machineChange: 'Machine change detected – check machine',
+    both: 'Environment and machine changed – interpret results with caution',
+    uncertain: 'Unclear situation – measure closer to machine or create new reference',
+
+    // Recommendations
+    recommendRoom: 'Score drop likely caused by environment or microphone position. Measure closer to machine, use same position as reference, or create new reference in this environment.',
+    recommendMachine: 'Structural change in machine detected. Check maintenance.',
+    recommendBoth: 'Both environment and machine changed. For reliable results: create new reference in current environment.',
+    recommendUncertain: 'For clearer results: measure closer to machine, use same position as reference, or create reference in current environment.',
+
+    // Contextual hints
+    roomChangeButScoreOk: 'Environment change detected, but score stable – that\'s a good sign.',
+    roomChangeMayCauseScoreDrop: 'Score drop may be caused by environment or microphone position, not the machine. Use same position as reference or create new reference here.',
+    machineChangeDetected: 'Structural change in machine detected. Please check.',
+
+    // Reference phase
+    referenceHint: 'Change analysis active: This recording also defines the reference environment and microphone position. Future diagnoses will show whether the environment or machine has changed.',
+    referenceStored: 'Environment profile stored. Future diagnoses will automatically analyze whether changes come from the environment or the machine.',
+  },
 };

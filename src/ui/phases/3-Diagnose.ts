@@ -58,6 +58,12 @@ import {
 import type { T60Estimate, EnvironmentComparisonResult } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, RealtimeCherryPick } from '@core/dsp/cherryPicking.js';
 import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
+import {
+  RealtimeDriftDetector,
+  getDriftSettings,
+  type DriftResult,
+  type DriftDetectorSettings,
+} from '@core/dsp/driftDetector.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -138,6 +144,11 @@ export class DiagnosePhase {
 
   // Environment comparison result (Reference T60 vs. Diagnosis T60)
   private environmentWarning: EnvironmentComparisonResult | null = null;
+
+  // Drift Detector (Global Drift + Local Residual Index)
+  private realtimeDrift: RealtimeDriftDetector | null = null;
+  private driftSettings: DriftDetectorSettings | null = null;
+  private driftContextHintTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -415,6 +426,18 @@ export class DiagnosePhase {
         this.realtimeCherryPick = null;
       }
 
+      // Drift Detector: Initialize if enabled and refLogMean available
+      this.driftSettings = getDriftSettings();
+      this.realtimeDrift = null;
+      if (this.driftSettings.enabled && this.machine.refLogMean) {
+        const muRef = new Float64Array(this.machine.refLogMean);
+        const sigmaRef = this.machine.refLogStd
+          ? new Float64Array(this.machine.refLogStd)
+          : undefined;
+        this.realtimeDrift = new RealtimeDriftDetector(muRef, this.driftSettings, sigmaRef);
+        logger.info('🔍 Drift detector activated' + (sigmaRef ? ' (with σ normalization)' : ''));
+      }
+
       // Pipeline Status Dashboard: Initialize if expert mode and features active
       const viewLevelForDashboard = getViewLevel();
       if (viewLevelForDashboard === 'expert' && (cherryPickSettings.enabled || roomCompSettings.enabled)) {
@@ -589,6 +612,17 @@ export class DiagnosePhase {
       this.realtimeCherryPick.reset();
       this.realtimeCherryPick = null;
     }
+
+    // Cleanup Drift Detector state
+    if (this.realtimeDrift) {
+      this.realtimeDrift.reset();
+      this.realtimeDrift = null;
+    }
+    if (this.driftContextHintTimeout) {
+      clearTimeout(this.driftContextHintTimeout);
+      this.driftContextHintTimeout = null;
+    }
+    this.driftSettings = null;
 
     // Cleanup Room Compensation state
     if (this.realtimeT60) {
@@ -817,6 +851,14 @@ export class DiagnosePhase {
       this.lastDetectedState = detectedState; // MULTICLASS: Store detected state (will be replaced by majority vote on save)
       this.hasValidMeasurement = true; // Mark that we have valid data
 
+      // Step 9: Drift Detector – purely diagnostic, does NOT change score
+      if (this.realtimeDrift && rawFeatureVector.absoluteFeatures) {
+        const driftResult = this.realtimeDrift.processFrame(rawFeatureVector.absoluteFeatures);
+        if (driftResult) {
+          this.updateDriftDisplay(driftResult, filteredScore);
+        }
+      }
+
       // Debug log every 10th update
       if (this.scoreHistory.getAllScores().length % 10 === 0) {
         logger.debug(
@@ -959,6 +1001,126 @@ export class DiagnosePhase {
       t('diagnose.debug.rawScore', { value: v.rawScore.toFixed(1) }),
       v.rawScore === 0
     );
+  }
+
+  /**
+   * Update drift indicator panel with latest drift result.
+   * Called from processChunkDirectly() after scoring.
+   */
+  private updateDriftDisplay(result: DriftResult, currentScore: number): void {
+    const panel = document.getElementById('drift-indicator-panel');
+    if (!panel) return;
+
+    panel.style.display = '';
+
+    // Global Drift Bar
+    const globalBar = document.getElementById('drift-bar-global');
+    const globalStatus = document.getElementById('drift-status-global');
+    if (globalBar && globalStatus && this.driftSettings) {
+      const maxVal = this.driftSettings.globalCritical * 1.5;
+      const pct = Math.min((result.globalDrift / maxVal) * 100, 100);
+      globalBar.style.width = pct + '%';
+      globalBar.className = 'drift-bar drift-bar-' + result.globalSeverity;
+
+      switch (result.globalSeverity) {
+        case 'ok':
+          globalStatus.textContent = '\u2705';
+          break;
+        case 'warning':
+          globalStatus.textContent = '\uD83D\uDFE1';
+          break;
+        case 'critical':
+          globalStatus.textContent = '\uD83D\uDD34';
+          break;
+      }
+    }
+
+    // Local Drift Bar
+    const localBar = document.getElementById('drift-bar-local');
+    const localStatus = document.getElementById('drift-status-local');
+    if (localBar && localStatus && this.driftSettings) {
+      const maxVal = this.driftSettings.localCritical * 1.5;
+      const localVal = result.localDriftNormalized ?? result.localDrift;
+      const pct = Math.min((localVal / maxVal) * 100, 100);
+      localBar.style.width = pct + '%';
+      localBar.className = 'drift-bar drift-bar-' + result.localSeverity;
+
+      switch (result.localSeverity) {
+        case 'ok':
+          localStatus.textContent = '\u2705';
+          break;
+        case 'warning':
+          localStatus.textContent = '\uD83D\uDFE1';
+          break;
+        case 'critical':
+          localStatus.textContent = '\uD83D\uDD34';
+          break;
+      }
+    }
+
+    // Interpretation
+    const interpEl = document.getElementById('drift-interpretation');
+    if (interpEl) {
+      interpEl.textContent = result.overallMessage;
+      interpEl.className =
+        'drift-interpretation drift-interp-' + result.interpretation;
+    }
+
+    // Recommendation (only when there's a deviation)
+    const recoEl = document.getElementById('drift-recommendation');
+    if (recoEl) {
+      if (result.recommendation) {
+        recoEl.style.display = '';
+        recoEl.textContent = result.recommendation;
+      } else {
+        recoEl.style.display = 'none';
+      }
+    }
+
+    // Expert details
+    const detailGlobal = document.getElementById('drift-detail-global');
+    const detailLocal = document.getElementById('drift-detail-local');
+    const detailsContainer = document.getElementById('drift-details');
+    if (detailGlobal && detailLocal && detailsContainer) {
+      detailsContainer.style.display = '';
+      detailGlobal.textContent = `D_global = ${result.globalDrift.toFixed(4)}`;
+      let localText = `D_local = ${result.localDrift.toFixed(4)}`;
+      if (result.localDriftNormalized !== null) {
+        localText += ` (norm: ${result.localDriftNormalized.toFixed(4)})`;
+      }
+      detailLocal.textContent = localText;
+    }
+
+    // Contextual hints
+    if (result.interpretation === 'room_change' && currentScore > 85) {
+      this.showDriftContextHint('drift.roomChangeButScoreOk');
+    } else if (result.interpretation === 'room_change' && currentScore < 70) {
+      this.showDriftContextHint('drift.roomChangeMayCauseScoreDrop');
+    } else if (result.interpretation === 'machine_change') {
+      this.showDriftContextHint('drift.machineChangeDetected');
+    }
+  }
+
+  /**
+   * Show a contextual hint below the drift panel.
+   * Only one at a time; auto-hides after 6 seconds.
+   */
+  private showDriftContextHint(messageKey: string): void {
+    const hintEl = document.getElementById('drift-context-hint');
+    if (!hintEl) return;
+
+    // Only show once per interpretation (not every frame update)
+    if (hintEl.dataset.lastKey === messageKey) return;
+    hintEl.dataset.lastKey = messageKey;
+
+    hintEl.textContent = t(messageKey);
+    hintEl.style.display = '';
+
+    // Auto-hide after 6s
+    if (this.driftContextHintTimeout) clearTimeout(this.driftContextHintTimeout);
+    this.driftContextHintTimeout = setTimeout(() => {
+      hintEl.style.display = 'none';
+    }, 6000);
   }
 
   /**
@@ -1673,6 +1835,49 @@ export class DiagnosePhase {
     if (this.pipelineStatus) {
       this.pipelineStatus.mount(scrollableArea);
       this.pipelineStatus.show();
+    }
+
+    // === DRIFT INDICATOR PANEL (Expert mode, only when drift detector active) ===
+    if (this.realtimeDrift && currentViewLevel === 'expert') {
+      const driftPanel = document.createElement('div');
+      driftPanel.id = 'drift-indicator-panel';
+      driftPanel.className = 'drift-panel';
+      driftPanel.style.display = 'none'; // Hidden until first result
+      driftPanel.innerHTML = `
+        <div class="drift-panel-header">
+          <span>${t('drift.title')}</span>
+        </div>
+        <div class="drift-indicators">
+          <div class="drift-row" id="drift-row-global">
+            <span class="drift-label">${t('drift.environment')}</span>
+            <div class="drift-bar-container">
+              <div class="drift-bar" id="drift-bar-global"></div>
+            </div>
+            <span class="drift-status" id="drift-status-global">—</span>
+          </div>
+          <div class="drift-row" id="drift-row-local">
+            <span class="drift-label">${t('drift.machine')}</span>
+            <div class="drift-bar-container">
+              <div class="drift-bar" id="drift-bar-local"></div>
+            </div>
+            <span class="drift-status" id="drift-status-local">—</span>
+          </div>
+        </div>
+        <div class="drift-interpretation" id="drift-interpretation"></div>
+        <div class="drift-recommendation" id="drift-recommendation" style="display: none;"></div>
+        <div class="drift-details" id="drift-details" style="display: none;">
+          <span id="drift-detail-global"></span>
+          <span id="drift-detail-local"></span>
+        </div>
+      `;
+      scrollableArea.appendChild(driftPanel);
+
+      // Context hint element (below drift panel)
+      const hintEl = document.createElement('div');
+      hintEl.id = 'drift-context-hint';
+      hintEl.className = 'drift-context-hint';
+      hintEl.style.display = 'none';
+      scrollableArea.appendChild(hintEl);
     }
 
     // === CONTROLS: Stop Button ===

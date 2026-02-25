@@ -1664,6 +1664,75 @@
                     <!-- Divider (Expert) -->
                     <div class="settings-divider" data-view-level="expert"></div>
 
+                    <!-- Drift Detector / Change Analysis (Expert only) -->
+                    <div class="setting-category" data-view-level="expert">
+                        <h4 class="setting-category-title" data-i18n="drift.settingsTitle">Änderungsanalyse</h4>
+                        <p class="setting-category-description" data-i18n="drift.settingsDescription">
+                            Analysiert ob Score-Änderungen durch die Umgebung (Raum) oder die Maschine verursacht werden. Zeigt während der Diagnose eine separate Bewertung an.
+                        </p>
+
+                        <!-- Master Toggle -->
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span data-i18n="drift.enabled">Änderungsanalyse aktiviert</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="drift-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Sub-settings (hidden when toggle off) -->
+                        <div id="drift-details-settings" style="display: none;">
+
+                            <!-- Explanation -->
+                            <div class="setting-item">
+                                <small data-i18n="drift.howItWorks">
+                                    Das System trennt spektrale Änderungen in zwei Komponenten: Glatte, breitbandige Drift (= Raum/Umgebung) und lokale, schmalbandige Änderungen (= Maschine).
+                                </small>
+                            </div>
+
+                            <!-- Smoothing window -->
+                            <div class="setting-item" id="drift-smooth-setting">
+                                <div class="setting-label">
+                                    <span data-i18n="drift.smoothWindow">Glättungsfenster</span>
+                                    <small id="drift-smooth-value">32</small> Bins
+                                </div>
+                                <input type="range" id="drift-smooth-slider" min="8" max="64" step="8" value="32">
+                                <small data-i18n="drift.smoothHint">
+                                    Größer = mehr Trennung zwischen Raum und Maschine. Kleiner = empfindlicher für Raumeigenheiten.
+                                </small>
+                            </div>
+
+                            <!-- Global threshold (Room) -->
+                            <div class="setting-item" id="drift-global-setting">
+                                <div class="setting-label">
+                                    <span data-i18n="drift.globalThreshold">Raum-Empfindlichkeit</span>
+                                    <small id="drift-global-value">0.30</small>
+                                </div>
+                                <input type="range" id="drift-global-slider" min="0.1" max="1.0" step="0.05" value="0.30">
+                                <small data-i18n="drift.globalThresholdHint">
+                                    Niedrig = warnt früher bei Umgebungswechsel. Hoch = toleranter.
+                                </small>
+                            </div>
+
+                            <!-- Local threshold (Machine) -->
+                            <div class="setting-item" id="drift-local-setting">
+                                <div class="setting-label">
+                                    <span data-i18n="drift.localThreshold">Maschinen-Empfindlichkeit</span>
+                                    <small id="drift-local-value">0.15</small>
+                                </div>
+                                <input type="range" id="drift-local-slider" min="0.05" max="0.5" step="0.05" value="0.15">
+                                <small data-i18n="drift.localThresholdHint">
+                                    Niedrig = erkennt kleine Maschinenänderungen. Hoch = toleranter.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divider (Expert) -->
+                    <div class="settings-divider" data-view-level="expert"></div>
+
                     <!-- Database Management (Expert only) -->
                     <div class="setting-category" data-view-level="expert">
                         <h4 class="setting-category-title" data-i18n="settingsUI.dataManagement">Datenverwaltung</h4>
