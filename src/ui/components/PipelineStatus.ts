@@ -11,6 +11,7 @@
  */
 
 import { t } from '../../i18n/index.js';
+import type { EnvironmentComparisonResult } from '@core/dsp/roomCompensation.js';
 
 /**
  * Live data the dashboard displays.
@@ -39,6 +40,18 @@ export interface PipelineStatusData {
     t60Color: string;             // CSS color class
     chirpSuccess: boolean | null; // null = not attempted, true = success, false = failed
     beta: number;
+  };
+
+  // Environment comparison (Reference T60 vs. Diagnosis T60)
+  environment: {
+    hasComparison: boolean;        // true if refT60 AND measT60 available
+    refT60: number | null;
+    measT60: number | null;
+    ratio: number | null;
+    severity: 'ok' | 'warning' | 'critical' | null;
+    message: string;
+    referenceOnly: boolean;        // true when only ref info shown (no live T60)
+    referenceClassification: string; // e.g. "trocken"
   };
 }
 
@@ -80,6 +93,16 @@ export class PipelineStatusDashboard {
         chirpSuccess: null,
         beta: 1.0,
       },
+      environment: {
+        hasComparison: false,
+        refT60: null,
+        measT60: null,
+        ratio: null,
+        severity: null,
+        message: '',
+        referenceOnly: false,
+        referenceClassification: '',
+      },
     };
   }
 
@@ -104,6 +127,10 @@ export class PipelineStatusDashboard {
         <div class="pipeline-item" id="ps-chirp" style="display:none;">
           <span class="pipeline-item-icon">\u{1F50A}</span>
           <span class="pipeline-item-label" id="ps-chirp-label">\u2014</span>
+        </div>
+        <div class="pipeline-item" id="ps-env" style="display:none;">
+          <span class="pipeline-item-icon">\u{1F4CD}</span>
+          <span class="pipeline-item-label" id="ps-env-label">\u2014</span>
         </div>
         <div class="pipeline-item" id="ps-cherry" style="display:none;">
           <span class="pipeline-item-icon">\u{1F352}</span>
@@ -221,6 +248,42 @@ export class PipelineStatusDashboard {
   }
 
   /**
+   * Set environment comparison result (Reference T60 vs. Diagnosis T60).
+   * Shows color-coded comparison in the dashboard.
+   */
+  public setEnvironmentComparison(result: EnvironmentComparisonResult): void {
+    this.data.environment = {
+      hasComparison: true,
+      refT60: result.refT60,
+      measT60: result.measT60,
+      ratio: result.ratio,
+      severity: result.severity,
+      message: result.message,
+      referenceOnly: false,
+      referenceClassification: '',
+    };
+    this.render();
+  }
+
+  /**
+   * Show reference T60 info when live T60 measurement is disabled.
+   * Displays only the stored reference value without comparison.
+   */
+  public setReferenceT60Info(refT60: number, classification: string): void {
+    this.data.environment = {
+      hasComparison: false,
+      refT60,
+      measT60: null,
+      ratio: null,
+      severity: null,
+      message: '',
+      referenceOnly: true,
+      referenceClassification: classification,
+    };
+    this.render();
+  }
+
+  /**
    * Load settings and initialize data
    */
   public loadFromSettings(
@@ -285,6 +348,53 @@ export class PipelineStatusDashboard {
         }
       } else {
         chirpRow.style.display = 'none';
+      }
+    }
+
+    // --- Environment Comparison Row ---
+    const envRow = this.container.querySelector('#ps-env') as HTMLElement;
+    const envLabel = this.container.querySelector('#ps-env-label') as HTMLElement;
+    if (envRow && envLabel) {
+      if (this.data.environment.hasComparison) {
+        envRow.style.display = '';
+
+        const ref = this.data.environment.refT60!.toFixed(2);
+        const meas = this.data.environment.measT60!.toFixed(2);
+        const ratio = this.data.environment.ratio!.toFixed(1);
+
+        let colorClass: string;
+        const iconEl = envRow.querySelector('.pipeline-item-icon');
+        switch (this.data.environment.severity) {
+          case 'ok':
+            colorClass = 'status-healthy';
+            if (iconEl) iconEl.textContent = '\u2705';
+            envLabel.textContent = `${t('envCompare.environment')}: ${meas}s \u2248 ${t('envCompare.reference')} ${ref}s`;
+            break;
+          case 'warning':
+            colorClass = 'status-uncertain';
+            if (iconEl) iconEl.textContent = '\u26A0\uFE0F';
+            envLabel.textContent = `${t('envCompare.environment')}: ${meas}s vs. ${t('envCompare.reference')} ${ref}s (${ratio}\u00D7)`;
+            break;
+          case 'critical':
+            colorClass = 'status-faulty';
+            if (iconEl) iconEl.textContent = '\u{1F534}';
+            envLabel.textContent = `${t('envCompare.environment')}: ${meas}s vs. ${t('envCompare.reference')} ${ref}s (${ratio}\u00D7!) \u2014 ${this.data.environment.message}`;
+            break;
+          default:
+            colorClass = '';
+            if (iconEl) iconEl.textContent = '\u{1F4CD}';
+        }
+
+        envLabel.className = `pipeline-item-label ${colorClass}`;
+      } else if (this.data.environment.referenceOnly) {
+        // Show reference T60 info only (no live comparison available)
+        envRow.style.display = '';
+        const iconEl = envRow.querySelector('.pipeline-item-icon');
+        if (iconEl) iconEl.textContent = '\u{1F4CD}';
+        envLabel.textContent = `${t('envCompare.reference')}: T60 = ${this.data.environment.refT60!.toFixed(2)}s (${this.data.environment.referenceClassification})`;
+        envLabel.className = 'pipeline-item-label';
+      } else {
+        envRow.style.display = 'none';
       }
     }
 

@@ -15,6 +15,7 @@
 
 import type { FeatureVector } from '@data/types.js';
 import { logger } from '@utils/logger.js';
+import { t } from '../../i18n/index.js';
 
 // ============================================================================
 // INTERFACES
@@ -45,6 +46,99 @@ export const DEFAULT_ROOM_COMP_SETTINGS: RoomCompSettings = {
   spectralFloor: 0.05,
   calibrationMode: 'none',
 };
+
+// ============================================================================
+// ENVIRONMENT COMPARISON (Reference T60 vs. Diagnosis T60)
+// ============================================================================
+
+/**
+ * Classify a T60 value into a machine-readable category.
+ * Thresholds match classifyT60() in PipelineStatus.ts.
+ */
+export function classifyT60Value(t60: number): string {
+  if (t60 < 0.3) return 'very_dry';
+  if (t60 < 0.6) return 'dry';
+  if (t60 < 1.0) return 'medium';
+  if (t60 < 2.0) return 'reverberant';
+  return 'very_reverberant';
+}
+
+/**
+ * Return a localized display name for a T60 classification.
+ */
+export function getT60ClassificationLabel(classification: string): string {
+  const labels: Record<string, string> = {
+    'very_dry': t('pipelineStatus.t60VeryDry'),
+    'dry': t('pipelineStatus.t60Dry'),
+    'medium': t('pipelineStatus.t60Medium'),
+    'reverberant': t('pipelineStatus.t60Reverberant'),
+    'very_reverberant': t('pipelineStatus.t60VeryReverberant'),
+  };
+  return labels[classification] ?? classification;
+}
+
+export interface EnvironmentComparisonResult {
+  refT60: number;           // Reference T60 in seconds
+  measT60: number;          // Current T60 in seconds
+  deltaT60: number;         // |measT60 - refT60| in seconds
+  ratio: number;            // measT60 / refT60 (>1 = more reverberant, <1 = dryer)
+  severity: 'ok' | 'warning' | 'critical';
+  message: string;          // Human-readable hint (localized)
+  recommendation: string;   // Action recommendation (localized)
+}
+
+/**
+ * Compare the current test environment with the reference environment.
+ *
+ * Thresholds:
+ *   Ratio 0.7 – 1.5 → ok (similar environment, no hint)
+ *   Ratio 1.5 – 3.0 or 0.3 – 0.7 → warning (significantly different)
+ *   Ratio > 3.0 or < 0.3 → critical (strongly deviating)
+ *
+ * @param refT60 - T60 of the reference session (seconds)
+ * @param measT60 - T60 of the current diagnosis session (seconds)
+ */
+export function compareEnvironments(refT60: number, measT60: number): EnvironmentComparisonResult {
+  const deltaT60 = Math.abs(measT60 - refT60);
+  const ratio = measT60 / refT60;
+
+  let severity: 'ok' | 'warning' | 'critical';
+  let message: string;
+  let recommendation: string;
+
+  if (ratio >= 0.7 && ratio <= 1.5) {
+    severity = 'ok';
+    message = t('envCompare.ok');
+    recommendation = '';
+  } else if (ratio > 1.5 && ratio <= 3.0) {
+    severity = 'warning';
+    message = t('envCompare.moreReverberant');
+    recommendation = t('envCompare.recommendCloser');
+  } else if (ratio < 0.7 && ratio >= 0.3) {
+    severity = 'warning';
+    message = t('envCompare.lesserReverberant');
+    recommendation = t('envCompare.recommendNote');
+  } else if (ratio > 3.0) {
+    severity = 'critical';
+    message = t('envCompare.muchMoreReverberant');
+    recommendation = t('envCompare.recommendCompensation');
+  } else {
+    // ratio < 0.3
+    severity = 'critical';
+    message = t('envCompare.muchLessReverberant');
+    recommendation = t('envCompare.recommendNote');
+  }
+
+  return {
+    refT60,
+    measT60,
+    deltaT60,
+    ratio,
+    severity,
+    message,
+    recommendation,
+  };
+}
 
 // ============================================================================
 // CONSTANTS
@@ -230,27 +324,34 @@ export class RealtimeBiasMatch {
   private readonly epsilon: number = 1e-30;
 
   /**
-   * @param referenceFeatures - The reference FeatureVectors (from training)
+   * @param source - Either FeatureVector[] (compute mean live) or Float64Array (precomputed log-mean from IndexedDB)
    * @param alpha - Exponential smoothing factor (default: 0.02)
    */
-  constructor(referenceFeatures: FeatureVector[], alpha: number = 0.02) {
-    if (!referenceFeatures || referenceFeatures.length === 0) {
-      throw new Error('RealtimeBiasMatch requires non-empty reference features');
-    }
-    this.K = referenceFeatures[0].absoluteFeatures.length;
+  constructor(source: FeatureVector[] | Float64Array, alpha: number = 0.02) {
     this.alpha = alpha;
-    this.muRef = new Float64Array(this.K);
-    this.muMeas = new Float64Array(this.K);
 
-    // Compute reference mean once
-    for (const fv of referenceFeatures) {
+    if (source instanceof Float64Array) {
+      // Precomputed log-mean (loaded from IndexedDB via Machine.refLogMean)
+      this.K = source.length;
+      this.muRef = new Float64Array(source);
+    } else {
+      // Feature vectors → compute mean live
+      if (!source || source.length === 0) {
+        throw new Error('RealtimeBiasMatch requires non-empty reference features');
+      }
+      this.K = source[0].absoluteFeatures.length;
+      this.muRef = new Float64Array(this.K);
+      for (const fv of source) {
+        for (let k = 0; k < this.K; k++) {
+          this.muRef[k] += Math.log(fv.absoluteFeatures[k] + this.epsilon);
+        }
+      }
       for (let k = 0; k < this.K; k++) {
-        this.muRef[k] += Math.log(fv.absoluteFeatures[k] + this.epsilon);
+        this.muRef[k] /= source.length;
       }
     }
-    for (let k = 0; k < this.K; k++) {
-      this.muRef[k] /= referenceFeatures.length;
-    }
+
+    this.muMeas = new Float64Array(this.K);
   }
 
   /**
