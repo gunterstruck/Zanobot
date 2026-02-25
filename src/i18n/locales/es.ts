@@ -322,9 +322,9 @@ export const es: TranslationDict = {
     },
     frequencyDelta: {
       shortLabel: 'Frecuencia \u0394',
-      description: 'Desplazamiento del tono principal (frecuencia dominante).',
-      warning: '\u26A0\uFE0F Punto de operaci\u00f3n desviado: La frecuencia fundamental ha cambiado. La m\u00e1quina probablemente funciona a una velocidad diferente a la de la referencia.',
-      explain: 'Compara el tono principal (ej. RPM del motor) con la referencia. Un desplazamiento generalmente significa que la m\u00e1quina funciona m\u00e1s r\u00e1pido o m\u00e1s lento.',
+      description: 'Desplazamiento medio de los picos espectrales dominantes respecto a la referencia. Puede indicar cambio de RPM o del punto de operaci\u00f3n.',
+      warning: '\u26A0\uFE0F Punto de operaci\u00f3n desviado: Las frecuencias dominantes han cambiado. La m\u00e1quina probablemente funciona a una velocidad diferente a la de la referencia.',
+      explain: 'Compara los picos espectrales dominantes (ej. RPM del motor y arm\u00f3nicos) con la referencia. Un desplazamiento generalmente significa que la m\u00e1quina funciona m\u00e1s r\u00e1pido o m\u00e1s lento.',
     },
     stability: {
       shortLabel: 'Estabilidad de se\u00f1al',

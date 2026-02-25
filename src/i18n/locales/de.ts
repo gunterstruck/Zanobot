@@ -326,9 +326,9 @@ export const de: TranslationDict = {
     },
     frequencyDelta: {
       shortLabel: 'Frequenz \u0394',
-      description: 'Verschiebung des st\u00e4rksten Haupttons (dominante Frequenz).',
-      warning: '\u26A0\uFE0F Abweichender Betriebspunkt: Die Grundfrequenz hat sich verschoben. Die Maschine l\u00e4uft vermutlich mit einer anderen Drehzahl als bei der Referenz.',
-      explain: 'Vergleicht den st\u00e4rksten Hauptton (z.\u00A0B. Motordrehzahl) mit der Referenz. Eine Verschiebung bedeutet meist, dass die Maschine schneller oder langsamer l\u00e4uft.',
+      description: 'Mittlere Verschiebung der wichtigsten Spektral-Peaks im Vergleich zur Referenz. Kann auf Drehzahl\u00e4nderung oder ge\u00e4nderten Betriebspunkt hinweisen.',
+      warning: '\u26A0\uFE0F Abweichender Betriebspunkt: Die Hauptfrequenzen haben sich verschoben. Die Maschine l\u00e4uft vermutlich mit einer anderen Drehzahl als bei der Referenz.',
+      explain: 'Vergleicht die wichtigsten Spektral-Peaks (z.\u00A0B. Motordrehzahl und Oberwellen) mit der Referenz. Eine Verschiebung bedeutet meist, dass die Maschine schneller oder langsamer l\u00e4uft.',
     },
     stability: {
       shortLabel: 'Signal-Stabilit\u00e4t',

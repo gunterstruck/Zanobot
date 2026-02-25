@@ -324,9 +324,9 @@ export const en: TranslationDict = {
     },
     frequencyDelta: {
       shortLabel: 'Frequency \u0394',
-      description: 'Shift of the strongest main tone (dominant frequency).',
-      warning: '\u26A0\uFE0F Deviating operating point: The fundamental frequency has shifted. The machine is likely running at a different speed than during the reference.',
-      explain: 'Compares the strongest main tone (e.g. motor RPM) with the reference. A shift usually means the machine is running faster or slower.',
+      description: 'Median shift of the dominant spectral peaks compared to reference. May indicate RPM change or changed operating point.',
+      warning: '\u26A0\uFE0F Deviating operating point: The dominant frequencies have shifted. The machine is likely running at a different speed than during the reference.',
+      explain: 'Compares the dominant spectral peaks (e.g. motor RPM and harmonics) with the reference. A shift usually means the machine is running faster or slower.',
     },
     stability: {
       shortLabel: 'Signal Stability',

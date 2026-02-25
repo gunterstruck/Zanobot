@@ -21,7 +21,7 @@ const FREQUENCY_BINS = 512;
 
 /**
  * Generate a stable feature vector (normalised, sum ~ 1).
- * Peaks at a given bin to simulate a dominant frequency.
+ * Peaks at a given bin to simulate a dominant spectral peak.
  */
 function makeFeatures(peakBin: number = 50, spread: number = 5): Float64Array {
   const f = new Float64Array(FREQUENCY_BINS);
@@ -272,7 +272,7 @@ describe('OperatingPointMetrics', () => {
     it('should remain stable when peak amplitudes change but positions stay', () => {
       // Feed frames where two peaks stay at the same position (bin 50 and bin 200)
       // but their amplitudes fluctuate inversely.
-      // With the old centroid approach this would cause large jumps.
+      // With a single-centroid approach this would cause large jumps;
       // With multi-peak tracking the shift should stay near 0%.
       for (let i = 0; i < 10; i++) {
         const features = new Float64Array(FREQUENCY_BINS);
