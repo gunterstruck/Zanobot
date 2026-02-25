@@ -1194,7 +1194,7 @@ export const en: TranslationDict = {
   // ============================================================================
   drift: {
     // Settings
-    settingsTitle: 'Change Analysis',
+    settingsTitle: '\uD83D\uDD0D Change Analysis',
     settingsDescription: 'Analyzes whether score changes are caused by the environment (room) or the machine. Shows a separate assessment during diagnosis.',
     enabled: 'Change analysis enabled',
     howItWorks: 'The system separates spectral changes into two components: Smooth, broadband drift (= room/environment) and local, narrowband changes (= machine). This helps you see whether a score drop comes from the room or the machine.',
@@ -1221,11 +1221,11 @@ export const en: TranslationDict = {
     localCritical: 'Significant change detected',
 
     // Interpretations
-    allOk: 'Environment and machine consistent with reference',
-    roomChange: 'Environment change detected – machine unchanged',
-    machineChange: 'Machine change detected – check machine',
-    both: 'Environment and machine changed – interpret results with caution',
-    uncertain: 'Unclear situation – measure closer to machine or create new reference',
+    allOk: '\u2705 Environment and machine consistent with reference',
+    roomChange: '\uD83D\uDFE1 Environment change detected – machine unchanged',
+    machineChange: '\uD83D\uDD34 Machine change detected – check machine',
+    both: '\uD83D\uDFE0 Environment and machine changed – interpret results with caution',
+    uncertain: '\uD83D\uDFE1 Unclear situation – measure closer to machine or create new reference',
 
     // Recommendations
     recommendRoom: 'Score drop likely caused by environment or microphone position. Measure closer to machine, use same position as reference, or create new reference in this environment.',
@@ -1234,12 +1234,12 @@ export const en: TranslationDict = {
     recommendUncertain: 'For clearer results: measure closer to machine, use same position as reference, or create reference in current environment.',
 
     // Contextual hints
-    roomChangeButScoreOk: 'Environment change detected, but score stable – that\'s a good sign.',
-    roomChangeMayCauseScoreDrop: 'Score drop may be caused by environment or microphone position, not the machine. Use same position as reference or create new reference here.',
-    machineChangeDetected: 'Structural change in machine detected. Please check.',
+    roomChangeButScoreOk: '\uD83D\uDCA1 Environment change detected, but score stable – that\'s a good sign.',
+    roomChangeMayCauseScoreDrop: '\uD83D\uDCA1 Score drop may be caused by environment or microphone position, not the machine. Use same position as reference or create new reference here.',
+    machineChangeDetected: '\u26A0\uFE0F Structural change in machine detected. Please check.',
 
     // Reference phase
-    referenceHint: 'Change analysis active: This recording also defines the reference environment and microphone position. Future diagnoses will show whether the environment or machine has changed.',
-    referenceStored: 'Environment profile stored. Future diagnoses will automatically analyze whether changes come from the environment or the machine.',
+    referenceHint: '\uD83D\uDCA1 Change analysis active: This recording also defines the reference environment and microphone position. Future diagnoses will show whether the environment or machine has changed.',
+    referenceStored: '\u2705 Environment profile stored. Future diagnoses will automatically analyze whether changes come from the environment or the machine.',
   },
 };

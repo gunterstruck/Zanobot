@@ -34,6 +34,7 @@ import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, cherryPickFeatures } from '@core/dsp/cherryPicking.js';
 import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
+import { getDriftSettings } from '@core/dsp/driftDetector.js';
 
 export class ReferencePhase {
   private machine: Machine | null;
@@ -196,6 +197,12 @@ export class ReferencePhase {
           title: t('modals.cameraOptional'),
         });
         this.cameraStream = null;
+      }
+
+      // Drift Detector: Show info hint if change analysis is active
+      const driftSettings = getDriftSettings();
+      if (driftSettings.enabled) {
+        notify.info(t('drift.referenceHint'));
       }
 
       if (typeof MediaRecorder === 'undefined') {
@@ -1707,6 +1714,11 @@ export class ReferencePhase {
       logger.info(
         `✅ Reference model "${label}" trained and saved${this.capturedReferenceImage ? ' with image' : ''}!`
       );
+
+      // Drift Detector: Show hint that environment profile was stored
+      if (getDriftSettings().enabled && this.currentRefLogMean) {
+        notify.info(t('drift.referenceStored'));
+      }
 
       const updatedMachine = machineToUpdate;
       if (updatedMachine) {

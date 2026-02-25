@@ -1237,7 +1237,7 @@ export const de: TranslationDict = {
   // ============================================================================
   drift: {
     // Settings
-    settingsTitle: 'Änderungsanalyse',
+    settingsTitle: '\uD83D\uDD0D Änderungsanalyse',
     settingsDescription: 'Analysiert ob Score-Änderungen durch die Umgebung (Raum) oder die Maschine verursacht werden. Zeigt während der Diagnose eine separate Bewertung an.',
     enabled: 'Änderungsanalyse aktiviert',
     howItWorks: 'Das System trennt spektrale Änderungen in zwei Komponenten: Glatte, breitbandige Drift (= Raum/Umgebung) und lokale, schmalbandige Änderungen (= Maschine). So siehst du, ob ein Score-Abfall vom Raum oder von der Maschine kommt.',
@@ -1264,11 +1264,11 @@ export const de: TranslationDict = {
     localCritical: 'Deutliche Änderung erkannt',
 
     // Interpretations
-    allOk: 'Umgebung und Maschine konsistent zur Referenz',
-    roomChange: 'Umgebungsänderung erkannt – Maschine unverändert',
-    machineChange: 'Maschinenänderung erkannt – Maschine prüfen',
-    both: 'Umgebung und Maschine verändert – Ergebnis mit Vorsicht interpretieren',
-    uncertain: 'Unklare Situation – näher an Maschine messen oder neue Referenz erstellen',
+    allOk: '\u2705 Umgebung und Maschine konsistent zur Referenz',
+    roomChange: '\uD83D\uDFE1 Umgebungsänderung erkannt – Maschine unverändert',
+    machineChange: '\uD83D\uDD34 Maschinenänderung erkannt – Maschine prüfen',
+    both: '\uD83D\uDFE0 Umgebung und Maschine verändert – Ergebnis mit Vorsicht interpretieren',
+    uncertain: '\uD83D\uDFE1 Unklare Situation – näher an Maschine messen oder neue Referenz erstellen',
 
     // Recommendations
     recommendRoom: 'Score-Abfall wahrscheinlich durch Umgebung oder Mikrofonposition verursacht. Näher an Maschine messen, gleiche Position wie bei Referenz wählen, oder Referenz in dieser Umgebung neu erstellen.',
@@ -1277,12 +1277,12 @@ export const de: TranslationDict = {
     recommendUncertain: 'Für klareres Ergebnis: Näher an Maschine messen, gleiche Position wie bei Referenz wählen, oder Referenz in aktueller Umgebung erstellen.',
 
     // Contextual hints
-    roomChangeButScoreOk: 'Umgebungsänderung erkannt, aber Score stabil – das ist ein gutes Zeichen.',
-    roomChangeMayCauseScoreDrop: 'Score-Abfall könnte durch Umgebung oder Mikrofonposition verursacht sein, nicht durch die Maschine. Gleiche Position wie bei Referenz wählen oder Referenz hier neu erstellen.',
-    machineChangeDetected: 'Strukturelle Änderung an der Maschine erkannt. Bitte prüfen.',
+    roomChangeButScoreOk: '\uD83D\uDCA1 Umgebungsänderung erkannt, aber Score stabil – das ist ein gutes Zeichen.',
+    roomChangeMayCauseScoreDrop: '\uD83D\uDCA1 Score-Abfall könnte durch Umgebung oder Mikrofonposition verursacht sein, nicht durch die Maschine. Gleiche Position wie bei Referenz wählen oder Referenz hier neu erstellen.',
+    machineChangeDetected: '\u26A0\uFE0F Strukturelle Änderung an der Maschine erkannt. Bitte prüfen.',
 
     // Reference phase
-    referenceHint: 'Änderungsanalyse aktiv: Diese Aufnahme definiert auch die Referenz-Umgebung und Mikrofonposition. Spätere Diagnosen zeigen ob sich die Umgebung oder die Maschine verändert hat.',
-    referenceStored: 'Umgebungsprofil gespeichert. Bei zukünftigen Diagnosen wird automatisch analysiert ob Änderungen von der Umgebung oder der Maschine kommen.',
+    referenceHint: '\uD83D\uDCA1 Änderungsanalyse aktiv: Diese Aufnahme definiert auch die Referenz-Umgebung und Mikrofonposition. Spätere Diagnosen zeigen ob sich die Umgebung oder die Maschine verändert hat.',
+    referenceStored: '\u2705 Umgebungsprofil gespeichert. Bei zukünftigen Diagnosen wird automatisch analysiert ob Änderungen von der Umgebung oder der Maschine kommen.',
   },
 };
