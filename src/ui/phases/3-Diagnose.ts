@@ -51,8 +51,11 @@ import {
   RealtimeT60Subtraction,
   playChirpAndRecord,
   estimateT60FromChirp,
+  compareEnvironments,
+  classifyT60Value,
+  getT60ClassificationLabel,
 } from '@core/dsp/roomCompensation.js';
-import type { T60Estimate } from '@core/dsp/roomCompensation.js';
+import type { T60Estimate, EnvironmentComparisonResult } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, RealtimeCherryPick } from '@core/dsp/cherryPicking.js';
 import { PipelineStatusDashboard } from '@ui/components/PipelineStatus.js';
 
@@ -132,6 +135,9 @@ export class DiagnosePhase {
 
   // Pipeline Status Dashboard (Expert mode, shows DSP pipeline state)
   private pipelineStatus: PipelineStatusDashboard | null = null;
+
+  // Environment comparison result (Reference T60 vs. Diagnosis T60)
+  private environmentWarning: EnvironmentComparisonResult | null = null;
 
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
@@ -342,13 +348,13 @@ export class DiagnosePhase {
       const roomCompSettings = getRoomCompSettings();
 
       // Session Bias Match: Preferred over CMN for stationary machine signals.
-      // Requires reference features – currently not stored in GMIAModel,
-      // so this is prepared for future use when reference features become available.
+      // Uses precomputed refLogMean from the Machine object (stored at reference creation).
       this.realtimeBiasMatch = null;
-      // Note: RealtimeBiasMatch would be initialized here if reference features were available:
-      // if (roomCompSettings.enabled && roomCompSettings.biasMatchEnabled && referenceFeatures) {
-      //   this.realtimeBiasMatch = new RealtimeBiasMatch(referenceFeatures);
-      // }
+      if (roomCompSettings.enabled && roomCompSettings.biasMatchEnabled && this.machine.refLogMean) {
+        const muRef = new Float64Array(this.machine.refLogMean);
+        this.realtimeBiasMatch = new RealtimeBiasMatch(muRef);
+        logger.info(`📊 Session Bias Match activated (refLogMean loaded, ${muRef.length} bins)`);
+      }
 
       // CMN: Only if explicitly enabled AND bias match is NOT active
       this.roomCompEnabled = roomCompSettings.enabled && roomCompSettings.cmnEnabled && !roomCompSettings.biasMatchEnabled;
@@ -386,6 +392,20 @@ export class DiagnosePhase {
         }
       }
 
+      // Environment comparison: Reference T60 vs. current T60
+      this.environmentWarning = null;
+      if (this.currentT60 && this.machine.refT60) {
+        this.environmentWarning = compareEnvironments(
+          this.machine.refT60,
+          this.currentT60.broadband
+        );
+        if (this.environmentWarning.severity !== 'ok') {
+          logger.warn(`⚠️ Environment comparison: ${this.environmentWarning.message}`);
+        } else {
+          logger.info(`✅ Environment similar to reference (ratio: ${this.environmentWarning.ratio.toFixed(1)}x)`);
+        }
+      }
+
       // Cherry-Picking: Initialize real-time Energy-Entropy Gate if enabled
       const cherryPickSettings = getCherryPickSettings();
       if (cherryPickSettings.enabled) {
@@ -419,6 +439,17 @@ export class DiagnosePhase {
         // Set CMN status
         if (this.roomCompEnabled) {
           this.pipelineStatus.setCmnActive(false); // Will be set to true after first CMN application
+        }
+
+        // Environment comparison: Show result in dashboard
+        if (this.environmentWarning) {
+          this.pipelineStatus.setEnvironmentComparison(this.environmentWarning);
+        } else if (this.machine.refT60 && !roomCompSettings.t60Enabled) {
+          // T60 is OFF but reference had a value → show reference info
+          this.pipelineStatus.setReferenceT60Info(
+            this.machine.refT60,
+            this.machine.refT60Classification ?? classifyT60Value(this.machine.refT60)
+          );
         }
       }
 

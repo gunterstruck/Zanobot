@@ -29,6 +29,31 @@ export interface Machine {
   referenceDbVersion?: string;
   /** @internal Whether the reference DB has been downloaded */
   referenceDbLoaded?: boolean;
+
+  /**
+   * Mean log-energy vector of the reference session.
+   * 512 values: refLogMean[k] = (1/N) · Σ ln(absoluteFeatures[n][k] + ε)
+   * Computed at reference creation. Used for Session Bias Match in diagnosis.
+   * Stored as number[] (not Float64Array) because IndexedDB/JSON
+   * does not natively serialize TypedArrays.
+   * null/undefined for old references (before this update).
+   */
+  refLogMean?: number[] | null;
+
+  /**
+   * Reverberation time (T60) of the reference environment in seconds.
+   * Measured via chirp at reference creation.
+   * null when T60 measurement was disabled or chirp failed.
+   * Used for environment comparison during diagnosis.
+   */
+  refT60?: number | null;
+
+  /**
+   * Classification of the reference environment.
+   * One of: 'very_dry' | 'dry' | 'medium' | 'reverberant' | 'very_reverberant'
+   * Derived from refT60. null when no T60 available.
+   */
+  refT60Classification?: string | null;
 }
 
 /**

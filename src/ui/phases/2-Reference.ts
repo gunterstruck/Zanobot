@@ -28,6 +28,7 @@ import {
   getRoomCompSettings,
   playChirpAndRecord,
   estimateT60FromChirp,
+  classifyT60Value,
 } from '@core/dsp/roomCompensation.js';
 import type { T60Estimate } from '@core/dsp/roomCompensation.js';
 import { getCherryPickSettings, cherryPickFeatures } from '@core/dsp/cherryPicking.js';
@@ -75,6 +76,11 @@ export class ReferencePhase {
 
   // Pipeline Status Dashboard (Expert mode, shows batch DSP results in review modal)
   private pipelineStatus: PipelineStatusDashboard | null = null;
+
+  // Reference environment data (for Session Bias Match + T60 environment comparison)
+  private currentRefLogMean: number[] | null = null;
+  private currentRefT60: number | null = null;
+  private currentRefT60Classification: string | null = null;
 
   constructor(machine?: Machine | null, selectedDeviceId?: string) {
     this.machine = machine || null;
@@ -740,6 +746,37 @@ export class ReferencePhase {
         if (roomCompSettings.enabled && roomCompSettings.cmnEnabled) {
           this.pipelineStatus.setCmnActive(true);
         }
+      }
+
+      // ════════════════════════════════════════════════════════════
+      // Reference environment data for Bias Match + T60 comparison
+      // ════════════════════════════════════════════════════════════
+      const LOG_EPSILON = 1e-12;
+      const K = processedFeatures[0]?.absoluteFeatures.length ?? 512;
+      const refLogMeanArr = new Float64Array(K);
+
+      for (const fv of processedFeatures) {
+        for (let k = 0; k < K; k++) {
+          refLogMeanArr[k] += Math.log(fv.absoluteFeatures[k] + LOG_EPSILON);
+        }
+      }
+      for (let k = 0; k < K; k++) {
+        refLogMeanArr[k] /= processedFeatures.length;
+      }
+
+      this.currentRefLogMean = Array.from(refLogMeanArr);
+      logger.info(`📊 refLogMean computed (${K} bins, ${processedFeatures.length} frames)`);
+
+      // Store reference T60 (measured during chirp warmup)
+      this.currentRefT60 = this.currentT60?.broadband ?? null;
+      this.currentRefT60Classification = this.currentRefT60 !== null
+        ? classifyT60Value(this.currentRefT60)
+        : null;
+
+      if (this.currentRefT60 !== null) {
+        logger.info(`🔊 Reference environment: T60 = ${this.currentRefT60.toFixed(2)}s (${this.currentRefT60Classification})`);
+      } else {
+        logger.info('🔊 No reference T60 (chirp disabled or failed)');
       }
 
       // Prepare training data (but don't train yet - wait for user approval)
@@ -1629,6 +1666,17 @@ export class ReferencePhase {
         );
       }
 
+      // Save reference environment data (for Session Bias Match + T60 comparison)
+      if (this.currentRefLogMean) {
+        machineToUpdate.refLogMean = this.currentRefLogMean;
+        logger.info(`📊 refLogMean saved (${this.currentRefLogMean.length} bins)`);
+      }
+      machineToUpdate.refT60 = this.currentRefT60;
+      machineToUpdate.refT60Classification = this.currentRefT60Classification;
+      if (this.currentRefT60 !== null) {
+        logger.info(`📍 Reference environment saved: T60 = ${this.currentRefT60.toFixed(2)}s (${this.currentRefT60Classification})`);
+      }
+
       await saveMachine(machineToUpdate);
 
       logger.info(
@@ -1664,6 +1712,9 @@ export class ReferencePhase {
       this.currentFeatures = [];
       this.currentQualityResult = null;
       this.currentTrainingData = null;
+      this.currentRefLogMean = null;
+      this.currentRefT60 = null;
+      this.currentRefT60Classification = null;
     } catch (error) {
       logger.error('Save error:', error);
       notify.error(t('reference.errors.saveFailed'), error as Error, {

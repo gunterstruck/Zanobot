@@ -303,6 +303,22 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // ENVIRONMENT COMPARISON (Reference T60 vs. Diagnosis T60)
+  // ============================================================================
+  envCompare: {
+    environment: 'Environment',
+    reference: 'Ref.',
+    ok: 'Similar environment to reference',
+    moreReverberant: 'Environment significantly more reverberant than reference',
+    lesserReverberant: 'Environment significantly less reverberant than reference',
+    muchMoreReverberant: 'Test environment strongly deviating \u2014 score may be affected',
+    muchLessReverberant: 'Test environment strongly deviating \u2014 score may be affected',
+    recommendCloser: 'Recommendation: Measure closer to machine or enable room compensation',
+    recommendCompensation: 'Recommendation: Enable Session Bias Match or T60 equalization',
+    recommendNote: 'Note: Score deviations may be environment-related',
+  },
+
+  // ============================================================================
   // OPERATING POINT MONITOR (Expert Mode)
   // ============================================================================
   opMonitor: {
