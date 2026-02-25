@@ -41,6 +41,7 @@ export const DEFAULT_DRIFT_SETTINGS: DriftDetectorSettings = {
   localWarning: 0.15,
   localCritical: 0.30,
   useAdaptiveThresholds: true, // Prefer calibrated thresholds when available
+  hasManualOverride: false, // True when user has explicitly adjusted threshold sliders
 };
 
 // ════════════════════════════════════════════════════════════
@@ -51,11 +52,12 @@ export interface DriftDetectorSettings {
   enabled: boolean;
   smoothWindow: number; // Moving-Average window width (bins)
   lowFreqCutoffBin: number; // Bins below this are ignored for D_local (room mode protection)
-  globalWarning: number; // D_global → warning threshold (fallback)
-  globalCritical: number; // D_global → critical threshold (fallback)
-  localWarning: number; // D_local → warning threshold (fallback)
-  localCritical: number; // D_local → critical threshold (fallback)
+  globalWarning: number; // D_global → warning threshold (fallback/manual)
+  globalCritical: number; // D_global → critical threshold (fallback/manual)
+  localWarning: number; // D_local → warning threshold (fallback/manual)
+  localCritical: number; // D_local → critical threshold (fallback/manual)
   useAdaptiveThresholds: boolean; // When true AND refDriftBaseline present → adaptive thresholds
+  hasManualOverride: boolean; // True when user has explicitly adjusted threshold sliders
 }
 
 /** Calibrated baseline from reference partitions */
@@ -228,10 +230,11 @@ export function computeDrift(
   }
 
   // ── Step 4: Determine thresholds (V2: adaptive support) ──
+  // Priority: 1. Adaptive (calibrated) 2. Manual (user-adjusted sliders) 3. Fallback (defaults)
   let gWarn: number, gCrit: number, lWarn: number, lCrit: number;
   let thresholdsUsed: 'adaptive' | 'manual' | 'fallback';
 
-  if (settings.useAdaptiveThresholds && baseline) {
+  if (settings.useAdaptiveThresholds && baseline && !settings.hasManualOverride) {
     gWarn = baseline.adaptiveGlobalWarning;
     gCrit = baseline.adaptiveGlobalCritical;
     lWarn = baseline.adaptiveLocalWarning;
@@ -242,7 +245,7 @@ export function computeDrift(
     gCrit = settings.globalCritical;
     lWarn = settings.localWarning;
     lCrit = settings.localCritical;
-    thresholdsUsed = 'fallback';
+    thresholdsUsed = settings.hasManualOverride ? 'manual' : 'fallback';
   }
 
   const localForSeverity = localDriftNormalized ?? localDrift;
@@ -482,6 +485,18 @@ function generateDriftMessages(
   }
 
   return { globalMessage, localMessage, overallMessage, recommendation };
+}
+
+/**
+ * Compute Hz per ESD bin from DSP parameters.
+ * Formula: (sampleRate / 2) / frequencyBins = Nyquist / numBins
+ *
+ * @param sampleRate - Audio sample rate in Hz (default: 48000)
+ * @param frequencyBins - Number of ESD frequency bins (default: 512)
+ * @returns Hz per bin
+ */
+export function getHzPerBin(sampleRate: number = 48000, frequencyBins: number = 512): number {
+  return (sampleRate / 2) / frequencyBins;
 }
 
 /** Compute median of a numeric array */

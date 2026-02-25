@@ -38,7 +38,9 @@ import {
 import {
   getDriftSettings,
   setDriftSettings,
+  getHzPerBin,
 } from '@core/dsp/driftDetector.js';
+import { DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
 
 export class SettingsPhase {
 
@@ -814,15 +816,16 @@ export class SettingsPhase {
     const lowFreqSlider = document.getElementById('drift-lowfreq-slider') as HTMLInputElement | null;
     const lowFreqValue = document.getElementById('drift-lowfreq-value');
     const lowFreqHz = document.getElementById('drift-lowfreq-hz');
+    // Compute Hz/bin from actual DSP config instead of hardcoding
+    const hzPerBin = getHzPerBin(DEFAULT_DSP_CONFIG.sampleRate, DEFAULT_DSP_CONFIG.frequencyBins);
 
     if (lowFreqSlider) {
       lowFreqSlider.value = String(dSettings.lowFreqCutoffBin);
       if (lowFreqValue) {
         lowFreqValue.textContent = String(dSettings.lowFreqCutoffBin);
       }
-      // Approximation: Bin × (sampleRate / fftSize) ≈ 46.9 Hz/Bin
       if (lowFreqHz) {
-        lowFreqHz.textContent = `\u2248${Math.round(dSettings.lowFreqCutoffBin * 46.9)}`;
+        lowFreqHz.textContent = `\u2248${Math.round(dSettings.lowFreqCutoffBin * hzPerBin)}`;
       }
 
       lowFreqSlider.addEventListener('input', () => {
@@ -831,7 +834,7 @@ export class SettingsPhase {
           lowFreqValue.textContent = String(val);
         }
         if (lowFreqHz) {
-          lowFreqHz.textContent = `\u2248${Math.round(val * 46.9)}`;
+          lowFreqHz.textContent = `\u2248${Math.round(val * hzPerBin)}`;
         }
         setDriftSettings({ lowFreqCutoffBin: val });
       });
@@ -852,8 +855,8 @@ export class SettingsPhase {
         if (globalValue) {
           globalValue.textContent = val.toFixed(2);
         }
-        // Critical = Warning × 2
-        setDriftSettings({ globalWarning: val, globalCritical: val * 2 });
+        // Critical = Warning × 2; mark as manual override
+        setDriftSettings({ globalWarning: val, globalCritical: val * 2, hasManualOverride: true });
       });
     }
 
@@ -872,8 +875,8 @@ export class SettingsPhase {
         if (localValue) {
           localValue.textContent = val.toFixed(2);
         }
-        // Critical = Warning × 2
-        setDriftSettings({ localWarning: val, localCritical: val * 2 });
+        // Critical = Warning × 2; mark as manual override
+        setDriftSettings({ localWarning: val, localCritical: val * 2, hasManualOverride: true });
       });
     }
   }
