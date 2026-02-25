@@ -234,7 +234,10 @@ export class RealtimeBiasMatch {
    * @param alpha - Exponential smoothing factor (default: 0.02)
    */
   constructor(referenceFeatures: FeatureVector[], alpha: number = 0.02) {
-    this.K = referenceFeatures[0]?.absoluteFeatures.length ?? 512;
+    if (!referenceFeatures || referenceFeatures.length === 0) {
+      throw new Error('RealtimeBiasMatch requires non-empty reference features');
+    }
+    this.K = referenceFeatures[0].absoluteFeatures.length;
     this.alpha = alpha;
     this.muRef = new Float64Array(this.K);
     this.muMeas = new Float64Array(this.K);
@@ -871,11 +874,17 @@ export function applyRoomCompensation(
   // Stage 2a: Session Bias Match (recommended, needs reference features)
   if (settings.biasMatchEnabled && referenceFeatures && referenceFeatures.length > 0) {
     processed = applySessionBiasMatch(processed, referenceFeatures);
+  } else if (settings.biasMatchEnabled && (!referenceFeatures || referenceFeatures.length === 0)) {
+    // Bias Match requested but no reference features available.
+    // Fall back to CMN if also enabled, otherwise skip silently.
+    logger.warn('⚠️ Session Bias Match enabled but no reference features available – skipped');
+    if (settings.cmnEnabled) {
+      logger.info('🔧 Falling back to CMN');
+      processed = applyCMN(processed);
+    }
   }
 
-  // Stage 2b: CMN (experimental, only if explicitly activated)
-  // WARNING: CMN and Bias-Match should NOT be active simultaneously.
-  // If both are on, CMN is ignored (Bias-Match takes priority).
+  // Stage 2b: CMN (experimental, only if explicitly activated and bias match is OFF)
   if (settings.cmnEnabled && !settings.biasMatchEnabled) {
     processed = applyCMN(processed);
   }
