@@ -664,6 +664,36 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // ROOM MEASUREMENT (Standalone T60 in Settings)
+  // ============================================================================
+  roomMeasure: {
+    title: 'Raummessung',
+    description: 'Misst die Nachhallzeit (T60) deiner aktuellen Umgebung per Chirp-Signal. Halte das Smartphone frei in den Raum (nicht abdecken).',
+    measureBtn: 'Raum messen',
+    measureAgain: 'Erneut messen',
+    measuring: 'Messung läuft...',
+    chirpProgress: 'Chirp {{current}}/{{total}}...',
+    individual: 'Einzelmessungen',
+    stddev: 'Standardabweichung',
+    stable: 'stabil',
+    unstable: 'instabil',
+    veryDry: 'sehr trocken',
+    dry: 'trocken',
+    medium: 'mittel hallig',
+    reverberant: 'hallig',
+    veryReverberant: 'sehr hallig',
+    classVeryDry: 'Sehr trockener Raum – ideal für Messungen',
+    classDry: 'Trockener Raum – gute Bedingungen',
+    classMedium: 'Mittel hallig – akzeptable Bedingungen',
+    classReverberant: 'Hallig – Ergebnisse können beeinflusst werden',
+    classVeryReverberant: 'Sehr hallig – näher an die Maschine gehen',
+    errorNoResult: 'Messung fehlgeschlagen. Mögliche Ursachen:\n• Umgebung zu laut (Maschine abstellen)\n• Smartphone-Lautsprecher zu leise\n• Lautstärke am Gerät erhöhen',
+    errorMicPermission: 'Kein Mikrofon-Zugriff. Bitte erlaube den Zugriff in den Browser-Einstellungen.',
+    errorNoMic: 'Kein Mikrofon gefunden.',
+    errorGeneric: 'Messung fehlgeschlagen. Bitte versuche es erneut.',
+  },
+
+  // ============================================================================
   // ZERO-FRICTION RECORDING (Auto-Machine Creation)
   // ============================================================================
   zeroFriction: {

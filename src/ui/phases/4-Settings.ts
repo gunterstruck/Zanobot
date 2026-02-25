@@ -25,7 +25,12 @@ import { t } from '../../i18n/index.js';
 import {
   getRoomCompSettings,
   setRoomCompSettings,
+  playChirpAndRecord,
+  estimateT60FromChirp,
+  classifyT60Value,
+  getT60ClassificationLabel,
 } from '@core/dsp/roomCompensation.js';
+import { getRawAudioStream } from '@core/audio/audioHelper.js';
 import {
   getCherryPickSettings,
   setCherryPickSettings,
@@ -62,6 +67,9 @@ export class SettingsPhase {
 
     // Initialize banner settings (advanced/expert only)
     this.initBannerSettings();
+
+    // Initialize standalone room measurement (all view levels)
+    this.initRoomMeasurement();
 
     // Initialize room compensation settings (expert only)
     this.initRoomCompSettings();
@@ -321,6 +329,249 @@ export class SettingsPhase {
     window.addEventListener('themechange', () => {
       void updateBannerPreview();
     });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // STANDALONE ROOM MEASUREMENT (T60 via 3× Chirp)
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * Initialize standalone room measurement button and UI.
+   * Visible to ALL view levels (not expert-only).
+   */
+  private initRoomMeasurement(): void {
+    const measureBtn = document.getElementById('room-measure-btn') as HTMLButtonElement | null;
+    if (!measureBtn) return;
+
+    measureBtn.addEventListener('click', () => {
+      void this.performRoomMeasurement();
+    });
+  }
+
+  private async performRoomMeasurement(): Promise<void> {
+    const measureBtn = document.getElementById('room-measure-btn') as HTMLButtonElement | null;
+    if (!measureBtn) return;
+
+    const btnText = document.getElementById('room-measure-btn-text');
+    const btnIcon = document.getElementById('room-measure-btn-icon');
+    const progressSection = document.getElementById('room-measure-progress');
+    const progressBar = document.getElementById('room-measure-progress-bar') as HTMLElement | null;
+    const progressText = document.getElementById('room-measure-progress-text');
+    const resultSection = document.getElementById('room-measure-result');
+    const errorSection = document.getElementById('room-measure-error');
+
+    // ── UI: Start measurement ──────────────────────────────
+    measureBtn.disabled = true;
+    if (btnText) btnText.textContent = t('roomMeasure.measuring');
+    if (btnIcon) btnIcon.textContent = '\u23F3'; // ⏳
+    if (resultSection) resultSection.style.display = 'none';
+    if (errorSection) errorSection.style.display = 'none';
+    if (progressSection) progressSection.style.display = '';
+    if (progressBar) progressBar.style.width = '0%';
+
+    const NUM_CHIRPS = 3;
+    const PAUSE_BETWEEN_MS = 800;
+    const t60Values: number[] = [];
+
+    let audioContext: AudioContext | null = null;
+    let stream: MediaStream | null = null;
+
+    try {
+      // ── Initialize audio ─────────────────────────────────
+      audioContext = new AudioContext({ sampleRate: 48000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      stream = await getRawAudioStream();
+
+      // ── Run 3 chirps ─────────────────────────────────────
+      for (let i = 0; i < NUM_CHIRPS; i++) {
+        if (progressText) {
+          progressText.textContent = t('roomMeasure.chirpProgress', {
+            current: String(i + 1),
+            total: String(NUM_CHIRPS),
+          });
+        }
+        if (progressBar) {
+          progressBar.style.width = `${(i / NUM_CHIRPS) * 100}%`;
+        }
+
+        const { chirp, recorded } = await playChirpAndRecord(audioContext, stream);
+        const t60Result = estimateT60FromChirp(chirp, recorded, audioContext.sampleRate);
+
+        if (t60Result && t60Result.broadband > 0) {
+          t60Values.push(t60Result.broadband);
+          logger.info(`Chirp ${i + 1}/${NUM_CHIRPS}: T60 = ${t60Result.broadband.toFixed(3)}s`);
+        } else {
+          logger.warn(`Chirp ${i + 1}/${NUM_CHIRPS}: No valid T60 value`);
+        }
+
+        // Pause between chirps (let reverb decay)
+        if (i < NUM_CHIRPS - 1) {
+          await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_MS));
+        }
+      }
+
+      // Progress: 100%
+      if (progressBar) progressBar.style.width = '100%';
+
+      // ── Cleanup audio ────────────────────────────────────
+      stream.getTracks().forEach(track => track.stop());
+      await audioContext.close();
+      audioContext = null;
+      stream = null;
+
+      // ── Evaluate result ──────────────────────────────────
+      if (t60Values.length === 0) {
+        this.showRoomMeasurementError(t('roomMeasure.errorNoResult'));
+        return;
+      }
+
+      if (t60Values.length < 2) {
+        logger.warn(`Only ${t60Values.length} of ${NUM_CHIRPS} chirps successful`);
+      }
+
+      // Mean
+      const meanT60 = t60Values.reduce((a, b) => a + b, 0) / t60Values.length;
+
+      // Standard deviation
+      const stddev = t60Values.length > 1
+        ? Math.sqrt(
+            t60Values.reduce((sum, v) => sum + (v - meanT60) ** 2, 0) / (t60Values.length - 1)
+          )
+        : 0;
+
+      const isStable = stddev < 0.15;
+
+      logger.info(`Room measurement result: T60 = ${meanT60.toFixed(3)}s ± ${stddev.toFixed(3)}s (${t60Values.length}/${NUM_CHIRPS} chirps)`);
+
+      // ── Show result ──────────────────────────────────────
+      this.showRoomMeasurementResult(meanT60, stddev, t60Values, isStable);
+
+    } catch (error) {
+      logger.error('Room measurement error:', error);
+
+      // Cleanup on error
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      if (audioContext && audioContext.state !== 'closed') {
+        try { await audioContext.close(); } catch { /* ignore */ }
+      }
+
+      let errorMsg = t('roomMeasure.errorGeneric');
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError') {
+          errorMsg = t('roomMeasure.errorMicPermission');
+        } else if (error.name === 'NotFoundError') {
+          errorMsg = t('roomMeasure.errorNoMic');
+        }
+      }
+      this.showRoomMeasurementError(errorMsg);
+
+    } finally {
+      // ── Reset button ─────────────────────────────────────
+      measureBtn.disabled = false;
+      const resultVisible = document.getElementById('room-measure-result');
+      if (btnText) {
+        btnText.textContent = resultVisible?.style.display !== 'none'
+          ? t('roomMeasure.measureAgain')
+          : t('roomMeasure.measureBtn');
+      }
+      if (btnIcon) btnIcon.textContent = '\uD83D\uDD0A'; // 🔊
+      if (progressSection) progressSection.style.display = 'none';
+    }
+  }
+
+  private showRoomMeasurementResult(
+    meanT60: number,
+    stddev: number,
+    individual: number[],
+    isStable: boolean
+  ): void {
+    const errorSection = document.getElementById('room-measure-error');
+    const resultSection = document.getElementById('room-measure-result');
+    if (errorSection) errorSection.style.display = 'none';
+    if (!resultSection) return;
+    resultSection.style.display = '';
+
+    // T60 value
+    const t60El = document.getElementById('room-measure-t60');
+    if (t60El) t60El.textContent = meanT60.toFixed(2);
+
+    // Classification
+    const classification = classifyT60Value(meanT60);
+    const classEl = document.getElementById('room-measure-classification');
+    const colorClass = this.getT60ColorClass(classification);
+
+    if (classEl) {
+      classEl.textContent = this.getRoomMeasureClassLabel(classification);
+      classEl.className = 'room-measure-classification ' + colorClass;
+    }
+
+    // Color the T60 value
+    if (t60El) {
+      t60El.className = 'room-measure-t60 ' + colorClass;
+    }
+
+    // Position scale marker (0.0s = 0%, 2.5s = 100%)
+    const marker = document.getElementById('room-measure-scale-marker');
+    if (marker) {
+      const pct = Math.min(Math.max(meanT60 / 2.5 * 100, 0), 100);
+      marker.style.left = `calc(${pct}% - 2px)`;
+    }
+
+    // Individual measurements (Expert)
+    const individualEl = document.getElementById('room-measure-individual');
+    if (individualEl) {
+      individualEl.textContent = `${t('roomMeasure.individual')}: ${individual.map(v => v.toFixed(2) + 's').join(', ')}`;
+    }
+
+    const stddevEl = document.getElementById('room-measure-stddev');
+    if (stddevEl) {
+      const stabilityIcon = isStable ? '\u2713' : '\u26A0';
+      const stabilityText = isStable ? t('roomMeasure.stable') : t('roomMeasure.unstable');
+      stddevEl.textContent = `${t('roomMeasure.stddev')}: ${stddev.toFixed(3)}s (${stabilityText} ${stabilityIcon})`;
+    }
+
+    // Update button text
+    const btnText = document.getElementById('room-measure-btn-text');
+    if (btnText) btnText.textContent = t('roomMeasure.measureAgain');
+  }
+
+  private showRoomMeasurementError(message: string): void {
+    const resultSection = document.getElementById('room-measure-result');
+    const errorSection = document.getElementById('room-measure-error');
+    const errorText = document.getElementById('room-measure-error-text');
+    if (resultSection) resultSection.style.display = 'none';
+    if (!errorSection || !errorText) return;
+    errorSection.style.display = '';
+    errorText.textContent = message;
+  }
+
+  private getT60ColorClass(classification: string): string {
+    switch (classification) {
+      case 'very_dry':
+      case 'dry':
+        return 'rm-status-healthy';
+      case 'medium':
+        return 'rm-status-uncertain';
+      case 'reverberant':
+        return 'rm-status-warning';
+      case 'very_reverberant':
+        return 'rm-status-faulty';
+      default:
+        return '';
+    }
+  }
+
+  private getRoomMeasureClassLabel(classification: string): string {
+    const labels: Record<string, string> = {
+      'very_dry': t('roomMeasure.classVeryDry'),
+      'dry': t('roomMeasure.classDry'),
+      'medium': t('roomMeasure.classMedium'),
+      'reverberant': t('roomMeasure.classReverberant'),
+      'very_reverberant': t('roomMeasure.classVeryReverberant'),
+    };
+    return labels[classification] ?? getT60ClassificationLabel(classification);
   }
 
   /**

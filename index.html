@@ -1490,6 +1490,70 @@
                         </div>
                     </div>
 
+                    <!-- Divider -->
+                    <div class="settings-divider"></div>
+
+                    <!-- Room Measurement (all view levels) -->
+                    <div class="setting-category" id="room-measurement-section">
+                        <h4 class="setting-category-title" data-i18n="roomMeasure.title">Raummessung</h4>
+                        <p class="setting-category-description" data-i18n="roomMeasure.description">
+                            Misst die Nachhallzeit (T60) deiner aktuellen Umgebung per Chirp-Signal. Halte das Smartphone frei in den Raum (nicht abdecken).
+                        </p>
+
+                        <!-- Measure Button -->
+                        <div class="setting-item">
+                            <button id="room-measure-btn" class="room-measure-btn">
+                                <span id="room-measure-btn-icon">&#x1F50A;</span>
+                                <span id="room-measure-btn-text" data-i18n="roomMeasure.measureBtn">Raum messen</span>
+                            </button>
+                        </div>
+
+                        <!-- Progress (initially hidden) -->
+                        <div id="room-measure-progress" style="display: none;">
+                            <div class="room-measure-progress-bar-container">
+                                <div class="room-measure-progress-bar" id="room-measure-progress-bar" style="width: 0%;"></div>
+                            </div>
+                            <p id="room-measure-progress-text" class="room-measure-progress-text">Chirp 1/3...</p>
+                        </div>
+
+                        <!-- Result (initially hidden) -->
+                        <div id="room-measure-result" style="display: none;">
+                            <!-- T60 value -->
+                            <div class="room-measure-value">
+                                <span class="room-measure-t60" id="room-measure-t60">&mdash;</span>
+                                <span class="room-measure-unit">s</span>
+                            </div>
+
+                            <!-- Visual scale -->
+                            <div class="room-measure-scale" id="room-measure-scale">
+                                <div class="room-measure-scale-bar">
+                                    <div class="room-measure-scale-marker" id="room-measure-scale-marker"></div>
+                                </div>
+                                <div class="room-measure-scale-labels">
+                                    <span data-i18n="roomMeasure.veryDry">sehr trocken</span>
+                                    <span data-i18n="roomMeasure.dry">trocken</span>
+                                    <span data-i18n="roomMeasure.medium">mittel</span>
+                                    <span data-i18n="roomMeasure.reverberant">hallig</span>
+                                    <span data-i18n="roomMeasure.veryReverberant">sehr hallig</span>
+                                </div>
+                            </div>
+
+                            <!-- Classification -->
+                            <p class="room-measure-classification" id="room-measure-classification"></p>
+
+                            <!-- Individual measurements (Expert only) -->
+                            <div class="room-measure-details" data-view-level="expert" id="room-measure-details">
+                                <p id="room-measure-individual"></p>
+                                <p id="room-measure-stddev"></p>
+                            </div>
+                        </div>
+
+                        <!-- Error (initially hidden) -->
+                        <div id="room-measure-error" style="display: none;">
+                            <p class="room-measure-error-text" id="room-measure-error-text"></p>
+                        </div>
+                    </div>
+
                     <!-- Divider (Expert) -->
                     <div class="settings-divider" data-view-level="expert"></div>
 
