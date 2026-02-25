@@ -20,7 +20,7 @@
  *
  * METRICS:
  *  A. RMS-Delta (Energy Check) — dB difference to baseline RMS
- *  B. Dominant Frequency Shift (RPM Check) — peak frequency delta in Hz
+ *  B. Multi-Peak Frequency Shift — median shift of tracked dominant peaks
  *  C. P10-Similarity (Stability Check) — 10th percentile of rolling scores
  *  D. Signal Stability — percentage of stable frame transitions
  */
@@ -58,7 +58,7 @@ export interface OperatingPointResult {
   similarityP10: OperatingPointMetric;
   /** Energy delta - RMS difference to reference in dB */
   energyDelta: OperatingPointMetric;
-  /** Frequency delta - dominant peak frequency shift in Hz */
+  /** Frequency delta - multi-peak tracking shift (median of dominant peaks) */
   frequencyDelta: OperatingPointMetric;
   /** Signal stability - percentage of stable frames */
   stability: OperatingPointMetric;
