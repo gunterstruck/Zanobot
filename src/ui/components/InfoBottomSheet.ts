@@ -103,13 +103,20 @@ export class InfoBottomSheet {
       this.escHandler = null;
     }
 
-    if (this.overlay) {
-      this.overlay.classList.remove('bottomsheet-overlay-visible');
-      this.overlay.addEventListener('transitionend', () => this.overlay?.remove(), { once: true });
+    // Capture references before nulling – transitionend fires asynchronously
+    const overlayEl = this.overlay;
+    const sheetEl = this.sheet;
+
+    if (overlayEl) {
+      overlayEl.classList.remove('bottomsheet-overlay-visible');
+      overlayEl.addEventListener('transitionend', () => overlayEl.remove(), { once: true });
+      // Fallback: remove after timeout if transitionend doesn't fire
+      setTimeout(() => { if (overlayEl.parentNode) overlayEl.remove(); }, 400);
     }
-    if (this.sheet) {
-      this.sheet.classList.remove('bottomsheet-visible');
-      this.sheet.addEventListener('transitionend', () => this.sheet?.remove(), { once: true });
+    if (sheetEl) {
+      sheetEl.classList.remove('bottomsheet-visible');
+      sheetEl.addEventListener('transitionend', () => sheetEl.remove(), { once: true });
+      setTimeout(() => { if (sheetEl.parentNode) sheetEl.remove(); }, 400);
     }
 
     // Restore focus
