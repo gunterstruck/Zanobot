@@ -510,6 +510,7 @@ export function getHzPerBin(sampleRate: number = 48000, frequencyBins: number = 
 
 /** Compute median of a numeric array */
 export function median(arr: number[]): number {
+  if (arr.length === 0) return 0;
   const sorted = [...arr].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;

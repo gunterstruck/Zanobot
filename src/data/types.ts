@@ -192,12 +192,12 @@ export interface DiagnosisResult {
  * DSP Processing Configuration
  */
 export interface DSPConfig {
-  sampleRate: number; // Default: 44100 Hz
+  sampleRate: number; // Default: 48000 Hz
   windowSize: number; // 0.330s (330ms)
   hopSize: number; // 0.066s (66ms)
   fftSize: number; // Calculated from windowSize
   frequencyBins: number; // Default: 512
-  frequencyRange: [number, number]; // [0, 22050] Hz (Nyquist)
+  frequencyRange: [number, number]; // [0, 24000] Hz (Nyquist)
 }
 
 /**

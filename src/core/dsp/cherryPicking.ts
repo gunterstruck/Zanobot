@@ -74,7 +74,7 @@ function mad(values: number[]): number {
 function computeRmsFromAbsolute(fv: FeatureVector): number {
   let sum = 0;
   for (let i = 0; i < fv.absoluteFeatures.length; i++) {
-    sum += fv.absoluteFeatures[i];
+    sum += fv.absoluteFeatures[i] * fv.absoluteFeatures[i];
   }
   return Math.sqrt(sum / fv.absoluteFeatures.length);
 }
