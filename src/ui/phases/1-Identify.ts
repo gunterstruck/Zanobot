@@ -2640,10 +2640,12 @@ export class IdentifyPhase {
     }));
     svg.setAttribute('role', 'img');
 
+    // Sprint 3 Polish: Use style properties for CSS variable colors
+    // (more reliable across browsers/WebViews than SVG attributes)
     const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     polyline.setAttribute('points', points.join(' '));
     polyline.setAttribute('fill', 'none');
-    polyline.setAttribute('stroke', strokeColor);
+    polyline.style.stroke = strokeColor;
     polyline.setAttribute('stroke-width', '1.5');
     polyline.setAttribute('stroke-linecap', 'round');
     polyline.setAttribute('stroke-linejoin', 'round');
@@ -2654,7 +2656,7 @@ export class IdentifyPhase {
     dot.setAttribute('cx', lastPoint[0]);
     dot.setAttribute('cy', lastPoint[1]);
     dot.setAttribute('r', '2.5');
-    dot.setAttribute('fill', strokeColor);
+    dot.style.fill = strokeColor;
     svg.appendChild(dot);
 
     return svg;
@@ -2677,11 +2679,16 @@ export class IdentifyPhase {
           if (!machineId) return;
 
           try {
+            // Sprint 3 Polish: Skip if sparkline already rendered
+            if (container.querySelector('.sparkline-svg')) return;
+
             const diagnoses = await getDiagnosesForMachine(machineId, 10);
             if (diagnoses.length >= 2) {
               const scores = [...diagnoses].reverse().map(d => d.healthScore);
               const sparkline = this.generateSparkline(scores);
               if (sparkline) {
+                // Sprint 3 Polish: Clear container before appending to prevent duplicates
+                container.textContent = '';
                 container.appendChild(sparkline);
               }
             }

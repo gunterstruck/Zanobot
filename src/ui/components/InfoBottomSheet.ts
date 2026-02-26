@@ -1,3 +1,5 @@
+import { t } from '../../i18n/index.js';
+
 /**
  * Sprint 2 UX: Reusable InfoBottomSheet for contextual help
  *
@@ -17,6 +19,8 @@ export class InfoBottomSheet {
   private sheet: HTMLElement | null = null;
   private previousFocus: HTMLElement | null = null;
   private escHandler: ((e: KeyboardEvent) => void) | null = null;
+  /** Sprint 3 Polish: Focus trap handler for Tab key cycling */
+  private trapFocusHandler: ((e: KeyboardEvent) => void) | null = null;
 
   private constructor() {}
 
@@ -65,7 +69,7 @@ export class InfoBottomSheet {
       <div class="bottomsheet-header">
         ${options.icon ? `<span class="bottomsheet-icon">${options.icon}</span>` : ''}
         <h3 class="bottomsheet-title">${options.title}</h3>
-        <button class="bottomsheet-close" aria-label="Schließen">✕</button>
+        <button class="bottomsheet-close" aria-label="${t('buttons.close')}">✕</button>
       </div>
       <div class="bottomsheet-body">${options.content}</div>
     `;
@@ -80,6 +84,30 @@ export class InfoBottomSheet {
       }
     };
     document.addEventListener('keydown', this.escHandler);
+
+    // Sprint 3 Polish: Focus trap – Tab cycles within the sheet
+    const focusableElements = this.sheet.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    this.trapFocusHandler = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable?.focus();
+        }
+      } else {
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable?.focus();
+        }
+      }
+    };
+    this.sheet.addEventListener('keydown', this.trapFocusHandler);
 
     // Append to DOM
     document.body.appendChild(this.overlay);
@@ -101,6 +129,12 @@ export class InfoBottomSheet {
     if (this.escHandler) {
       document.removeEventListener('keydown', this.escHandler);
       this.escHandler = null;
+    }
+
+    // Sprint 3 Polish: Clean up focus trap handler
+    if (this.trapFocusHandler && this.sheet) {
+      this.sheet.removeEventListener('keydown', this.trapFocusHandler);
+      this.trapFocusHandler = null;
     }
 
     // Capture references before nulling – transitionend fires asynchronously
