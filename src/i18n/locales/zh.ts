@@ -670,6 +670,7 @@ export const zh: TranslationDict = {
     referenceQualityTitle: '参考质量',
     referenceQualityStatusGood: '良好',
     referenceQualityDescription: '参考录制符合推荐条件',
+    featureModeLabel: '特征模式',
     viewHistory: '查看历史',
     closeDialog: '关闭诊断',
   },

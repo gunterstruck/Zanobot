@@ -867,6 +867,7 @@ export const de: TranslationDict = {
     referenceQualityTitle: 'Referenzqualität',
     referenceQualityStatusGood: 'GUT',
     referenceQualityDescription: 'Referenzaufnahme erfüllt empfohlene Bedingungen',
+    featureModeLabel: 'Feature-Modus',
     viewHistory: 'Verlauf anzeigen',
     closeDialog: 'Diagnose schließen',
   },
