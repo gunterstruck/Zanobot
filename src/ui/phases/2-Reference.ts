@@ -975,8 +975,20 @@ export class ReferencePhase {
       }
     }
 
-    // Add existing models info and status message
+    // Sprint 1 UX: Show reference explanation before recording
     const modalBody = document.querySelector('#recording-modal .modal-body');
+    if (modalBody && !document.getElementById('reference-explain-banner')) {
+      const explainBanner = document.createElement('div');
+      explainBanner.id = 'reference-explain-banner';
+      explainBanner.className = 'reference-explain-banner';
+      explainBanner.innerHTML = `
+        <div class="explain-icon">\u2139\uFE0F</div>
+        <div class="explain-text">${t('reference.explainBefore')}</div>
+      `;
+      modalBody.insertBefore(explainBanner, modalBody.firstChild);
+    }
+
+    // Add existing models info and status message
     if (modalBody && !document.getElementById('recording-status')) {
       // Show existing models info
       const existingModels = this.machine?.referenceModels || [];
@@ -1017,6 +1029,12 @@ export class ReferencePhase {
       statusDiv.className = 'recording-status';
       statusDiv.textContent = t('common.initializing');
       infoDiv.insertAdjacentElement('afterend', statusDiv);
+
+      // Sprint 1 UX: Show movement hint during recording
+      const movementHint = document.createElement('div');
+      movementHint.className = 'recording-hint';
+      movementHint.textContent = t('reference.explainDuring');
+      statusDiv.insertAdjacentElement('afterend', movementHint);
     }
 
     // Setup stop button
@@ -1768,6 +1786,12 @@ export class ReferencePhase {
       // Hide review modal
       this.hideReviewModal();
 
+      // Sprint 1 UX: Enhanced success confirmation toast
+      notify.success(t('reference.savedSuccess'), {
+        title: t('reference.savedTitle'),
+        duration: 5000,
+      });
+
       // ZERO-FRICTION: Show simple success toast with edit option for auto-created machines
       if (this.wasAutoCreated) {
         this.showZeroFrictionSuccess(updatedMachine);
@@ -1913,8 +1937,37 @@ export class ReferencePhase {
         dateSpan.className = 'state-date';
         dateSpan.textContent = dateStr;
 
+        // Sprint 1 UX: Delete button for individual reference model
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'reference-delete-btn';
+        deleteBtn.setAttribute('aria-label', t('reference.deleteModel'));
+        deleteBtn.textContent = '\uD83D\uDDD1\uFE0F';
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const confirmed = confirm(
+            t('reference.confirmDeleteModel', { name: model.label || `#${stateList.children.length + 1}` })
+          );
+          if (!confirmed) return;
+
+          const { deleteReferenceModel, getMachine } = await import('@data/db.js');
+          const deleted = await deleteReferenceModel(this.machine!.id, model.label || '');
+          if (deleted) {
+            notify.success(t('reference.modelDeleted', { name: model.label || `#${stateList.children.length + 1}` }));
+            // Reload machine and re-render
+            const updated = await getMachine(this.machine!.id);
+            if (updated) {
+              this.machine = updated;
+              if (this.onMachineUpdated) {
+                this.onMachineUpdated(updated);
+              }
+              this.showMulticlassStatus();
+            }
+          }
+        });
+
         li.appendChild(labelSpan);
         li.appendChild(dateSpan);
+        li.appendChild(deleteBtn);
 
         stateList.appendChild(li);
       });

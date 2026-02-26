@@ -27,7 +27,7 @@
         'use strict';
         const CONFIG_PATH = './config.json';
         const THEME_STORAGE_KEY = 'zanobot-theme';
-        const DEFAULT_THEME = 'neon';
+        const DEFAULT_THEME = 'focus';
         const AVAILABLE_THEMES = ['neon', 'light', 'brand', 'focus'];
         const VIEW_LEVEL_STORAGE_KEY = 'zanobot.view-level';
         const DEFAULT_VIEW_LEVEL = 'basic';
@@ -201,13 +201,18 @@
                                 <h5 class="option-title" data-i18n="identify.manualEntry">Manuell anlegen</h5>
                             </div>
                             <p class="option-description" data-i18n="identify.manualEntryDescription">Neue Maschine mit Namen erstellen</p>
-                            <div class="input-group">
-                                <label for="machine-name-input" data-i18n="identify.machineName">Maschinenname</label>
-                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Zanobo 123" data-i18n-placeholder="identify.machineName" />
+                            <div class="input-group input-group-required">
+                                <label for="machine-name-input">
+                                    <span data-i18n="identify.machineName">Maschinenname</span><span class="required-star">*</span>
+                                </label>
+                                <input type="text" id="machine-name-input" class="machine-input" placeholder="z.B. Pumpe 3 – Westhalle" data-i18n-placeholder="identify.machineNamePlaceholder" />
+                                <span class="input-hint" id="machine-name-hint" data-i18n="identify.machineNameHint">Eindeutiger Name, z.B. Pumpe 3 – Westhalle</span>
+                                <span class="input-error" id="machine-name-error" role="alert" data-i18n="identify.machineNameRequired">Bitte gib einen Maschinennamen ein.</span>
                             </div>
                             <div class="input-group" data-view-level="advanced">
                                 <label for="machine-id-input" data-i18n="identify.machineId">Maschinen-ID (optional)</label>
                                 <input type="text" id="machine-id-input" class="machine-input" placeholder="z.B. 1GB4-636A0-Ba1" data-i18n-placeholder="identify.machineId" />
+                                <span class="input-hint" data-i18n="identify.machineIdHint">Optional: Interne Kennung (z.B. SAP-Nr.). Wird nicht für die Analyse verwendet.</span>
                             </div>
 
                             <button class="action-btn" id="create-machine-btn">
@@ -937,6 +942,7 @@
                     <div class="result-fingerprint">
                         <h4 data-i18n="diagnosisResults.fingerprintLabel">Fingerprint</h4>
                         <p class="result-status status-healthy" id="result-status">UNAUFFÄLLIG</p>
+                        <p class="result-verbal-status" id="result-verbal-status"></p>
                         <p class="result-confidence" data-view-level="advanced"><span id="result-confidence">87</span>% <span data-i18n="diagnosisResults.confidenceScoreLabel">Confidence score</span></p>
                         <div class="result-feature-mode" data-view-level="advanced">
                             <span class="result-feature-mode-label" data-i18n="diagnosisResults.featureModeLabel">Feature Mode</span>

@@ -48,6 +48,10 @@ export const de: TranslationDict = {
     notChecked: 'Noch nicht geprüft',
     ready: 'Bereit',
     analyzing: 'ANALYSIERE...',
+    consistent: 'Maschine konsistent',
+    slightDeviation: 'Leichte Abweichung',
+    significantChange: 'Signifikante Änderung',
+    strongDeviation: 'Starke Abweichung – Prüfung empfohlen',
   },
 
   // ============================================================================
@@ -89,6 +93,14 @@ export const de: TranslationDict = {
     manualEntryDescription: 'Neue Maschine mit Namen erstellen',
     machineName: 'Maschinenname',
     machineId: 'Maschinen-ID (optional)',
+    machineNameHint: 'Eindeutiger Name, z.B. Pumpe 3 – Westhalle',
+    machineNameRequired: 'Bitte gib einen Maschinennamen ein.',
+    machineNamePlaceholder: 'z.B. Pumpe 3 – Westhalle',
+    machineIdHint: 'Optional: Interne Kennung (z.B. SAP-Nr.). Wird nicht für die Analyse verwendet.',
+    deleteMachine: 'Maschine löschen',
+    confirmDeleteMachine: 'Maschine „{{name}}" löschen? Alle Diagnosen gehen verloren.',
+    confirmDeleteMachineWithData: 'Maschine „{{name}}" hat {{count}} Aufnahmen. Wirklich ALLES löschen?',
+    machineDeleted: '\uD83D\uDDD1\uFE0F Maschine „{{name}}" gelöscht',
     quickAccess: 'Schnellwahl',
     quickAccessDescription: 'Schneller Zugriff auf kürzlich verwendete Maschinen',
     recentlyUsed: 'Zuletzt verwendet',
@@ -167,6 +179,16 @@ export const de: TranslationDict = {
     existingModels: 'VORHANDENE MODELLE:',
     statesTrainedCount: '{{count}} Zustand(e) bereits trainiert',
     recordingStatusHighQuality: 'Hohe Audioqualität erkannt',
+    explainBefore: 'Die Referenz definiert den Normalzustand deiner Maschine. Alle zukünftigen Vergleiche basieren darauf.',
+    explainDuring: 'Bewege das Smartphone langsam um die Maschine. So können Umgebungseinflüsse herausgerechnet werden.',
+    savedSuccess: '\u2705 Referenz gespeichert – Umgebungsprofil erkannt',
+    savedTitle: 'Referenz erstellt',
+    cherryPickingHint: '\uD83D\uDEE1\uFE0F Störgeräusche werden automatisch erkannt und verworfen.',
+    noModels: 'Noch keine Referenzen vorhanden.',
+    unnamed: 'Referenz #{{index}}',
+    deleteModel: 'Referenz löschen',
+    confirmDeleteModel: 'Referenz „{{name}}" löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Referenz „{{name}}" gelöscht',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} Zustand aufgenommen',
@@ -236,6 +258,7 @@ export const de: TranslationDict = {
     noValidSampleRate: 'Kein Referenzmodell mit gültiger Sample Rate gefunden.',
     cameraNotAvailable: 'Kamera nicht verfügbar. Diagnose wird ohne Positionshilfe fortgesetzt.',
     diagnosisRunning: 'Diagnose läuft',
+    compareComplete: '\u2705 Vergleich durchgeführt',
     saveFailed: 'Diagnose konnte nicht gespeichert werden',
     liveAnalysis: 'Live-Analyse durchführen',
 
@@ -537,6 +560,8 @@ export const de: TranslationDict = {
     normal: 'UNAUFFÄLLIG',
     deviation: 'ABWEICHUNG',
     abnormal: 'AUFFÄLLIG',
+    explain: 'Der Score zeigt die Ähnlichkeit zum Referenzzustand (0–100%). 100% = nahezu identisch. Ein sinkender Trend ist wichtiger als ein einzelner Wert.',
+    explainTitle: 'Was bedeutet der Score?',
   },
 
   // ============================================================================
@@ -975,6 +1000,8 @@ export const de: TranslationDict = {
     errorInvalidJson: 'Fehler: Die Datei enthält kein gültiges JSON-Format.',
     errorInvalidStructure: 'Fehler: Die Datei hat nicht das erwartete Backup-Format.',
     errorNetwork: 'Netzwerkfehler beim Laden der Daten. Bitte prüfen Sie Ihre Internetverbindung.',
+    nfcMergeSuccess: '\u2705 Datenbank ergänzt – {{added}} neue Referenzen hinzugefügt, {{skipped}} bereits vorhanden',
+    nfcMergeInfo: 'Vorhandene Maschinen und Referenzen bleiben erhalten.',
   },
 
   // ============================================================================

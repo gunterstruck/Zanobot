@@ -46,6 +46,10 @@ export const es: TranslationDict = {
     notChecked: 'Aún no verificado',
     ready: 'Listo',
     analyzing: 'ANALIZANDO...',
+    consistent: 'Machine consistent',
+    slightDeviation: 'Slight deviation',
+    significantChange: 'Significant change',
+    strongDeviation: 'Strong deviation – check recommended',
   },
 
   // ============================================================================
@@ -87,6 +91,14 @@ export const es: TranslationDict = {
     manualEntryDescription: 'Crear nueva máquina con nombre',
     machineName: 'Nombre de la máquina',
     machineId: 'ID de la máquina (opcional)',
+    machineNameHint: 'Unique name, e.g. Pump 3 – West Hall',
+    machineNameRequired: 'Please enter a machine name.',
+    machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
+    machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
+    deleteMachine: 'Delete machine',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
+    machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: 'Acceso rápido',
     quickAccessDescription: 'Acceso rápido a máquinas usadas recientemente',
     recentlyUsed: 'Usado recientemente',
@@ -165,6 +177,16 @@ export const es: TranslationDict = {
     existingModels: 'MODELOS EXISTENTES:',
     statesTrainedCount: '{{count}} estado(s) ya entrenado(s)',
     recordingStatusHighQuality: 'Alta calidad de audio detectada',
+    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
+    savedSuccess: '\u2705 Reference saved – Environment profile detected',
+    savedTitle: 'Reference created',
+    cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
+    noModels: 'No references yet.',
+    unnamed: 'Reference #{{index}}',
+    deleteModel: 'Delete reference',
+    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} estado grabado',
@@ -234,6 +256,7 @@ export const es: TranslationDict = {
     noValidSampleRate: 'No se encontró modelo de referencia con frecuencia de muestreo válida.',
     cameraNotAvailable: 'Cámara no disponible. El diagnóstico continuará sin guía de posición.',
     diagnosisRunning: 'Diagnóstico en ejecución',
+    compareComplete: '\u2705 Comparison complete',
     saveFailed: 'No se pudo guardar el diagnóstico',
     liveAnalysis: 'Realizar análisis en vivo',
 
@@ -521,7 +544,13 @@ export const es: TranslationDict = {
     trainingSignalWeak: 'Señal demasiado débil o inconsistente para entrenamiento. Asegúrese: micrófono cerca de la máquina, máquina funcionando, no solo ruido de fondo. (Similitud coseno promedio: {{value}})',
     invalidSampleRate: 'Tasa de muestreo inválida: {{rate}}Hz. Esperada: 8000-192000Hz (típica: 44100Hz o 48000Hz)',
   },
-  healthGauge: { normal: 'NORMAL', deviation: 'DESVIACION', abnormal: 'ANORMAL' },
+  healthGauge: {
+    normal: 'NORMAL',
+    deviation: 'DESVIACION',
+    abnormal: 'ANORMAL',
+    explain: 'The score shows similarity to the reference state (0–100%). 100% = nearly identical. A declining trend matters more than a single value.',
+    explainTitle: 'What does the score mean?',
+  },
   audio: { ready: 'Listo', stabilizing: 'Estabilización acústica... {{seconds}}s', waitingForSignal: 'Esperando señal...', recordingRunning: 'Grabación en curso' },
   settingsUI: {
     title: 'Configuración', nfcWriterTitle: 'Etiquetas NFC', nfcWriterDescription: 'Escribe etiquetas NFC para acceder a la app o a una máquina seleccionada.', appearance: 'Apariencia',
@@ -702,6 +731,8 @@ export const es: TranslationDict = {
     errorInvalidJson: 'Error: El archivo no contiene un formato JSON válido.',
     errorInvalidStructure: 'Error: El archivo no tiene el formato de copia de seguridad esperado.',
     errorNetwork: 'Error de red al cargar los datos. Por favor verifique su conexión.',
+    nfcMergeSuccess: '\u2705 Database updated – {{added}} new references added, {{skipped}} already present',
+    nfcMergeInfo: 'Existing machines and references are preserved.',
   },
 
   // BADGES (UI Hints)
