@@ -10,12 +10,13 @@
  * The DB URL is automatically built: https://gunterstruck.github.io/<customerId>/db-latest.json
  */
 
-import { getMachine, saveMachine } from '@data/db.js';
+import { getMachine, saveMachine, deleteMachine } from '@data/db.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
-import type { Machine } from '@data/types.js';
+import type { Machine, FleetDbFile, GMIAModel } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace } from '@utils/onboardingTrace.js';
 import { t } from '../i18n/index.js';
+import { notify } from '@utils/notifications.js';
 
 /**
  * Base URL for GitHub Pages reference databases (MVP)
@@ -27,12 +28,16 @@ export const GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
  * Route match result
  */
 export interface RouteMatch {
-  type: 'machine' | 'import' | 'unknown';
+  type: 'machine' | 'fleet' | 'import' | 'unknown';
   machineId?: string;
+  /** Fleet ID from fleet deep link */
+  fleetId?: string;
   /** Customer ID from NFC link (c parameter) - used to build DB URL */
   customerId?: string;
   /** Reference DB URL from NFC link (allows auto-creation on new devices) */
   referenceDbUrl?: string;
+  /** Fleet DB URL from fleet deep link */
+  fleetDbUrl?: string;
   /** External database URL for import route (#/import?url=...) */
   importUrl?: string;
 }
@@ -58,12 +63,21 @@ export interface MachineLoadResult {
 /**
  * Hash Router for NFC deep links
  */
+/** Fleet import plan (Phase 1: RAM only) */
+interface FleetImportPlan {
+  toCreate: Machine[];
+  toUpdate: Array<{ machine: Machine; updates: Partial<Machine> }>;
+  skipped: Array<{ id: string; name: string; reason: 'already_in_fleet' | 'different_fleet' }>;
+  warnings: string[];
+}
+
 export class HashRouter {
   private onRouteChange?: HashChangeCallback;
   private onMachineReady?: (machine: Machine) => void;
   private onDownloadProgress?: (status: string, progress?: number) => void;
   private onDownloadError?: (error: string) => void;
   private onImportRequested?: (importUrl: string) => void;
+  private onFleetReady?: (fleetName: string, machineCount: number) => void;
   private boundHandleHashChange: () => void;
 
   constructor() {
@@ -105,6 +119,13 @@ export class HashRouter {
    */
   public setOnImportRequested(callback: (importUrl: string) => void): void {
     this.onImportRequested = callback;
+  }
+
+  /**
+   * Set callback for when fleet provisioning is complete
+   */
+  public setOnFleetReady(callback: (fleetName: string, machineCount: number) => void): void {
+    this.onFleetReady = callback;
   }
 
   /**
@@ -206,6 +227,29 @@ export class HashRouter {
       return result;
     }
 
+    // Match /f/<fleet_id> pattern (fleet deep link)
+    const fleetMatch = path.match(/^\/f\/([^/?]+)/);
+
+    if (fleetMatch) {
+      const result: RouteMatch = {
+        type: 'fleet',
+        fleetId: decodeURIComponent(fleetMatch[1]),
+      };
+
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        const customerId = params.get('c');
+        if (customerId) {
+          result.customerId = customerId;
+          // Fleet DB URL: <base>/<customerId>/fleet-<fleetId>.json
+          result.fleetDbUrl = `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(customerId)}/fleet-${result.fleetId}.json`;
+          logger.info(`Fleet route: "${result.fleetId}" -> ${result.fleetDbUrl}`);
+        }
+      }
+
+      return result;
+    }
+
     return { type: 'unknown' };
   }
 
@@ -292,6 +336,25 @@ export class HashRouter {
   }
 
   /**
+   * Generate hash fragment for fleet deep link
+   */
+  public static getFleetHash(fleetId: string, customerId?: string): string {
+    const base = `#/f/${encodeURIComponent(fleetId)}`;
+    if (customerId) {
+      return `${base}?c=${encodeURIComponent(customerId)}`;
+    }
+    return base;
+  }
+
+  /**
+   * Generate full URL for fleet NFC/QR tag
+   */
+  public static getFullFleetUrl(fleetId: string, customerId?: string): string {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}${this.getFleetHash(fleetId, customerId)}`;
+  }
+
+  /**
    * Handle hash change event
    */
   private async handleHashChange(): Promise<void> {
@@ -316,6 +379,11 @@ export class HashRouter {
     // Handle machine route
     if (match.type === 'machine' && match.machineId) {
       await this.handleMachineRoute(match.machineId, match.referenceDbUrl);
+    }
+
+    // Handle fleet route
+    if (match.type === 'fleet' && match.fleetId && match.fleetDbUrl) {
+      await this.handleFleetRoute(match.fleetId, match.fleetDbUrl);
     }
 
     // Handle import route
@@ -554,6 +622,261 @@ export class HashRouter {
     };
 
     return errorMap[error] || t('machineSetup.errorUnknown');
+  }
+
+  /**
+   * Handle fleet deep link - download fleet DB and provision all machines.
+   */
+  private async handleFleetRoute(fleetId: string, fleetDbUrl: string): Promise<void> {
+    try {
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 10);
+
+      // 1. Validate URL (same origin check as machine links)
+      const validation = ReferenceDbService.validateUrl(fleetDbUrl);
+      if (!validation.valid) {
+        logger.error(`Invalid fleet DB URL: ${validation.error}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.('invalid_fleet_url');
+        return;
+      }
+
+      // 2. Download fleet DB JSON
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 30);
+      const response = await fetch(fleetDbUrl);
+      if (!response.ok) {
+        logger.error(`Fleet DB download failed: ${response.status}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.('fleet_download_failed');
+        return;
+      }
+
+      const rawData = await response.json();
+
+      // 3. Validate format + schema + consistency
+      const formatCheck = this.validateFleetDb(rawData);
+      if (!formatCheck.valid) {
+        logger.error(`Fleet DB validation failed: ${formatCheck.error}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.(`fleet_validation_failed: ${formatCheck.error}`);
+        return;
+      }
+
+      const fleetData = rawData as FleetDbFile;
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 50);
+
+      // 4. DB version compatibility warning
+      if (fleetData.exportDbVersion > 7) {
+        notify.warning(t('fleet.provision.updateRecommended'), { duration: 5000 });
+      }
+
+      // 5. Prepare import plan (Phase 1: RAM only)
+      const plan = await this.prepareFleetImport(fleetData);
+
+      // Show warnings
+      for (const warning of plan.warnings) {
+        notify.warning(warning, { duration: 5000 });
+      }
+
+      // Nothing to import?
+      if (plan.toCreate.length === 0 && plan.toUpdate.length === 0) {
+        logger.info('Fleet import: nothing to do (all machines already exist)');
+        notify.info(t('fleet.provision.alreadyExists', {
+          name: fleetData.fleet.name,
+          skipped: String(plan.skipped.length),
+        }));
+        this.onFleetReady?.(fleetData.fleet.name, plan.skipped.length);
+        return;
+      }
+
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 70);
+
+      // 6. Commit import plan (Phase 2: DB writes with rollback on error)
+      const result = await this.commitFleetImport(plan);
+
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 100);
+
+      logger.info(`Fleet "${fleetData.fleet.name}" provisioned: ` +
+        `${result.created} created, ${result.updated} updated, ${result.skipped} skipped`);
+
+      // 7. Notify UI
+      notify.success(t('fleet.provision.success', {
+        name: fleetData.fleet.name,
+        created: String(result.created),
+        updated: String(result.updated),
+      }));
+
+      this.onFleetReady?.(fleetData.fleet.name, result.created + result.updated);
+
+    } catch (error) {
+      logger.error('Fleet provisioning failed:', error);
+      notify.error(t('fleet.provision.error'));
+      this.onDownloadError?.(error instanceof Error ? error.message : 'fleet_provision_failed');
+    }
+  }
+
+  /**
+   * Validate fleet DB JSON structure (Hard Reject on failure)
+   */
+  private validateFleetDb(data: unknown): { valid: boolean; error?: string } {
+    if (!data || typeof data !== 'object') return { valid: false, error: 'not_an_object' };
+    const d = data as Record<string, unknown>;
+
+    // Format check
+    if (d.format !== 'zanobot-fleet-db') return { valid: false, error: 'wrong_format' };
+
+    // Schema version check (only support major version 1)
+    const sv = String(d.schemaVersion || '');
+    if (!sv.startsWith('1.')) return { valid: false, error: `unsupported_schema_version: ${sv}` };
+
+    // Fleet metadata
+    const fleet = d.fleet as Record<string, unknown> | undefined;
+    if (!fleet || typeof fleet.name !== 'string' || !fleet.name.trim()) {
+      return { valid: false, error: 'missing_fleet_name' };
+    }
+
+    // Machines array
+    const machines = d.machines as unknown[];
+    if (!Array.isArray(machines) || machines.length < 2) {
+      return { valid: false, error: 'need_at_least_2_machines' };
+    }
+
+    // Unique machine IDs
+    const typedMachines = machines as Array<Record<string, unknown>>;
+    const ids = typedMachines.map(m => m?.id).filter(Boolean);
+    if (new Set(ids).size !== ids.length) {
+      return { valid: false, error: 'duplicate_machine_ids' };
+    }
+
+    // Gold Standard consistency
+    const gsId = d.goldStandardId as string | null;
+    if (gsId) {
+      const gsEntry = typedMachines.find(m => m?.id === gsId && m?.isGoldStandard === true);
+      if (!gsEntry) return { valid: false, error: 'gold_standard_id_not_in_machines' };
+      if (!d.goldStandardModels) return { valid: false, error: 'gold_standard_models_missing' };
+      const gsModels = d.goldStandardModels as Record<string, unknown>;
+      const refModels = gsModels.referenceModels as unknown[];
+      if (!Array.isArray(refModels) || refModels.length === 0) {
+        return { valid: false, error: 'gold_standard_has_no_models' };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Phase 1: Prepare fleet import plan (RAM only, no DB writes)
+   */
+  private async prepareFleetImport(fleetData: FleetDbFile): Promise<FleetImportPlan> {
+    const plan: FleetImportPlan = {
+      toCreate: [],
+      toUpdate: [],
+      skipped: [],
+      warnings: [],
+    };
+
+    const goldStandardId = fleetData.goldStandardId;
+
+    for (const machineData of fleetData.machines) {
+      const existing = await getMachine(machineData.id);
+
+      if (!existing) {
+        // New machine -> create
+        const newMachine: Machine = {
+          id: machineData.id,
+          name: machineData.name,
+          createdAt: Date.now(),
+          referenceModels: [],
+          fleetGroup: fleetData.fleet.name,
+          location: machineData.location,
+          notes: machineData.notes,
+          fleetReferenceSourceId: (goldStandardId && machineData.id !== goldStandardId)
+            ? goldStandardId : null,
+        };
+
+        // Apply Gold Standard reference if this IS the Gold Standard
+        if (machineData.isGoldStandard && fleetData.goldStandardModels) {
+          const gsModels = fleetData.goldStandardModels;
+          newMachine.referenceModels = gsModels.referenceModels.map((m: GMIAModel) => ({
+            ...m,
+            weightVector: new Float64Array(m.weightVector as unknown as number[]),
+          }));
+          newMachine.refLogMean = gsModels.refLogMean;
+          newMachine.refLogStd = gsModels.refLogStd;
+          newMachine.refLogResidualStd = gsModels.refLogResidualStd;
+          newMachine.refDriftBaseline = gsModels.refDriftBaseline;
+          newMachine.refT60 = gsModels.refT60;
+          newMachine.refT60Classification = gsModels.refT60Classification;
+        }
+
+        plan.toCreate.push(newMachine);
+
+      } else if (existing.fleetGroup === fleetData.fleet.name) {
+        // Already in this fleet -> skip (idempotent re-scan)
+        plan.skipped.push({ id: existing.id, name: existing.name, reason: 'already_in_fleet' });
+
+      } else if (existing.fleetGroup && existing.fleetGroup !== fleetData.fleet.name) {
+        // Belongs to DIFFERENT fleet -> skip + warn
+        plan.skipped.push({ id: existing.id, name: existing.name, reason: 'different_fleet' });
+        plan.warnings.push(t('fleet.provision.skippedDifferentFleet', {
+          name: existing.name,
+          fleet: existing.fleetGroup,
+        }));
+
+      } else {
+        // Exists but no fleet -> adopt into this fleet
+        const updates: Partial<Machine> = {
+          fleetGroup: fleetData.fleet.name,
+          fleetReferenceSourceId: (goldStandardId && existing.id !== goldStandardId)
+            ? goldStandardId : null,
+        };
+        plan.toUpdate.push({ machine: existing, updates });
+      }
+    }
+
+    return plan;
+  }
+
+  /**
+   * Phase 2: Commit fleet import plan (DB writes with rollback on error)
+   */
+  private async commitFleetImport(plan: FleetImportPlan): Promise<{
+    created: number;
+    updated: number;
+    skipped: number;
+  }> {
+    const createdIds: string[] = [];
+
+    try {
+      // Create new machines
+      for (const machine of plan.toCreate) {
+        await saveMachine(machine);
+        createdIds.push(machine.id);
+      }
+
+      // Update existing machines
+      for (const { machine, updates } of plan.toUpdate) {
+        Object.assign(machine, updates);
+        await saveMachine(machine);
+      }
+
+      return {
+        created: plan.toCreate.length,
+        updated: plan.toUpdate.length,
+        skipped: plan.skipped.length,
+      };
+
+    } catch (error) {
+      // Rollback: Delete machines we just created
+      logger.error('Fleet import failed, rolling back:', error);
+      for (const id of createdIds) {
+        try {
+          await deleteMachine(id);
+        } catch (rollbackError) {
+          logger.warn(`Rollback: could not delete machine ${id}:`, rollbackError);
+        }
+      }
+      throw error;
+    }
   }
 
   /**

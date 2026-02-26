@@ -70,6 +70,12 @@ export class IdentifyPhase {
   // NFC customerId field for Variante B
   private nfcCustomerIdInput: HTMLInputElement | null = null;
   private nfcDbUrlPreview: HTMLElement | null = null;
+  // NFC Fleet option
+  private nfcFleetOption: HTMLInputElement | null = null;
+  private nfcFleetSection: HTMLElement | null = null;
+  private nfcFleetSelect: HTMLSelectElement | null = null;
+  private nfcFleetDetail: HTMLElement | null = null;
+  private nfcFleetUrlPreview: HTMLElement | null = null;
 
   // NFC Onboarding context tracking
   // Used to restore view level after NFC flow ends
@@ -99,6 +105,10 @@ export class IdentifyPhase {
   private qrDownloadBtn: HTMLButtonElement | null = null;
   private qrPrintBtn: HTMLButtonElement | null = null;
   private qrCurrentUrl: string = '';
+  // QR Fleet option
+  private qrFleetOption: HTMLInputElement | null = null;
+  private qrFleetSection: HTMLElement | null = null;
+  private qrFleetSelect: HTMLSelectElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -1500,7 +1510,27 @@ export class IdentifyPhase {
 
     // Update DB URL preview when customerId changes
     if (this.nfcCustomerIdInput) {
-      this.nfcCustomerIdInput.addEventListener('input', () => this.updateNfcDbUrlPreview());
+      this.nfcCustomerIdInput.addEventListener('input', () => {
+        this.updateNfcDbUrlPreview();
+        this.updateNfcFleetDetail();
+      });
+    }
+
+    // Fleet option
+    this.nfcFleetOption = document.getElementById('nfc-option-fleet') as HTMLInputElement | null;
+    this.nfcFleetSection = document.getElementById('nfc-fleet-section');
+    this.nfcFleetSelect = document.getElementById('nfc-fleet-select') as HTMLSelectElement | null;
+    this.nfcFleetDetail = document.getElementById('nfc-option-fleet-detail');
+    this.nfcFleetUrlPreview = document.getElementById('nfc-fleet-url-preview');
+
+    // Show/hide fleet section based on radio selection
+    [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption].forEach(radio => {
+      radio?.addEventListener('change', () => this.updateNfcFleetVisibility());
+    });
+
+    // Fleet select change
+    if (this.nfcFleetSelect) {
+      this.nfcFleetSelect.addEventListener('change', () => this.updateNfcFleetDetail());
     }
 
     this.updateNfcSpecificOption();
@@ -1521,6 +1551,62 @@ export class IdentifyPhase {
       this.nfcDbUrlPreview.style.display = 'block';
     } else {
       this.nfcDbUrlPreview.style.display = 'none';
+    }
+  }
+
+  private async updateNfcFleetVisibility(): Promise<void> {
+    const isFleet = this.nfcFleetOption?.checked;
+
+    if (this.nfcFleetSection) {
+      this.nfcFleetSection.style.display = isFleet ? 'block' : 'none';
+    }
+
+    if (isFleet && this.nfcFleetSelect) {
+      // Populate fleet dropdown
+      const machines = await getAllMachines();
+      const groups = new Map<string, number>();
+      for (const m of machines) {
+        if (m.fleetGroup) {
+          groups.set(m.fleetGroup, (groups.get(m.fleetGroup) || 0) + 1);
+        }
+      }
+
+      this.nfcFleetSelect.innerHTML = '';
+      if (groups.size === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = t('nfc.noFleets');
+        this.nfcFleetSelect.appendChild(opt);
+      } else {
+        for (const [name, count] of [...groups].sort((a, b) => a[0].localeCompare(b[0]))) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} (${count} ${count === 1 ? t('nfc.machine') : t('nfc.machines')})`;
+          this.nfcFleetSelect.appendChild(opt);
+        }
+      }
+
+      this.updateNfcFleetDetail();
+    }
+  }
+
+  private updateNfcFleetDetail(): void {
+    const selected = this.nfcFleetSelect?.value;
+    if (this.nfcFleetDetail && selected) {
+      this.nfcFleetDetail.textContent = t('nfc.optionFleetDetail', { name: selected });
+    }
+
+    // Update URL preview
+    if (this.nfcFleetUrlPreview && selected) {
+      const customerId = this.nfcCustomerIdInput?.value.trim();
+      if (customerId) {
+        const fleetId = ReferenceDbService.slugifyFleetName(selected);
+        const url = HashRouter.getFullFleetUrl(fleetId, customerId);
+        this.nfcFleetUrlPreview.textContent = url;
+        this.nfcFleetUrlPreview.style.display = 'block';
+      } else {
+        this.nfcFleetUrlPreview.style.display = 'none';
+      }
     }
   }
 
@@ -1637,27 +1723,42 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.nfcSpecificOption?.checked ? 'specific' : 'generic';
+    const selectedOption = this.nfcFleetOption?.checked ? 'fleet'
+      : this.nfcSpecificOption?.checked ? 'specific'
+      : 'generic';
+
     if (selectedOption === 'specific' && !this.currentMachine) {
       this.setNfcStatus(t('nfc.optionSpecificUnavailable'), 'error');
       return;
     }
 
-    // Get customerId from input field (required for machine-specific links)
+    // Get customerId from input field
     const customerId = this.nfcCustomerIdInput?.value.trim() || '';
 
-    // Validate: customerId is required for machine-specific links
+    // Validate: customerId is required for machine-specific and fleet links
     if (selectedOption === 'specific' && !customerId) {
       this.setNfcStatus(t('nfc.customerIdRequired'), 'error');
       return;
     }
 
-    // Use hash-based URL for NFC: #/m/<machine_id>?c=<customer_id>
-    // The customerId determines which database to load (Variante B)
+    if (selectedOption === 'fleet') {
+      const fleetName = this.nfcFleetSelect?.value;
+      if (!fleetName || !customerId) {
+        this.setNfcStatus(t('nfc.fleetRequiresCustomerId'), 'error');
+        return;
+      }
+    }
+
     const baseUrl = this.getBaseAppUrl();
-    const url = selectedOption === 'specific' && this.currentMachine
-      ? HashRouter.getFullMachineUrl(this.currentMachine.id, customerId)
-      : baseUrl;
+    let url: string;
+    if (selectedOption === 'fleet' && this.nfcFleetSelect?.value) {
+      const fleetId = ReferenceDbService.slugifyFleetName(this.nfcFleetSelect.value);
+      url = HashRouter.getFullFleetUrl(fleetId, customerId);
+    } else if (selectedOption === 'specific' && this.currentMachine) {
+      url = HashRouter.getFullMachineUrl(this.currentMachine.id, customerId);
+    } else {
+      url = baseUrl;
+    }
 
     logger.info(`📝 Writing NFC tag: ${url}`);
 
@@ -1737,12 +1838,34 @@ export class IdentifyPhase {
       });
     }
 
+    // QR Fleet option
+    this.qrFleetOption = document.getElementById('qr-option-fleet') as HTMLInputElement | null;
+    this.qrFleetSelect = document.getElementById('qr-fleet-select') as HTMLSelectElement | null;
+    this.qrFleetSection = document.getElementById('qr-fleet-section');
+
     // Radio button changes trigger QR regeneration
     if (this.qrGenericOption) {
-      this.qrGenericOption.addEventListener('change', () => void this.generateQrPreview());
+      this.qrGenericOption.addEventListener('change', () => {
+        this.updateQrFleetVisibility();
+        void this.generateQrPreview();
+      });
     }
     if (this.qrSpecificOption) {
-      this.qrSpecificOption.addEventListener('change', () => void this.generateQrPreview());
+      this.qrSpecificOption.addEventListener('change', () => {
+        this.updateQrFleetVisibility();
+        void this.generateQrPreview();
+      });
+    }
+    if (this.qrFleetOption) {
+      this.qrFleetOption.addEventListener('change', () => {
+        this.updateQrFleetVisibility();
+        void this.generateQrPreview();
+      });
+    }
+
+    // Fleet select change triggers QR regeneration
+    if (this.qrFleetSelect) {
+      this.qrFleetSelect.addEventListener('change', () => void this.generateQrPreview());
     }
 
     // Customer ID input changes trigger QR regeneration
@@ -1823,9 +1946,54 @@ export class IdentifyPhase {
     }
   }
 
+  private async updateQrFleetVisibility(): Promise<void> {
+    const isFleet = this.qrFleetOption?.checked;
+
+    if (this.qrFleetSection) {
+      this.qrFleetSection.style.display = isFleet ? 'block' : 'none';
+    }
+
+    if (isFleet && this.qrFleetSelect) {
+      const machines = await getAllMachines();
+      const groups = new Map<string, number>();
+      for (const m of machines) {
+        if (m.fleetGroup) {
+          groups.set(m.fleetGroup, (groups.get(m.fleetGroup) || 0) + 1);
+        }
+      }
+
+      this.qrFleetSelect.innerHTML = '';
+      if (groups.size === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = t('nfc.noFleets');
+        this.qrFleetSelect.appendChild(opt);
+      } else {
+        for (const [name, count] of [...groups].sort((a, b) => a[0].localeCompare(b[0]))) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} (${count} ${count === 1 ? t('nfc.machine') : t('nfc.machines')})`;
+          this.qrFleetSelect.appendChild(opt);
+        }
+      }
+    }
+  }
+
   private getQrUrl(): string {
-    const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
+    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+      : this.qrSpecificOption?.checked ? 'specific'
+      : 'generic';
     const baseUrl = this.getBaseAppUrl();
+
+    if (selectedOption === 'fleet') {
+      const fleetName = this.qrFleetSelect?.value;
+      const customerId = this.qrCustomerIdInput?.value.trim();
+      if (fleetName && customerId) {
+        const fleetId = ReferenceDbService.slugifyFleetName(fleetName);
+        return HashRouter.getFullFleetUrl(fleetId, customerId);
+      }
+      return baseUrl;
+    }
 
     if (selectedOption === 'specific' && this.currentMachine) {
       const customerId = this.qrCustomerIdInput?.value.trim() || '';
@@ -1870,8 +2038,13 @@ export class IdentifyPhase {
 
       // Update label info
       if (this.qrLabelInfo) {
-        const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
-        if (selectedOption === 'specific' && this.currentMachine) {
+        const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+          : this.qrSpecificOption?.checked ? 'specific'
+          : 'generic';
+        if (selectedOption === 'fleet' && this.qrFleetSelect?.value) {
+          this.qrLabelInfo.innerHTML =
+            `<strong>${t('qrCode.fleetLabel')}:</strong> ${escapeHtml(this.qrFleetSelect.value)}`;
+        } else if (selectedOption === 'specific' && this.currentMachine) {
           this.qrLabelInfo.innerHTML =
             `<strong>${t('qrCode.machineLabel')}:</strong> ${escapeHtml(this.currentMachine.name)}<br>` +
             `<strong>${t('qrCode.machineIdLabel')}:</strong> ${escapeHtml(this.currentMachine.id)}`;
@@ -1901,7 +2074,9 @@ export class IdentifyPhase {
       errorCorrectionLevel: 'M',
     }).then(() => {
       const link = document.createElement('a');
-      link.download = this.currentMachine && this.qrSpecificOption?.checked
+      link.download = this.qrFleetOption?.checked && this.qrFleetSelect?.value
+        ? `qr-fleet-${ReferenceDbService.slugifyFleetName(this.qrFleetSelect.value)}.png`
+        : this.currentMachine && this.qrSpecificOption?.checked
         ? `qr-${this.currentMachine.id}.png`
         : 'qr-zanobot.png';
       link.href = downloadCanvas.toDataURL('image/png');
@@ -1919,19 +2094,27 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.qrSpecificOption?.checked ? 'specific' : 'generic';
+    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+      : this.qrSpecificOption?.checked ? 'specific'
+      : 'generic';
     const isSpecific = selectedOption === 'specific' && this.currentMachine;
+    const isFleet = selectedOption === 'fleet' && this.qrFleetSelect?.value;
     const now = new Date().toLocaleDateString();
 
     // Fill print label content
-    printHeader.textContent = t('qrCode.printTitle');
-
-    if (isSpecific && this.currentMachine) {
+    if (isFleet) {
+      printHeader.textContent = t('qrCode.fleetPrintTitle');
+      printDetails.innerHTML =
+        `<strong>${t('qrCode.fleetLabel')}:</strong> ${escapeHtml(this.qrFleetSelect!.value)}<br>` +
+        `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
+    } else if (isSpecific && this.currentMachine) {
+      printHeader.textContent = t('qrCode.printTitle');
       printDetails.innerHTML =
         `<strong>${t('qrCode.machineLabel')}:</strong> ${escapeHtml(this.currentMachine.name)}<br>` +
         `<strong>${t('qrCode.machineIdLabel')}:</strong> ${escapeHtml(this.currentMachine.id)}<br>` +
         `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
     } else {
+      printHeader.textContent = t('qrCode.printTitle');
       printDetails.innerHTML =
         `<strong>${t('qrCode.genericLabel')}</strong><br>` +
         `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
@@ -2842,9 +3025,22 @@ export class IdentifyPhase {
       });
     });
 
+    // Fleet export button (for NFC/QR provisioning)
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'help-icon-btn help-icon-inline';
+    exportBtn.setAttribute('aria-label', t('fleet.export.button'));
+    exportBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>`;
+    exportBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await this.exportCurrentFleet(groupName);
+    });
+
     const titleRow = document.createElement('div');
     titleRow.className = 'fleet-header-title-row';
     titleRow.appendChild(titleEl);
+    titleRow.appendChild(exportBtn);
     titleRow.appendChild(helpBtn);
 
     // Stats row
@@ -2872,6 +3068,37 @@ export class IdentifyPhase {
 
     // Insert at top of container
     container.insertBefore(header, container.firstChild);
+  }
+
+  /**
+   * Export current fleet as JSON file for NFC/QR provisioning.
+   */
+  private async exportCurrentFleet(groupName: string): Promise<void> {
+    const result = await ReferenceDbService.exportFleet(groupName);
+    if (!result) {
+      notify.error(t('fleet.export.failed'));
+      return;
+    }
+
+    // Trigger download
+    const url = URL.createObjectURL(result.blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = result.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    notify.success(t('fleet.export.success', { name: groupName }));
+  }
+
+  /**
+   * Activate fleet mode from external trigger (e.g., NFC fleet provisioning)
+   */
+  public async activateFleetMode(): Promise<void> {
+    await this.setWorkflowMode('fleet');
+    await this.populateFleetGroupSuggestions();
   }
 
   /**

@@ -232,6 +232,77 @@ export interface AppSettings {
 }
 
 /**
+ * Fleet database export format for NFC/QR provisioning.
+ * Contains everything needed to provision a complete fleet on a new device.
+ *
+ * CRITICAL: This format is the contract between export and import.
+ * Every field marked as required MUST be present, otherwise import MUST fail.
+ */
+export interface FleetDbFile {
+  /** Format identifier – MUST be exactly 'zanobot-fleet-db' */
+  format: 'zanobot-fleet-db';
+
+  /** Schema version (SemVer). Import MUST reject files with major > 1. */
+  schemaVersion: '1.0.0';
+
+  /** App DB_VERSION at export time. */
+  exportDbVersion: number;
+
+  /** ISO 8601 timestamp of export. */
+  exportedAt: string;
+
+  /** App version string at export time (for debugging). */
+  appVersion?: string;
+
+  /** Fleet metadata */
+  fleet: {
+    /** Fleet group name (becomes fleetGroup on all machines) */
+    name: string;
+    /** Slugified fleet ID (used in URL path) */
+    id: string;
+    /** Optional description */
+    description?: string;
+  };
+
+  /**
+   * Gold Standard machine ID within this fleet (null = no shared reference).
+   * MUST match exactly one entry in machines[] where isGoldStandard === true.
+   */
+  goldStandardId: string | null;
+
+  /**
+   * Gold Standard reference models + calibration data.
+   * MUST be present if goldStandardId is not null.
+   */
+  goldStandardModels?: {
+    referenceModels: GMIAModel[];
+    refLogMean?: number[] | null;
+    refLogStd?: number[] | null;
+    refLogResidualStd?: number[] | null;
+    refDriftBaseline?: Machine['refDriftBaseline'];
+    refT60?: number | null;
+    refT60Classification?: string | null;
+  };
+
+  /**
+   * List of machines in this fleet. MUST contain >= 2 entries.
+   * Each machine becomes a Machine record in IndexedDB with fleetGroup set.
+   */
+  machines: Array<{
+    /** Machine ID (used as IndexedDB key). MUST be unique within this array. */
+    id: string;
+    /** Machine display name */
+    name: string;
+    /** Is this the Gold Standard? */
+    isGoldStandard: boolean;
+    /** Optional location info */
+    location?: string;
+    /** Optional notes */
+    notes?: string;
+  }>;
+}
+
+/**
  * Reference Database File Format - Official format for Google Drive files
  *
  * This is the expected format for reference database files stored in Google Drive.

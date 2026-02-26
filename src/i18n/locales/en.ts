@@ -814,6 +814,15 @@ export const en: TranslationDict = {
     customerIdRequired: 'Please enter a customer ID.',
     dbUrlPreview: 'Loaded DB URL: {{url}}',
     closeDialog: 'Close NFC dialog',
+    // Fleet option
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Opens the app with a complete fleet.',
+    optionFleetDetail: 'Opens the app for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    noFleets: 'No fleets available',
+    machine: 'machine',
+    machines: 'machines',
+    fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
   },
 
   // ============================================================================
@@ -845,6 +854,13 @@ export const en: TranslationDict = {
     printTitle: 'Machine QR Code',
     printInstructions: 'Cut out QR code and attach to the machine.',
     genericLabel: 'App Access',
+    // Fleet option
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Creates a QR code for a complete fleet.',
+    optionFleetDetail: 'Creates QR code for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    fleetLabel: 'Fleet',
+    fleetPrintTitle: 'Fleet QR Code',
   },
 
   review: {
@@ -1428,6 +1444,22 @@ export const en: TranslationDict = {
     // Sprint 5 UX: Gold Standard badge
     goldStandard: {
       badge: 'Gold Standard (reference for the fleet)',
+    },
+    // Fleet NFC/QR provisioning: Export
+    export: {
+      button: 'Export fleet',
+      success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
+      failed: 'Fleet export failed.',
+    },
+    // Fleet NFC/QR provisioning: Import
+    provision: {
+      success: 'Fleet "{{name}}" provisioned: {{created}} created, {{updated}} updated.',
+      alreadyExists: 'Fleet "{{name}}" already exists ({{skipped}} machines skipped).',
+      downloading: 'Loading fleet…',
+      error: 'Could not load fleet.',
+      rollbackComplete: 'Import failed – changes rolled back.',
+      updateRecommended: 'Fleet file was exported from a newer app version. App update recommended.',
+      skippedDifferentFleet: '"{{name}}" belongs to fleet "{{fleet}}" – not reassigned.',
     },
   },
 };

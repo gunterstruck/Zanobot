@@ -824,6 +824,20 @@
                             <span class="nfc-option-detail" id="nfc-option-specific-detail" data-i18n="nfc.optionSpecificDetailDefault">Öffnet die App mit der aktuell ausgewählten Maschine.</span>
                         </span>
                     </label>
+                    <label class="nfc-option">
+                        <input type="radio" name="nfc-write-option" id="nfc-option-fleet" value="fleet">
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="nfc.optionFleet">Flotten-Link</span>
+                            <span class="nfc-option-detail" id="nfc-option-fleet-detail" data-i18n="nfc.optionFleetDetailDefault">Öffnet die App mit einer kompletten Flotte.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Fleet selection (shown only when fleet option selected) -->
+                <div id="nfc-fleet-section" class="nfc-customer-id-section" style="display: none;">
+                    <label class="setting-label" data-i18n="nfc.fleetSelectLabel">Flotte auswählen</label>
+                    <select id="nfc-fleet-select" class="form-input"></select>
+                    <p class="nfc-db-url-preview" id="nfc-fleet-url-preview" style="display: none;"></p>
                 </div>
 
                 <!-- Customer ID Input Field (Variante B) -->
@@ -881,6 +895,19 @@
                             <span class="nfc-option-detail" id="qr-option-specific-detail" data-i18n="qrCode.optionSpecificDetailDefault">Öffnet die App mit der aktuell ausgewählten Maschine.</span>
                         </span>
                     </label>
+                    <label class="nfc-option">
+                        <input type="radio" name="qr-option" id="qr-option-fleet" value="fleet">
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="qrCode.optionFleet">Flotten-Link</span>
+                            <span class="nfc-option-detail" id="qr-option-fleet-detail" data-i18n="qrCode.optionFleetDetailDefault">Erstellt einen QR-Code für eine komplette Flotte.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Fleet selection (shown only when fleet option selected) -->
+                <div id="qr-fleet-section" class="nfc-customer-id-section" style="display: none;">
+                    <label class="setting-label" data-i18n="qrCode.fleetSelectLabel">Flotte auswählen</label>
+                    <select id="qr-fleet-select" class="form-input"></select>
                 </div>
 
                 <!-- Customer ID Input Field -->

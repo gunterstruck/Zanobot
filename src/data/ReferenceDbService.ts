@@ -23,7 +23,7 @@ import {
   importData,
   getAllMachines,
 } from './db.js';
-import type { Machine, ReferenceDatabase, GMIAModel, ReferenceDbFile, ReferenceDbMeta } from './types.js';
+import type { Machine, ReferenceDatabase, GMIAModel, ReferenceDbFile, ReferenceDbMeta, FleetDbFile } from './types.js';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace } from '@utils/onboardingTrace.js';
 
@@ -1334,6 +1334,113 @@ export class ReferenceDbService {
 
     if (updated) {
       await saveMachine(machine);
+    }
+  }
+
+  /**
+   * Slugify a fleet name for use in URLs.
+   * "Fernwärme Ost" → "fernwaerme-ost"
+   */
+  public static slugifyFleetName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50);
+  }
+
+  /**
+   * Export a fleet as FleetDbFile JSON for NFC/QR provisioning.
+   *
+   * @param fleetGroupName - The fleetGroup to export
+   * @returns Blob + filename + fleetId, or null if export failed
+   */
+  public static async exportFleet(fleetGroupName: string): Promise<{
+    blob: Blob;
+    filename: string;
+    fleetId: string;
+  } | null> {
+    try {
+      const allMachines = await getAllMachines();
+      const fleetMachines = allMachines.filter(m => m.fleetGroup === fleetGroupName);
+
+      if (fleetMachines.length < 2) {
+        logger.warn(`Fleet "${fleetGroupName}" has fewer than 2 machines`);
+        return null;
+      }
+
+      const fleetId = this.slugifyFleetName(fleetGroupName);
+
+      // Find Gold Standard: most common fleetReferenceSourceId
+      const refSourceIds = fleetMachines.map(m => m.fleetReferenceSourceId).filter(Boolean) as string[];
+      let goldStandardId: string | null = null;
+      if (refSourceIds.length > 0) {
+        const counts = new Map<string, number>();
+        for (const id of refSourceIds) {
+          counts.set(id, (counts.get(id) || 0) + 1);
+        }
+        let maxCount = 0;
+        for (const [id, count] of counts) {
+          if (count > maxCount) {
+            goldStandardId = id;
+            maxCount = count;
+          }
+        }
+      }
+
+      // Get Gold Standard reference data
+      let goldStandardModels: FleetDbFile['goldStandardModels'] = undefined;
+      if (goldStandardId) {
+        const goldMachine = await getMachine(goldStandardId);
+        if (goldMachine && goldMachine.referenceModels && goldMachine.referenceModels.length > 0) {
+          goldStandardModels = {
+            referenceModels: goldMachine.referenceModels.map(m => ({
+              ...m,
+              // Serialize Float64Array to number[] for JSON
+              weightVector: Array.from(m.weightVector) as unknown as Float64Array,
+            })),
+            refLogMean: goldMachine.refLogMean,
+            refLogStd: goldMachine.refLogStd,
+            refLogResidualStd: goldMachine.refLogResidualStd,
+            refDriftBaseline: goldMachine.refDriftBaseline,
+            refT60: goldMachine.refT60,
+            refT60Classification: goldMachine.refT60Classification,
+          };
+        }
+      }
+
+      const exportData: FleetDbFile = {
+        format: 'zanobot-fleet-db',
+        schemaVersion: '1.0.0',
+        exportDbVersion: 7,
+        exportedAt: new Date().toISOString(),
+        fleet: {
+          name: fleetGroupName,
+          id: fleetId,
+        },
+        goldStandardId,
+        goldStandardModels,
+        machines: fleetMachines.map(m => ({
+          id: m.id,
+          name: m.name,
+          isGoldStandard: m.id === goldStandardId,
+          location: m.location,
+          notes: m.notes,
+        })),
+      };
+
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const filename = `fleet-${fleetId}.json`;
+
+      logger.info(`Fleet exported: ${filename} (${fleetMachines.length} machines, ` +
+        `Gold Standard: ${goldStandardId || 'none'})`);
+
+      return { blob, filename, fleetId };
+    } catch (error) {
+      logger.error('Fleet export failed:', error);
+      return null;
     }
   }
 }

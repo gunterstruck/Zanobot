@@ -641,6 +641,14 @@ export const zh: TranslationDict = {
     customerIdRequired: '请输入客户 ID。',
     dbUrlPreview: '加载的数据库 URL：{{url}}',
     closeDialog: '关闭 NFC 对话框',
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Opens the app with a complete fleet.',
+    optionFleetDetail: 'Opens the app for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    noFleets: 'No fleets available',
+    machine: 'machine',
+    machines: 'machines',
+    fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
   },
 
   // ============================================================================
@@ -672,6 +680,12 @@ export const zh: TranslationDict = {
     printTitle: '机器二维码',
     printInstructions: '剪下二维码并贴在机器上。',
     genericLabel: '应用入口',
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Creates a QR code for a complete fleet.',
+    optionFleetDetail: 'Creates QR code for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    fleetLabel: 'Fleet',
+    fleetPrintTitle: 'Fleet QR Code',
   },
 
   review: {
@@ -1092,5 +1106,19 @@ export const zh: TranslationDict = {
       cancelled: 'Fleet check cancelled.',
     },
     goldStandard: { badge: 'Gold Standard (reference for the fleet)' },
+    export: {
+      button: 'Export fleet',
+      success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
+      failed: 'Fleet export failed.',
+    },
+    provision: {
+      success: 'Fleet "{{name}}" provisioned: {{created}} created, {{updated}} updated.',
+      alreadyExists: 'Fleet "{{name}}" already exists ({{skipped}} machines skipped).',
+      downloading: 'Loading fleet…',
+      error: 'Could not load fleet.',
+      rollbackComplete: 'Import failed – changes rolled back.',
+      updateRecommended: 'Fleet file was exported from a newer app version. App update recommended.',
+      skippedDifferentFleet: '"{{name}}" belongs to fleet "{{fleet}}" – not reassigned.',
+    },
   },
 };
