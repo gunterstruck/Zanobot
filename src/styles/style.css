@@ -7493,10 +7493,12 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     background: rgba(0, 0, 0, 0);
     z-index: 9000;
     transition: background 0.3s ease;
+    pointer-events: none;
 }
 
 .bottomsheet-overlay-visible {
     background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
 }
 
 .bottomsheet {
