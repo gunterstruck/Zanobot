@@ -289,6 +289,21 @@ export class ReferencePhase {
           onSmartStartComplete: (rms) => {
             logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
             this.smartStartWasUsed = true; // Mark that Smart Start completed successfully
+
+            // Sprint 2 UX: Visual ready moment (flash green + haptic)
+            const statusElement = document.getElementById('recording-status')
+              || document.querySelector('.recording-status');
+            if (statusElement) {
+              statusElement.classList.add('smart-start-ready');
+              statusElement.textContent = t('smartStartReady.signalDetected');
+              setTimeout(() => {
+                statusElement.classList.remove('smart-start-ready');
+              }, 1500);
+            }
+            if (navigator.vibrate) {
+              navigator.vibrate([50, 30, 50]);
+            }
+
             this.updateStatusMessage(t('reference.recording.recording'));
             this.actuallyStartRecording();
           },

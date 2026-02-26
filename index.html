@@ -284,10 +284,44 @@
                                     <rect x="14" y="14" width="7" height="7"/>
                                 </svg>
                                 <h5 class="option-title" data-i18n="identify.machineOverview">Maschinenübersicht</h5>
+                                <button class="help-icon-btn" id="help-machines" aria-label="Hilfe: Maschinen">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div id="machine-overview" class="machine-list">
                                 <!-- Machine items will be added dynamically -->
-                                <p class="empty-state" id="machine-overview-empty" data-i18n="identify.noMachines">Keine Maschinen vorhanden</p>
+                                <!-- Sprint 2 UX: Empty state mini 1-2-3 guide -->
+                                <div id="machine-overview-empty" class="empty-state-guide" style="display: none;">
+                                    <p class="empty-state-title" data-i18n="identify.emptyGuide.title">So funktioniert Zanobot</p>
+                                    <div class="guide-steps">
+                                        <div class="guide-step">
+                                            <span class="guide-step-number">1</span>
+                                            <div class="guide-step-content">
+                                                <strong data-i18n="identify.emptyGuide.step1Title">Maschine anlegen</strong>
+                                                <span data-i18n="identify.emptyGuide.step1Desc">Gib deiner Maschine einen eindeutigen Namen.</span>
+                                            </div>
+                                        </div>
+                                        <div class="guide-step">
+                                            <span class="guide-step-number">2</span>
+                                            <div class="guide-step-content">
+                                                <strong data-i18n="identify.emptyGuide.step2Title">Referenz aufnehmen</strong>
+                                                <span data-i18n="identify.emptyGuide.step2Desc">10 Sekunden Normalzustand aufnehmen.</span>
+                                            </div>
+                                        </div>
+                                        <div class="guide-step">
+                                            <span class="guide-step-number">3</span>
+                                            <div class="guide-step-content">
+                                                <strong data-i18n="identify.emptyGuide.step3Title">Zustand prüfen</strong>
+                                                <span data-i18n="identify.emptyGuide.step3Desc">Vergleiche jederzeit gegen die Referenz.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="guide-cta-btn" id="empty-state-cta" data-i18n="identify.emptyGuide.cta">
+                                        Erste Maschine anlegen
+                                    </button>
+                                </div>
                             </div>
                             <button class="add-reference-btn" id="add-new-machine-btn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -332,6 +366,11 @@
                             <line x1="8" y1="22" x2="16" y2="22"/>
                         </svg>
                         <h3 class="container-title" data-i18n="reference.recordReference">Referenz aufnehmen</h3>
+                        <button class="help-icon-btn" id="help-reference" aria-label="Hilfe: Referenz">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </button>
                     </div>
                     <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"/>
@@ -421,6 +460,11 @@
                             <circle cx="18" cy="12" r="2"/>
                         </svg>
                         <h3 class="container-title" data-i18n="buttons.startDiagnosis">Zustand prüfen</h3>
+                        <button class="help-icon-btn" id="help-diagnose" aria-label="Hilfe: Diagnose">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </button>
                     </div>
                     <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"/>
@@ -1182,6 +1226,11 @@
                     <!-- View Level Selection Section -->
                     <div class="setting-category">
                         <h4 class="setting-category-title" data-i18n="viewLevels.viewModeTitle">Ansichtsmodus</h4>
+                        <button class="help-icon-btn" id="help-viewlevel" aria-label="Hilfe: Ansichtsmodus" style="margin-left: 4px; vertical-align: middle;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </button>
                         <p class="setting-category-description" data-i18n="viewLevels.viewModeDescription">Passen Sie die Komplexität der Benutzeroberfläche an Ihre Bedürfnisse an.</p>
                         <div class="view-level-selector" id="view-level-selector">
                             <button class="view-level-btn active" data-level="basic" type="button">

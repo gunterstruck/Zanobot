@@ -43,6 +43,7 @@ import { stopMediaStream, closeAudioContext } from '@utils/streamHelper.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
+import { InfoBottomSheet } from '@ui/components/InfoBottomSheet.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
 import {
   getRoomCompSettings,
@@ -541,6 +542,21 @@ export class DiagnosePhase {
         },
         onSmartStartComplete: (rms) => {
           logger.info(`✅ Smart Start: Signal detected! RMS: ${rms.toFixed(4)}`);
+
+          // Sprint 2 UX: Visual ready moment (flash green + haptic)
+          const statusElement = document.getElementById('smart-start-status')
+            || document.getElementById('inspection-subtitle');
+          if (statusElement) {
+            statusElement.classList.add('smart-start-ready');
+            statusElement.textContent = t('smartStartReady.signalDetected');
+            setTimeout(() => {
+              statusElement.classList.remove('smart-start-ready');
+            }, 1500);
+          }
+          if (navigator.vibrate) {
+            navigator.vibrate([50, 30, 50]);
+          }
+
           this.updateSmartStartStatus(t('diagnose.diagnosisRunning'));
           this.isProcessing = true; // Start processing incoming chunks
         },
@@ -1017,6 +1033,37 @@ export class DiagnosePhase {
    * Called from processChunkDirectly() after scoring.
    */
   private updateDriftDisplay(result: DriftResult, currentScore: number): void {
+    // Sprint 2 UX: Update simplified drift summary for Advanced view
+    const summaryEl = document.getElementById('drift-summary-advanced');
+    if (summaryEl) {
+      const iconEl = document.getElementById('drift-summary-icon');
+      const textEl = document.getElementById('drift-summary-text');
+
+      if (iconEl && textEl) {
+        switch (result.interpretation) {
+          case 'all_ok':
+            iconEl.textContent = '✅';
+            textEl.textContent = t('drift.summaryOk');
+            break;
+          case 'room_change':
+            iconEl.textContent = '🟡';
+            textEl.textContent = t('drift.summaryRoomChange');
+            break;
+          case 'machine_change':
+            iconEl.textContent = '🔴';
+            textEl.textContent = t('drift.summaryMachineChange');
+            break;
+          case 'both':
+            iconEl.textContent = '🟠';
+            textEl.textContent = t('drift.summaryBoth');
+            break;
+          default:
+            iconEl.textContent = '🟡';
+            textEl.textContent = t('drift.summaryUncertain');
+        }
+      }
+    }
+
     const panel = document.getElementById('drift-indicator-panel');
     if (!panel) return;
 
@@ -1823,6 +1870,21 @@ export class DiagnosePhase {
     const spectrumSection = document.createElement('div');
     spectrumSection.className = 'diagnosis-spectrum-container';
 
+    // Sprint 2 UX: Help button for spectrogram (Advanced/Expert)
+    const spectroHelp = document.createElement('button');
+    spectroHelp.className = 'help-icon-btn help-icon-inline';
+    spectroHelp.setAttribute('aria-label', t('help.spectrogram.title'));
+    spectroHelp.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    spectroHelp.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.spectrogram.title'),
+        content: t('help.spectrogram.body'),
+        icon: 'ℹ️',
+      });
+    });
+    spectrumSection.appendChild(spectroHelp);
+
     if (waveformCanvas) {
       waveformCanvas.style.display = 'block';
       spectrumSection.appendChild(waveformCanvas);
@@ -1889,6 +1951,34 @@ export class DiagnosePhase {
       this.pipelineStatus.show();
     }
 
+    // === DRIFT SUMMARY (Advanced mode, simplified 1-line indicator) ===
+    if (this.realtimeDrift && currentViewLevel === 'advanced') {
+      const driftSummary = document.createElement('div');
+      driftSummary.id = 'drift-summary-advanced';
+      driftSummary.className = 'drift-summary';
+      driftSummary.innerHTML = `
+        <span class="drift-summary-icon" id="drift-summary-icon">—</span>
+        <span class="drift-summary-text" id="drift-summary-text">${t('drift.initializing')}</span>
+      `;
+
+      // Sprint 2 UX: Help button for drift summary (Advanced)
+      const driftHelpAdv = document.createElement('button');
+      driftHelpAdv.className = 'help-icon-btn help-icon-inline';
+      driftHelpAdv.setAttribute('aria-label', t('help.drift.title'));
+      driftHelpAdv.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      driftHelpAdv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        InfoBottomSheet.show({
+          title: t('help.drift.title'),
+          content: t('help.drift.body'),
+          icon: 'ℹ️',
+        });
+      });
+      driftSummary.appendChild(driftHelpAdv);
+
+      scrollableArea.appendChild(driftSummary);
+    }
+
     // === DRIFT INDICATOR PANEL (Expert mode, only when drift detector active) ===
     if (this.realtimeDrift && currentViewLevel === 'expert') {
       const driftPanel = document.createElement('div');
@@ -1922,6 +2012,24 @@ export class DiagnosePhase {
           <span id="drift-detail-local"></span>
         </div>
       `;
+      // Sprint 2 UX: Help button in drift panel header (Expert)
+      const driftHelpExp = document.createElement('button');
+      driftHelpExp.className = 'help-icon-btn help-icon-inline';
+      driftHelpExp.setAttribute('aria-label', t('help.drift.title'));
+      driftHelpExp.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      driftHelpExp.addEventListener('click', (e) => {
+        e.stopPropagation();
+        InfoBottomSheet.show({
+          title: t('help.drift.title'),
+          content: t('help.drift.body'),
+          icon: 'ℹ️',
+        });
+      });
+      const driftHeader = driftPanel.querySelector('.drift-panel-header');
+      if (driftHeader) {
+        driftHeader.appendChild(driftHelpExp);
+      }
+
       scrollableArea.appendChild(driftPanel);
 
       // Context hint element (below drift panel)

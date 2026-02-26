@@ -16,6 +16,7 @@ import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.
 import { escapeHtml } from '@utils/sanitize.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
 import { t } from '../../i18n/index.js';
+import { InfoBottomSheet } from '../components/InfoBottomSheet.js';
 import {
   HardwareCheck,
   type AudioQualityReport,
@@ -195,6 +196,48 @@ export class IdentifyPhase {
     if (addNewMachineBtn) {
       addNewMachineBtn.addEventListener('click', () => this.handleAddNewMachine());
     }
+
+    // Sprint 2 UX: Empty state CTA scrolls to machine name input
+    document.getElementById('empty-state-cta')?.addEventListener('click', () => {
+      this.handleAddNewMachine();
+    });
+
+    // Sprint 2 UX: Help icon handlers for contextual BottomSheet help
+    document.getElementById('help-reference')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.reference.title'),
+        content: t('help.reference.body'),
+        icon: 'ℹ️',
+      });
+    });
+
+    document.getElementById('help-diagnose')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.diagnose.title'),
+        content: t('help.diagnose.body'),
+        icon: 'ℹ️',
+      });
+    });
+
+    document.getElementById('help-machines')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.machines.title'),
+        content: t('help.machines.body'),
+        icon: 'ℹ️',
+      });
+    });
+
+    document.getElementById('help-viewlevel')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.viewLevel.title'),
+        content: t('help.viewLevel.body'),
+        icon: 'ℹ️',
+      });
+    });
 
     // NFC Writer integration
     this.initNfcWriter();

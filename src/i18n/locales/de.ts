@@ -111,6 +111,18 @@ export const de: TranslationDict = {
     noMachines: 'Keine Maschinen vorhanden',
     statesTrained: '{{count}} Zustände trainiert',
 
+    // Sprint 2 UX: Empty state mini guide
+    emptyGuide: {
+      title: 'So funktioniert Zanobot',
+      step1Title: 'Maschine anlegen',
+      step1Desc: 'Gib deiner Maschine einen eindeutigen Namen.',
+      step2Title: 'Referenz aufnehmen',
+      step2Desc: '10 Sekunden Normalzustand aufnehmen.',
+      step3Title: 'Zustand prüfen',
+      step3Desc: 'Vergleiche jederzeit gegen die Referenz.',
+      cta: 'Erste Maschine anlegen',
+    },
+
     errors: {
       scannerStart: 'Fehler beim Starten des Scanners',
       cameraAccessDenied: 'Kamerazugriff wurde verweigert',
@@ -1314,5 +1326,46 @@ export const de: TranslationDict = {
     // Reference phase
     referenceHint: '\uD83D\uDCA1 Änderungsanalyse aktiv: Diese Aufnahme definiert auch die Referenz-Umgebung und Mikrofonposition. Spätere Diagnosen zeigen ob sich die Umgebung oder die Maschine verändert hat.',
     referenceStored: '\u2705 Umgebungsprofil gespeichert. Bei zukünftigen Diagnosen wird automatisch analysiert ob Änderungen von der Umgebung oder der Maschine kommen.',
+
+    // Sprint 2 UX: Simplified drift summary (Advanced view)
+    initializing: 'Umgebungsanalyse läuft…',
+    summaryOk: 'Umgebung stabil',
+    summaryRoomChange: 'Umgebung verändert – Score kann abweichen',
+    summaryMachineChange: 'Maschinengeräusch hat sich verändert',
+    summaryBoth: 'Umgebung und Maschine verändert',
+    summaryUncertain: 'Umgebungsanalyse noch nicht aussagekräftig',
+  },
+
+  // Sprint 2 UX: Contextual help texts (InfoBottomSheet)
+  help: {
+    reference: {
+      title: 'Was ist eine Referenz?',
+      body: '<p>Die Referenz ist der „Normalzustand" deiner Maschine – eine 10-Sekunden-Aufnahme bei normalem Betrieb.</p><p>Alle zukünftigen Diagnosen vergleichen gegen diesen Zustand. Je besser die Referenz, desto genauer die Erkennung von Veränderungen.</p><p><strong>Tipp:</strong> Nimm die Referenz bei normalem Betrieb auf und bewege das Smartphone langsam um die Maschine, damit Umgebungseinflüsse herausgerechnet werden können.</p>',
+    },
+    diagnose: {
+      title: 'Was passiert bei „Zustand prüfen"?',
+      body: '<p>Die App nimmt das aktuelle Maschinengeräusch auf und vergleicht es mathematisch mit der gespeicherten Referenz.</p><p>Das Ergebnis ist ein Ähnlichkeits-Score (0–100%). 100% bedeutet: Die Maschine klingt genau wie bei der Referenzaufnahme.</p><p>Ein sinkender Trend über mehrere Messungen ist aussagekräftiger als ein einzelner Wert.</p>',
+    },
+    machines: {
+      title: 'Warum eine Maschine anlegen?',
+      body: '<p>Jede Maschine hat ein eigenes akustisches Profil. Durch das Anlegen einer Maschine mit eindeutigem Namen können Referenzen und Diagnosehistorie zugeordnet werden.</p><p>So siehst du den zeitlichen Verlauf und erkennst Veränderungen frühzeitig.</p>',
+    },
+    viewLevel: {
+      title: 'Ansichtsmodus',
+      body: '<p><strong>Basic:</strong> Einfache Ampel-Anzeige. Für den täglichen Einsatz durch Bediener.</p><p><strong>Advanced:</strong> Zusätzliche Details wie Spektrogramm und Umgebungsüberwachung. Für Wartungspersonal.</p><p><strong>Expert:</strong> Volle technische Ansicht mit DSP-Parametern und Debug-Informationen. Für Ingenieure.</p>',
+    },
+    spectrogram: {
+      title: 'Was zeigt das Spektrogramm?',
+      body: '<p>Das Spektrogramm zeigt die Frequenzverteilung des Maschinengeräuschs in Echtzeit.</p><p>Die horizontale Achse zeigt die Zeit, die vertikale die Frequenz. Helle Bereiche bedeuten hohe Energie bei dieser Frequenz.</p><p>Veränderungen im Muster können auf mechanische Probleme hinweisen (z.B. Lagerschäden erzeugen neue Frequenzbänder).</p>',
+    },
+    drift: {
+      title: 'Was ist Drift-Erkennung?',
+      body: '<p>Die Drift-Erkennung überwacht, ob sich die Umgebung oder die Maschine seit der Referenzaufnahme verändert hat.</p><p><strong>Umgebungs-Drift:</strong> Position, Temperatur, Hall – kann den Score beeinflussen, ohne dass die Maschine defekt ist.</p><p><strong>Maschinen-Drift:</strong> Tatsächliche Veränderung im Maschinengeräusch.</p><p>Die Unterscheidung hilft, Fehlalarme zu vermeiden.</p>',
+    },
+  },
+
+  // Sprint 2 UX: Smart Start visual ready moment
+  smartStartReady: {
+    signalDetected: '✅ Signal erkannt – Analyse startet',
   },
 };
