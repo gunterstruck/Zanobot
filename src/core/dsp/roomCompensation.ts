@@ -100,7 +100,7 @@ export interface EnvironmentComparisonResult {
  */
 export function compareEnvironments(refT60: number, measT60: number): EnvironmentComparisonResult {
   const deltaT60 = Math.abs(measT60 - refT60);
-  const ratio = measT60 / refT60;
+  const ratio = refT60 > 0 ? measT60 / refT60 : (measT60 > 0 ? Infinity : 1);
 
   let severity: 'ok' | 'warning' | 'critical';
   let message: string;

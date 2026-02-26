@@ -11,6 +11,7 @@
 
 import { logger } from '@utils/logger.js';
 import { isIOS } from '@utils/platform.js';
+import { t } from '../../i18n/index.js';
 import { HardwareCheck } from './HardwareCheck.js';
 
 /**
@@ -562,17 +563,17 @@ export class SmartStartManager {
 export function getSmartStartStatusMessage(state: SmartStartState): string {
   switch (state.phase) {
     case 'idle':
-      return 'Bereit';
+      return t('audio.ready');
     case 'warmup': {
       // CRITICAL FIX: Handle optional remainingWarmUp field
       const seconds = state.remainingWarmUp ? Math.ceil(state.remainingWarmUp / 1000) : 0;
-      return `Akustische Stabilisierung... ${seconds}s`;
+      return t('audio.stabilizing', { seconds });
     }
     case 'waiting':
-      return 'Warte auf Signal...';
+      return t('audio.waitingForSignal');
     case 'recording':
-      return 'Aufnahme läuft';
+      return t('audio.recordingRunning');
     default:
-      return 'Bereit';
+      return t('audio.ready');
   }
 }
