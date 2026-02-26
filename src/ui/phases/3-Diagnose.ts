@@ -155,6 +155,9 @@ export class DiagnosePhase {
   private driftSettings: DriftDetectorSettings | null = null;
   private driftContextHintTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  /** Sprint 5: Optional callback fired after diagnosis is saved (for fleet queue) */
+  private onDiagnosisComplete: ((diagnosis: DiagnosisResult) => void) | null = null;
+
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
@@ -189,6 +192,13 @@ export class DiagnosePhase {
   }
 
   /**
+   * Sprint 5: Set callback for diagnosis completion (used by fleet queue)
+   */
+  public setOnDiagnosisComplete(cb: (diagnosis: DiagnosisResult) => void): void {
+    this.onDiagnosisComplete = cb;
+  }
+
+  /**
    * Initialize the diagnose phase UI
    */
   public init(): void {
@@ -215,8 +225,27 @@ export class DiagnosePhase {
 
     try {
       // Refresh machine data to ensure latest reference models are loaded
-      const latestMachine = await getMachine(this.machine.id);
+      let latestMachine = await getMachine(this.machine.id);
       if (latestMachine) {
+        // Sprint 5: Shared Fleet Reference – load Gold Standard models if configured
+        if (latestMachine.fleetReferenceSourceId) {
+          const goldStandard = await getMachine(latestMachine.fleetReferenceSourceId);
+          if (goldStandard && goldStandard.referenceModels && goldStandard.referenceModels.length > 0) {
+            logger.info(`🏆 Using Gold Standard reference from: ${goldStandard.name} (${goldStandard.id})`);
+            latestMachine = {
+              ...latestMachine,
+              referenceModels: goldStandard.referenceModels,
+              refLogMean: goldStandard.refLogMean,
+              refLogStd: goldStandard.refLogStd,
+              refLogResidualStd: goldStandard.refLogResidualStd,
+              refDriftBaseline: goldStandard.refDriftBaseline,
+              refT60: goldStandard.refT60,
+              refT60Classification: goldStandard.refT60Classification,
+            };
+          } else {
+            logger.warn(`⚠️ Gold Standard ${latestMachine.fleetReferenceSourceId} not found or has no models. Using own reference.`);
+          }
+        }
         this.machine = latestMachine;
       } else {
         notify.error(t('identify.errors.machineNotFound'));
@@ -1576,6 +1605,11 @@ export class DiagnosePhase {
       });
 
       logger.info('✅ Diagnosis saved successfully!');
+
+      // Sprint 5: Fire fleet queue callback if set
+      if (this.onDiagnosisComplete) {
+        this.onDiagnosisComplete(diagnosis);
+      }
     } catch (error) {
       logger.error('Save error:', error);
       notify.error(t('diagnose.saveFailed'), error as Error, {

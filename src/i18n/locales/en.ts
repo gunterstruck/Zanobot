@@ -1356,6 +1356,15 @@ export const en: TranslationDict = {
       title: 'What is drift detection?',
       body: '<p>Drift detection monitors whether the environment or the machine has changed since the reference recording.</p><p><strong>Environment drift:</strong> Position, temperature, acoustics – can affect the score without the machine being faulty.</p><p><strong>Machine drift:</strong> Actual change in machine sound.</p><p>This distinction helps avoid false alarms.</p>',
     },
+    // Sprint 5 UX: Fleet check help texts
+    fleet: {
+      title: 'What is Fleet Check?',
+      body: '<p><strong>Fleet Check</strong> compares multiple identical machines against each other – e.g., 24 pumps of the same type.</p><p>Instead of showing the trend for a single machine (that\'s Overview), Fleet Check shows a <strong>ranking</strong>: Which machine deviates?</p><p><strong>When to use?</strong> When you have many similar machines on-site and want to quickly find the outliers.</p><p><strong>Tip:</strong> Assign machines to a fleet group (e.g., "Heating West") so they are compared together.</p>',
+    },
+    fleetRanking: {
+      title: 'Understanding the ranking',
+      body: '<p>Each <strong>bar</strong> shows the similarity score (0–100%). Machines are sorted: lowest score at the top.</p><p><strong>Orange</strong> machines deviate statistically from the rest.</p><p><strong>Median:</strong> The middle score – more robust than an average.</p><p><strong>Spread:</strong> Difference between best and worst score.</p><p><strong>Tip:</strong> Tap a machine to start its diagnosis.</p>',
+    },
   },
 
   // Sprint 2 UX: Smart Start visual ready moment
@@ -1391,6 +1400,34 @@ export const en: TranslationDict = {
       button: 'Save as fleet…',
       prompt: 'Enter fleet name (e.g. "Heating West"):',
       success: '{{count}} machines saved as "{{name}}".',
+    },
+    // Sprint 5 UX: Context-sensitive CTA
+    cta: {
+      newFleet: 'New Fleet',
+    },
+    // Sprint 5 UX: Fleet creation modal
+    create: {
+      title: 'Create new fleet',
+      nameLabel: 'Fleet name',
+      namePlaceholder: 'e.g. Heating West',
+      selectMachines: 'Select machines (min. 2)',
+      goldStandard: 'Gold Standard (optional)',
+      goldHint: 'Which machine serves as the reference for the entire fleet?',
+      goldNone: 'No Gold Standard (each machine uses its own reference)',
+      createButton: 'Create fleet',
+      success: 'Fleet "{{name}}" created with {{count}} machines.',
+      noMachines: 'No machines available. Create machines first.',
+    },
+    // Sprint 5 UX: Fleet diagnosis queue
+    queue: {
+      startButton: 'Check {{count}} machines',
+      progress: '{{name}} ({{current}} of {{total}})',
+      complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
+      cancelled: 'Fleet check cancelled.',
+    },
+    // Sprint 5 UX: Gold Standard badge
+    goldStandard: {
+      badge: 'Gold Standard (reference for the fleet)',
     },
   },
 };

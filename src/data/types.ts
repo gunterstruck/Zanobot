@@ -96,6 +96,13 @@ export interface Machine {
    * null/undefined = no group assigned (uses time-based fallback in fleet mode).
    */
   fleetGroup?: string | null;
+
+  /**
+   * Optional: Machine ID of the fleet's Gold Standard.
+   * When set, this machine uses the referenced machine's referenceModels for diagnosis.
+   * null/undefined = uses own referenceModels (default, backward compatible).
+   */
+  fleetReferenceSourceId?: string | null;
 }
 
 /**
