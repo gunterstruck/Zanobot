@@ -17,7 +17,7 @@ import { SettingsPhase } from './phases/4-Settings.js';
 import { AutoDetectionPhase } from './phases/AutoDetectionPhase.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { ReferenceCardController } from './components/ReferenceCardController.js';
-import { getAllMachines } from '@data/db.js';
+import { getAllMachines, getMachine } from '@data/db.js';
 import type { AutoDetectionResult, MachineMatchResult } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
@@ -42,10 +42,19 @@ export class Router {
   private diagnoseCardController: DiagnoseCardController;
   private referenceCardController: ReferenceCardController;
 
+  /** Sprint 5: Fleet diagnosis queue */
+  private fleetQueue: string[] = [];
+  private fleetQueueIndex: number = 0;
+  private fleetQueueGroupName: string = '';
+  private isFleetQueueActive: boolean = false;
+
   constructor() {
     // Initialize Phase 1 (always available)
     this.identifyPhase = new IdentifyPhase((machine) => this.onMachineSelected(machine));
     this.identifyPhase.init();
+
+    // Sprint 5: Wire up fleet queue callback
+    this.identifyPhase.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
 
     // Initialize Phase 4 (Settings - always available, independent of machine selection)
     this.settingsPhase = new SettingsPhase();
@@ -587,6 +596,15 @@ export class Router {
     this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
 
+    // Sprint 5: Register fleet queue callback if queue is active
+    if (this.isFleetQueueActive) {
+      this.diagnosePhase.setOnDiagnosisComplete(() => {
+        this.fleetQueueIndex++;
+        // Short delay to show result, then advance
+        setTimeout(() => this.advanceFleetQueue(), 1500);
+      });
+    }
+
     // Register callback to update UI when reference model is saved
     this.referencePhase.setOnMachineUpdated((updatedMachine) => {
       // ZERO-FRICTION: Update current machine state when a new machine is auto-created
@@ -910,5 +928,144 @@ export class Router {
     if (icon) {
       icon.classList.remove('rotated');
     }
+  }
+
+  // ============================================================================
+  // SPRINT 5: FLEET DIAGNOSIS QUEUE
+  // ============================================================================
+
+  /**
+   * Sprint 5: Start fleet diagnosis queue
+   */
+  public startFleetQueue(machineIds: string[], groupName: string): void {
+    this.fleetQueue = machineIds;
+    this.fleetQueueIndex = 0;
+    this.fleetQueueGroupName = groupName;
+    this.isFleetQueueActive = true;
+
+    // Show progress bar
+    this.showFleetProgress();
+
+    // Advance to first machine
+    this.advanceFleetQueue();
+  }
+
+  /**
+   * Sprint 5: Advance to next machine in fleet queue
+   */
+  private async advanceFleetQueue(): Promise<void> {
+    if (this.fleetQueueIndex >= this.fleetQueue.length) {
+      this.completeFleetQueue();
+      return;
+    }
+
+    const machineId = this.fleetQueue[this.fleetQueueIndex];
+    const machine = await getMachine(machineId);
+    if (!machine) {
+      // Skip missing machine
+      this.fleetQueueIndex++;
+      this.advanceFleetQueue();
+      return;
+    }
+
+    // Update progress
+    this.updateFleetProgress(this.fleetQueueIndex + 1, this.fleetQueue.length, machine.name);
+
+    // Select machine (triggers normal diagnosis flow)
+    this.onMachineSelected(machine);
+
+    // Auto-start diagnosis after short delay (let UI settle)
+    setTimeout(() => {
+      const diagnoseBtn = document.getElementById('diagnose-btn');
+      if (diagnoseBtn) diagnoseBtn.click();
+    }, 300);
+  }
+
+  /**
+   * Sprint 5: Show fleet progress bar
+   */
+  private showFleetProgress(): void {
+    // Remove existing
+    document.getElementById('fleet-progress')?.remove();
+
+    const bar = document.createElement('div');
+    bar.id = 'fleet-progress';
+    bar.className = 'fleet-progress';
+
+    const textEl = document.createElement('div');
+    textEl.className = 'fleet-progress-text';
+    textEl.id = 'fleet-progress-text';
+
+    const barBg = document.createElement('div');
+    barBg.className = 'fleet-progress-bar-bg';
+
+    const barFill = document.createElement('div');
+    barFill.className = 'fleet-progress-bar-fill';
+    barFill.id = 'fleet-progress-fill';
+    barBg.appendChild(barFill);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'fleet-progress-cancel';
+    cancelBtn.id = 'fleet-progress-cancel';
+    cancelBtn.setAttribute('aria-label', t('buttons.cancel'));
+    cancelBtn.textContent = '\u2715';
+
+    bar.appendChild(textEl);
+    bar.appendChild(barBg);
+    bar.appendChild(cancelBtn);
+
+    // Insert at top of page
+    const main = document.querySelector('main');
+    if (main) {
+      main.insertBefore(bar, main.firstChild);
+    } else {
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+
+    cancelBtn.addEventListener('click', () => {
+      this.cancelFleetQueue();
+    });
+  }
+
+  /**
+   * Sprint 5: Update fleet progress bar
+   */
+  private updateFleetProgress(current: number, total: number, machineName: string): void {
+    const textEl = document.getElementById('fleet-progress-text');
+    const fillEl = document.getElementById('fleet-progress-fill');
+    if (textEl) {
+      textEl.textContent = t('fleet.queue.progress', {
+        current: String(current),
+        total: String(total),
+        name: machineName,
+      });
+    }
+    if (fillEl) fillEl.style.width = `${(current / total) * 100}%`;
+  }
+
+  /**
+   * Sprint 5: Complete fleet queue and show ranking
+   */
+  private completeFleetQueue(): void {
+    this.isFleetQueueActive = false;
+    document.getElementById('fleet-progress')?.remove();
+
+    notify.success(t('fleet.queue.complete', {
+      count: String(this.fleetQueue.length),
+      name: this.fleetQueueGroupName,
+    }));
+
+    // Navigate back to fleet ranking
+    this.identifyPhase.showFleetRanking();
+  }
+
+  /**
+   * Sprint 5: Cancel fleet queue
+   */
+  private cancelFleetQueue(): void {
+    this.isFleetQueueActive = false;
+    this.fleetQueue = [];
+    document.getElementById('fleet-progress')?.remove();
+    notify.info(t('fleet.queue.cancelled'));
   }
 }

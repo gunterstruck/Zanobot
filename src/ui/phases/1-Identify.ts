@@ -78,6 +78,12 @@ export class IdentifyPhase {
   /** Sprint 4 UX: Current workflow mode */
   private currentWorkflowMode: 'series' | 'fleet' = 'series';
 
+  /** Sprint 5 UX: Current Gold Standard machine ID for badge display */
+  private currentGoldStandardId: string | null = null;
+
+  /** Sprint 5 UX: Callback for starting fleet diagnosis queue (set by Router) */
+  public onStartFleetQueue: ((machineIds: string[], groupName: string) => void) | null = null;
+
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
   private qrCanvas: HTMLCanvasElement | null = null;
@@ -194,10 +200,16 @@ export class IdentifyPhase {
     // Load and render diagnosis history
     this.loadDiagnosisHistory();
 
-    // "Neue Maschine" button handler
+    // "Neue Maschine" / "Neue Flotte" button handler (Sprint 5: mode-dependent)
     const addNewMachineBtn = document.getElementById('add-new-machine-btn');
     if (addNewMachineBtn) {
-      addNewMachineBtn.addEventListener('click', () => this.handleAddNewMachine());
+      addNewMachineBtn.addEventListener('click', () => {
+        if (this.currentWorkflowMode === 'fleet') {
+          this.showFleetCreationModal();
+        } else {
+          this.handleAddNewMachine();
+        }
+      });
     }
 
     // Sprint 2 UX: Empty state CTA scrolls to machine name input
@@ -238,6 +250,16 @@ export class IdentifyPhase {
       InfoBottomSheet.show({
         title: t('help.viewLevel.title'),
         content: t('help.viewLevel.body'),
+        icon: 'ℹ️',
+      });
+    });
+
+    // Sprint 5 UX: Flottencheck help icon (next to toggle)
+    document.getElementById('help-fleet')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.fleet.title'),
+        content: t('help.fleet.body'),
         icon: 'ℹ️',
       });
     });
@@ -2452,6 +2474,17 @@ export class IdentifyPhase {
       fleetBtn.setAttribute('aria-pressed', String(mode === 'fleet'));
     }
 
+    // Sprint 5: Update CTA button text based on mode
+    const addBtn = document.getElementById('add-new-machine-btn');
+    if (addBtn) {
+      const label = addBtn.querySelector('span');
+      if (label) {
+        label.textContent = mode === 'fleet'
+          ? t('fleet.cta.newFleet')
+          : t('buttons.newMachine');
+      }
+    }
+
     // Re-render machine overview with new mode
     await this.loadMachineOverview();
   }
@@ -2628,6 +2661,23 @@ export class IdentifyPhase {
     const scores = ranked.map(r => r.score).filter((s): s is number => s !== null);
     const stats = this.calculateFleetStats(scores);
 
+    // Sprint 5: Pre-compute Gold Standard for badge display
+    this.currentGoldStandardId = null;
+    const refSourceIds = machines.map(m => m.fleetReferenceSourceId).filter(Boolean);
+    if (refSourceIds.length > 0) {
+      const counts = new Map<string, number>();
+      for (const id of refSourceIds) {
+        if (id) counts.set(id, (counts.get(id) || 0) + 1);
+      }
+      let maxCount = 0;
+      for (const [id, count] of counts) {
+        if (count > maxCount) {
+          this.currentGoldStandardId = id;
+          maxCount = count;
+        }
+      }
+    }
+
     // Show/hide empty state
     if (emptyState) {
       emptyState.style.display = ranked.length === 0 ? 'block' : 'none';
@@ -2666,6 +2716,29 @@ export class IdentifyPhase {
         this.renderQuickFleetSaveCTA(overviewContainer, untagged.map(r => r.machine));
       }
     }
+
+    // Sprint 5 UX: "Flotte prüfen" button (only if machines have references)
+    const machinesWithRef = ranked.filter(r =>
+      r.machine.referenceModels && r.machine.referenceModels.length > 0
+    );
+    if (machinesWithRef.length >= 2) {
+      const checkAllBtn = document.createElement('button');
+      checkAllBtn.className = 'action-btn fleet-check-all-btn';
+      checkAllBtn.textContent = t('fleet.queue.startButton', {
+        count: String(machinesWithRef.length),
+      });
+      checkAllBtn.addEventListener('click', () => {
+        const ids = machinesWithRef.map(r => r.machine.id);
+        if (this.onStartFleetQueue) {
+          this.onStartFleetQueue(ids, groupName);
+        }
+      });
+      if (emptyState) {
+        overviewContainer.insertBefore(checkAllBtn, emptyState);
+      } else {
+        overviewContainer.appendChild(checkAllBtn);
+      }
+    }
   }
 
   /**
@@ -2685,6 +2758,15 @@ export class IdentifyPhase {
     const nameEl = document.createElement('div');
     nameEl.className = 'fleet-rank-name';
     nameEl.textContent = machine.name;
+
+    // Sprint 5: Gold Standard indicator
+    if (this.currentGoldStandardId === machine.id) {
+      const goldBadge = document.createElement('span');
+      goldBadge.className = 'fleet-gold-badge';
+      goldBadge.textContent = '\u{1F3C6}';
+      goldBadge.title = t('fleet.goldStandard.badge');
+      nameEl.appendChild(goldBadge);
+    }
 
     // Score bar container
     const barContainer = document.createElement('div');
@@ -2744,6 +2826,27 @@ export class IdentifyPhase {
     titleEl.className = 'fleet-header-title';
     titleEl.textContent = `${groupName} (${machineCount})`;
 
+    // Sprint 5 UX: Help icon in fleet header
+    const helpBtn = document.createElement('button');
+    helpBtn.className = 'help-icon-btn help-icon-inline';
+    helpBtn.setAttribute('aria-label', t('help.fleetRanking.title'));
+    helpBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>`;
+    helpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.fleetRanking.title'),
+        content: t('help.fleetRanking.body'),
+        icon: 'ℹ️',
+      });
+    });
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'fleet-header-title-row';
+    titleRow.appendChild(titleEl);
+    titleRow.appendChild(helpBtn);
+
     // Stats row
     const statsRow = document.createElement('div');
     statsRow.className = 'fleet-header-stats';
@@ -2764,7 +2867,7 @@ export class IdentifyPhase {
     statsRow.appendChild(worstStat);
     statsRow.appendChild(spreadStat);
 
-    header.appendChild(titleEl);
+    header.appendChild(titleRow);
     header.appendChild(statsRow);
 
     // Insert at top of container
@@ -2830,6 +2933,255 @@ export class IdentifyPhase {
   }
 
   /**
+   * Sprint 5 UX: Show fleet creation modal with multi-select machine list
+   */
+  private async showFleetCreationModal(): Promise<void> {
+    const allMachines = await getAllMachines();
+    if (allMachines.length === 0) {
+      notify.info(t('fleet.create.noMachines'));
+      return;
+    }
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'fleet-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'fleet-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', t('fleet.create.title'));
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'fleet-modal-header';
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'fleet-modal-title';
+    titleEl.textContent = t('fleet.create.title');
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'bottomsheet-close fleet-modal-close';
+    closeBtn.setAttribute('aria-label', t('buttons.close'));
+    closeBtn.textContent = '\u2715';
+
+    header.appendChild(titleEl);
+    header.appendChild(closeBtn);
+
+    // Group name input
+    const nameSection = document.createElement('div');
+    nameSection.className = 'fleet-modal-section';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.className = 'form-label';
+    nameLabel.textContent = t('fleet.create.nameLabel');
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'machine-input fleet-modal-name-input';
+    nameInput.placeholder = t('fleet.create.namePlaceholder');
+    nameInput.setAttribute('list', 'fleet-group-suggestions');
+    nameInput.maxLength = 50;
+    nameInput.autocomplete = 'off';
+
+    nameSection.appendChild(nameLabel);
+    nameSection.appendChild(nameInput);
+
+    // Machine list with checkboxes
+    const listSection = document.createElement('div');
+    listSection.className = 'fleet-modal-section';
+
+    const listLabel = document.createElement('label');
+    listLabel.className = 'form-label';
+    listLabel.textContent = t('fleet.create.selectMachines');
+    listSection.appendChild(listLabel);
+
+    const machineList = document.createElement('div');
+    machineList.className = 'fleet-modal-machine-list';
+
+    for (const machine of allMachines) {
+      const item = document.createElement('label');
+      item.className = 'fleet-modal-machine-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = machine.id;
+      checkbox.className = 'fleet-modal-checkbox';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'fleet-modal-machine-name';
+      nameSpan.textContent = machine.name;
+
+      item.appendChild(checkbox);
+      item.appendChild(nameSpan);
+      machineList.appendChild(item);
+    }
+    listSection.appendChild(machineList);
+
+    // Gold-Standard selection (Maßnahme 5)
+    const goldSection = document.createElement('div');
+    goldSection.className = 'fleet-modal-section fleet-modal-gold-section';
+    goldSection.style.display = 'none';
+
+    const goldLabel = document.createElement('label');
+    goldLabel.className = 'form-label';
+    goldLabel.textContent = t('fleet.create.goldStandard');
+
+    const goldHint = document.createElement('p');
+    goldHint.className = 'fleet-modal-hint';
+    goldHint.textContent = t('fleet.create.goldHint');
+
+    const goldSelect = document.createElement('select');
+    goldSelect.className = 'machine-input fleet-modal-gold-select';
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = t('fleet.create.goldNone');
+    goldSelect.appendChild(defaultOpt);
+
+    goldSection.appendChild(goldLabel);
+    goldSection.appendChild(goldHint);
+    goldSection.appendChild(goldSelect);
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'fleet-modal-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'fleet-modal-cancel-btn';
+    cancelBtn.textContent = t('buttons.cancel');
+
+    const createBtn = document.createElement('button');
+    createBtn.className = 'action-btn fleet-modal-create-btn';
+    createBtn.textContent = t('fleet.create.createButton');
+    createBtn.disabled = true;
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(createBtn);
+
+    // Assemble modal
+    modal.appendChild(header);
+    modal.appendChild(nameSection);
+    modal.appendChild(listSection);
+    modal.appendChild(goldSection);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // --- Event handlers ---
+    const checkboxes = machineList.querySelectorAll<HTMLInputElement>('.fleet-modal-checkbox');
+
+    const updateState = () => {
+      const checked = [...checkboxes].filter(cb => cb.checked);
+      const hasName = nameInput.value.trim().length > 0;
+      const hasEnoughMachines = checked.length >= 2;
+
+      createBtn.disabled = !(hasName && hasEnoughMachines);
+
+      // Show/hide Gold-Standard section
+      goldSection.style.display = hasEnoughMachines ? 'block' : 'none';
+
+      // Update Gold-Standard dropdown options
+      if (hasEnoughMachines) {
+        const currentValue = goldSelect.value;
+        goldSelect.innerHTML = '';
+        const noneOpt = document.createElement('option');
+        noneOpt.value = '';
+        noneOpt.textContent = t('fleet.create.goldNone');
+        goldSelect.appendChild(noneOpt);
+
+        for (const cb of checked) {
+          const machine = allMachines.find(m => m.id === cb.value);
+          if (machine && machine.referenceModels && machine.referenceModels.length > 0) {
+            const opt = document.createElement('option');
+            opt.value = machine.id;
+            opt.textContent = machine.name;
+            goldSelect.appendChild(opt);
+          }
+        }
+        // Restore previous selection if still valid
+        if ([...goldSelect.options].some(o => o.value === currentValue)) {
+          goldSelect.value = currentValue;
+        }
+      }
+    };
+
+    nameInput.addEventListener('input', updateState);
+    checkboxes.forEach(cb => cb.addEventListener('change', updateState));
+
+    // Close handlers
+    const close = () => { overlay.remove(); };
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    closeBtn.addEventListener('click', close);
+    cancelBtn.addEventListener('click', close);
+
+    // Create handler
+    createBtn.addEventListener('click', async () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const selectedIds = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value);
+      const goldStandardId = goldSelect.value || null;
+
+      await this.createFleetFromSelection(name, selectedIds, goldStandardId, allMachines);
+      close();
+    });
+
+    // Focus name input
+    requestAnimationFrame(() => nameInput.focus());
+  }
+
+  /**
+   * Sprint 5 UX: Apply fleetGroup (and optional Gold-Standard) to selected machines
+   */
+  private async createFleetFromSelection(
+    groupName: string,
+    machineIds: string[],
+    goldStandardId: string | null,
+    allMachines: Machine[]
+  ): Promise<void> {
+    for (const id of machineIds) {
+      const machine = allMachines.find(m => m.id === id);
+      if (!machine) continue;
+
+      machine.fleetGroup = groupName;
+
+      // Maßnahme 5: Set shared reference source (if Gold-Standard chosen)
+      if (goldStandardId && id !== goldStandardId) {
+        machine.fleetReferenceSourceId = goldStandardId;
+      } else if (id === goldStandardId) {
+        // Gold-Standard uses its own reference
+        machine.fleetReferenceSourceId = null;
+      }
+
+      await saveMachine(machine);
+    }
+
+    // Update autocomplete suggestions
+    await this.populateFleetGroupSuggestions();
+
+    // Switch to fleet mode and re-render
+    this.currentWorkflowMode = 'series'; // Force mode switch
+    await this.setWorkflowMode('fleet');
+
+    notify.success(t('fleet.create.success', {
+      count: String(machineIds.length),
+      name: groupName,
+    }));
+  }
+
+  /**
+   * Sprint 5 UX: Public method for Router to trigger fleet ranking re-render
+   */
+  public async showFleetRanking(): Promise<void> {
+    if (this.currentWorkflowMode !== 'fleet') {
+      this.currentWorkflowMode = 'series'; // Force mode switch
+      await this.setWorkflowMode('fleet');
+    } else {
+      await this.loadMachineOverview();
+    }
+  }
+
+  /**
    * ========================================
    * MACHINE OVERVIEW
    * ========================================
@@ -2868,7 +3220,7 @@ export class IdentifyPhase {
     }
 
     // Clear existing items (except empty state and fleet-specific elements)
-    const existingItems = overviewContainer.querySelectorAll('.machine-item, .fleet-rank-item, .fleet-header, .fleet-save-cta');
+    const existingItems = overviewContainer.querySelectorAll('.machine-item, .fleet-rank-item, .fleet-header, .fleet-save-cta, .fleet-check-all-btn');
     existingItems.forEach((item) => item.remove());
 
     // Sprint 4 UX: Branch based on workflow mode

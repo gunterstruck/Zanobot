@@ -1399,6 +1399,15 @@ export const de: TranslationDict = {
       title: 'Was ist Drift-Erkennung?',
       body: '<p>Die Drift-Erkennung überwacht, ob sich die Umgebung oder die Maschine seit der Referenzaufnahme verändert hat.</p><p><strong>Umgebungs-Drift:</strong> Position, Temperatur, Hall – kann den Score beeinflussen, ohne dass die Maschine defekt ist.</p><p><strong>Maschinen-Drift:</strong> Tatsächliche Veränderung im Maschinengeräusch.</p><p>Die Unterscheidung hilft, Fehlalarme zu vermeiden.</p>',
     },
+    // Sprint 5 UX: Fleet check help texts
+    fleet: {
+      title: 'Was ist der Flottencheck?',
+      body: '<p>Der <strong>Flottencheck</strong> vergleicht mehrere baugleiche Maschinen miteinander – z.B. 24 Pumpen derselben Baureihe.</p><p>Statt den zeitlichen Verlauf einer einzelnen Maschine zu zeigen (das macht die Übersicht), zeigt der Flottencheck ein <strong>Ranking</strong>: Welche Maschine weicht vom Rest ab?</p><p><strong>Wann nutzen?</strong> Wenn Sie vor Ort viele gleichartige Maschinen haben und schnell die „schwarzen Schafe" finden wollen.</p><p><strong>Tipp:</strong> Weisen Sie Maschinen eine Flottengruppe zu (z.B. „Fernwärme Ost"), damit sie automatisch zusammen verglichen werden.</p>',
+    },
+    fleetRanking: {
+      title: 'Ranking verstehen',
+      body: '<p>Jeder <strong>Balken</strong> zeigt den Ähnlichkeits-Score einer Maschine (0–100%). Maschinen sind sortiert: niedrigster Score oben.</p><p><strong>Orange markierte</strong> Maschinen weichen statistisch vom Rest ab. Orange heißt: „Diese Maschine klingt anders als ihre Geschwister."</p><p><strong>Median:</strong> Der mittlere Score aller Maschinen – robuster als ein Durchschnitt.</p><p><strong>Spannweite:</strong> Differenz zwischen bestem und schlechtestem Score. Große Spannweite = mindestens eine Maschine weicht deutlich ab.</p><p><strong>Tipp:</strong> Tippen Sie auf eine Maschine im Ranking, um deren Diagnose zu starten.</p>',
+    },
   },
 
   // Sprint 2 UX: Smart Start visual ready moment
@@ -1434,6 +1443,34 @@ export const de: TranslationDict = {
       button: 'Als Flotte speichern…',
       prompt: 'Flottenname eingeben (z.B. „Fernwärme Ost"):',
       success: '{{count}} Maschinen als „{{name}}" gespeichert.',
+    },
+    // Sprint 5 UX: Context-sensitive CTA
+    cta: {
+      newFleet: 'Neue Flotte',
+    },
+    // Sprint 5 UX: Fleet creation modal
+    create: {
+      title: 'Neue Flotte erstellen',
+      nameLabel: 'Flottenname',
+      namePlaceholder: 'z.B. Fernwärme Ost',
+      selectMachines: 'Maschinen auswählen (min. 2)',
+      goldStandard: 'Gold-Standard (optional)',
+      goldHint: 'Welche Maschine dient als Referenz für die gesamte Flotte?',
+      goldNone: 'Kein Gold-Standard (jede Maschine nutzt eigene Referenz)',
+      createButton: 'Flotte erstellen',
+      success: 'Flotte „{{name}}" mit {{count}} Maschinen erstellt.',
+      noMachines: 'Keine Maschinen vorhanden. Legen Sie zuerst Maschinen an.',
+    },
+    // Sprint 5 UX: Fleet diagnosis queue
+    queue: {
+      startButton: '{{count}} Maschinen prüfen',
+      progress: '{{name}} ({{current}} von {{total}})',
+      complete: 'Flottencheck abgeschlossen: {{count}} Maschinen in „{{name}}" geprüft.',
+      cancelled: 'Flottencheck abgebrochen.',
+    },
+    // Sprint 5 UX: Gold Standard badge
+    goldStandard: {
+      badge: 'Gold-Standard (Referenz für die Flotte)',
     },
   },
 };
