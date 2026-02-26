@@ -46,6 +46,10 @@ export const zh: TranslationDict = {
     notChecked: '尚未检查',
     ready: '就绪',
     analyzing: '分析中...',
+    consistent: 'Machine consistent',
+    slightDeviation: 'Slight deviation',
+    significantChange: 'Significant change',
+    strongDeviation: 'Strong deviation – check recommended',
   },
 
   // ============================================================================
@@ -87,6 +91,14 @@ export const zh: TranslationDict = {
     manualEntryDescription: '使用名称创建新机器',
     machineName: '机器名称',
     machineId: '机器ID（可选）',
+    machineNameHint: 'Unique name, e.g. Pump 3 – West Hall',
+    machineNameRequired: 'Please enter a machine name.',
+    machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
+    machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
+    deleteMachine: 'Delete machine',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
+    machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: '快速访问',
     quickAccessDescription: '快速访问最近使用的机器',
     recentlyUsed: '最近使用',
@@ -164,6 +176,16 @@ export const zh: TranslationDict = {
     existingModels: '现有模型：',
     statesTrainedCount: '{{count}} 个状态已训练',
     recordingStatusHighQuality: '检测到高音频质量',
+    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
+    savedSuccess: '\u2705 Reference saved – Environment profile detected',
+    savedTitle: 'Reference created',
+    cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
+    noModels: 'No references yet.',
+    unnamed: 'Reference #{{index}}',
+    deleteModel: 'Delete reference',
+    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} 个状态已录制',
@@ -233,6 +255,7 @@ export const zh: TranslationDict = {
     noValidSampleRate: '未找到具有有效采样率的参考模型。',
     cameraNotAvailable: '摄像头不可用。诊断将在无位置指南的情况下继续。',
     diagnosisRunning: '诊断运行中',
+    compareComplete: '\u2705 Comparison complete',
     saveFailed: '无法保存诊断',
     liveAnalysis: '执行实时分析',
 
@@ -517,7 +540,13 @@ export const zh: TranslationDict = {
     trainingSignalWeak: '信号太弱或不一致，无法训练。请确保：麦克风靠近机器，机器正在运行，不只是背景噪音。（平均余弦相似度：{{value}}）',
     invalidSampleRate: '无效的采样率：{{rate}}Hz。预期：8000-192000Hz（典型：44100Hz或48000Hz）',
   },
-  healthGauge: { normal: '正常', deviation: '偏差', abnormal: '异常' },
+  healthGauge: {
+    normal: '正常',
+    deviation: '偏差',
+    abnormal: '异常',
+    explain: 'The score shows similarity to the reference state (0–100%). 100% = nearly identical. A declining trend matters more than a single value.',
+    explainTitle: 'What does the score mean?',
+  },
   audio: { ready: '就绪', stabilizing: '声学稳定中... {{seconds}}秒', waitingForSignal: '等待信号...', recordingRunning: '录制中' },
   settingsUI: {
     title: '设置', nfcWriterTitle: 'NFC 标签', nfcWriterDescription: '为应用入口或选定机器写入 NFC 标签。', appearance: '外观',
@@ -698,6 +727,8 @@ export const zh: TranslationDict = {
     errorInvalidJson: '错误：文件不包含有效的JSON格式。',
     errorInvalidStructure: '错误：文件格式不是预期的备份格式。',
     errorNetwork: '加载数据时出现网络错误。请检查您的网络连接。',
+    nfcMergeSuccess: '\u2705 Database updated – {{added}} new references added, {{skipped}} already present',
+    nfcMergeInfo: 'Existing machines and references are preserved.',
   },
 
   // BADGES (UI Hints)

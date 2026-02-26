@@ -46,6 +46,10 @@ export const fr: TranslationDict = {
     notChecked: 'Pas encore vérifié',
     ready: 'Prêt',
     analyzing: 'ANALYSE EN COURS...',
+    consistent: 'Machine consistent',
+    slightDeviation: 'Slight deviation',
+    significantChange: 'Significant change',
+    strongDeviation: 'Strong deviation – check recommended',
   },
 
   // ============================================================================
@@ -87,6 +91,14 @@ export const fr: TranslationDict = {
     manualEntryDescription: 'Créer une nouvelle machine avec un nom',
     machineName: 'Nom de la machine',
     machineId: 'ID de la machine (optionnel)',
+    machineNameHint: 'Unique name, e.g. Pump 3 – West Hall',
+    machineNameRequired: 'Please enter a machine name.',
+    machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
+    machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
+    deleteMachine: 'Delete machine',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
+    machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: 'Accès rapide',
     quickAccessDescription: 'Accès rapide aux machines récemment utilisées',
     recentlyUsed: 'Récemment utilisé',
@@ -165,6 +177,16 @@ export const fr: TranslationDict = {
     existingModels: 'MODÈLES EXISTANTS :',
     statesTrainedCount: '{{count}} état(s) déjà entraîné(s)',
     recordingStatusHighQuality: 'Haute qualité audio détectée',
+    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
+    savedSuccess: '\u2705 Reference saved – Environment profile detected',
+    savedTitle: 'Reference created',
+    cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
+    noModels: 'No references yet.',
+    unnamed: 'Reference #{{index}}',
+    deleteModel: 'Delete reference',
+    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} état enregistré',
@@ -234,6 +256,7 @@ export const fr: TranslationDict = {
     noValidSampleRate: 'Aucun modèle de référence avec une fréquence d\'échantillonnage valide trouvé.',
     cameraNotAvailable: 'Caméra non disponible. Le diagnostic continuera sans guide de position.',
     diagnosisRunning: 'Diagnostic en cours',
+    compareComplete: '\u2705 Comparison complete',
     saveFailed: 'Le diagnostic n\'a pas pu être sauvegardé',
     liveAnalysis: 'Effectuer une analyse en direct',
 
@@ -521,7 +544,13 @@ export const fr: TranslationDict = {
     trainingSignalWeak: 'Signal trop faible ou incohérent pour l\'entraînement. Veuillez vous assurer : microphone proche de la machine, machine en marche, pas uniquement du bruit de fond. (Similarité cosinus moyenne : {{value}})',
     invalidSampleRate: 'Taux d\'échantillonnage invalide : {{rate}}Hz. Attendu : 8000-192000Hz (typique : 44100Hz ou 48000Hz)',
   },
-  healthGauge: { normal: 'NORMAL', deviation: 'DEVIATION', abnormal: 'ANORMAL' },
+  healthGauge: {
+    normal: 'NORMAL',
+    deviation: 'DEVIATION',
+    abnormal: 'ANORMAL',
+    explain: 'The score shows similarity to the reference state (0–100%). 100% = nearly identical. A declining trend matters more than a single value.',
+    explainTitle: 'What does the score mean?',
+  },
   audio: { ready: 'Prêt', stabilizing: 'Stabilisation acoustique... {{seconds}}s', waitingForSignal: 'En attente du signal...', recordingRunning: 'Enregistrement en cours' },
   settingsUI: {
     title: 'Paramètres', nfcWriterTitle: 'Tags NFC', nfcWriterDescription: 'Écrivez des tags NFC pour l’accès à l’app ou une machine sélectionnée.', appearance: 'Apparence',
@@ -702,6 +731,8 @@ export const fr: TranslationDict = {
     errorInvalidJson: 'Erreur: Le fichier ne contient pas de format JSON valide.',
     errorInvalidStructure: 'Erreur: Le fichier n\'a pas le format de sauvegarde attendu.',
     errorNetwork: 'Erreur réseau lors du chargement des données. Veuillez vérifier votre connexion.',
+    nfcMergeSuccess: '\u2705 Database updated – {{added}} new references added, {{skipped}} already present',
+    nfcMergeInfo: 'Existing machines and references are preserved.',
   },
 
   // BADGES (UI Hints)

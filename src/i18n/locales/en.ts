@@ -46,6 +46,10 @@ export const en: TranslationDict = {
     notChecked: 'Not Yet Checked',
     ready: 'Ready',
     analyzing: 'ANALYZING...',
+    consistent: 'Machine consistent',
+    slightDeviation: 'Slight deviation',
+    significantChange: 'Significant change',
+    strongDeviation: 'Strong deviation – check recommended',
   },
 
   // ============================================================================
@@ -87,6 +91,14 @@ export const en: TranslationDict = {
     manualEntryDescription: 'Create new machine with name',
     machineName: 'Machine Name',
     machineId: 'Machine ID (optional)',
+    machineNameHint: 'Unique name, e.g. Pump 3 – West Hall',
+    machineNameRequired: 'Please enter a machine name.',
+    machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
+    machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
+    deleteMachine: 'Delete machine',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
+    machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: 'Quick Access',
     quickAccessDescription: 'Quick access to recently used machines',
     recentlyUsed: 'Recently Used',
@@ -165,6 +177,16 @@ export const en: TranslationDict = {
     existingModels: 'EXISTING MODELS:',
     statesTrainedCount: '{{count}} state(s) already trained',
     recordingStatusHighQuality: 'High audio quality detected',
+    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
+    savedSuccess: '\u2705 Reference saved – Environment profile detected',
+    savedTitle: 'Reference created',
+    cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
+    noModels: 'No references yet.',
+    unnamed: 'Reference #{{index}}',
+    deleteModel: 'Delete reference',
+    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} state recorded',
@@ -234,6 +256,7 @@ export const en: TranslationDict = {
     noValidSampleRate: 'No reference model with valid sample rate found.',
     cameraNotAvailable: 'Camera not available. Diagnosis will continue without position guide.',
     diagnosisRunning: 'Diagnosis running',
+    compareComplete: '\u2705 Comparison complete',
     saveFailed: 'Diagnosis could not be saved',
     liveAnalysis: 'Run live analysis',
 
@@ -519,6 +542,8 @@ export const en: TranslationDict = {
     normal: 'NORMAL',
     deviation: 'DEVIATION',
     abnormal: 'ABNORMAL',
+    explain: 'The score shows similarity to the reference state (0–100%). 100% = nearly identical. A declining trend matters more than a single value.',
+    explainTitle: 'What does the score mean?',
   },
 
   // Inspection View (Simplified PWA)
@@ -932,6 +957,8 @@ export const en: TranslationDict = {
     errorInvalidJson: 'Error: The file does not contain valid JSON format.',
     errorInvalidStructure: 'Error: The file does not have the expected backup format.',
     errorNetwork: 'Network error loading data. Please check your internet connection.',
+    nfcMergeSuccess: '\u2705 Database updated – {{added}} new references added, {{skipped}} already present',
+    nfcMergeInfo: 'Existing machines and references are preserved.',
   },
 
   // ============================================================================

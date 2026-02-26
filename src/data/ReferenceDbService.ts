@@ -751,9 +751,9 @@ export class ReferenceDbService {
       logger.warn('⚠️ Full database export has no machines - importing anyway');
     }
 
-    // Trace: DB import started (replace mode)
+    // Trace: DB import started (merge mode - Sprint 1 UX)
     onboardingTrace.step('db_import_started', {
-      mode: 'replace_reset',
+      mode: 'merge',
       importPath: 'shared_manual_import',
       machineCount: data.machines?.length || 0,
       recordingCount: data.recordings?.length || 0,
@@ -763,22 +763,23 @@ export class ReferenceDbService {
     onProgress?.('saving', 70);
 
     try {
-      // Use the shared import path with replace/reset (merge = false)
-      // This is exactly what the manual import in Settings does
+      // Sprint 1 UX: NFC import MERGES with existing data (never deletes user data)
+      // Existing machines, recordings, and diagnoses are preserved.
+      // New data is added alongside existing data.
       await importData(
         {
           machines: data.machines as Parameters<typeof importData>[0]['machines'],
           recordings: data.recordings as Parameters<typeof importData>[0]['recordings'],
           diagnoses: data.diagnoses as Parameters<typeof importData>[0]['diagnoses'],
         },
-        false // merge = false → replace/reset
+        true // merge = true → preserve existing data, add new
       );
 
-      logger.info('✅ Full database import completed (replace mode)');
+      logger.info('✅ Full database import completed (merge mode)');
 
       // Trace: DB import complete
       onboardingTrace.success('db_import_complete', {
-        mode: 'replace_reset',
+        mode: 'merge',
         importPath: 'shared_manual_import',
         machineCount: data.machines?.length || 0,
         recordingCount: data.recordings?.length || 0,
@@ -824,7 +825,7 @@ export class ReferenceDbService {
       // Trace: Process complete
       onboardingTrace.success('process_complete', {
         importPath: 'shared_manual_import',
-        mode: 'replace_reset',
+        mode: 'merge',
         machineCount: data.machines?.length || 0,
         targetMachineId: machineId,
         targetMachineFound: !!targetMachine,
@@ -1279,11 +1280,31 @@ export class ReferenceDbService {
         : model.weightVector,
     }));
 
-    // Replace existing models with imported ones
-    machine.referenceModels = processedModels;
+    // Sprint 1 UX: MERGE models – only add if no model with same name exists
+    const existingNames = new Set(
+      (machine.referenceModels || []).map(m => m.label?.toLowerCase().trim())
+    );
+
+    const newModels = processedModels.filter(model => {
+      const modelName = model.label?.toLowerCase().trim();
+      if (modelName && existingNames.has(modelName)) {
+        logger.info(`⏭️ Skipping model "${model.label}" – already exists for machine ${machine.id}`);
+        return false;
+      }
+      return true;
+    });
+
+    // Append new models to existing ones
+    machine.referenceModels = [...(machine.referenceModels || []), ...newModels];
+
+    if (newModels.length < processedModels.length) {
+      const skipped = processedModels.length - newModels.length;
+      logger.info(`📋 Merged: ${newModels.length} new models added, ${skipped} duplicates skipped`);
+    }
+
     await saveMachine(machine);
 
-    return processedModels.length;
+    return newModels.length;
   }
 
   /**

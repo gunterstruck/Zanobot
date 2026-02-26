@@ -493,6 +493,30 @@ export async function deleteMachine(id: string): Promise<void> {
 }
 
 /**
+ * Delete a single reference model from a machine
+ *
+ * @param machineId - Machine ID
+ * @param modelLabel - Label of the model to delete
+ * @returns true if model was found and deleted
+ */
+export async function deleteReferenceModel(machineId: string, modelLabel: string): Promise<boolean> {
+  const machine = await getMachine(machineId);
+  if (!machine) return false;
+
+  const before = machine.referenceModels?.length || 0;
+  machine.referenceModels = (machine.referenceModels || []).filter(
+    m => m.label?.toLowerCase().trim() !== modelLabel.toLowerCase().trim()
+  );
+  const after = machine.referenceModels.length;
+
+  if (before === after) return false; // Nothing was deleted
+
+  await saveMachine(machine);
+  logger.info(`🗑️ Reference model "${modelLabel}" deleted from machine ${machineId}`);
+  return true;
+}
+
+/**
  * Add a reference model to a machine's model collection
  *
  * @param machineId - Machine ID

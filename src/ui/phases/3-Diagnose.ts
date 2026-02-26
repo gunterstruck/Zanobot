@@ -1138,6 +1138,16 @@ export class DiagnosePhase {
    * - Simplified view: Updates large percentage, status label, quality hints
    * - Advanced view: Updates HealthGauge, live score display, status
    */
+  /**
+   * Sprint 1 UX: Get human-readable status text for a health score
+   */
+  private getScoreVerbalStatus(score: number): string {
+    if (score >= 85) return t('status.consistent');
+    if (score >= 70) return t('status.slightDeviation');
+    if (score >= 50) return t('status.significantChange');
+    return t('status.strongDeviation');
+  }
+
   private updateLiveDisplay(score: number, status: string, detectedState?: string, operatingPointChanged?: boolean): void {
     const normalizedStatus = status.toLowerCase();
 
@@ -1195,6 +1205,12 @@ export class DiagnosePhase {
 
       // Update quality hints based on signal strength
       this.updateQualityHint();
+
+      // Sprint 1 UX: Update verbal status in simplified view
+      const inspectionVerbal = document.getElementById('live-verbal-status');
+      if (inspectionVerbal) {
+        inspectionVerbal.textContent = this.getScoreVerbalStatus(score);
+      }
 
     } else {
       // === ADVANCED/EXPERT VIEW ===
@@ -1269,6 +1285,13 @@ export class DiagnosePhase {
           dashboardStatus.textContent = localizedStatus;
         }
         dashboardStatus.className = `inspection-status status-${normalizedStatus}`;
+      }
+
+      // Sprint 1 UX: Update verbal status in advanced/expert view
+      const liveVerbal = document.getElementById('live-verbal-status')
+        || document.getElementById('live-dashboard-verbal');
+      if (liveVerbal) {
+        liveVerbal.textContent = this.getScoreVerbalStatus(score);
       }
 
       // Update legacy status element
@@ -1490,6 +1513,11 @@ export class DiagnosePhase {
       // Show results
       this.showResults(diagnosis);
 
+      // Sprint 1 UX: Diagnosis completion confirmation
+      notify.success(t('diagnose.compareComplete'), {
+        duration: 3000,
+      });
+
       logger.info('✅ Diagnosis saved successfully!');
     } catch (error) {
       logger.error('Save error:', error);
@@ -1676,6 +1704,21 @@ export class DiagnosePhase {
       this.showInspectionModal();
     } else {
       this.showAdvancedRecordingModal();
+    }
+
+    // Sprint 1 UX: Tap on score shows explanation toast
+    const scoreDisplay = document.getElementById('health-gauge-canvas')
+      || document.getElementById('inspection-score-container')
+      || document.getElementById('live-dashboard-score-container');
+
+    if (scoreDisplay && !scoreDisplay.dataset.scoreTapBound) {
+      scoreDisplay.dataset.scoreTapBound = 'true';
+      scoreDisplay.addEventListener('click', () => {
+        notify.info(t('healthScore.explain'), {
+          title: t('healthScore.explainTitle'),
+          duration: 8000,
+        });
+      });
     }
   }
 
@@ -2068,6 +2111,12 @@ export class DiagnosePhase {
       }
       // CSS classes use technical terms for correct color styling
       resultStatus.className = `result-status status-${normalizedStatus}`;
+    }
+
+    // Sprint 1 UX: Add verbal status below score in result modal
+    const verbalStatus = document.getElementById('result-verbal-status');
+    if (verbalStatus) {
+      verbalStatus.textContent = this.getScoreVerbalStatus(diagnosis.healthScore);
     }
 
     // Update confidence

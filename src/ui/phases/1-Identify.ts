@@ -7,7 +7,7 @@
  * - Manual entry
  */
 
-import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses } from '@data/db.js';
+import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses, deleteMachine, getRecordingsForMachine } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -108,6 +108,17 @@ export class IdentifyPhase {
     const createBtn = document.getElementById('create-machine-btn');
     if (createBtn) {
       createBtn.addEventListener('click', () => this.handleCreateMachine());
+    }
+
+    // Sprint 1 UX: Clear inline validation error on typing
+    const machineNameInput = document.getElementById('machine-name-input') as HTMLInputElement;
+    if (machineNameInput) {
+      machineNameInput.addEventListener('input', () => {
+        machineNameInput.classList.remove('input-invalid');
+        machineNameInput.removeAttribute('aria-invalid');
+        const nameError = document.getElementById('machine-name-error');
+        if (nameError) nameError.style.display = 'none';
+      });
     }
 
     // Scanner modal elements
@@ -917,11 +928,24 @@ export class IdentifyPhase {
       const location = locationInput?.value.trim() || undefined;
       const notes = notesInput?.value.trim() || undefined;
 
+      // Sprint 1 UX: Inline validation for machine name
+      const nameError = document.getElementById('machine-name-error');
+
       // Validate name
       if (!name) {
-        this.showError(t('identify.errors.nameRequired'));
+        nameInput.classList.add('input-invalid');
+        nameInput.setAttribute('aria-invalid', 'true');
+        if (nameError) {
+          nameError.style.display = 'block';
+        }
+        nameInput.focus();
         return;
       }
+
+      // Clear error state on valid input
+      nameInput.classList.remove('input-invalid');
+      nameInput.removeAttribute('aria-invalid');
+      if (nameError) nameError.style.display = 'none';
 
       // Validate name is not just whitespace and has reasonable length
       if (!/\S/.test(name)) {
@@ -2440,8 +2464,44 @@ export class IdentifyPhase {
     polyline.setAttribute('points', '9 18 15 12 9 6');
     chevron.appendChild(polyline);
 
+    // Sprint 1 UX: Delete button on machine card
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'machine-delete-btn';
+    deleteBtn.setAttribute('aria-label', t('identify.deleteMachine'));
+    deleteBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>`;
+
+    deleteBtn.addEventListener('click', async (e) => {
+      e.stopPropagation(); // Don't trigger machine select
+
+      const confirmed = confirm(
+        t('identify.confirmDeleteMachine', { name: machine.name })
+      );
+      if (!confirmed) return;
+
+      // Double confirmation for machines with recordings
+      const recordings = await getRecordingsForMachine(machine.id);
+      if (recordings.length > 0) {
+        const doubleConfirm = confirm(
+          t('identify.confirmDeleteMachineWithData', {
+            name: machine.name,
+            count: String(recordings.length),
+          })
+        );
+        if (!doubleConfirm) return;
+      }
+
+      await deleteMachine(machine.id);
+      notify.success(t('identify.machineDeleted', { name: machine.name }));
+      await this.refreshMachineLists();
+    });
+
     // Assemble item
     machineItem.appendChild(machineInfo);
+    machineItem.appendChild(deleteBtn);
     machineItem.appendChild(chevron);
 
     // Add click handler

@@ -7255,3 +7255,170 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
         padding: 10mm;
     }
 }
+
+/* ===================================
+   UX SPRINT 1: INPUT HINTS & VALIDATION
+   =================================== */
+.required-star {
+    color: var(--status-error);
+    margin-left: 2px;
+    font-weight: 700;
+}
+
+.input-hint {
+    display: block;
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.input-error {
+    display: none;
+    font-size: var(--font-xs);
+    color: var(--status-error);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.input-group-required .machine-input.input-invalid {
+    border-color: var(--status-error);
+    box-shadow: 0 0 0 2px rgba(255, 82, 82, 0.2);
+}
+
+.input-group-required .machine-input:not(.input-invalid):focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
+}
+
+/* Accessibility: visible focus for keyboard navigation */
+.machine-input:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ===================================
+   UX SPRINT 1: REFERENCE EXPLANATION
+   =================================== */
+.reference-explain-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 212, 255, 0.08);
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.reference-explain-banner .explain-icon {
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+.recording-hint {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    text-align: center;
+    padding: 6px 12px;
+    margin-top: var(--spacing-xs);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+}
+
+/* ===================================
+   UX SPRINT 1: VERBAL SCORE STATUS
+   =================================== */
+.result-verbal-status {
+    text-align: center;
+    font-size: var(--font-md);
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ===================================
+   UX SPRINT 1: DELETE BUTTONS
+   =================================== */
+.machine-delete-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.machine-delete-btn:hover,
+.machine-delete-btn:active {
+    color: var(--status-error);
+    background: rgba(255, 82, 82, 0.1);
+}
+
+.machine-delete-btn:focus-visible,
+.reference-delete-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.reference-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.reference-list-item:last-child {
+    border-bottom: none;
+}
+
+.reference-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.reference-name {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.reference-date {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+}
+
+.reference-delete-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+}
+
+.reference-delete-btn:hover,
+.reference-delete-btn:active {
+    background: rgba(255, 82, 82, 0.1);
+}
