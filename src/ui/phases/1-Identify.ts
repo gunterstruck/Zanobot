@@ -7,7 +7,7 @@
  * - Manual entry
  */
 
-import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses, deleteMachine, getRecordingsForMachine } from '@data/db.js';
+import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses, deleteMachine, getRecordingsForMachine, getDiagnosesForMachine } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -2449,6 +2449,11 @@ export class IdentifyPhase {
         overviewContainer.appendChild(machineItem);
       }
     }
+
+    // Sprint 3 UX: Lazy-load sparklines after initial render
+    requestAnimationFrame(() => {
+      this.loadSparklines();
+    });
   }
 
   /**
@@ -2497,6 +2502,25 @@ export class IdentifyPhase {
     machineInfo.appendChild(machineName);
     machineInfo.appendChild(machineStatus);
     machineInfo.appendChild(machineTime);
+
+    // Sprint 3 UX: Reference quality badge
+    if (machine.referenceModels && machine.referenceModels.length > 0) {
+      const avgBaseline = this.getAverageBaselineScore(machine);
+      const rating = this.getBaselineRating(avgBaseline);
+      const badgeEl = document.createElement('span');
+      badgeEl.className = `ref-quality-badge ref-quality-${rating}`;
+      badgeEl.textContent = t(`reference.quality.${rating}`);
+      badgeEl.setAttribute('aria-label', t('reference.quality.ariaLabel', {
+        rating: t(`reference.quality.${rating}`)
+      }));
+      machineInfo.appendChild(badgeEl);
+    }
+
+    // Sprint 3 UX: Sparkline container (filled lazily after render)
+    const sparkContainer = document.createElement('div');
+    sparkContainer.className = 'sparkline-container';
+    sparkContainer.dataset.machineId = machine.id;
+    machineInfo.appendChild(sparkContainer);
 
     // Create chevron icon
     const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -2556,6 +2580,117 @@ export class IdentifyPhase {
     machineItem.addEventListener('click', () => this.handleMachineSelect(machine));
 
     return machineItem;
+  }
+
+  /**
+   * Sprint 3 UX: Calculate average baseline score across all reference models
+   */
+  private getAverageBaselineScore(machine: Machine): number {
+    const models = machine.referenceModels || [];
+    const scores = models
+      .map(m => m.baselineScore)
+      .filter((s): s is number => s !== undefined && s !== null);
+
+    if (scores.length === 0) return 0;
+    return scores.reduce((sum, s) => sum + s, 0) / scores.length;
+  }
+
+  /**
+   * Sprint 3 UX: Get rating category from baseline score
+   */
+  private getBaselineRating(score: number): 'good' | 'ok' | 'unknown' {
+    if (score >= 90) return 'good';
+    if (score >= 75) return 'ok';
+    return 'unknown';
+  }
+
+  /**
+   * Sprint 3 UX: Generate inline SVG sparkline from diagnosis scores
+   * Returns an SVG element or null if not enough data
+   */
+  private generateSparkline(scores: number[]): SVGSVGElement | null {
+    if (scores.length < 2) return null;
+
+    const width = 80;
+    const height = 24;
+    const padding = 2;
+
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    const range = max - min || 1;
+
+    const points = scores.map((score, i) => {
+      const x = padding + (i / (scores.length - 1)) * (width - padding * 2);
+      const y = padding + (1 - (score - min) / range) * (height - padding * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+
+    const trend = scores[scores.length - 1] - scores[0];
+    const strokeColor = trend >= -3
+      ? 'var(--status-healthy, #4CAF50)'
+      : 'var(--status-warning, #FF9800)';
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', String(width));
+    svg.setAttribute('height', String(height));
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('class', 'sparkline-svg');
+    svg.setAttribute('aria-label', t('identify.sparkline.ariaLabel', {
+      count: String(scores.length)
+    }));
+    svg.setAttribute('role', 'img');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', points.join(' '));
+    polyline.setAttribute('fill', 'none');
+    polyline.setAttribute('stroke', strokeColor);
+    polyline.setAttribute('stroke-width', '1.5');
+    polyline.setAttribute('stroke-linecap', 'round');
+    polyline.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(polyline);
+
+    const lastPoint = points[points.length - 1].split(',');
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', lastPoint[0]);
+    dot.setAttribute('cy', lastPoint[1]);
+    dot.setAttribute('r', '2.5');
+    dot.setAttribute('fill', strokeColor);
+    svg.appendChild(dot);
+
+    return svg;
+  }
+
+  /**
+   * Sprint 3 UX: Load sparklines for all visible machine cards (lazy, batched)
+   */
+  private async loadSparklines(): Promise<void> {
+    const containers = Array.from(
+      document.querySelectorAll('.sparkline-container[data-machine-id]')
+    ) as HTMLElement[];
+
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < containers.length; i += BATCH_SIZE) {
+      const batch = containers.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(
+        batch.map(async (container) => {
+          const machineId = container.dataset.machineId;
+          if (!machineId) return;
+
+          try {
+            const diagnoses = await getDiagnosesForMachine(machineId, 10);
+            if (diagnoses.length >= 2) {
+              const scores = [...diagnoses].reverse().map(d => d.healthScore);
+              const sparkline = this.generateSparkline(scores);
+              if (sparkline) {
+                container.appendChild(sparkline);
+              }
+            }
+          } catch (error) {
+            logger.warn(`Could not load sparkline for ${machineId}:`, error);
+          }
+        })
+      );
+    }
   }
 
   /**

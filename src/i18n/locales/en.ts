@@ -175,6 +175,11 @@ export const en: TranslationDict = {
       weekAgo: '1 week ago',
       weeksAgo: '{{weeks}} weeks ago',
     },
+
+    // Sprint 3 UX: Sparkline accessibility
+    sparkline: {
+      ariaLabel: 'Trend of last {{count}} diagnoses',
+    },
   },
 
   // ============================================================================
@@ -229,6 +234,11 @@ export const en: TranslationDict = {
       signalStable: '✓ Signal stable',
       slightUnrest: '⚠ Slight instability',
       signalUnstable: '✗ Warning: Signal unstable!',
+      // Sprint 3 UX: Reference quality badge
+      good: 'Ref: Good',
+      ok: 'Ref: OK',
+      unknown: 'Ref: ?',
+      ariaLabel: 'Reference quality: {{rating}}',
     },
 
     errors: {
@@ -317,6 +327,22 @@ export const en: TranslationDict = {
     changeMachine: 'Change machine',
     noMachinesYet: 'No machines created yet.',
     noMachinesHint: 'Create a new machine first.',
+
+    // Sprint 3 UX: Operating point hint
+    opHint: {
+      changed: 'ℹ️ Operating point differed during measurement – consider when interpreting score',
+    },
+  },
+
+  // ============================================================================
+  // SPRINT 3 UX: TREND
+  // ============================================================================
+  trend: {
+    improving: 'Trend: improving',
+    stable: 'Trend: stable',
+    declining: 'Trend: declining',
+    uncertain: 'Trend: not yet reliable',
+    noTrend: 'No trend yet',
   },
 
   // ============================================================================

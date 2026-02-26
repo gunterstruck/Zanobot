@@ -7740,3 +7740,105 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
+
+/* ══════════════════════════════════════════════════════════ */
+/* UX Sprint 3: Reference Quality Badge                      */
+/* ══════════════════════════════════════════════════════════ */
+
+.ref-quality-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill, 12px);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.ref-quality-good {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--status-healthy);
+}
+
+.ref-quality-ok {
+    background: rgba(255, 152, 0, 0.15);
+    color: var(--status-warning);
+}
+
+.ref-quality-unknown {
+    background: rgba(158, 158, 158, 0.15);
+    color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════ */
+/* UX Sprint 3: Trend Arrow                                  */
+/* ══════════════════════════════════════════════════════════ */
+
+.result-trend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill, 12px);
+    font-size: var(--font-sm);
+    font-weight: 500;
+    margin-top: var(--spacing-xs);
+}
+
+.trend-arrow {
+    font-size: 1.2rem;
+}
+
+.trend-up {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--status-healthy);
+}
+
+.trend-stable {
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--primary-color);
+}
+
+.trend-down {
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--status-warning);
+}
+
+.trend-neutral {
+    background: rgba(158, 158, 158, 0.1);
+    color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════ */
+/* UX Sprint 3: Sparkline on Machine Cards                   */
+/* ══════════════════════════════════════════════════════════ */
+
+.sparkline-container {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.sparkline-svg {
+    display: block;
+    opacity: 0.8;
+}
+
+/* ══════════════════════════════════════════════════════════ */
+/* UX Sprint 3: Operating Point Hint (Result Modal)          */
+/* ══════════════════════════════════════════════════════════ */
+
+.op-hint-result {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(0, 212, 255, 0.06);
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
