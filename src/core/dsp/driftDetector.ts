@@ -93,6 +93,10 @@ export interface DriftResult {
   overallMessage: string;
   recommendation: string;
 
+  // Actual thresholds used for severity classification (for correct UI scaling)
+  globalCriticalUsed: number;
+  localCriticalUsed: number;
+
   // Debug data (for Expert-View)
   diff: Float64Array; // µ_meas - µ_ref (raw difference)
   smoothDiff: Float64Array; // Smoothed difference (≈ environment)
@@ -188,7 +192,10 @@ export function computeDrift(
   baseline?: RefDriftBaseline
 ): DriftResult {
   const K = muRef.length;
-  const lowCut = settings.lowFreqCutoffBin;
+
+  // ── Clamp settings (protect against corrupt localStorage values) ──
+  const lowCut = Math.max(0, Math.min(settings.lowFreqCutoffBin, K - 1));
+  const smoothWindow = Math.max(1, Math.min(settings.smoothWindow, K));
 
   // ── Step 1: Compute difference first (V2 improvement) ──
   const diff = new Float64Array(K);
@@ -197,7 +204,7 @@ export function computeDrift(
   }
 
   // ── Step 2: Smooth → Global Drift Index ────────────────
-  const smoothDiff = smoothSpectrum(diff, settings.smoothWindow);
+  const smoothDiff = smoothSpectrum(diff, smoothWindow);
   let globalSum = 0;
   for (let k = 0; k < K; k++) {
     globalSum += Math.abs(smoothDiff[k]);
@@ -274,6 +281,8 @@ export function computeDrift(
     localMessage,
     overallMessage,
     recommendation,
+    globalCriticalUsed: gCrit,
+    localCriticalUsed: lCrit,
     diff,
     smoothDiff,
     localDiff,
@@ -608,8 +617,9 @@ export class RealtimeDriftDetector {
     if (this.accumulatedFrames < MIN_ACCUMULATED_FRAMES) return null;
 
     // Only update every N frames (performance)
+    // Return null on non-update frames to prevent unnecessary DOM updates
     if (this.accumulatedFrames % this.updateInterval !== 0)
-      return this.lastResult;
+      return null;
 
     this.lastResult = computeDrift(
       this.muRef,

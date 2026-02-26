@@ -1022,11 +1022,11 @@ export class DiagnosePhase {
 
     panel.style.display = '';
 
-    // Global Drift Bar
+    // Global Drift Bar (use actual thresholds from result for correct scaling)
     const globalBar = document.getElementById('drift-bar-global');
     const globalStatus = document.getElementById('drift-status-global');
-    if (globalBar && globalStatus && this.driftSettings) {
-      const maxVal = this.driftSettings.globalCritical * 1.5;
+    if (globalBar && globalStatus) {
+      const maxVal = result.globalCriticalUsed * 1.5;
       const pct = Math.min((result.globalDrift / maxVal) * 100, 100);
       globalBar.style.width = pct + '%';
       globalBar.className = 'drift-bar drift-bar-' + result.globalSeverity;
@@ -1044,11 +1044,11 @@ export class DiagnosePhase {
       }
     }
 
-    // Local Drift Bar
+    // Local Drift Bar (use actual thresholds from result for correct scaling)
     const localBar = document.getElementById('drift-bar-local');
     const localStatus = document.getElementById('drift-status-local');
-    if (localBar && localStatus && this.driftSettings) {
-      const maxVal = this.driftSettings.localCritical * 1.5;
+    if (localBar && localStatus) {
+      const maxVal = result.localCriticalUsed * 1.5;
       const localVal = result.localDriftNormalized ?? result.localDrift;
       const pct = Math.min((localVal / maxVal) * 100, 100);
       localBar.style.width = pct + '%';
