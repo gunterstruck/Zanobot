@@ -89,6 +89,13 @@ export interface Machine {
    * Derived from refT60. null when no T60 available.
    */
   refT60Classification?: string | null;
+
+  /**
+   * Optional fleet group identifier for fleet check mode.
+   * Machines with the same fleetGroup are compared as a fleet.
+   * null/undefined = no group assigned (uses time-based fallback in fleet mode).
+   */
+  fleetGroup?: string | null;
 }
 
 /**
