@@ -1898,17 +1898,16 @@ export class ReferencePhase {
     // Find or create status container
     let statusContainer = document.getElementById('multiclass-status');
     if (!statusContainer) {
-      // Create container if it doesn't exist
-      // CRITICAL FIX: Use correct class selector from HTML (container-content, not phase-content)
-      const parentContainer = document.querySelector(
-        '#record-reference-content .container-content'
-      );
-      if (!parentContainer) return;
+      // Use dedicated mount point that lives outside both state containers
+      // (reference-no-machine / reference-machine-ready) so it's visible
+      // regardless of which state is active
+      const mountPoint = document.getElementById('multiclass-status-mount');
+      if (!mountPoint) return;
 
       statusContainer = document.createElement('div');
       statusContainer.id = 'multiclass-status';
       statusContainer.className = 'multiclass-status';
-      parentContainer.appendChild(statusContainer);
+      mountPoint.appendChild(statusContainer);
     }
 
     // Clear existing content
