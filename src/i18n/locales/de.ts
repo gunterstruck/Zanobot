@@ -840,6 +840,15 @@ export const de: TranslationDict = {
     customerIdPlaceholder: 'z.B. Kundenkennung_nr1',
     customerIdRequired: 'Bitte geben Sie eine Kundenkennung ein.',
     dbUrlPreview: 'Geladene DB-URL: {{url}}',
+    // Fleet option
+    optionFleet: 'Flotten-Link',
+    optionFleetDetailDefault: 'Öffnet die App mit einer kompletten Flotte.',
+    optionFleetDetail: 'Öffnet die App für Flotte „{{name}}".',
+    fleetSelectLabel: 'Flotte auswählen',
+    noFleets: 'Keine Flotten vorhanden',
+    machine: 'Maschine',
+    machines: 'Maschinen',
+    fleetRequiresCustomerId: 'Bitte Kundenkennung und Flotte auswählen.',
   },
 
   // ============================================================================
@@ -871,6 +880,13 @@ export const de: TranslationDict = {
     printTitle: 'Maschinen-QR-Code',
     printInstructions: 'QR-Code ausschneiden und an der Maschine anbringen.',
     genericLabel: 'App-Zugang',
+    // Fleet option
+    optionFleet: 'Flotten-Link',
+    optionFleetDetailDefault: 'Erstellt einen QR-Code für eine komplette Flotte.',
+    optionFleetDetail: 'Erstellt QR-Code für Flotte „{{name}}".',
+    fleetSelectLabel: 'Flotte auswählen',
+    fleetLabel: 'Flotte',
+    fleetPrintTitle: 'Flotten-QR-Code',
   },
 
   // ============================================================================
@@ -1471,6 +1487,22 @@ export const de: TranslationDict = {
     // Sprint 5 UX: Gold Standard badge
     goldStandard: {
       badge: 'Gold-Standard (Referenz für die Flotte)',
+    },
+    // Fleet NFC/QR provisioning: Export
+    export: {
+      button: 'Flotte exportieren',
+      success: 'Flotte „{{name}}" exportiert. Datei auf GitHub Pages hochladen für NFC/QR.',
+      failed: 'Flotten-Export fehlgeschlagen.',
+    },
+    // Fleet NFC/QR provisioning: Import
+    provision: {
+      success: 'Flotte „{{name}}" eingerichtet: {{created}} erstellt, {{updated}} aktualisiert.',
+      alreadyExists: 'Flotte „{{name}}" ist bereits vorhanden ({{skipped}} Maschinen übersprungen).',
+      downloading: 'Flotte wird geladen…',
+      error: 'Flotte konnte nicht geladen werden.',
+      rollbackComplete: 'Import fehlgeschlagen – Änderungen rückgängig gemacht.',
+      updateRecommended: 'Die Flotten-Datei wurde mit einer neueren App-Version erstellt. App-Update empfohlen.',
+      skippedDifferentFleet: '„{{name}}" gehört zu Flotte „{{fleet}}" – nicht umgehängt.',
     },
   },
 };

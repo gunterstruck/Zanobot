@@ -645,6 +645,14 @@ export const fr: TranslationDict = {
     customerIdRequired: 'Veuillez entrer un identifiant client.',
     dbUrlPreview: 'URL de la BD chargée : {{url}}',
     closeDialog: 'Fermer le dialogue NFC',
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Opens the app with a complete fleet.',
+    optionFleetDetail: 'Opens the app for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    noFleets: 'No fleets available',
+    machine: 'machine',
+    machines: 'machines',
+    fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
   },
 
   // ============================================================================
@@ -676,6 +684,12 @@ export const fr: TranslationDict = {
     printTitle: 'QR Code Machine',
     printInstructions: 'Découpez le QR code et fixez-le sur la machine.',
     genericLabel: 'Accès App',
+    optionFleet: 'Fleet link',
+    optionFleetDetailDefault: 'Creates a QR code for a complete fleet.',
+    optionFleetDetail: 'Creates QR code for fleet "{{name}}".',
+    fleetSelectLabel: 'Select fleet',
+    fleetLabel: 'Fleet',
+    fleetPrintTitle: 'Fleet QR Code',
   },
 
   review: {
@@ -1096,5 +1110,19 @@ export const fr: TranslationDict = {
       cancelled: 'Fleet check cancelled.',
     },
     goldStandard: { badge: 'Gold Standard (reference for the fleet)' },
+    export: {
+      button: 'Export fleet',
+      success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
+      failed: 'Fleet export failed.',
+    },
+    provision: {
+      success: 'Fleet "{{name}}" provisioned: {{created}} created, {{updated}} updated.',
+      alreadyExists: 'Fleet "{{name}}" already exists ({{skipped}} machines skipped).',
+      downloading: 'Loading fleet…',
+      error: 'Could not load fleet.',
+      rollbackComplete: 'Import failed – changes rolled back.',
+      updateRecommended: 'Fleet file was exported from a newer app version. App update recommended.',
+      skippedDifferentFleet: '"{{name}}" belongs to fleet "{{fleet}}" – not reassigned.',
+    },
   },
 };
