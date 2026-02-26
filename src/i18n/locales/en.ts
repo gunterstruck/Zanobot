@@ -109,6 +109,18 @@ export const en: TranslationDict = {
     noMachines: 'No machines available',
     statesTrained: '{{count}} states trained',
 
+    // Sprint 2 UX: Empty state mini guide
+    emptyGuide: {
+      title: 'How Zanobot works',
+      step1Title: 'Create machine',
+      step1Desc: 'Give your machine a unique name.',
+      step2Title: 'Record reference',
+      step2Desc: '10 seconds of normal operation.',
+      step3Title: 'Check condition',
+      step3Desc: 'Compare against the reference anytime.',
+      cta: 'Create first machine',
+    },
+
     errors: {
       scannerStart: 'Error starting scanner',
       cameraAccessDenied: 'Camera access denied',
@@ -1271,5 +1283,46 @@ export const en: TranslationDict = {
     // Reference phase
     referenceHint: '\uD83D\uDCA1 Change analysis active: This recording also defines the reference environment and microphone position. Future diagnoses will show whether the environment or machine has changed.',
     referenceStored: '\u2705 Environment profile stored. Future diagnoses will automatically analyze whether changes come from the environment or the machine.',
+
+    // Sprint 2 UX: Simplified drift summary (Advanced view)
+    initializing: 'Environment analysis running…',
+    summaryOk: 'Environment stable',
+    summaryRoomChange: 'Environment changed – score may deviate',
+    summaryMachineChange: 'Machine sound has changed',
+    summaryBoth: 'Environment and machine changed',
+    summaryUncertain: 'Environment analysis not yet conclusive',
+  },
+
+  // Sprint 2 UX: Contextual help texts (InfoBottomSheet)
+  help: {
+    reference: {
+      title: 'What is a reference?',
+      body: '<p>The reference is your machine\'s "normal state" – a 10-second recording during normal operation.</p><p>All future diagnoses compare against this state. The better the reference, the more accurately changes are detected.</p><p><strong>Tip:</strong> Record the reference during normal operation and slowly move the smartphone around the machine so environmental influences can be filtered out.</p>',
+    },
+    diagnose: {
+      title: 'What happens during "Check condition"?',
+      body: '<p>The app records the current machine sound and mathematically compares it to the stored reference.</p><p>The result is a similarity score (0–100%). 100% means the machine sounds exactly like during the reference recording.</p><p>A declining trend across multiple measurements is more meaningful than a single value.</p>',
+    },
+    machines: {
+      title: 'Why create a machine?',
+      body: '<p>Every machine has its own acoustic profile. By creating a machine with a unique name, references and diagnosis history can be assigned.</p><p>This way you can see trends over time and detect changes early.</p>',
+    },
+    viewLevel: {
+      title: 'View mode',
+      body: '<p><strong>Basic:</strong> Simple traffic light display. For daily use by operators.</p><p><strong>Advanced:</strong> Additional details like spectrogram and environment monitoring. For maintenance staff.</p><p><strong>Expert:</strong> Full technical view with DSP parameters and debug information. For engineers.</p>',
+    },
+    spectrogram: {
+      title: 'What does the spectrogram show?',
+      body: '<p>The spectrogram shows the frequency distribution of the machine sound in real time.</p><p>The horizontal axis shows time, the vertical axis frequency. Bright areas indicate high energy at that frequency.</p><p>Changes in the pattern can indicate mechanical problems (e.g., bearing damage creates new frequency bands).</p>',
+    },
+    drift: {
+      title: 'What is drift detection?',
+      body: '<p>Drift detection monitors whether the environment or the machine has changed since the reference recording.</p><p><strong>Environment drift:</strong> Position, temperature, acoustics – can affect the score without the machine being faulty.</p><p><strong>Machine drift:</strong> Actual change in machine sound.</p><p>This distinction helps avoid false alarms.</p>',
+    },
+  },
+
+  // Sprint 2 UX: Smart Start visual ready moment
+  smartStartReady: {
+    signalDetected: '✅ Signal detected – Analysis starting',
   },
 };

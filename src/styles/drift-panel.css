@@ -147,6 +147,31 @@
     }
 }
 
+/* ══════════════════════════════════════════════════════════ */
+/* UX Sprint 2: Simplified Drift Summary (Advanced view)     */
+/* ══════════════════════════════════════════════════════════ */
+
+.drift-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    margin: 4px 12px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.drift-summary-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.drift-summary-text {
+    flex: 1;
+}
+
 /* Responsive */
 @media (max-width: 360px) {
     .drift-label {
