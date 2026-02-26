@@ -147,6 +147,9 @@ export class DiagnosePhase {
   // Environment comparison result (Reference T60 vs. Diagnosis T60)
   private environmentWarning: EnvironmentComparisonResult | null = null;
 
+  /** Sprint 3 UX: Track whether operating point changed during diagnosis */
+  private opChangedDuringDiagnosis = false;
+
   // Drift Detector (Global Drift + Local Residual Index)
   private realtimeDrift: RealtimeDriftDetector | null = null;
   private driftSettings: DriftDetectorSettings | null = null;
@@ -206,6 +209,9 @@ export class DiagnosePhase {
       notify.warning(t('diagnose.alreadyRunning'));
       return;
     }
+
+    // Sprint 3 UX: Reset operating point change flag for new diagnosis
+    this.opChangedDuringDiagnosis = false;
 
     try {
       // Refresh machine data to ensure latest reference models are loaded
@@ -860,6 +866,10 @@ export class DiagnosePhase {
         const opResult = this.opMetrics.getResult();
         if (opResult) {
           operatingPointChanged = opResult.operatingPointChanged;
+          // Sprint 3 UX: Latch – once true, stays true for the entire diagnosis
+          if (operatingPointChanged) {
+            this.opChangedDuringDiagnosis = true;
+          }
           if (this.opMonitor) {
             this.opMonitor.update(opResult);
           }
@@ -2176,7 +2186,7 @@ export class DiagnosePhase {
   /**
    * Show diagnosis results
    */
-  private showResults(diagnosis: DiagnosisResult): void {
+  private async showResults(diagnosis: DiagnosisResult): Promise<void> {
     const modal = document.getElementById('diagnosis-modal');
     if (!modal) return;
 
@@ -2225,6 +2235,74 @@ export class DiagnosePhase {
     const verbalStatus = document.getElementById('result-verbal-status');
     if (verbalStatus) {
       verbalStatus.textContent = this.getScoreVerbalStatus(diagnosis.healthScore);
+    }
+
+    // Sprint 3 UX: Calculate and show trend arrow
+    const trendEl = document.getElementById('result-trend');
+    if (trendEl) {
+      try {
+        const recentDiagnoses = await getDiagnosesForMachine(this.machine.id, 6);
+        const olderDiagnoses = recentDiagnoses.filter(d => d.id !== diagnosis.id);
+
+        if (olderDiagnoses.length < 1) {
+          trendEl.style.display = 'flex';
+          const arrowEl = document.getElementById('trend-arrow');
+          const textEl = document.getElementById('trend-text');
+          if (arrowEl) arrowEl.textContent = '—';
+          if (textEl) textEl.textContent = t('trend.noTrend');
+          trendEl.className = 'result-trend trend-neutral';
+        } else if (olderDiagnoses.length <= 2) {
+          trendEl.style.display = 'flex';
+          const arrowEl = document.getElementById('trend-arrow');
+          const textEl = document.getElementById('trend-text');
+          if (arrowEl) arrowEl.textContent = '~';
+          if (textEl) textEl.textContent = t('trend.uncertain');
+          trendEl.className = 'result-trend trend-neutral';
+        } else {
+          const currentScore = diagnosis.healthScore;
+          const olderScores = olderDiagnoses
+            .slice(0, 5)
+            .map(d => d.healthScore)
+            .sort((a, b) => a - b);
+          const medianOlder = olderScores.length % 2 === 0
+            ? (olderScores[olderScores.length / 2 - 1] + olderScores[olderScores.length / 2]) / 2
+            : olderScores[Math.floor(olderScores.length / 2)];
+          const diff = currentScore - medianOlder;
+
+          const arrowEl = document.getElementById('trend-arrow');
+          const textEl = document.getElementById('trend-text');
+          trendEl.style.display = 'flex';
+
+          if (diff > 3) {
+            trendEl.className = 'result-trend trend-up';
+            if (arrowEl) arrowEl.textContent = '↗';
+            if (textEl) textEl.textContent = t('trend.improving');
+          } else if (diff < -3) {
+            trendEl.className = 'result-trend trend-down';
+            if (arrowEl) arrowEl.textContent = '↘';
+            if (textEl) textEl.textContent = t('trend.declining');
+          } else {
+            trendEl.className = 'result-trend trend-stable';
+            if (arrowEl) arrowEl.textContent = '→';
+            if (textEl) textEl.textContent = t('trend.stable');
+          }
+        }
+      } catch (error) {
+        logger.warn('Could not calculate trend:', error);
+        trendEl.style.display = 'none';
+      }
+    }
+
+    // Sprint 3 UX: Operating point hint in result modal (Expert only)
+    const opHintResult = document.getElementById('op-hint-result');
+    if (opHintResult) {
+      const currentViewLevel = document.body.dataset.viewLevel || 'basic';
+      if (currentViewLevel === 'expert' && this.opChangedDuringDiagnosis) {
+        opHintResult.style.display = '';
+        opHintResult.textContent = t('diagnose.opHint.changed');
+      } else {
+        opHintResult.style.display = 'none';
+      }
     }
 
     // Update confidence

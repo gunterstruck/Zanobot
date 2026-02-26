@@ -162,6 +162,11 @@ export const zh: TranslationDict = {
       weekAgo: '1周前',
       weeksAgo: '{{weeks}}周前',
     },
+
+    // Sprint 3 UX: Sparkline accessibility
+    sparkline: {
+      ariaLabel: 'Trend of last {{count}} diagnoses',
+    },
   },
 
   // ============================================================================
@@ -216,6 +221,11 @@ export const zh: TranslationDict = {
       signalStable: '✓ 信号稳定',
       slightUnrest: '⚠ 轻微不稳定',
       signalUnstable: '✗ 警告：信号不稳定！',
+      // Sprint 3 UX: Reference quality badge
+      good: 'Ref: Good',
+      ok: 'Ref: OK',
+      unknown: 'Ref: ?',
+      ariaLabel: 'Reference quality: {{rating}}',
     },
 
     errors: {
@@ -304,6 +314,22 @@ export const zh: TranslationDict = {
     changeMachine: '更换机器',
     noMachinesYet: '\u5c1a\u672a\u521b\u5efa\u673a\u5668\u3002',
     noMachinesHint: '\u8bf7\u5148\u521b\u5efa\u4e00\u53f0\u65b0\u673a\u5668\u3002',
+
+    // Sprint 3 UX: Operating point hint
+    opHint: {
+      changed: 'ℹ️ Operating point differed during measurement – consider when interpreting score',
+    },
+  },
+
+  // ============================================================================
+  // SPRINT 3 UX: TREND
+  // ============================================================================
+  trend: {
+    improving: 'Trend: improving',
+    stable: 'Trend: stable',
+    declining: 'Trend: declining',
+    uncertain: 'Trend: not yet reliable',
+    noTrend: 'No trend yet',
   },
 
   // ============================================================================
