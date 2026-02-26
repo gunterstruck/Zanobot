@@ -1405,4 +1405,35 @@ export const de: TranslationDict = {
   smartStartReady: {
     signalDetected: '✅ Signal erkannt – Analyse startet',
   },
+
+  // ============================================================================
+  // SPRINT 4 UX: FLEET CHECK MODE
+  // ============================================================================
+  fleet: {
+    toggle: {
+      series: 'Übersicht',
+      fleet: 'Flottencheck',
+    },
+    group: {
+      label: 'Flottengruppe (optional)',
+      hint: 'z.B. „Fernwärme Ost" – Maschinen mit gleicher Gruppe werden verglichen',
+      recent24h: 'Letzte 24 Stunden',
+      noMachines: 'Keine Maschinen für Flottencheck',
+      noMachinesHint: 'Führen Sie Diagnosen durch oder weisen Sie Maschinen einer Flottengruppe zu.',
+    },
+    ranking: {
+      noData: 'Nicht geprüft',
+    },
+    stats: {
+      median: 'Median',
+      worst: 'Schlechteste',
+      spread: 'Spannweite',
+    },
+    quickSave: {
+      hint: 'Quick Fleet – wird morgen nicht mehr angezeigt.',
+      button: 'Als Flotte speichern…',
+      prompt: 'Flottenname eingeben (z.B. „Fernwärme Ost"):',
+      success: '{{count}} Maschinen als „{{name}}" gespeichert.',
+    },
+  },
 };

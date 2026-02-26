@@ -75,6 +75,9 @@ export class IdentifyPhase {
   // Used to restore view level after NFC flow ends
   private isNfcOnboardingActive: boolean = false;
 
+  /** Sprint 4 UX: Current workflow mode */
+  private currentWorkflowMode: 'series' | 'fleet' = 'series';
+
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
   private qrCanvas: HTMLCanvasElement | null = null;
@@ -238,6 +241,10 @@ export class IdentifyPhase {
         icon: 'ℹ️',
       });
     });
+
+    // Sprint 4 UX: Workflow mode toggle + fleet group autocomplete
+    this.initWorkflowToggle();
+    this.populateFleetGroupSuggestions();
 
     // NFC Writer integration
     this.initNfcWriter();
@@ -1037,6 +1044,10 @@ export class IdentifyPhase {
         return;
       }
 
+      // Sprint 4 UX: Fleet group
+      const fleetGroupInput = document.getElementById('machine-fleet-group') as HTMLInputElement | null;
+      const fleetGroup = fleetGroupInput?.value?.trim() || null;
+
       // Create new machine with service technician fields
       const machine: Machine = {
         id,
@@ -1047,6 +1058,8 @@ export class IdentifyPhase {
         referenceDbUrl,
         location,
         notes,
+        // Sprint 4 UX: Optional fleet group
+        fleetGroup,
       };
 
       await saveMachine(machine);
@@ -1066,6 +1079,10 @@ export class IdentifyPhase {
       if (refDbUrlInput) refDbUrlInput.value = '';
       if (locationInput) locationInput.value = '';
       if (notesInput) notesInput.value = '';
+      if (fleetGroupInput) fleetGroupInput.value = '';
+
+      // Sprint 4 UX: Update fleet group autocomplete suggestions
+      this.populateFleetGroupSuggestions();
 
       this.showNotification(t('identify.success.machineCreated', { name }));
       this.setCurrentMachine(machine);
@@ -2394,6 +2411,426 @@ export class IdentifyPhase {
 
   /**
    * ========================================
+   * SPRINT 4 UX: FLEET CHECK MODE
+   * ========================================
+   */
+
+  /**
+   * Sprint 4 UX: Initialize workflow mode toggle buttons
+   */
+  private initWorkflowToggle(): void {
+    const seriesBtn = document.getElementById('toggle-series');
+    const fleetBtn = document.getElementById('toggle-fleet');
+
+    if (seriesBtn) {
+      seriesBtn.textContent = t('fleet.toggle.series');
+      seriesBtn.addEventListener('click', () => this.setWorkflowMode('series'));
+    }
+    if (fleetBtn) {
+      fleetBtn.textContent = t('fleet.toggle.fleet');
+      fleetBtn.addEventListener('click', () => this.setWorkflowMode('fleet'));
+    }
+  }
+
+  /**
+   * Sprint 4 UX: Switch workflow mode and re-render machine list
+   */
+  private async setWorkflowMode(mode: 'series' | 'fleet'): Promise<void> {
+    if (this.currentWorkflowMode === mode) return;
+
+    this.currentWorkflowMode = mode;
+
+    // Update toggle button states
+    const seriesBtn = document.getElementById('toggle-series');
+    const fleetBtn = document.getElementById('toggle-fleet');
+    if (seriesBtn) {
+      seriesBtn.classList.toggle('toggle-btn-active', mode === 'series');
+      seriesBtn.setAttribute('aria-pressed', String(mode === 'series'));
+    }
+    if (fleetBtn) {
+      fleetBtn.classList.toggle('toggle-btn-active', mode === 'fleet');
+      fleetBtn.setAttribute('aria-pressed', String(mode === 'fleet'));
+    }
+
+    // Re-render machine overview with new mode
+    await this.loadMachineOverview();
+  }
+
+  /**
+   * Sprint 4 UX: Populate fleet group datalist with existing group names.
+   * Called on init and after machine creation to keep suggestions current.
+   */
+  private async populateFleetGroupSuggestions(): Promise<void> {
+    const datalist = document.getElementById('fleet-group-suggestions');
+    if (!datalist) return;
+
+    // Clear existing options
+    datalist.innerHTML = '';
+
+    // Collect unique fleet groups from all machines
+    const machines = await getAllMachines();
+    const groups = new Set<string>();
+    for (const m of machines) {
+      if (m.fleetGroup) {
+        groups.add(m.fleetGroup);
+      }
+    }
+
+    // Add as datalist options (sorted alphabetically)
+    const sorted = [...groups].sort((a, b) => a.localeCompare(b));
+    for (const group of sorted) {
+      const option = document.createElement('option');
+      option.value = group;
+      datalist.appendChild(option);
+    }
+  }
+
+  /**
+   * Sprint 4 UX: Get machines for fleet ranking.
+   * Primary: Filter by fleetGroup. Fallback: Last 24h diagnoses.
+   */
+  private async getFleetMachines(allMachines: Machine[]): Promise<{
+    machines: Machine[];
+    groupName: string;
+    isTimeFallback: boolean;
+  }> {
+    // Collect all unique fleet groups
+    const groups = new Map<string, Machine[]>();
+    for (const m of allMachines) {
+      if (m.fleetGroup) {
+        const list = groups.get(m.fleetGroup) || [];
+        list.push(m);
+        groups.set(m.fleetGroup, list);
+      }
+    }
+
+    // If groups exist, use the largest one
+    if (groups.size > 0) {
+      let bestGroup = '';
+      let bestSize = 0;
+      for (const [name, members] of groups) {
+        if (members.length > bestSize) {
+          bestGroup = name;
+          bestSize = members.length;
+        }
+      }
+      return {
+        machines: groups.get(bestGroup) || [],
+        groupName: bestGroup,
+        isTimeFallback: false,
+      };
+    }
+
+    // Fallback: machines with diagnosis in last 24h
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const recentChecks = await Promise.all(
+      allMachines.map(async (m) => {
+        // Fast path: lastDiagnosisAt exists and is recent
+        if (m.lastDiagnosisAt && m.lastDiagnosisAt > cutoff) {
+          return m;
+        }
+        // Slow path: field missing – query DB for actual latest diagnosis
+        if (!m.lastDiagnosisAt) {
+          const latest = await getLatestDiagnosis(m.id);
+          if (latest && latest.timestamp > cutoff) {
+            return m;
+          }
+        }
+        return null;
+      })
+    );
+    const recentMachines = recentChecks.filter((m): m is Machine => m !== null);
+
+    return {
+      machines: recentMachines,
+      groupName: t('fleet.group.recent24h'),
+      isTimeFallback: true,
+    };
+  }
+
+  /**
+   * Sprint 4 UX: Fleet statistics interface
+   */
+  private calculateFleetStats(scores: number[]): {
+    median: number;
+    mad: number;
+    outlierThreshold: number;
+    min: number;
+    max: number;
+    spread: number;
+    count: number;
+  } | null {
+    if (scores.length < 2) return null;
+
+    const sorted = [...scores].sort((a, b) => a - b);
+    const n = sorted.length;
+
+    // Median
+    const median = n % 2 === 0
+      ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+      : sorted[Math.floor(n / 2)];
+
+    // MAD (Median Absolute Deviation)
+    const deviations = sorted.map(s => Math.abs(s - median));
+    deviations.sort((a, b) => a - b);
+    const mad = deviations.length % 2 === 0
+      ? (deviations[deviations.length / 2 - 1] + deviations[deviations.length / 2]) / 2
+      : deviations[Math.floor(deviations.length / 2)];
+
+    // Outlier threshold: below this = orange
+    // Guard: if MAD is 0 (all scores identical), threshold = median - 5
+    const effectiveMAD = mad > 0 ? mad : 2.5;
+    const outlierThreshold = median - 2 * effectiveMAD;
+
+    return {
+      median,
+      mad,
+      outlierThreshold,
+      min: sorted[0],
+      max: sorted[n - 1],
+      spread: sorted[n - 1] - sorted[0],
+      count: n,
+    };
+  }
+
+  /**
+   * Sprint 4 UX: Render fleet ranking view
+   */
+  private async renderFleetRanking(allMachines: Machine[]): Promise<void> {
+    const overviewContainer = document.getElementById('machine-overview');
+    const emptyState = document.getElementById('machine-overview-empty');
+    if (!overviewContainer) return;
+
+    // Get fleet machines
+    const { machines, groupName, isTimeFallback } = await this.getFleetMachines(allMachines);
+
+    // Collect scores (parallel DB reads)
+    const ranked = await Promise.all(
+      machines.map(async (machine) => {
+        const diagnosis = await getLatestDiagnosis(machine.id);
+        return {
+          machine,
+          score: diagnosis ? diagnosis.healthScore : null,
+          diagnosis: diagnosis ?? null,
+        };
+      })
+    );
+
+    // Sort: lowest score first (outlier at top), null-scores at bottom
+    ranked.sort((a, b) => {
+      if (a.score === null && b.score === null) return 0;
+      if (a.score === null) return 1;
+      if (b.score === null) return -1;
+      return a.score - b.score;
+    });
+
+    // Calculate statistics (only from machines with scores)
+    const scores = ranked.map(r => r.score).filter((s): s is number => s !== null);
+    const stats = this.calculateFleetStats(scores);
+
+    // Show/hide empty state
+    if (emptyState) {
+      emptyState.style.display = ranked.length === 0 ? 'block' : 'none';
+    }
+
+    // Update empty state text for fleet mode
+    if (ranked.length === 0 && emptyState) {
+      const titleEl = emptyState.querySelector('.empty-state-title');
+      if (titleEl) {
+        titleEl.textContent = t('fleet.group.noMachines');
+      }
+    }
+
+    // Render fleet header (Maßnahme 4)
+    if (stats && ranked.length >= 2) {
+      this.renderFleetHeader(overviewContainer, stats, groupName, ranked.length);
+    }
+
+    // Render ranking items
+    for (const item of ranked) {
+      const isOutlier = stats !== null && item.score !== null
+        ? item.score < stats.outlierThreshold
+        : false;
+      const rankItem = this.createFleetRankingItem(item.machine, item.score, stats, isOutlier);
+      if (emptyState) {
+        overviewContainer.insertBefore(rankItem, emptyState);
+      } else {
+        overviewContainer.appendChild(rankItem);
+      }
+    }
+
+    // Sprint 4 UX: Quick Fleet – show "Save as fleet" CTA
+    if (isTimeFallback && ranked.length >= 2) {
+      const untagged = ranked.filter(r => !r.machine.fleetGroup);
+      if (untagged.length >= 2) {
+        this.renderQuickFleetSaveCTA(overviewContainer, untagged.map(r => r.machine));
+      }
+    }
+  }
+
+  /**
+   * Sprint 4 UX: Create a single fleet ranking item
+   */
+  private createFleetRankingItem(
+    machine: Machine,
+    score: number | null,
+    stats: { median: number; mad: number; outlierThreshold: number; min: number; max: number; spread: number; count: number } | null,
+    isOutlier: boolean
+  ): HTMLElement {
+    const item = document.createElement('div');
+    item.className = `fleet-rank-item${isOutlier ? ' fleet-outlier' : ''}`;
+    item.dataset.machineId = machine.id;
+
+    // Machine name
+    const nameEl = document.createElement('div');
+    nameEl.className = 'fleet-rank-name';
+    nameEl.textContent = machine.name;
+
+    // Score bar container
+    const barContainer = document.createElement('div');
+    barContainer.className = 'fleet-rank-bar-container';
+
+    if (score !== null && stats) {
+      // Score bar (width proportional to score, 0–100%)
+      const bar = document.createElement('div');
+      bar.className = `fleet-rank-bar${isOutlier ? ' fleet-rank-bar-outlier' : ''}`;
+      bar.style.width = `${Math.max(score, 2)}%`; // Min 2% for visibility
+
+      barContainer.appendChild(bar);
+
+      // Score label
+      const scoreLabel = document.createElement('span');
+      scoreLabel.className = `fleet-rank-score${isOutlier ? ' fleet-rank-score-outlier' : ''}`;
+      scoreLabel.textContent = isOutlier ? `\u26A0 ${score.toFixed(0)}%` : `${score.toFixed(0)}%`;
+
+      barContainer.appendChild(scoreLabel);
+    } else {
+      // No diagnosis
+      const noData = document.createElement('span');
+      noData.className = 'fleet-rank-nodata';
+      noData.textContent = t('fleet.ranking.noData');
+      barContainer.appendChild(noData);
+    }
+
+    item.appendChild(nameEl);
+    item.appendChild(barContainer);
+
+    // Click handler: select machine (same as series mode)
+    item.addEventListener('click', () => {
+      this.handleMachineSelect(machine);
+    });
+
+    return item;
+  }
+
+  /**
+   * Sprint 4 UX: Render fleet statistics header
+   */
+  private renderFleetHeader(
+    container: HTMLElement,
+    stats: { median: number; mad: number; outlierThreshold: number; min: number; max: number; spread: number; count: number },
+    groupName: string,
+    machineCount: number
+  ): void {
+    // Remove existing header if re-rendering
+    const existing = container.querySelector('.fleet-header');
+    if (existing) existing.remove();
+
+    const header = document.createElement('div');
+    header.className = 'fleet-header';
+
+    // Group name + count
+    const titleEl = document.createElement('div');
+    titleEl.className = 'fleet-header-title';
+    titleEl.textContent = `${groupName} (${machineCount})`;
+
+    // Stats row
+    const statsRow = document.createElement('div');
+    statsRow.className = 'fleet-header-stats';
+
+    const medianStat = document.createElement('span');
+    medianStat.className = 'fleet-stat';
+    medianStat.innerHTML = `<span class="fleet-stat-label">${escapeHtml(t('fleet.stats.median'))}</span><span class="fleet-stat-value">${stats.median.toFixed(0)}%</span>`;
+
+    const worstStat = document.createElement('span');
+    worstStat.className = 'fleet-stat';
+    worstStat.innerHTML = `<span class="fleet-stat-label">${escapeHtml(t('fleet.stats.worst'))}</span><span class="fleet-stat-value fleet-stat-worst">${stats.min.toFixed(0)}%</span>`;
+
+    const spreadStat = document.createElement('span');
+    spreadStat.className = 'fleet-stat';
+    spreadStat.innerHTML = `<span class="fleet-stat-label">${escapeHtml(t('fleet.stats.spread'))}</span><span class="fleet-stat-value">${stats.spread.toFixed(0)}%</span>`;
+
+    statsRow.appendChild(medianStat);
+    statsRow.appendChild(worstStat);
+    statsRow.appendChild(spreadStat);
+
+    header.appendChild(titleEl);
+    header.appendChild(statsRow);
+
+    // Insert at top of container
+    container.insertBefore(header, container.firstChild);
+  }
+
+  /**
+   * Sprint 4 UX: Render "Save as fleet" CTA below Quick Fleet ranking.
+   */
+  private renderQuickFleetSaveCTA(container: HTMLElement, machines: Machine[]): void {
+    // Remove existing CTA if re-rendering
+    const existing = container.querySelector('.fleet-save-cta');
+    if (existing) existing.remove();
+
+    const ctaContainer = document.createElement('div');
+    ctaContainer.className = 'fleet-save-cta';
+
+    const hint = document.createElement('span');
+    hint.className = 'fleet-save-cta-hint';
+    hint.textContent = t('fleet.quickSave.hint');
+
+    const btn = document.createElement('button');
+    btn.className = 'fleet-save-cta-btn';
+    btn.textContent = t('fleet.quickSave.button');
+    btn.setAttribute('aria-label', t('fleet.quickSave.button'));
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showQuickFleetSaveDialog(machines);
+    });
+
+    ctaContainer.appendChild(hint);
+    ctaContainer.appendChild(btn);
+    container.appendChild(ctaContainer);
+  }
+
+  /**
+   * Sprint 4 UX: Show dialog to name and save the Quick Fleet as a persistent group.
+   */
+  private async showQuickFleetSaveDialog(machines: Machine[]): Promise<void> {
+    const groupName = prompt(t('fleet.quickSave.prompt'));
+    if (!groupName || !groupName.trim()) return;
+
+    const trimmed = groupName.trim();
+
+    // Bulk-assign fleetGroup to all machines
+    for (const machine of machines) {
+      machine.fleetGroup = trimmed;
+      await saveMachine(machine);
+    }
+
+    // Update autocomplete suggestions
+    await this.populateFleetGroupSuggestions();
+
+    // Re-render fleet ranking (now uses tag-based grouping)
+    await this.loadMachineOverview();
+
+    // Notify user
+    notify.success(t('fleet.quickSave.success', {
+      count: String(machines.length),
+      name: trimmed,
+    }));
+  }
+
+  /**
+   * ========================================
    * MACHINE OVERVIEW
    * ========================================
    */
@@ -2430,9 +2867,17 @@ export class IdentifyPhase {
       return;
     }
 
-    // Clear existing items (except empty state)
-    const existingItems = overviewContainer.querySelectorAll('.machine-item');
+    // Clear existing items (except empty state and fleet-specific elements)
+    const existingItems = overviewContainer.querySelectorAll('.machine-item, .fleet-rank-item, .fleet-header, .fleet-save-cta');
     existingItems.forEach((item) => item.remove());
+
+    // Sprint 4 UX: Branch based on workflow mode
+    if (this.currentWorkflowMode === 'fleet') {
+      await this.renderFleetRanking(machines);
+      return;
+    }
+
+    // --- Series mode (existing, unmodified) ---
 
     // Show/hide empty state
     if (emptyState) {

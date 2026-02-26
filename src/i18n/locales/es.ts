@@ -1048,4 +1048,33 @@ export const es: TranslationDict = {
     guidingPrincipleQuestion: '¿La máquina suena normal?',
     guidingPrincipleStatement: 'Los teléfonos inteligentes escuchan los sonidos de las máquinas.',
   },
+
+  // Sprint 4 UX: Fleet Check Mode (English fallbacks)
+  fleet: {
+    toggle: {
+      series: 'Overview',
+      fleet: 'Fleet Check',
+    },
+    group: {
+      label: 'Fleet group (optional)',
+      hint: 'e.g. "Heating West" – machines in the same group are compared',
+      recent24h: 'Last 24 hours',
+      noMachines: 'No machines for fleet check',
+      noMachinesHint: 'Run diagnoses or assign machines to a fleet group.',
+    },
+    ranking: {
+      noData: 'Not checked',
+    },
+    stats: {
+      median: 'Median',
+      worst: 'Worst',
+      spread: 'Spread',
+    },
+    quickSave: {
+      hint: 'Quick Fleet – won\'t show tomorrow.',
+      button: 'Save as fleet…',
+      prompt: 'Enter fleet name (e.g. "Heating West"):',
+      success: '{{count}} machines saved as "{{name}}".',
+    },
+  },
 };
