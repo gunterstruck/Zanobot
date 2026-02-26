@@ -911,6 +911,17 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // RESULTS – Ergebnis-Modal Kontext-Hinweise
+  // ============================================================================
+  results: {
+    envMatch: {
+      moreReverberant: '🏠 Umgebung halliger als bei Referenz – Score kann beeinflusst sein',
+      lessReverberant: '🏠 Umgebung trockener als bei Referenz – Score kann beeinflusst sein',
+      critical: '⚠️ Umgebung stark abweichend – Score-Interpretation eingeschränkt',
+    },
+  },
+
+  // ============================================================================
   // HISTORY CHART MODAL
   // ============================================================================
   historyChart: {

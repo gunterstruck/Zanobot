@@ -2293,6 +2293,34 @@ export class DiagnosePhase {
       }
     }
 
+    // Environment match hint (all view levels)
+    const envMatchEl = document.getElementById('env-match-result');
+    if (envMatchEl) {
+      if (this.environmentWarning && this.environmentWarning.severity !== 'ok') {
+        envMatchEl.style.display = '';
+
+        const severity = this.environmentWarning.severity;
+        const ratio = this.environmentWarning.ratio;
+
+        // Direction-aware text
+        let textKey: string;
+        if (severity === 'critical') {
+          textKey = 'results.envMatch.critical';
+        } else if (ratio > 1) {
+          textKey = 'results.envMatch.moreReverberant';
+        } else {
+          textKey = 'results.envMatch.lessReverberant';
+        }
+
+        envMatchEl.textContent = t(textKey);
+        envMatchEl.className = 'env-match-result';
+        envMatchEl.classList.add(`env-match-${severity}`);
+      } else {
+        // severity === 'ok' OR no environmentWarning (T60 not available)
+        envMatchEl.style.display = 'none';
+      }
+    }
+
     // Sprint 3 UX: Operating point hint in result modal (Expert only)
     const opHintResult = document.getElementById('op-hint-result');
     if (opHintResult) {

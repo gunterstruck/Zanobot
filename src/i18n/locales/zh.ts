@@ -700,6 +700,13 @@ export const zh: TranslationDict = {
     viewHistory: '查看历史',
     closeDialog: '关闭诊断',
   },
+  results: {
+    envMatch: {
+      moreReverberant: '🏠 Environment more reverberant than reference – score may be affected',
+      lessReverberant: '🏠 Environment less reverberant than reference – score may be affected',
+      critical: '⚠️ Environment strongly deviating – score interpretation limited',
+    },
+  },
   historyChart: {
     title: '机器历史',
     machineName: '机器',

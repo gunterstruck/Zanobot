@@ -704,6 +704,13 @@ export const es: TranslationDict = {
     viewHistory: 'Ver historial',
     closeDialog: 'Cerrar diagnóstico',
   },
+  results: {
+    envMatch: {
+      moreReverberant: '🏠 Environment more reverberant than reference – score may be affected',
+      lessReverberant: '🏠 Environment less reverberant than reference – score may be affected',
+      critical: '⚠️ Environment strongly deviating – score interpretation limited',
+    },
+  },
   historyChart: {
     title: 'Historial de la máquina',
     machineName: 'Máquina',
