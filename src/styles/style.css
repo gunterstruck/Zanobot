@@ -7844,3 +7844,31 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     color: var(--text-secondary);
     font-style: italic;
 }
+
+/* ══════════════════════════════════════════════════════════ */
+/* Environment Match Hint (Result Modal)                     */
+/* ══════════════════════════════════════════════════════════ */
+
+.env-match-result {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 4px 0;
+}
+
+.env-match-warning {
+    background: rgba(255, 152, 0, 0.08);
+    border-left: 3px solid var(--status-warning);
+    color: var(--text-secondary);
+}
+
+.env-match-critical {
+    background: rgba(255, 152, 0, 0.15);
+    border-left: 3px solid var(--status-warning);
+    color: var(--status-warning);
+    font-weight: 500;
+}
