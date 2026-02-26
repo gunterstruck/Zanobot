@@ -134,6 +134,11 @@ export class IdentifyPhase {
       closeScannerBtn.addEventListener('click', () => this.closeScanner());
     }
 
+    const closeScannerFooterBtn = document.getElementById('close-scanner-btn');
+    if (closeScannerFooterBtn) {
+      closeScannerFooterBtn.addEventListener('click', () => this.closeScanner());
+    }
+
     if (manualInputBtn) {
       manualInputBtn.addEventListener('click', () => this.handleManualInput());
     }

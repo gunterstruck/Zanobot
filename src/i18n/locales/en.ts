@@ -835,6 +835,7 @@ export const en: TranslationDict = {
     referenceQualityTitle: 'Reference Quality',
     referenceQualityStatusGood: 'GOOD',
     referenceQualityDescription: 'Reference recording meets recommended conditions',
+    featureModeLabel: 'Feature Mode',
     viewHistory: 'View History',
     closeDialog: 'Close diagnosis',
   },

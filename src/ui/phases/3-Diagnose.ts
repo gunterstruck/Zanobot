@@ -2162,6 +2162,18 @@ export class DiagnosePhase {
       };
     }
 
+    // Setup footer close button
+    const closeResultBtn = document.getElementById('close-diagnosis-result-btn');
+    if (closeResultBtn) {
+      closeResultBtn.onclick = () => {
+        modal.style.display = 'none';
+        if (this.workPointRanking) {
+          this.workPointRanking.destroy();
+          this.workPointRanking = null;
+        }
+      };
+    }
+
     // Setup view history button
     const viewHistoryBtn = document.getElementById('view-history-btn');
     if (viewHistoryBtn) {

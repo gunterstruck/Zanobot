@@ -674,6 +674,7 @@ export const fr: TranslationDict = {
     referenceQualityTitle: 'Qualité de référence',
     referenceQualityStatusGood: 'BON',
     referenceQualityDescription: 'L\'enregistrement de référence respecte les conditions recommandées',
+    featureModeLabel: 'Mode de caractéristiques',
     viewHistory: 'Voir l\'historique',
     closeDialog: 'Fermer le diagnostic',
   },
