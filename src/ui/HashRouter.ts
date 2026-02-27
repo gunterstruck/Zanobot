@@ -642,7 +642,16 @@ export class HashRouter {
 
       // 2. Download fleet DB JSON
       this.onDownloadProgress?.(t('fleet.provision.downloading'), 30);
-      const response = await fetch(fleetDbUrl);
+      let response: Response;
+      try {
+        response = await fetch(fleetDbUrl);
+      } catch (fetchError) {
+        // Network error (offline, DNS failure, etc.)
+        logger.error(`Fleet DB fetch failed (likely offline):`, fetchError);
+        notify.error(t('fleet.provision.offline'), { duration: 0 });
+        this.onDownloadError?.('fleet_download_failed_offline');
+        return;
+      }
       if (!response.ok) {
         logger.error(`Fleet DB download failed: ${response.status}`);
         notify.error(t('fleet.provision.error'));
@@ -838,6 +847,7 @@ export class HashRouter {
 
   /**
    * Phase 2: Commit fleet import plan (DB writes with rollback on error)
+   * Saves original values of updated machines to enable full rollback.
    */
   private async commitFleetImport(plan: FleetImportPlan): Promise<{
     created: number;
@@ -845,6 +855,8 @@ export class HashRouter {
     skipped: number;
   }> {
     const createdIds: string[] = [];
+    // Save original values for rollback of updates
+    const updatedOriginals: Array<{ machine: Machine; originalFleetGroup: string | null | undefined; originalRefSourceId: string | null | undefined }> = [];
 
     try {
       // Create new machines
@@ -853,8 +865,13 @@ export class HashRouter {
         createdIds.push(machine.id);
       }
 
-      // Update existing machines
+      // Update existing machines (save originals first for rollback)
       for (const { machine, updates } of plan.toUpdate) {
+        updatedOriginals.push({
+          machine,
+          originalFleetGroup: machine.fleetGroup,
+          originalRefSourceId: machine.fleetReferenceSourceId,
+        });
         Object.assign(machine, updates);
         await saveMachine(machine);
       }
@@ -873,6 +890,16 @@ export class HashRouter {
           await deleteMachine(id);
         } catch (rollbackError) {
           logger.warn(`Rollback: could not delete machine ${id}:`, rollbackError);
+        }
+      }
+      // Rollback: Restore original values on updated machines
+      for (const { machine, originalFleetGroup, originalRefSourceId } of updatedOriginals) {
+        try {
+          machine.fleetGroup = originalFleetGroup;
+          machine.fleetReferenceSourceId = originalRefSourceId;
+          await saveMachine(machine);
+        } catch (rollbackError) {
+          logger.warn(`Rollback: could not restore machine ${machine.id}:`, rollbackError);
         }
       }
       throw error;

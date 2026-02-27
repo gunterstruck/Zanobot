@@ -3336,10 +3336,38 @@ export class IdentifyPhase {
     checkboxes.forEach(cb => cb.addEventListener('change', updateState));
 
     // Close handlers
-    const close = () => { overlay.remove(); };
+    const close = () => {
+      document.removeEventListener('keydown', keydownHandler);
+      overlay.remove();
+    };
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     closeBtn.addEventListener('click', close);
     cancelBtn.addEventListener('click', close);
+
+    // Escape key + focus trap
+    const keydownHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        close();
+        return;
+      }
+      // Focus trap: Tab cycles within modal
+      if (e.key === 'Tab') {
+        const focusableEls = modal.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input, select, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableEls.length === 0) return;
+        const first = focusableEls[0];
+        const last = focusableEls[focusableEls.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', keydownHandler);
 
     // Create handler
     createBtn.addEventListener('click', async () => {
@@ -3591,6 +3619,25 @@ export class IdentifyPhase {
       }
 
       await deleteMachine(machine.id);
+
+      // Sprint 5 Fix: Clean up Gold-Standard references pointing to deleted machine
+      const allMachines = await getAllMachines();
+      let goldStandardOrphans = 0;
+      for (const m of allMachines) {
+        if (m.fleetReferenceSourceId === machine.id) {
+          m.fleetReferenceSourceId = null;
+          await saveMachine(m);
+          goldStandardOrphans++;
+        }
+      }
+      if (goldStandardOrphans > 0) {
+        logger.info(`Cleared Gold-Standard reference on ${goldStandardOrphans} machines after deleting ${machine.name}`);
+        notify.warning(t('fleet.goldStandard.deleted', {
+          name: machine.name,
+          count: String(goldStandardOrphans),
+        }));
+      }
+
       notify.success(t('identify.machineDeleted', { name: machine.name }));
       await this.refreshMachineLists();
     });

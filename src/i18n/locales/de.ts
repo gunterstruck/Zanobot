@@ -1483,10 +1483,12 @@ export const de: TranslationDict = {
       progress: '{{name}} ({{current}} von {{total}})',
       complete: 'Flottencheck abgeschlossen: {{count}} Maschinen in „{{name}}" geprüft.',
       cancelled: 'Flottencheck abgebrochen.',
+      resumed: 'Flottencheck fortgesetzt.',
     },
     // Sprint 5 UX: Gold Standard badge
     goldStandard: {
       badge: 'Gold-Standard (Referenz für die Flotte)',
+      deleted: 'Gold-Standard „{{name}}" gelöscht – {{count}} Maschinen nutzen jetzt eigene Referenz.',
     },
     // Fleet NFC/QR provisioning: Export
     export: {
@@ -1500,6 +1502,7 @@ export const de: TranslationDict = {
       alreadyExists: 'Flotte „{{name}}" ist bereits vorhanden ({{skipped}} Maschinen übersprungen).',
       downloading: 'Flotte wird geladen…',
       error: 'Flotte konnte nicht geladen werden.',
+      offline: 'Keine Internetverbindung. Bitte verbinden Sie sich mit dem Netzwerk und scannen Sie den Tag erneut.',
       rollbackComplete: 'Import fehlgeschlagen – Änderungen rückgängig gemacht.',
       updateRecommended: 'Die Flotten-Datei wurde mit einer neueren App-Version erstellt. App-Update empfohlen.',
       skippedDifferentFleet: '„{{name}}" gehört zu Flotte „{{fleet}}" – nicht umgehängt.',
