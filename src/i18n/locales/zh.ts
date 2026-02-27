@@ -1073,7 +1073,8 @@ export const zh: TranslationDict = {
       noMachinesHint: 'Run diagnoses or assign machines to a fleet group.',
     },
     ranking: {
-      noData: 'Not checked',
+      noData: '未检查',
+      minimumHint: '至少需要2台机器才能进行有意义的车队比较。',
     },
     stats: {
       median: 'Median',
@@ -1106,7 +1107,7 @@ export const zh: TranslationDict = {
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
     },
-    goldStandard: { badge: 'Gold Standard (reference for the fleet)', deleted: 'Gold Standard "{{name}}" deleted – {{count}} machines now use own reference.' },
+    goldStandard: { badge: '金标准（车队参考）', deleted: '金标准「{{name}}」已删除 – {{count}} 台机器现在使用自己的参考。' },
     export: {
       button: 'Export fleet',
       success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
