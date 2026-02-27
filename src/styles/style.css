@@ -7956,6 +7956,15 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     background: rgba(255, 152, 0, 0.04);
 }
 
+.fleet-single-machine-hint {
+    text-align: center;
+    color: var(--text-secondary, #8899aa);
+    font-size: var(--font-sm, 0.85rem);
+    padding: 8px 16px;
+    margin: 0 0 8px;
+    opacity: 0.85;
+}
+
 .fleet-rank-name {
     flex: 0 0 120px;
     font-size: var(--font-sm);
