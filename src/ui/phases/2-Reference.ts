@@ -151,6 +151,13 @@ export class ReferencePhase {
       zeroFrictionRecordBtn.addEventListener('click', this.recordButtonClickHandler);
       logger.debug('📝 Zero-friction record button initialized');
     }
+
+    // Show existing reference models list (with delete buttons) if machine already has references.
+    // Without this, the multiclass status was only shown after saving/deleting a reference,
+    // so users couldn't see or delete existing references when loading a machine.
+    if (this.machine?.referenceModels && this.machine.referenceModels.length > 0) {
+      this.showMulticlassStatus();
+    }
   }
 
   /**
