@@ -8311,3 +8311,119 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     width: 100%;
     margin-top: 12px;
 }
+
+/* === Sprint 6: Guided Fleet Check Prompt === */
+.fleet-guided-prompt {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--card-bg, #fff);
+    border-top: 3px solid var(--primary-color, #00bcd4);
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
+    padding: var(--spacing-xl, 24px) var(--spacing-lg, 20px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    animation: fleetGuideSlideUp 0.3s ease-out;
+}
+
+@keyframes fleetGuideSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.fleet-guided-goto {
+    font-size: var(--font-sm, 0.85rem);
+    color: var(--text-muted, #999);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-xs, 4px);
+}
+
+.fleet-guided-machine-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary, #333);
+    margin-bottom: var(--spacing-sm, 8px);
+}
+
+.fleet-guided-location {
+    font-size: var(--font-sm, 0.85rem);
+    color: var(--text-muted, #999);
+    margin-bottom: var(--spacing-md, 12px);
+}
+
+.fleet-guided-instruction {
+    font-size: var(--font-sm, 0.85rem);
+    color: var(--text-secondary, #666);
+    margin-bottom: var(--spacing-lg, 20px);
+}
+
+.fleet-guided-start-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto var(--spacing-lg, 20px);
+    padding: var(--spacing-md, 16px) var(--spacing-xl, 24px);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-color, #00bcd4);
+    border: none;
+    border-radius: var(--radius-md, 12px);
+    cursor: pointer;
+    min-height: 56px;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.fleet-guided-start-btn:hover {
+    background: var(--primary-hover, #00a0b4);
+}
+
+.fleet-guided-start-btn:active {
+    transform: scale(0.97);
+}
+
+.fleet-guided-start-btn:focus-visible {
+    outline: 2px solid var(--primary-color, #00bcd4);
+    outline-offset: 2px;
+}
+
+.fleet-guided-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.fleet-guided-counter {
+    font-size: var(--font-sm, 0.85rem);
+    color: var(--text-muted, #999);
+}
+
+.fleet-guided-skip-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted, #999);
+    font-size: var(--font-sm, 0.85rem);
+    cursor: pointer;
+    padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+    border-radius: var(--radius-sm, 8px);
+    min-width: 40px;
+    min-height: 40px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fleet-guided-skip-btn:hover,
+.fleet-guided-skip-btn:active {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary, #666);
+}
+
+.fleet-guided-skip-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}

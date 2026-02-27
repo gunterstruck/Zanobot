@@ -1070,6 +1070,12 @@ export async function importData(
               : new Float64Array(model.weightVector as number[]),
         }));
 
+        const normalizedMachine: Machine = {
+          ...machine,
+          referenceImage: normalizedReferenceImage,
+          referenceModels: normalizedReferenceModels,
+        };
+
         // When merging: if machine already exists, merge referenceModels instead of overwriting
         if (merge && machine.id) {
           const existingMachine = await db.get('machines', machine.id);
@@ -1089,12 +1095,28 @@ export async function importData(
 
             const mergedModels = [...(existingMachine.referenceModels || []), ...newModels];
 
-            // Merge: preserve existing local fields, overlay with import data, keep merged models
+            // Sprint 6 Fix: Merge preserving existing local data.
+            // Existing fields take priority; import only fills gaps.
             const mergedMachine: Machine = {
-              ...existingMachine,
-              ...machine,
-              referenceImage: normalizedReferenceImage ?? existingMachine.referenceImage,
+              ...normalizedMachine,              // import as base
+              ...existingMachine,                // existing data overwrites
+              // Explicitly merge fields where we want "fill gaps" behavior:
+              name: existingMachine.name || normalizedMachine.name,
+              location: existingMachine.location || normalizedMachine.location,
+              notes: existingMachine.notes || normalizedMachine.notes,
+              fleetGroup: existingMachine.fleetGroup || normalizedMachine.fleetGroup,
+              referenceDbUrl: existingMachine.referenceDbUrl || normalizedMachine.referenceDbUrl,
+              // Merged reference models (append new ones)
               referenceModels: mergedModels,
+              // Preserve existing calibration data (never overwrite)
+              refLogMean: existingMachine.refLogMean ?? normalizedMachine.refLogMean,
+              refLogStd: existingMachine.refLogStd ?? normalizedMachine.refLogStd,
+              refLogResidualStd: existingMachine.refLogResidualStd ?? normalizedMachine.refLogResidualStd,
+              refDriftBaseline: existingMachine.refDriftBaseline ?? normalizedMachine.refDriftBaseline,
+              refT60: existingMachine.refT60 ?? normalizedMachine.refT60,
+              refT60Classification: existingMachine.refT60Classification ?? normalizedMachine.refT60Classification,
+              // Keep existing image
+              referenceImage: existingMachine.referenceImage || normalizedReferenceImage,
             };
             await db.put('machines', mergedMachine);
 
@@ -1108,11 +1130,7 @@ export async function importData(
           }
         }
 
-        const normalizedMachine: Machine = {
-          ...machine,
-          referenceImage: normalizedReferenceImage,
-          referenceModels: normalizedReferenceModels,
-        };
+        // New machine (or replace mode): write directly
         await db.put('machines', normalizedMachine);
         machinesImported++;
       } catch (error) {

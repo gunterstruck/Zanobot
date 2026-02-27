@@ -367,6 +367,108 @@ describe('Database Operations', () => {
       expect(machines.map((m) => m.id)).toContain('imported');
     });
 
+    it('should merge referenceModels when importing machine with same ID (merge mode)', async () => {
+      const baseModel: GMIAModel = {
+        label: 'Motor-links',
+        machineId: 'pump-1',
+        type: 'healthy',
+        weightVector: new Float64Array([1, 2, 3]),
+        regularization: 1e9,
+        scalingConstant: 1.0,
+        featureDimension: 3,
+        trainingDate: Date.now(),
+        trainingDuration: 10,
+        sampleRate: 44100,
+        metadata: { meanCosineSimilarity: 0.95, targetScore: 0.9 },
+      };
+
+      // Create existing machine with one reference model
+      await saveMachine({
+        id: 'pump-1',
+        name: 'Pumpe 1',
+        createdAt: Date.now(),
+        referenceModels: [baseModel],
+      });
+
+      // Import same machine with different reference model
+      const importDataMock = {
+        machines: [
+          {
+            id: 'pump-1',
+            name: 'Pumpe 1 (updated)',
+            createdAt: Date.now(),
+            referenceModels: [
+              {
+                ...baseModel,
+                label: 'Motor-rechts',
+                weightVector: new Float64Array([4, 5, 6]),
+              },
+            ],
+          },
+        ],
+        recordings: [],
+        diagnoses: [],
+      };
+
+      await importData(importDataMock, true); // merge mode
+
+      const machine = await getMachine('pump-1');
+      expect(machine).toBeDefined();
+      expect(machine!.name).toBe('Pumpe 1'); // Original name preserved
+      expect(machine!.referenceModels).toHaveLength(2); // Both models present
+      expect(machine!.referenceModels.map(m => m.label)).toContain('Motor-links');
+      expect(machine!.referenceModels.map(m => m.label)).toContain('Motor-rechts');
+    });
+
+    it('should skip duplicate models when merging (merge mode)', async () => {
+      const baseModel: GMIAModel = {
+        label: 'Normalbetrieb',
+        machineId: 'pump-2',
+        type: 'healthy',
+        weightVector: new Float64Array([1, 2, 3]),
+        regularization: 1e9,
+        scalingConstant: 1.0,
+        featureDimension: 3,
+        trainingDate: Date.now(),
+        trainingDuration: 10,
+        sampleRate: 44100,
+        metadata: { meanCosineSimilarity: 0.95, targetScore: 0.9 },
+      };
+
+      await saveMachine({
+        id: 'pump-2',
+        name: 'Pumpe 2',
+        createdAt: Date.now(),
+        referenceModels: [baseModel],
+      });
+
+      const importDataMock = {
+        machines: [
+          {
+            id: 'pump-2',
+            name: 'Pumpe 2',
+            createdAt: Date.now(),
+            referenceModels: [
+              {
+                ...baseModel,
+                label: 'Normalbetrieb', // Duplicate!
+                weightVector: new Float64Array([7, 8, 9]),
+              },
+            ],
+          },
+        ],
+        recordings: [],
+        diagnoses: [],
+      };
+
+      await importData(importDataMock, true);
+
+      const machine = await getMachine('pump-2');
+      expect(machine!.referenceModels).toHaveLength(1); // No duplicate added
+      // Original model preserved (not overwritten with import version)
+      expect(machine!.referenceModels[0].weightVector).toBeInstanceOf(Float64Array);
+    });
+
     it('should handle empty export', async () => {
       const exported = await exportData();
 

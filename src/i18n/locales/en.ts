@@ -1442,6 +1442,14 @@ export const en: TranslationDict = {
       complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
+      // Sprint 6: Guided fleet check
+      guided: {
+        goTo: 'Go to:',
+        startRecording: '\u25B6 Start recording',
+        skip: 'Skip',
+        machineOf: '{{current}} of {{total}}',
+        waitingForUser: 'Ready? Hold your smartphone near the machine.',
+      },
     },
     // Sprint 5 UX: Gold Standard badge
     goldStandard: {
