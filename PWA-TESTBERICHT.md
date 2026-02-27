@@ -77,7 +77,9 @@
 | 4 | Escape → schließt | ✅ | `escHandler` mit `document.addEventListener('keydown', ...)` |
 | 5 | Kein doppeltes BottomSheet | ✅ | `this.dismiss()` wird vor jedem `render()` aufgerufen |
 
-### 2.2 Hilfe-Icons
+### 2.2 Hilfe-Icons (4 Basis-Icons + 2 Fleet-Icons in 5.1a/5.1b)
+
+> **Hinweis:** Die Checkliste nennt „6 Stück". Die 4 Basis-Icons werden hier getestet, die 2 Fleet-Icons (Toggle + Header) in Abschnitt 5.1a/5.1b.
 
 | # | Prüfpunkt | Status | Notizen |
 |---|-----------|--------|---------|
@@ -85,7 +87,7 @@
 | 2 | ℹ️ neben Diagnose | ✅ | `help-diagnose` → `help.diagnose.title/body` |
 | 3 | ℹ️ neben Maschinen | ✅ | `help-machines` → `help.machines.title/body` |
 | 4 | ℹ️ neben Ansichtslevel | ✅ | `help-viewlevel` → `help.viewLevel.title/body` |
-| 5 | Eigenes BottomSheet mit passendem Text | ✅ | Jeweils separate i18n-Keys mit individuellem Inhalt |
+| 5 | Alle 4 öffnen eigenes BottomSheet mit passendem Text | ✅ | Jeweils separate i18n-Keys mit individuellem Inhalt |
 | 6 | Texte in aktueller Sprache | ✅ | Alle 5 Sprachen: DE, EN, FR, ES, ZH |
 
 ### 2.3 Drift Simplified (Advanced View)
@@ -187,6 +189,12 @@
 | 6 | Ohne Diagnose → grauer Balken | ✅ | "Keine Daten" Fallback |
 | 7 | Tap → Maschine auswählen | ✅ | Click-Handler auf Ranking-Items |
 
+#### 4.3 Edge Case (aus Checklisten-Review identifiziert)
+
+| # | Prüfpunkt | Status | Notizen |
+|---|-----------|--------|---------|
+| E9 | Flotte mit nur 1 Maschine nach Löschung → kein Header/Stats | ⚠️ | `renderFleetRanking()` (`1-Identify.ts:2878`): Statistik-Header nur bei `ranked.length >= 2`. **Einzelner Balken wird aber gerendert** → UX-Entscheidung: kein sinnloser Vergleich, aber auch kein expliziter Hinweis "Mindestens 2 Maschinen nötig". Queue-Button ebenfalls ausgeblendet (korrekt: `machinesWithRef.length >= 2`). |
+
 ### 4.4 Statistik-Header
 
 | # | Prüfpunkt | Status | Notizen |
@@ -253,8 +261,12 @@
 | 8 | Erstellen → fleetGroup gesetzt | ✅ | Bulk-Update aller gewählten Maschinen |
 | 9 | Erfolgs-Meldung | ✅ | `fleet.creation.success` mit Name + Anzahl |
 | 10 | Ranking rendert neu | ✅ | Automatisches Re-Render + Modus-Switch |
-| 11 | Modal schließen | ✅ | ✕-Button, Overlay-Tap, Abbrechen, Escape (Focus-Trap) |
-| 12 | 0 Maschinen → Hinweis | ✅ | Leere Liste mit Hinweistext |
+| 11 | Modal schließen: ✕-Button | ✅ | `closeBtn.addEventListener('click', close)` (`1-Identify.ts:3344`) |
+| 12 | Modal schließen: Overlay-Tap | ✅ | `overlay.addEventListener('click', ...)` prüft `e.target === overlay` (`1-Identify.ts:3343`) |
+| 13 | Modal schließen: Abbrechen-Button | ✅ | `cancelBtn.addEventListener('click', close)` (`1-Identify.ts:3345`) |
+| 14 | Modal schließen: Escape-Taste | ✅ | `keydownHandler` prüft `e.key === 'Escape'` → `close()` (`1-Identify.ts:3348-3351`) |
+| 15 | Focus-Trap: Tab bleibt im Modal | ✅ | Tab/Shift+Tab cyclen zwischen erstem und letztem Element (`1-Identify.ts:3354-3366`) |
+| 16 | 0 Maschinen → Hinweis | ✅ | Leere Liste mit Hinweistext |
 
 ### 5.4 Flotten-Diagnose-Queue
 
@@ -272,6 +284,14 @@
 | 10 | Visibility-Pause/Resume | ✅ | Pausiert wenn App im Hintergrund, setzt fort bei Fokus |
 | 11 | Einzeldiagnose unberührt | ✅ | Übersicht-Modus ohne Queue-Logik |
 
+#### 5.4 Edge Cases (aus Checklisten-Review identifiziert)
+
+| # | Prüfpunkt | Status | Notizen |
+|---|-----------|--------|---------|
+| E1 | Mikrofon-Fehler bei Maschine X/Y → Queue skippt zur nächsten | ✅ | `setOnDiagnosisError()` in `router.ts:609-612` - fängt Fehler, inkrementiert Index, `advanceFleetQueue()` nach 500ms |
+| E2 | App in Hintergrund während Diagnose → Queue pausiert | ✅ | `handleVisibilityChange()` in `router.ts:971-983` - setzt `isFleetQueuePaused=true`, zeigt `fleet.queue.resumed` bei Rückkehr |
+| E3 | Diagnose-Button nicht gefunden → Skip nach Retry | ✅ | `waitForDiagnoseButton()` in `router.ts:1028-1054` - 10 Retries @ 50ms, dann Skip |
+
 ### 5.5 Shared Fleet Reference (Gold-Standard)
 
 | # | Prüfpunkt | Status | Notizen |
@@ -283,6 +303,13 @@
 | 5 | Ohne Gold-Standard → eigene Referenz | ✅ | `fleetReferenceSourceId: null` → Standard-Verhalten |
 | 6 | Kein 🏆 ohne Gold-Standard | ✅ | Badge nur wenn `goldStandardId` gesetzt |
 | 7 | Tooltip | ✅ | `fleet.goldStandard.badge` - "Gold-Standard (Referenz für die Flotte)" |
+
+#### 5.5 Edge Cases (aus Checklisten-Review identifiziert)
+
+| # | Prüfpunkt | Status | Notizen |
+|---|-----------|--------|---------|
+| E4 | Gold-Standard löschen → Cleanup verwaister Referenzen | ✅ | `1-Identify.ts:3623-3639` - iteriert alle Maschinen, setzt `fleetReferenceSourceId=null`, zeigt Warnung `fleet.goldStandard.deleted` mit Anzahl betroffener Maschinen |
+| E5 | Gold-Standard löschen → Meldung "X Maschinen nutzen jetzt eigene Referenz" | ✅ | `fleet.goldStandard.deleted` i18n-Key in allen 5 Sprachen vorhanden |
 
 **Sprint 5 Ergebnis: 5 / 5 bestanden**
 
@@ -335,6 +362,14 @@
 | 7 | Flottencheck wird aktiviert | ✅ | `onFleetReady` Callback an UI |
 | 8 | Ranking zeigt importierte Maschinen | ✅ | Re-Render nach Import |
 | 9 | Erfolgs-Meldung | ✅ | `fleet.provision.success` mit "X erstellt, Y aktualisiert" |
+
+#### NFC4 Edge Cases (aus Checklisten-Review identifiziert)
+
+| # | Prüfpunkt | Status | Notizen |
+|---|-----------|--------|---------|
+| E6 | Maschine gehört zu anderer Flotte → Skip + Warnung | ✅ | `prepareFleetImport()` in `HashRouter.ts:826-832` - `reason: 'different_fleet'`, Warnung via `fleet.provision.skippedDifferentFleet` |
+| E7 | Ungültige JSON-Datei → Fehlermeldung (kein Crash) | ✅ | `validateFleetDb()` in `HashRouter.ts:729-772` prüft: `format !== 'zanobot-fleet-db'`, `schemaVersion`, `fleet.name`, `machines.length >= 2`, unique IDs, Gold-Standard-Konsistenz. Fehler → `notify.error()` + `onDownloadError` Callback |
+| E8 | DB-Version zu neu → Kompatibilitäts-Warnung | ✅ | `HashRouter.ts:677-679` - `exportDbVersion > 7` → `fleet.provision.updateRecommended` |
 
 ### NFC5: Re-Scan (Idempotenz)
 
@@ -399,6 +434,8 @@
 
 ## ZUSAMMENFASSUNG
 
+### Checklisten-Prüfpunkte (Original: 33 Massnahmen)
+
 | Sprint | Massnahmen | Ergebnis |
 |--------|-----------|----------|
 | Sprint 1: Basis-UX | 4 | **4 / 4 bestanden** ✅ |
@@ -410,6 +447,55 @@
 | Querschnitts-Tests | 4 | **4 / 4 bestanden** ✅ |
 | **GESAMT** | **33** | **33 / 33** ✅ |
 
+### Zusätzliche Edge-Case-Prüfungen (aus Checklisten-Review)
+
+| # | Edge Case | Abschnitt | Status | Code-Stelle |
+|---|-----------|-----------|--------|-------------|
+| E1 | Queue: Mikrofon-Fehler → Skip zur nächsten Maschine | 5.4 | ✅ | `router.ts:609-612` |
+| E2 | Queue: App in Hintergrund → Pause/Resume | 5.4 | ✅ | `router.ts:971-983` |
+| E3 | Queue: Diagnose-Button nicht gefunden → Retry + Skip | 5.4 | ✅ | `router.ts:1028-1054` |
+| E4 | Gold-Standard löschen → Cleanup verwaister Referenzen | 5.5 | ✅ | `1-Identify.ts:3623-3639` |
+| E5 | Gold-Standard löschen → Benutzer-Meldung | 5.5 | ✅ | i18n `fleet.goldStandard.deleted` (5 Sprachen) |
+| E6 | Fleet-Import: Maschine gehört zu anderer Flotte → Skip + Warnung | NFC4 | ✅ | `HashRouter.ts:826-832` |
+| E7 | Fleet-Import: Ungültige JSON → Fehlermeldung | NFC4 | ✅ | `HashRouter.ts:729-772` |
+| E8 | Fleet-Import: DB-Version zu neu → Kompatibilitäts-Warnung | NFC4 | ✅ | `HashRouter.ts:677-679` |
+| E9 | Flotte mit nur 1 Maschine → Header/Stats ausgeblendet | 4.3 | ⚠️ | `1-Identify.ts:2878` (Guard `ranked.length >= 2`) |
+| **EDGE CASES GESAMT** | | | **8 ✅ + 1 ⚠️** | |
+
+### E9 Detail: Flotte mit 1 Maschine
+
+**Befund:** Nach Löschen aller Maschinen bis auf eine wird der Statistik-Header (Median/Spread/Worst) korrekt ausgeblendet (`ranked.length >= 2` Guard). Der Queue-Button wird ebenfalls korrekt ausgeblendet. **Ein einzelner Balken wird aber noch gerendert** ohne erklärenden Hinweis wie "Mindestens 2 Maschinen für Vergleich nötig".
+
+**Bewertung:** ⚠️ Funktional korrekt (kein Crash, keine falschen Statistiken), aber UX-Verbesserungspotenzial. Empfehlung: Hinweistext bei `ranked.length === 1` im Flottencheck-Modus.
+
+---
+
+## KORREKTUR DER CHECKLISTEN-UNSTIMMIGKEITEN
+
+### Unstimmigkeit 1: "Hilfe-Icons (6 Stück)" in Abschnitt 2.2
+
+**Problem:** Die Checkliste titelt "6 Stück", listet aber nur 4 Icons.
+**Analyse:** Die 6 Icons sind:
+1. `help-reference` (Referenz) - getestet in 2.2
+2. `help-diagnose` (Diagnose) - getestet in 2.2
+3. `help-machines` (Maschinen) - getestet in 2.2
+4. `help-viewlevel` (Ansichtslevel) - getestet in 2.2
+5. `help-fleet` (Fleet-Toggle) - getestet in **5.1a**
+6. Fleet-Header-Help (dynamisch) - getestet in **5.1b**
+
+**Empfehlung:** Titel in 2.2 korrigieren zu "Hilfe-Icons (4 Basis-Icons)" mit Verweis auf 5.1a/5.1b. Im Bericht oben bereits korrigiert.
+
+### Unstimmigkeit 2: Escape-Taste in 5.3
+
+**Problem:** Die Checkliste testet "Modal schließen: ✕-Button, Overlay-Tap, Abbrechen-Button" - Escape fehlt explizit.
+**Analyse:** Code hat alle 4 Schließ-Methoden implementiert (`1-Identify.ts:3338-3366`):
+- ✕-Button (Zeile 3344)
+- Overlay-Tap (Zeile 3343)
+- Abbrechen (Zeile 3345)
+- **Escape (Zeile 3348-3351)** + Focus-Trap (Zeile 3354-3366)
+
+**Empfehlung:** Checkliste ergänzen: "Escape-Taste → schließt" als separater Prüfpunkt. Im Bericht oben bereits ergänzt.
+
 ---
 
 ## HINWEISE & EMPFEHLUNGEN
@@ -419,6 +505,7 @@
 - **i18n:** 5 Sprachen mit vollständiger Abdeckung aller Features
 - **Accessibility:** ARIA-Attribute, Focus-Traps, Keyboard-Navigation
 - **Fehlerbehandlung:** Error Boundary, Rollback bei Fleet-Import, kaskadierendes Löschen
+- **Defensives Queuing:** Error-Skip, Visibility-Pause, Button-Retry im Fleet-Queue
 
 ### Manuell zu verifizieren (Laufzeit erforderlich)
 1. **NFC-Schreiben:** Nur auf Android/Chrome mit physischem NFC-Tag testbar
@@ -427,6 +514,16 @@
 4. **Print-Funktion:** Druckvorschau-Darstellung
 5. **Offline-Verhalten:** Service-Worker-Cache nach Build testen
 6. **Responsiveness:** Touch-Gesten (Swipe), Scroll-Performance auf echtem Gerät
+7. **E9 Feld-Test:** Flotte auf 1 Maschine reduzieren, Verhalten im Flottencheck prüfen
+
+### Empfohlene Ergänzungen für die manuelle Checkliste
+1. **5.3:** Escape-Taste als expliziten Prüfpunkt hinzufügen
+2. **5.4:** Mikrofon-Fehler während Queue als Prüfpunkt
+3. **5.4:** App-Hintergrund während Queue als Prüfpunkt
+4. **5.5:** Gold-Standard löschen als Prüfpunkt (Cleanup-Verhalten)
+5. **NFC4:** Ungültige JSON-Datei als Prüfpunkt
+6. **NFC4:** Maschine aus anderer Flotte als Prüfpunkt
+7. **4.3:** Flotte mit 1 Maschine nach Löschung als Prüfpunkt
 
 ### Code-Qualität
 - TypeScript mit strikter Typisierung
@@ -438,3 +535,4 @@
 ---
 
 *Dieser Bericht basiert auf statischer Code-Analyse. Laufzeit-Tests auf echtem Gerät werden für finale Validierung empfohlen.*
+*Revision 2: Edge-Cases und Checklisten-Unstimmigkeiten aus Review integriert.*
