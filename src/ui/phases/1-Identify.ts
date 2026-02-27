@@ -2879,6 +2879,18 @@ export class IdentifyPhase {
       this.renderFleetHeader(overviewContainer, stats, groupName, ranked.length);
     }
 
+    // Sprint 5 Polish: Show hint when only 1 machine in fleet (no meaningful comparison)
+    if (ranked.length === 1) {
+      const hint = document.createElement('p');
+      hint.className = 'fleet-single-machine-hint';
+      hint.textContent = t('fleet.ranking.singleMachineHint');
+      if (emptyState) {
+        overviewContainer.insertBefore(hint, emptyState);
+      } else {
+        overviewContainer.appendChild(hint);
+      }
+    }
+
     // Render ranking items
     for (const item of ranked) {
       const isOutlier = stats !== null && item.score !== null

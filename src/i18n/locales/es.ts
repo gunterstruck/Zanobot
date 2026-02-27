@@ -1078,6 +1078,7 @@ export const es: TranslationDict = {
     },
     ranking: {
       noData: 'Not checked',
+      singleMachineHint: 'Se necesitan al menos 2 máquinas para una comparación de flota.',
     },
     stats: {
       median: 'Median',

@@ -193,7 +193,7 @@
 
 | # | Prüfpunkt | Status | Notizen |
 |---|-----------|--------|---------|
-| E9 | Flotte mit nur 1 Maschine nach Löschung → kein Header/Stats | ⚠️ | `renderFleetRanking()` (`1-Identify.ts:2878`): Statistik-Header nur bei `ranked.length >= 2`. **Einzelner Balken wird aber gerendert** → UX-Entscheidung: kein sinnloser Vergleich, aber auch kein expliziter Hinweis "Mindestens 2 Maschinen nötig". Queue-Button ebenfalls ausgeblendet (korrekt: `machinesWithRef.length >= 2`). |
+| E9 | Flotte mit nur 1 Maschine nach Löschung → Hinweis | ✅ | `renderFleetRanking()`: Header/Stats/Queue bei `ranked.length < 2` ausgeblendet. **Neu:** Hinweis "Mindestens 2 Maschinen nötig für einen Flottenvergleich" wird angezeigt (`fleet.ranking.singleMachineHint`, 5 Sprachen). |
 
 ### 4.4 Statistik-Header
 
@@ -459,14 +459,14 @@
 | E6 | Fleet-Import: Maschine gehört zu anderer Flotte → Skip + Warnung | NFC4 | ✅ | `HashRouter.ts:826-832` |
 | E7 | Fleet-Import: Ungültige JSON → Fehlermeldung | NFC4 | ✅ | `HashRouter.ts:729-772` |
 | E8 | Fleet-Import: DB-Version zu neu → Kompatibilitäts-Warnung | NFC4 | ✅ | `HashRouter.ts:677-679` |
-| E9 | Flotte mit nur 1 Maschine → Header/Stats ausgeblendet | 4.3 | ⚠️ | `1-Identify.ts:2878` (Guard `ranked.length >= 2`) |
-| **EDGE CASES GESAMT** | | | **8 ✅ + 1 ⚠️** | |
+| E9 | Flotte mit nur 1 Maschine → Hinweistext | 4.3 | ✅ | `1-Identify.ts:2882` + `fleet.ranking.singleMachineHint` |
+| **EDGE CASES GESAMT** | | | **9 / 9 ✅** | |
 
-### E9 Detail: Flotte mit 1 Maschine
+### E9 Detail: Flotte mit 1 Maschine (behoben)
 
-**Befund:** Nach Löschen aller Maschinen bis auf eine wird der Statistik-Header (Median/Spread/Worst) korrekt ausgeblendet (`ranked.length >= 2` Guard). Der Queue-Button wird ebenfalls korrekt ausgeblendet. **Ein einzelner Balken wird aber noch gerendert** ohne erklärenden Hinweis wie "Mindestens 2 Maschinen für Vergleich nötig".
+**Befund (vorher):** Nach Löschen aller Maschinen bis auf eine wurde der Statistik-Header korrekt ausgeblendet, aber kein erklärender Hinweis angezeigt.
 
-**Bewertung:** ⚠️ Funktional korrekt (kein Crash, keine falschen Statistiken), aber UX-Verbesserungspotenzial. Empfehlung: Hinweistext bei `ranked.length === 1` im Flottencheck-Modus.
+**Fix:** Hinweistext "Mindestens 2 Maschinen nötig für einen Flottenvergleich" wird nun bei `ranked.length === 1` angezeigt. Implementiert in `renderFleetRanking()` mit i18n-Key `fleet.ranking.singleMachineHint` in allen 5 Sprachen (DE/EN/FR/ES/ZH).
 
 ---
 
@@ -514,7 +514,7 @@
 4. **Print-Funktion:** Druckvorschau-Darstellung
 5. **Offline-Verhalten:** Service-Worker-Cache nach Build testen
 6. **Responsiveness:** Touch-Gesten (Swipe), Scroll-Performance auf echtem Gerät
-7. **E9 Feld-Test:** Flotte auf 1 Maschine reduzieren, Verhalten im Flottencheck prüfen
+7. **E9 Feld-Test:** Flotte auf 1 Maschine reduzieren → Hinweistext prüfen
 
 ### Empfohlene Ergänzungen für die manuelle Checkliste
 1. **5.3:** Escape-Taste als expliziten Prüfpunkt hinzufügen
@@ -523,7 +523,7 @@
 4. **5.5:** Gold-Standard löschen als Prüfpunkt (Cleanup-Verhalten)
 5. **NFC4:** Ungültige JSON-Datei als Prüfpunkt
 6. **NFC4:** Maschine aus anderer Flotte als Prüfpunkt
-7. **4.3:** Flotte mit 1 Maschine nach Löschung als Prüfpunkt
+7. **4.3:** Flotte mit 1 Maschine nach Löschung als Prüfpunkt (jetzt mit Hinweistext)
 
 ### Code-Qualität
 - TypeScript mit strikter Typisierung
@@ -536,3 +536,4 @@
 
 *Dieser Bericht basiert auf statischer Code-Analyse. Laufzeit-Tests auf echtem Gerät werden für finale Validierung empfohlen.*
 *Revision 2: Edge-Cases und Checklisten-Unstimmigkeiten aus Review integriert.*
+*Revision 3: E9 behoben – Hinweistext bei 1-Maschinen-Flotte implementiert (5 Sprachen).*

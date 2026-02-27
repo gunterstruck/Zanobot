@@ -1405,6 +1405,7 @@ export const en: TranslationDict = {
     },
     ranking: {
       noData: 'Not checked',
+      singleMachineHint: 'At least 2 machines are needed for a fleet comparison.',
     },
     stats: {
       median: 'Median',

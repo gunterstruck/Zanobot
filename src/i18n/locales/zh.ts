@@ -1074,6 +1074,7 @@ export const zh: TranslationDict = {
     },
     ranking: {
       noData: 'Not checked',
+      singleMachineHint: '至少需要2台机器才能进行车队比较。',
     },
     stats: {
       median: 'Median',
