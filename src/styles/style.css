@@ -7928,6 +7928,15 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
 /* UX Sprint 4: Fleet Ranking                                */
 /* ══════════════════════════════════════════════════════════ */
 
+/* Fix: Minimum fleet size hint */
+.fleet-minimum-hint {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-sm);
+    font-style: italic;
+}
+
 .fleet-rank-item {
     display: flex;
     align-items: center;

@@ -1448,7 +1448,7 @@ export const de: TranslationDict = {
     },
     ranking: {
       noData: 'Nicht geprüft',
-      singleMachineHint: 'Mindestens 2 Maschinen nötig für einen Flottenvergleich.',
+      minimumHint: 'Mindestens 2 Maschinen für einen aussagekräftigen Flottenvergleich nötig.',
     },
     stats: {
       median: 'Median',

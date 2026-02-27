@@ -2844,6 +2844,31 @@ export class IdentifyPhase {
     const scores = ranked.map(r => r.score).filter((s): s is number => s !== null);
     const stats = this.calculateFleetStats(scores);
 
+    // Fix: Minimum fleet size check – at least 2 machines for meaningful ranking
+    if (ranked.length < 2) {
+      if (emptyState) {
+        emptyState.style.display = ranked.length === 0 ? 'block' : 'none';
+      }
+      const hint = document.createElement('div');
+      hint.className = 'fleet-minimum-hint';
+      hint.innerHTML = `<p>${t('fleet.ranking.minimumHint')}</p>`;
+      if (emptyState) {
+        overviewContainer.insertBefore(hint, emptyState);
+      } else {
+        overviewContainer.appendChild(hint);
+      }
+      // Still show the single machine as a regular item (without ranking context)
+      if (ranked.length === 1) {
+        const item = this.createFleetRankingItem(ranked[0].machine, ranked[0].score, null, false);
+        if (emptyState) {
+          overviewContainer.insertBefore(item, emptyState);
+        } else {
+          overviewContainer.appendChild(item);
+        }
+      }
+      return;
+    }
+
     // Sprint 5: Pre-compute Gold Standard for badge display
     this.currentGoldStandardId = null;
     const refSourceIds = machines.map(m => m.fleetReferenceSourceId).filter(Boolean);

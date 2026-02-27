@@ -1077,8 +1077,8 @@ export const es: TranslationDict = {
       noMachinesHint: 'Run diagnoses or assign machines to a fleet group.',
     },
     ranking: {
-      noData: 'Not checked',
-      singleMachineHint: 'Se necesitan al menos 2 máquinas para una comparación de flota.',
+      noData: 'No verificado',
+      minimumHint: 'Se necesitan al menos 2 máquinas para una comparación de flota significativa.',
     },
     stats: {
       median: 'Median',
@@ -1111,7 +1111,7 @@ export const es: TranslationDict = {
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
     },
-    goldStandard: { badge: 'Gold Standard (reference for the fleet)', deleted: 'Gold Standard "{{name}}" deleted – {{count}} machines now use own reference.' },
+    goldStandard: { badge: 'Gold Standard (referencia para la flota)', deleted: 'El Gold Standard "{{name}}" fue eliminado – {{count}} máquinas ahora usan su propia referencia.' },
     export: {
       button: 'Export fleet',
       success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
