@@ -90,6 +90,9 @@ export class IdentifyPhase {
   /** Sprint 5 UX: Callback for starting fleet diagnosis queue (set by Router) */
   public onStartFleetQueue: ((machineIds: string[], groupName: string) => void) | null = null;
 
+  /** Sprint 6: Callback for when fleet provisioning is complete (set by Router) */
+  public onFleetProvisioned: ((fleetName: string) => void) | null = null;
+
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
   private qrCanvas: HTMLCanvasElement | null = null;
@@ -1142,7 +1145,7 @@ export class IdentifyPhase {
   /**
    * Refresh machine lists (overview + quick select) after updates.
    */
-  private async refreshMachineLists(): Promise<void> {
+  public async refreshMachineLists(): Promise<void> {
     await Promise.all([this.loadMachineOverview(), this.loadMachineHistory()]);
   }
 
@@ -1277,6 +1280,58 @@ export class IdentifyPhase {
         referenceDbUrl = match.referenceDbUrl;
         isHashRoute = true;
         logger.info(`🔗 Deep link parsed: machineId=${machineId}, customerId=${customerId || 'none'}, dbUrl=${referenceDbUrl || 'none'}`);
+      }
+    }
+
+    // Sprint 6: Handle fleet deep links (#/f/<fleet_id>?c=<customer_id>)
+    if (hash && hash.startsWith('#/f/')) {
+      logger.info('🔗 Fleet deep link detected');
+
+      const fleetRouter = new HashRouter();
+      const fleetMatch = fleetRouter.parseHash(hash);
+
+      if (fleetMatch.type === 'fleet' && fleetMatch.fleetId && fleetMatch.fleetDbUrl) {
+        logger.info(`🚢 Fleet route: ${fleetMatch.fleetId} → ${fleetMatch.fleetDbUrl}`);
+
+        // Show loading overlay
+        const overlay = new ReferenceLoadingOverlay();
+        overlay.show();
+
+        // Configure callbacks
+        fleetRouter.setOnDownloadProgress((status, progress) => {
+          overlay.updateStatus(status, progress || 50);
+        });
+
+        fleetRouter.setOnDownloadError((error) => {
+          logger.error(`Fleet provisioning failed: ${error}`);
+          overlay.showError(t('fleet.provision.error'));
+          setTimeout(() => overlay.hide(), 3000);
+        });
+
+        fleetRouter.setOnFleetReady((fleetName, machineCount) => {
+          logger.info(`✅ Fleet "${fleetName}" ready with ${machineCount} machines`);
+          overlay.showSuccess();
+          setTimeout(() => overlay.hide(), 1500);
+
+          // Refresh machine lists to show new fleet
+          this.refreshMachineLists();
+
+          // Notify parent (Router) to switch to fleet mode
+          if (this.onFleetProvisioned) {
+            this.onFleetProvisioned(fleetName);
+          }
+        });
+
+        // Trigger fleet route handling (downloads + provisions)
+        // init() calls handleHashChange() which processes the current hash
+        await fleetRouter.init();
+
+        // Clean up URL after processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Destroy router to remove hashchange listener
+        fleetRouter.destroy();
+        return; // Don't fall through to machine ID handling
       }
     }
 
@@ -3131,11 +3186,20 @@ export class IdentifyPhase {
   }
 
   /**
-   * Activate fleet mode from external trigger (e.g., NFC fleet provisioning)
+   * Activate fleet mode from external trigger (e.g., NFC fleet provisioning).
+   * Sprint 6: Also called after fleet deep link provisioning to auto-navigate to fleet ranking.
    */
-  public async activateFleetMode(): Promise<void> {
-    await this.setWorkflowMode('fleet');
+  public async activateFleetMode(fleetName?: string): Promise<void> {
+    if (this.currentWorkflowMode !== 'fleet') {
+      await this.setWorkflowMode('fleet');
+    } else {
+      await this.loadMachineOverview();
+    }
     await this.populateFleetGroupSuggestions();
+
+    if (fleetName) {
+      logger.info(`🚢 Fleet mode activated for: "${fleetName}"`);
+    }
   }
 
   /**

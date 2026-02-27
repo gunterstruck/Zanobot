@@ -1106,6 +1106,13 @@ export const zh: TranslationDict = {
       complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
+      guided: {
+        goTo: 'Go to:',
+        startRecording: '\u25B6 Start recording',
+        skip: 'Skip',
+        machineOf: '{{current}} of {{total}}',
+        waitingForUser: 'Ready? Hold your smartphone near the machine.',
+      },
     },
     goldStandard: { badge: '金标准（车队参考）', deleted: '金标准「{{name}}」已删除 – {{count}} 台机器现在使用自己的参考。' },
     export: {

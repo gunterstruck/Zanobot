@@ -58,6 +58,11 @@ export class Router {
     // Sprint 5: Wire up fleet queue callback
     this.identifyPhase.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
 
+    // Sprint 6: Wire up fleet provisioning callback
+    this.identifyPhase.onFleetProvisioned = (fleetName: string) => {
+      this.handleFleetProvisioned(fleetName);
+    };
+
     // Initialize Phase 4 (Settings - always available, independent of machine selection)
     this.settingsPhase = new SettingsPhase();
     this.settingsPhase.init();
@@ -939,6 +944,27 @@ export class Router {
   }
 
   // ============================================================================
+  // SPRINT 6: FLEET PROVISIONING HANDLER
+  // ============================================================================
+
+  /**
+   * Sprint 6: Handle fleet provisioning completion.
+   * Switches to fleet mode and shows the fleet ranking.
+   */
+  private async handleFleetProvisioned(fleetName: string): Promise<void> {
+    logger.info(`🚢 Fleet provisioned: "${fleetName}" – switching to fleet mode`);
+
+    // Refresh machine data
+    await this.identifyPhase.refreshMachineLists();
+
+    // Expand the machine section
+    this.expandSection('select-machine-content');
+
+    // Switch to fleet mode and show the fleet
+    await this.identifyPhase.activateFleetMode(fleetName);
+  }
+
+  // ============================================================================
   // SPRINT 5: FLEET DIAGNOSIS QUEUE
   // ============================================================================
 
@@ -1012,12 +1038,11 @@ export class Router {
     // Update progress
     this.updateFleetProgress(this.fleetQueueIndex + 1, this.fleetQueue.length, machine.name);
 
-    // Select machine (triggers normal diagnosis flow)
+    // Select machine (loads it into Phase 2 & 3)
     this.onMachineSelected(machine);
 
-    // Wait for UI to settle, then click diagnose button with retry
-    // Uses requestAnimationFrame + polling to avoid race condition with phase initialization
-    await this.waitForDiagnoseButton();
+    // Sprint 6: Show guided prompt instead of auto-starting diagnosis
+    this.showGuidedPrompt(machine, this.fleetQueueIndex + 1, this.fleetQueue.length);
   }
 
   /**
@@ -1052,6 +1077,94 @@ export class Router {
       // Start after one animation frame to let DOM settle
       requestAnimationFrame(() => setTimeout(tryClick, 50));
     });
+  }
+
+  /**
+   * Sprint 6: Show guided fleet check prompt.
+   * Large, clear UI telling the user which machine to go to,
+   * with a manual start button for the recording.
+   */
+  private showGuidedPrompt(machine: Machine, current: number, total: number): void {
+    // Remove any existing prompt
+    document.getElementById('fleet-guided-prompt')?.remove();
+
+    const prompt = document.createElement('div');
+    prompt.id = 'fleet-guided-prompt';
+    prompt.className = 'fleet-guided-prompt';
+
+    // Machine name (large, prominent)
+    const goToLabel = document.createElement('div');
+    goToLabel.className = 'fleet-guided-goto';
+    goToLabel.textContent = t('fleet.queue.guided.goTo');
+    prompt.appendChild(goToLabel);
+
+    const machineName = document.createElement('div');
+    machineName.className = 'fleet-guided-machine-name';
+    machineName.textContent = machine.name;
+    prompt.appendChild(machineName);
+
+    // Location hint (if available)
+    if (machine.location) {
+      const locationHint = document.createElement('div');
+      locationHint.className = 'fleet-guided-location';
+      locationHint.textContent = machine.location;
+      prompt.appendChild(locationHint);
+    }
+
+    // Instruction text
+    const instruction = document.createElement('div');
+    instruction.className = 'fleet-guided-instruction';
+    instruction.textContent = t('fleet.queue.guided.waitingForUser');
+    prompt.appendChild(instruction);
+
+    // Start button (large, prominent, touch-friendly)
+    const startBtn = document.createElement('button');
+    startBtn.className = 'fleet-guided-start-btn';
+    startBtn.textContent = t('fleet.queue.guided.startRecording');
+    startBtn.addEventListener('click', async () => {
+      // Remove prompt
+      prompt.remove();
+
+      // Now trigger the diagnosis (same as before, but user-initiated)
+      await this.waitForDiagnoseButton();
+    });
+    prompt.appendChild(startBtn);
+
+    // Bottom row: counter + skip
+    const bottomRow = document.createElement('div');
+    bottomRow.className = 'fleet-guided-bottom';
+
+    const counter = document.createElement('span');
+    counter.className = 'fleet-guided-counter';
+    counter.textContent = t('fleet.queue.guided.machineOf', {
+      current: String(current),
+      total: String(total),
+    });
+    bottomRow.appendChild(counter);
+
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'fleet-guided-skip-btn';
+    skipBtn.textContent = t('fleet.queue.guided.skip');
+    skipBtn.addEventListener('click', () => {
+      prompt.remove();
+      this.fleetQueueIndex++;
+      // Short delay before next prompt
+      setTimeout(() => this.advanceFleetQueue(), 300);
+    });
+    bottomRow.appendChild(skipBtn);
+
+    prompt.appendChild(bottomRow);
+
+    // Insert prominently in the page (over the main content area)
+    const main = document.querySelector('main');
+    if (main) {
+      main.appendChild(prompt);
+    } else {
+      document.body.appendChild(prompt);
+    }
+
+    // Focus the start button for keyboard accessibility
+    requestAnimationFrame(() => startBtn.focus());
   }
 
   /**
@@ -1147,6 +1260,8 @@ export class Router {
     this.isFleetQueueActive = false;
     this.isFleetQueuePaused = false;
     document.getElementById('fleet-progress')?.remove();
+    // Sprint 6: Remove guided prompt if visible
+    document.getElementById('fleet-guided-prompt')?.remove();
     // Remove visibility listener
     if (this.boundVisibilityHandler) {
       document.removeEventListener('visibilitychange', this.boundVisibilityHandler);

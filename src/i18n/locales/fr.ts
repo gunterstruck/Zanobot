@@ -1110,6 +1110,13 @@ export const fr: TranslationDict = {
       complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
+      guided: {
+        goTo: 'Go to:',
+        startRecording: '\u25B6 Start recording',
+        skip: 'Skip',
+        machineOf: '{{current}} of {{total}}',
+        waitingForUser: 'Ready? Hold your smartphone near the machine.',
+      },
     },
     goldStandard: { badge: 'Gold Standard (référence pour la flotte)', deleted: 'Le Gold Standard « {{name}} » a été supprimé – {{count}} machines utilisent maintenant leur propre référence.' },
     export: {

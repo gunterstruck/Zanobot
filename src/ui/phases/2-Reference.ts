@@ -121,6 +121,13 @@ export class ReferencePhase {
       machineId: machine.id,
       machineName: machine.name,
     });
+
+    // Sprint 6 Fix: Show existing references when machine is set after init
+    if (machine.referenceModels && machine.referenceModels.length > 0) {
+      requestAnimationFrame(() => {
+        this.showMulticlassStatus();
+      });
+    }
   }
 
   /**
