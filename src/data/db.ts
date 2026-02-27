@@ -1062,16 +1062,56 @@ export async function importData(
           normalizedReferenceImage = deserializeBlob(referenceImage);
         }
 
+        const normalizedReferenceModels = (machine.referenceModels || []).map((model) => ({
+          ...model,
+          weightVector:
+            model.weightVector instanceof Float64Array
+              ? model.weightVector
+              : new Float64Array(model.weightVector as number[]),
+        }));
+
+        // When merging: if machine already exists, merge referenceModels instead of overwriting
+        if (merge && machine.id) {
+          const existingMachine = await db.get('machines', machine.id);
+          if (existingMachine) {
+            // Deduplicate by label (case-insensitive) – same logic as applyModelsToMachine
+            const existingNames = new Set(
+              (existingMachine.referenceModels || []).map(m => m.label?.toLowerCase().trim())
+            );
+            const newModels = normalizedReferenceModels.filter(model => {
+              const modelName = model.label?.toLowerCase().trim();
+              if (modelName && existingNames.has(modelName)) {
+                logger.info(`⏭️ Merge: skipping model "${model.label}" – already exists for machine ${machine.id}`);
+                return false;
+              }
+              return true;
+            });
+
+            const mergedModels = [...(existingMachine.referenceModels || []), ...newModels];
+
+            // Merge: preserve existing local fields, overlay with import data, keep merged models
+            const mergedMachine: Machine = {
+              ...existingMachine,
+              ...machine,
+              referenceImage: normalizedReferenceImage ?? existingMachine.referenceImage,
+              referenceModels: mergedModels,
+            };
+            await db.put('machines', mergedMachine);
+
+            if (newModels.length > 0) {
+              logger.info(`📋 Merged machine "${machine.id}": ${newModels.length} new model(s) added, ${normalizedReferenceModels.length - newModels.length} duplicate(s) skipped`);
+            } else {
+              logger.info(`📋 Merged machine "${machine.id}": no new models (${normalizedReferenceModels.length} duplicate(s) skipped)`);
+            }
+            machinesImported++;
+            continue;
+          }
+        }
+
         const normalizedMachine: Machine = {
           ...machine,
           referenceImage: normalizedReferenceImage,
-          referenceModels: (machine.referenceModels || []).map((model) => ({
-            ...model,
-            weightVector:
-              model.weightVector instanceof Float64Array
-                ? model.weightVector
-                : new Float64Array(model.weightVector as number[]),
-          })),
+          referenceModels: normalizedReferenceModels,
         };
         await db.put('machines', normalizedMachine);
         machinesImported++;
