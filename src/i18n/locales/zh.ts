@@ -1104,8 +1104,9 @@ export const zh: TranslationDict = {
       progress: '{{name}} ({{current}} of {{total}})',
       complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
       cancelled: 'Fleet check cancelled.',
+      resumed: 'Fleet check resumed.',
     },
-    goldStandard: { badge: 'Gold Standard (reference for the fleet)' },
+    goldStandard: { badge: 'Gold Standard (reference for the fleet)', deleted: 'Gold Standard "{{name}}" deleted – {{count}} machines now use own reference.' },
     export: {
       button: 'Export fleet',
       success: 'Fleet "{{name}}" exported. Upload file to GitHub Pages for NFC/QR.',
@@ -1116,6 +1117,7 @@ export const zh: TranslationDict = {
       alreadyExists: 'Fleet "{{name}}" already exists ({{skipped}} machines skipped).',
       downloading: 'Loading fleet…',
       error: 'Could not load fleet.',
+      offline: 'No internet connection. Please connect to the network and scan the tag again.',
       rollbackComplete: 'Import failed – changes rolled back.',
       updateRecommended: 'Fleet file was exported from a newer app version. App update recommended.',
       skippedDifferentFleet: '"{{name}}" belongs to fleet "{{fleet}}" – not reassigned.',

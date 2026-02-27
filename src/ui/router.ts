@@ -47,6 +47,8 @@ export class Router {
   private fleetQueueIndex: number = 0;
   private fleetQueueGroupName: string = '';
   private isFleetQueueActive: boolean = false;
+  private isFleetQueuePaused: boolean = false;
+  private boundVisibilityHandler: (() => void) | null = null;
 
   constructor() {
     // Initialize Phase 1 (always available)
@@ -596,12 +598,18 @@ export class Router {
     this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
 
-    // Sprint 5: Register fleet queue callback if queue is active
+    // Sprint 5: Register fleet queue callbacks if queue is active
     if (this.isFleetQueueActive) {
       this.diagnosePhase.setOnDiagnosisComplete(() => {
         this.fleetQueueIndex++;
         // Short delay to show result, then advance
         setTimeout(() => this.advanceFleetQueue(), 1500);
+      });
+      // Sprint 5 Fix: Handle diagnosis errors in fleet queue (skip to next machine)
+      this.diagnosePhase.setOnDiagnosisError((error) => {
+        logger.warn(`Fleet queue: diagnosis failed for machine ${this.fleetQueue[this.fleetQueueIndex]}, skipping`, error);
+        this.fleetQueueIndex++;
+        setTimeout(() => this.advanceFleetQueue(), 500);
       });
     }
 
@@ -942,6 +950,11 @@ export class Router {
     this.fleetQueueIndex = 0;
     this.fleetQueueGroupName = groupName;
     this.isFleetQueueActive = true;
+    this.isFleetQueuePaused = false;
+
+    // Sprint 5 Fix: Watch for app going to background to pause queue
+    this.boundVisibilityHandler = () => this.handleVisibilityChange();
+    document.addEventListener('visibilitychange', this.boundVisibilityHandler);
 
     // Show progress bar
     this.showFleetProgress();
@@ -951,12 +964,40 @@ export class Router {
   }
 
   /**
+   * Sprint 5 Fix: Pause/resume fleet queue when app visibility changes.
+   * Mobile OS can suspend audio streams when the app is backgrounded,
+   * which would cause silent diagnosis failures.
+   */
+  private handleVisibilityChange(): void {
+    if (!this.isFleetQueueActive) return;
+
+    if (document.hidden) {
+      // App went to background - pause the queue (don't auto-advance after current diagnosis)
+      this.isFleetQueuePaused = true;
+      logger.info('Fleet queue paused (app backgrounded)');
+    } else if (this.isFleetQueuePaused) {
+      // App came back - notify user and resume
+      this.isFleetQueuePaused = false;
+      logger.info('Fleet queue resumed (app foregrounded)');
+      notify.info(t('fleet.queue.resumed'));
+    }
+  }
+
+  /**
    * Sprint 5: Advance to next machine in fleet queue
    */
   private async advanceFleetQueue(): Promise<void> {
+    if (!this.isFleetQueueActive) return;
+
     if (this.fleetQueueIndex >= this.fleetQueue.length) {
       this.completeFleetQueue();
       return;
+    }
+
+    // Sprint 5 Fix: If paused (app backgrounded), wait for foreground
+    if (this.isFleetQueuePaused) {
+      logger.info('Fleet queue: waiting for app to return to foreground');
+      return; // Will be resumed by handleVisibilityChange -> the onDiagnosisComplete callback will re-trigger
     }
 
     const machineId = this.fleetQueue[this.fleetQueueIndex];
@@ -974,11 +1015,43 @@ export class Router {
     // Select machine (triggers normal diagnosis flow)
     this.onMachineSelected(machine);
 
-    // Auto-start diagnosis after short delay (let UI settle)
-    setTimeout(() => {
-      const diagnoseBtn = document.getElementById('diagnose-btn');
-      if (diagnoseBtn) diagnoseBtn.click();
-    }, 300);
+    // Wait for UI to settle, then click diagnose button with retry
+    // Uses requestAnimationFrame + polling to avoid race condition with phase initialization
+    await this.waitForDiagnoseButton();
+  }
+
+  /**
+   * Sprint 5 Fix: Wait for diagnose button to be ready and click it.
+   * Retries up to 10 times (50ms intervals = 500ms max) to handle slow devices
+   * where DiagnosePhase.init() may not have registered the click handler yet.
+   */
+  private waitForDiagnoseButton(): Promise<void> {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      const tryClick = () => {
+        attempts++;
+        const diagnoseBtn = document.getElementById('diagnose-btn');
+        if (diagnoseBtn) {
+          diagnoseBtn.click();
+          resolve();
+          return;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(tryClick, 50);
+        } else {
+          // Button not found after retries - skip this machine
+          logger.warn(`Fleet queue: diagnose-btn not found after ${maxAttempts} attempts, skipping`);
+          this.fleetQueueIndex++;
+          setTimeout(() => this.advanceFleetQueue(), 100);
+          resolve();
+        }
+      };
+
+      // Start after one animation frame to let DOM settle
+      requestAnimationFrame(() => setTimeout(tryClick, 50));
+    });
   }
 
   /**
@@ -1047,8 +1120,7 @@ export class Router {
    * Sprint 5: Complete fleet queue and show ranking
    */
   private completeFleetQueue(): void {
-    this.isFleetQueueActive = false;
-    document.getElementById('fleet-progress')?.remove();
+    this.cleanupFleetQueue();
 
     notify.success(t('fleet.queue.complete', {
       count: String(this.fleetQueue.length),
@@ -1063,9 +1135,22 @@ export class Router {
    * Sprint 5: Cancel fleet queue
    */
   private cancelFleetQueue(): void {
-    this.isFleetQueueActive = false;
+    this.cleanupFleetQueue();
     this.fleetQueue = [];
-    document.getElementById('fleet-progress')?.remove();
     notify.info(t('fleet.queue.cancelled'));
+  }
+
+  /**
+   * Sprint 5 Fix: Clean up fleet queue state and listeners
+   */
+  private cleanupFleetQueue(): void {
+    this.isFleetQueueActive = false;
+    this.isFleetQueuePaused = false;
+    document.getElementById('fleet-progress')?.remove();
+    // Remove visibility listener
+    if (this.boundVisibilityHandler) {
+      document.removeEventListener('visibilitychange', this.boundVisibilityHandler);
+      this.boundVisibilityHandler = null;
+    }
   }
 }

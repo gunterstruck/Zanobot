@@ -158,6 +158,9 @@ export class DiagnosePhase {
   /** Sprint 5: Optional callback fired after diagnosis is saved (for fleet queue) */
   private onDiagnosisComplete: ((diagnosis: DiagnosisResult) => void) | null = null;
 
+  /** Sprint 5 Fix: Optional callback fired when diagnosis fails to start (for fleet queue error recovery) */
+  private onDiagnosisError: ((error: unknown) => void) | null = null;
+
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
@@ -196,6 +199,13 @@ export class DiagnosePhase {
    */
   public setOnDiagnosisComplete(cb: (diagnosis: DiagnosisResult) => void): void {
     this.onDiagnosisComplete = cb;
+  }
+
+  /**
+   * Sprint 5 Fix: Set callback for diagnosis error (used by fleet queue to skip failed machines)
+   */
+  public setOnDiagnosisError(cb: (error: unknown) => void): void {
+    this.onDiagnosisError = cb;
   }
 
   /**
@@ -640,6 +650,11 @@ export class DiagnosePhase {
       // Cleanup on error
       this.cleanup();
       this.hideRecordingModal();
+
+      // Sprint 5 Fix: Notify fleet queue about the error so it can skip to next machine
+      if (this.onDiagnosisError) {
+        this.onDiagnosisError(error);
+      }
     } finally {
       this.isStarting = false;
     }
