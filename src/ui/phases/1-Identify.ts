@@ -76,9 +76,16 @@ export class IdentifyPhase {
   private nfcFleetSelect: HTMLSelectElement | null = null;
   private nfcFleetDetail: HTMLElement | null = null;
   private nfcFleetUrlPreview: HTMLElement | null = null;
-  // NFC Quick Compare option
+  // NFC Quick Compare option (Variant A: fleet-based)
   private nfcQuickCompareOption: HTMLInputElement | null = null;
   private nfcQuickCompareDetail: HTMLElement | null = null;
+  // NFC Quick Compare count-only option (Variant B)
+  private nfcQuickCompareCountOption: HTMLInputElement | null = null;
+  private nfcQuickCompareCountDetail: HTMLElement | null = null;
+  private nfcQcCountSection: HTMLElement | null = null;
+  private nfcQcCountInput: HTMLInputElement | null = null;
+  private nfcQcCountUrlPreview: HTMLElement | null = null;
+  private nfcQcCountSelectedValue: number = 0;
 
   // NFC Onboarding context tracking
   // Used to restore view level after NFC flow ends
@@ -118,9 +125,16 @@ export class IdentifyPhase {
   private qrFleetOption: HTMLInputElement | null = null;
   private qrFleetSection: HTMLElement | null = null;
   private qrFleetSelect: HTMLSelectElement | null = null;
-  // QR Quick Compare option
+  // QR Quick Compare option (Variant A: fleet-based)
   private qrQuickCompareOption: HTMLInputElement | null = null;
   private qrQuickCompareDetail: HTMLElement | null = null;
+  // QR Quick Compare count-only option (Variant B)
+  private qrQuickCompareCountOption: HTMLInputElement | null = null;
+  private qrQuickCompareCountDetail: HTMLElement | null = null;
+  private qrQcCountSection: HTMLElement | null = null;
+  private qrQcCountInput: HTMLInputElement | null = null;
+  private qrQcCountUrlPreview: HTMLElement | null = null;
+  private qrQcCountSelectedValue: number = 0;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -1514,7 +1528,9 @@ export class IdentifyPhase {
       }
     }
 
-    // Sprint 8: Handle quick compare deep links (#/q/<fleet_id>?c=<customer_id>)
+    // Sprint 8: Handle quick compare deep links
+    // Variant A: #/q/<fleetId>?c=<customerId> (fleet-based, needs download)
+    // Variant B: #/q/<number> (count-only, fully offline)
     if (hash && hash.startsWith('#/q/')) {
       logger.info('⚡ Quick Compare deep link detected');
 
@@ -1522,7 +1538,8 @@ export class IdentifyPhase {
       const qcMatch = qcRouter.parseHash(hash);
 
       if (qcMatch.type === 'quickcompare' && qcMatch.fleetId && qcMatch.fleetDbUrl) {
-        logger.info(`⚡ Quick Compare route: ${qcMatch.fleetId} → ${qcMatch.fleetDbUrl}`);
+        // Variant A: Fleet-based quick compare (needs download)
+        logger.info(`⚡ Quick Compare route (fleet): ${qcMatch.fleetId} → ${qcMatch.fleetDbUrl}`);
 
         // Show loading overlay
         const overlay = new ReferenceLoadingOverlay();
@@ -1554,6 +1571,32 @@ export class IdentifyPhase {
         });
 
         // Trigger quick compare route handling
+        await qcRouter.init();
+
+        // Clean up URL after processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Destroy router to remove hashchange listener
+        qcRouter.destroy();
+        return; // Don't fall through to machine ID handling
+
+      } else if (qcMatch.type === 'quickcompare' && qcMatch.machineCount) {
+        // Variant B: Count-only quick compare (fully offline, no download)
+        logger.info(`⚡ Quick Compare route (count-only): ${qcMatch.machineCount} machines`);
+
+        qcRouter.setOnQuickCompareReady((fleetName, machineIds) => {
+          logger.info(`✅ Quick Compare count-only "${fleetName}" ready with ${machineIds.length} machines`);
+
+          // Refresh machine lists to show created machines
+          this.refreshMachineLists();
+
+          // Notify parent (Router) to start quick compare flow
+          if (this.onQuickCompareProvisioned) {
+            this.onQuickCompareProvisioned(fleetName, machineIds);
+          }
+        });
+
+        // Trigger count-only handling (creates machines locally, no download)
         await qcRouter.init();
 
         // Clean up URL after processing
@@ -1808,15 +1851,59 @@ export class IdentifyPhase {
     this.nfcFleetDetail = document.getElementById('nfc-option-fleet-detail');
     this.nfcFleetUrlPreview = document.getElementById('nfc-fleet-url-preview');
 
-    // Quick Compare option
+    // Quick Compare option (Variant A: fleet-based)
     this.nfcQuickCompareOption = document.getElementById('nfc-option-quickcompare') as HTMLInputElement | null;
     this.nfcQuickCompareDetail = document.getElementById('nfc-option-quickcompare-detail');
 
+    // Quick Compare count-only option (Variant B)
+    this.nfcQuickCompareCountOption = document.getElementById('nfc-option-quickcompare-count') as HTMLInputElement | null;
+    this.nfcQuickCompareCountDetail = document.getElementById('nfc-option-quickcompare-count-detail');
+    this.nfcQcCountSection = document.getElementById('nfc-qc-count-section');
+    this.nfcQcCountInput = document.getElementById('nfc-qc-count-input') as HTMLInputElement | null;
+    this.nfcQcCountUrlPreview = document.getElementById('nfc-qc-count-url-preview');
+
+    // Count-only chip buttons
+    const nfcCountChips = document.getElementById('nfc-qc-count-chips');
+    if (nfcCountChips) {
+      nfcCountChips.querySelectorAll('.qc-count-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const count = parseInt((chip as HTMLElement).dataset.count || '0', 10);
+          if (count >= 2 && count <= 30) {
+            this.nfcQcCountSelectedValue = count;
+            // Deselect all chips, select this one
+            nfcCountChips.querySelectorAll('.qc-count-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            if (this.nfcQcCountInput) this.nfcQcCountInput.value = '';
+            this.updateNfcQcCountUrlPreview();
+          }
+        });
+      });
+    }
+
+    // Count-only custom input
+    if (this.nfcQcCountInput) {
+      this.nfcQcCountInput.addEventListener('input', () => {
+        const val = parseInt(this.nfcQcCountInput!.value, 10);
+        nfcCountChips?.querySelectorAll('.qc-count-chip').forEach(c => c.classList.remove('active'));
+        if (!isNaN(val) && val >= 2 && val <= 30) {
+          this.nfcQcCountSelectedValue = val;
+          // Highlight matching preset chip if it exists
+          nfcCountChips?.querySelectorAll('.qc-count-chip').forEach(c => {
+            if ((c as HTMLElement).dataset.count === String(val)) c.classList.add('active');
+          });
+        } else {
+          this.nfcQcCountSelectedValue = 0;
+        }
+        this.updateNfcQcCountUrlPreview();
+      });
+    }
+
     // Show/hide fleet section based on radio selection
-    [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption, this.nfcQuickCompareOption].forEach(radio => {
+    [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption, this.nfcQuickCompareOption, this.nfcQuickCompareCountOption].forEach(radio => {
       radio?.addEventListener('change', () => {
         this.updateNfcFleetVisibility();
         this.updateNfcDbUrlPreview();
+        this.updateNfcQcCountVisibility();
       });
     });
 
@@ -1839,13 +1926,14 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.nfcQuickCompareOption?.checked ? 'quickcompare'
+    const selectedOption = this.nfcQuickCompareCountOption?.checked ? 'quickcompare-count'
+      : this.nfcQuickCompareOption?.checked ? 'quickcompare'
       : this.nfcFleetOption?.checked ? 'fleet'
       : this.nfcSpecificOption?.checked ? 'specific'
       : 'generic';
 
-    // Generic link: no data URL preview needed
-    if (selectedOption === 'generic') {
+    // Generic or count-only link: no data URL preview needed
+    if (selectedOption === 'generic' || selectedOption === 'quickcompare-count') {
       this.nfcDbUrlPreview.style.display = 'none';
       return;
     }
@@ -1932,6 +2020,37 @@ export class IdentifyPhase {
       } else {
         this.nfcFleetUrlPreview.style.display = 'none';
       }
+    }
+  }
+
+  private updateNfcQcCountVisibility(): void {
+    const isCountOnly = this.nfcQuickCompareCountOption?.checked;
+    if (this.nfcQcCountSection) {
+      this.nfcQcCountSection.style.display = isCountOnly ? 'block' : 'none';
+    }
+    // Hide customer ID section when count-only is selected (no internet needed)
+    const nfcCustomerIdSection = document.getElementById('nfc-customer-id-section');
+    if (nfcCustomerIdSection) {
+      nfcCustomerIdSection.style.display = isCountOnly ? 'none' : '';
+    }
+  }
+
+  private updateNfcQcCountUrlPreview(): void {
+    if (!this.nfcQcCountUrlPreview) return;
+
+    if (this.nfcQcCountSelectedValue >= 2 && this.nfcQcCountSelectedValue <= 30) {
+      const url = HashRouter.getFullQuickCompareCountUrl(this.nfcQcCountSelectedValue);
+      this.nfcQcCountUrlPreview.textContent = url;
+      this.nfcQcCountUrlPreview.style.display = 'block';
+
+      // Update detail text
+      if (this.nfcQuickCompareCountDetail) {
+        this.nfcQuickCompareCountDetail.textContent = t('nfc.optionQuickCompareCountDetail', {
+          count: String(this.nfcQcCountSelectedValue),
+        });
+      }
+    } else {
+      this.nfcQcCountUrlPreview.style.display = 'none';
     }
   }
 
@@ -2048,7 +2167,8 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.nfcQuickCompareOption?.checked ? 'quickcompare'
+    const selectedOption = this.nfcQuickCompareCountOption?.checked ? 'quickcompare-count'
+      : this.nfcQuickCompareOption?.checked ? 'quickcompare'
       : this.nfcFleetOption?.checked ? 'fleet'
       : this.nfcSpecificOption?.checked ? 'specific'
       : 'generic';
@@ -2075,9 +2195,19 @@ export class IdentifyPhase {
       }
     }
 
+    // Validate: count-only requires a valid count
+    if (selectedOption === 'quickcompare-count') {
+      if (this.nfcQcCountSelectedValue < 2 || this.nfcQcCountSelectedValue > 30) {
+        this.setNfcStatus(t('quickCompare.wizard.minMachines'), 'error');
+        return;
+      }
+    }
+
     const baseUrl = this.getBaseAppUrl();
     let url: string;
-    if (selectedOption === 'quickcompare' && this.nfcFleetSelect?.value) {
+    if (selectedOption === 'quickcompare-count' && this.nfcQcCountSelectedValue >= 2) {
+      url = HashRouter.getFullQuickCompareCountUrl(this.nfcQcCountSelectedValue);
+    } else if (selectedOption === 'quickcompare' && this.nfcFleetSelect?.value) {
       const fleetId = ReferenceDbService.slugifyFleetName(this.nfcFleetSelect.value);
       url = HashRouter.getFullQuickCompareUrl(fleetId, customerId);
     } else if (selectedOption === 'fleet' && this.nfcFleetSelect?.value) {
@@ -2172,17 +2302,60 @@ export class IdentifyPhase {
     this.qrFleetSelect = document.getElementById('qr-fleet-select') as HTMLSelectElement | null;
     this.qrFleetSection = document.getElementById('qr-fleet-section');
 
-    // QR Quick Compare option
+    // QR Quick Compare option (Variant A: fleet-based)
     this.qrQuickCompareOption = document.getElementById('qr-option-quickcompare') as HTMLInputElement | null;
     this.qrQuickCompareDetail = document.getElementById('qr-option-quickcompare-detail');
 
+    // QR Quick Compare count-only option (Variant B)
+    this.qrQuickCompareCountOption = document.getElementById('qr-option-quickcompare-count') as HTMLInputElement | null;
+    this.qrQuickCompareCountDetail = document.getElementById('qr-option-quickcompare-count-detail');
+    this.qrQcCountSection = document.getElementById('qr-qc-count-section');
+    this.qrQcCountInput = document.getElementById('qr-qc-count-input') as HTMLInputElement | null;
+    this.qrQcCountUrlPreview = document.getElementById('qr-qc-count-url-preview');
+
+    // Count-only chip buttons for QR
+    const qrCountChips = document.getElementById('qr-qc-count-chips');
+    if (qrCountChips) {
+      qrCountChips.querySelectorAll('.qc-count-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const count = parseInt((chip as HTMLElement).dataset.count || '0', 10);
+          if (count >= 2 && count <= 30) {
+            this.qrQcCountSelectedValue = count;
+            qrCountChips.querySelectorAll('.qc-count-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            if (this.qrQcCountInput) this.qrQcCountInput.value = '';
+            this.updateQrQcCountUrlPreview();
+            void this.generateQrPreview();
+          }
+        });
+      });
+    }
+
+    if (this.qrQcCountInput) {
+      this.qrQcCountInput.addEventListener('input', () => {
+        const val = parseInt(this.qrQcCountInput!.value, 10);
+        qrCountChips?.querySelectorAll('.qc-count-chip').forEach(c => c.classList.remove('active'));
+        if (!isNaN(val) && val >= 2 && val <= 30) {
+          this.qrQcCountSelectedValue = val;
+          qrCountChips?.querySelectorAll('.qc-count-chip').forEach(c => {
+            if ((c as HTMLElement).dataset.count === String(val)) c.classList.add('active');
+          });
+        } else {
+          this.qrQcCountSelectedValue = 0;
+        }
+        this.updateQrQcCountUrlPreview();
+        void this.generateQrPreview();
+      });
+    }
+
     // Radio button changes trigger QR regeneration
-    const qrRadios = [this.qrGenericOption, this.qrSpecificOption, this.qrFleetOption, this.qrQuickCompareOption];
+    const qrRadios = [this.qrGenericOption, this.qrSpecificOption, this.qrFleetOption, this.qrQuickCompareOption, this.qrQuickCompareCountOption];
     for (const radio of qrRadios) {
       if (radio) {
         radio.addEventListener('change', () => {
           this.updateQrFleetVisibility();
           this.updateQrDbUrlPreview();
+          this.updateQrQcCountVisibility();
           void this.generateQrPreview();
         });
       }
@@ -2264,13 +2437,14 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+    const selectedOption = this.qrQuickCompareCountOption?.checked ? 'quickcompare-count'
+      : this.qrQuickCompareOption?.checked ? 'quickcompare'
       : this.qrFleetOption?.checked ? 'fleet'
       : this.qrSpecificOption?.checked ? 'specific'
       : 'generic';
 
-    // Generic link: no data URL preview needed
-    if (selectedOption === 'generic') {
+    // Generic or count-only link: no data URL preview needed
+    if (selectedOption === 'generic' || selectedOption === 'quickcompare-count') {
       this.qrDbUrlPreview.style.display = 'none';
       return;
     }
@@ -2331,12 +2505,50 @@ export class IdentifyPhase {
     }
   }
 
+  private updateQrQcCountVisibility(): void {
+    const isCountOnly = this.qrQuickCompareCountOption?.checked;
+    if (this.qrQcCountSection) {
+      this.qrQcCountSection.style.display = isCountOnly ? 'block' : 'none';
+    }
+    // Hide customer ID section when count-only is selected (no internet needed)
+    if (this.qrCustomerIdSection) {
+      this.qrCustomerIdSection.style.display = isCountOnly ? 'none' : '';
+    }
+  }
+
+  private updateQrQcCountUrlPreview(): void {
+    if (!this.qrQcCountUrlPreview) return;
+
+    if (this.qrQcCountSelectedValue >= 2 && this.qrQcCountSelectedValue <= 30) {
+      const url = HashRouter.getFullQuickCompareCountUrl(this.qrQcCountSelectedValue);
+      this.qrQcCountUrlPreview.textContent = url;
+      this.qrQcCountUrlPreview.style.display = 'block';
+
+      // Update detail text
+      if (this.qrQuickCompareCountDetail) {
+        this.qrQuickCompareCountDetail.textContent = t('qrCode.optionQuickCompareCountDetail', {
+          count: String(this.qrQcCountSelectedValue),
+        });
+      }
+    } else {
+      this.qrQcCountUrlPreview.style.display = 'none';
+    }
+  }
+
   private getQrUrl(): string {
-    const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+    const selectedOption = this.qrQuickCompareCountOption?.checked ? 'quickcompare-count'
+      : this.qrQuickCompareOption?.checked ? 'quickcompare'
       : this.qrFleetOption?.checked ? 'fleet'
       : this.qrSpecificOption?.checked ? 'specific'
       : 'generic';
     const baseUrl = this.getBaseAppUrl();
+
+    if (selectedOption === 'quickcompare-count') {
+      if (this.qrQcCountSelectedValue >= 2 && this.qrQcCountSelectedValue <= 30) {
+        return HashRouter.getFullQuickCompareCountUrl(this.qrQcCountSelectedValue);
+      }
+      return baseUrl;
+    }
 
     if (selectedOption === 'quickcompare') {
       const fleetName = this.qrFleetSelect?.value;
@@ -2401,11 +2613,15 @@ export class IdentifyPhase {
 
       // Update label info
       if (this.qrLabelInfo) {
-        const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+        const selectedOption = this.qrQuickCompareCountOption?.checked ? 'quickcompare-count'
+          : this.qrQuickCompareOption?.checked ? 'quickcompare'
           : this.qrFleetOption?.checked ? 'fleet'
           : this.qrSpecificOption?.checked ? 'specific'
           : 'generic';
-        if (selectedOption === 'quickcompare' && this.qrFleetSelect?.value) {
+        if (selectedOption === 'quickcompare-count' && this.qrQcCountSelectedValue >= 2) {
+          this.qrLabelInfo.innerHTML =
+            `<strong>${t('quickCompare.startButton')}:</strong> ${this.qrQcCountSelectedValue} ${t('nfc.machines')}`;
+        } else if (selectedOption === 'quickcompare' && this.qrFleetSelect?.value) {
           this.qrLabelInfo.innerHTML =
             `<strong>${t('quickCompare.startButton')}:</strong> ${escapeHtml(this.qrFleetSelect.value)}`;
         } else if (selectedOption === 'fleet' && this.qrFleetSelect?.value) {
@@ -2441,7 +2657,9 @@ export class IdentifyPhase {
       errorCorrectionLevel: 'M',
     }).then(() => {
       const link = document.createElement('a');
-      link.download = this.qrFleetOption?.checked && this.qrFleetSelect?.value
+      link.download = this.qrQuickCompareCountOption?.checked && this.qrQcCountSelectedValue >= 2
+        ? `qr-quickcompare-${this.qrQcCountSelectedValue}.png`
+        : this.qrFleetOption?.checked && this.qrFleetSelect?.value
         ? `qr-fleet-${ReferenceDbService.slugifyFleetName(this.qrFleetSelect.value)}.png`
         : this.currentMachine && this.qrSpecificOption?.checked
         ? `qr-${this.currentMachine.id}.png`
@@ -2461,15 +2679,22 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+    const selectedOption = this.qrQuickCompareCountOption?.checked ? 'quickcompare-count'
+      : this.qrFleetOption?.checked ? 'fleet'
       : this.qrSpecificOption?.checked ? 'specific'
       : 'generic';
     const isSpecific = selectedOption === 'specific' && this.currentMachine;
     const isFleet = selectedOption === 'fleet' && this.qrFleetSelect?.value;
+    const isCountOnly = selectedOption === 'quickcompare-count' && this.qrQcCountSelectedValue >= 2;
     const now = new Date().toLocaleDateString();
 
     // Fill print label content
-    if (isFleet) {
+    if (isCountOnly) {
+      printHeader.textContent = t('quickCompare.startButton');
+      printDetails.innerHTML =
+        `<strong>${t('quickCompare.startButton')}:</strong> ${this.qrQcCountSelectedValue} ${t('nfc.machines')}<br>` +
+        `<strong>${t('qrCode.dateLabel')}:</strong> ${now}`;
+    } else if (isFleet) {
       printHeader.textContent = t('qrCode.fleetPrintTitle');
       printDetails.innerHTML =
         `<strong>${t('qrCode.fleetLabel')}:</strong> ${escapeHtml(this.qrFleetSelect!.value)}<br>` +

@@ -8782,9 +8782,14 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
 }
 
 .qc-custom-input {
-    width: 100%;
+    width: 60px;
     text-align: center;
     margin-bottom: 0.5rem;
+}
+
+/* Full-width in the standalone wizard modal */
+.qc-modal > .qc-custom-input {
+    width: 100%;
 }
 
 .qc-error-msg {
