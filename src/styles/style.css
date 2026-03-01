@@ -2305,7 +2305,12 @@ body {
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -2313,9 +2318,15 @@ body {
     line-height: 1;
 }
 
-.machine-detail-delete-btn:hover {
+.machine-detail-delete-btn:hover,
+.machine-detail-delete-btn:active {
     background: rgba(255, 82, 82, 0.1);
     color: var(--status-error);
+}
+
+.machine-detail-delete-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .machine-detail-actions {
