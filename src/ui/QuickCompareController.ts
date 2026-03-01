@@ -265,8 +265,6 @@ export class QuickCompareController {
 
   /** Create the Gold Standard machine and trigger recording via Router callback */
   private async startReferenceRecording(): Promise<void> {
-    this.removeOverlay();
-
     // Create Gold Standard machine
     const goldMachine: Machine = {
       id: `qc-${Date.now()}-gold`,
@@ -280,10 +278,15 @@ export class QuickCompareController {
 
     logger.info(`[QuickCompare] Gold Standard machine created: ${goldMachine.id}`);
 
-    // Select this machine in the Router (triggers Phase 2 Reference)
+    // Select this machine in the Router (triggers Phase 2 Reference).
+    // MUST happen BEFORE removeOverlay() so phases are initialized and the
+    // reference section is expanded before the overlay disappears.
     if (this.onSelectMachine) {
       this.onSelectMachine(goldMachine);
     }
+
+    // NOW remove overlay – phases are already set up underneath
+    this.removeOverlay();
 
     // Show a toast to guide user
     notify.info(t('quickCompare.reference.recordingHint'));
