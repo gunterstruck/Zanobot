@@ -815,10 +815,10 @@ export const en: TranslationDict = {
     unsupportedBrowser: 'NFC writing requires Chrome on Android.',
     // Customer ID (Variant B)
     customerIdLabel: 'Customer ID (c)',
-    customerIdDescription: 'This ID determines which reference data is loaded when scanning the NFC tag. The app automatically loads: https://gunterstruck.github.io/<CustomerID>/db-latest.json',
+    customerIdDescription: 'This ID determines which reference data is loaded when scanning the NFC tag. Data is loaded automatically from GitHub Pages.',
     customerIdPlaceholder: 'e.g. Customer_ID_1',
     customerIdRequired: 'Please enter a customer ID.',
-    dbUrlPreview: 'Loaded DB URL: {{url}}',
+    dbUrlPreview: 'Data URL: {{url}}',
     closeDialog: 'Close NFC dialog',
     // Fleet option
     optionFleet: 'Fleet link',
@@ -848,7 +848,7 @@ export const en: TranslationDict = {
     customerIdDescription: 'This ID determines which reference data is loaded when scanning.',
     customerIdPlaceholder: 'e.g. Customer_ID_1',
     customerIdRequired: 'Please enter a customer ID.',
-    dbUrlPreview: 'Loaded DB URL: {{url}}',
+    dbUrlPreview: 'Data URL: {{url}}',
     urlPreview: 'Link preview',
     downloadPng: 'Save as image',
     print: 'Print',

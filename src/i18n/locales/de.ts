@@ -842,10 +842,10 @@ export const de: TranslationDict = {
     closeDialog: 'NFC-Dialog schließen',
     // Customer ID (Variante B)
     customerIdLabel: 'Kundenkennung (c)',
-    customerIdDescription: 'Diese Kennung bestimmt, welche Referenzdaten beim NFC-Scan geladen werden. Die App lädt automatisch: https://gunterstruck.github.io/<Kundenkennung>/db-latest.json',
+    customerIdDescription: 'Diese Kennung bestimmt, welche Referenzdaten beim NFC-Scan geladen werden. Die Daten werden automatisch von GitHub Pages geladen.',
     customerIdPlaceholder: 'z.B. Kundenkennung_nr1',
     customerIdRequired: 'Bitte geben Sie eine Kundenkennung ein.',
-    dbUrlPreview: 'Geladene DB-URL: {{url}}',
+    dbUrlPreview: 'Daten-URL: {{url}}',
     // Fleet option
     optionFleet: 'Flotten-Link',
     optionFleetDetailDefault: 'Öffnet die App mit einer kompletten Flotte.',
@@ -874,7 +874,7 @@ export const de: TranslationDict = {
     customerIdDescription: 'Diese Kennung bestimmt, welche Referenzdaten beim Scan geladen werden.',
     customerIdPlaceholder: 'z.B. Kundenkennung_nr1',
     customerIdRequired: 'Bitte geben Sie eine Kundenkennung ein.',
-    dbUrlPreview: 'Geladene DB-URL: {{url}}',
+    dbUrlPreview: 'Daten-URL: {{url}}',
     urlPreview: 'Link-Vorschau',
     downloadPng: 'Als Bild speichern',
     print: 'Drucken',
