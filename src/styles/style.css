@@ -2201,6 +2201,132 @@ body {
     padding: var(--spacing-lg);
 }
 
+/* Machine Detail Modal */
+.machine-detail-content {
+    max-width: 480px;
+}
+
+.machine-detail-info {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.machine-detail-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.machine-detail-id {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.machine-detail-signatures h5 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.machine-detail-empty {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-md) 0;
+}
+
+.machine-detail-signature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.machine-detail-signature-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    gap: var(--spacing-sm);
+}
+
+.machine-detail-signature-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.machine-detail-signature-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.machine-detail-signature-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.machine-detail-signature-type {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+.machine-detail-signature-type.type-healthy {
+    color: var(--status-healthy);
+    background: rgba(0, 200, 83, 0.1);
+}
+
+.machine-detail-signature-type.type-faulty {
+    color: var(--status-error);
+    background: rgba(255, 82, 82, 0.1);
+}
+
+.machine-detail-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.machine-detail-delete-btn:hover {
+    background: rgba(255, 82, 82, 0.1);
+    color: var(--status-error);
+}
+
+.machine-detail-actions {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--divider-color);
+}
+
+.machine-detail-actions .action-btn {
+    width: 100%;
+}
+
 /* Recording Modal Specific */
 #waveform-canvas {
     width: 100%;
