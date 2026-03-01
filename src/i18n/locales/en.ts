@@ -829,10 +829,16 @@ export const en: TranslationDict = {
     machine: 'machine',
     machines: 'machines',
     fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
-    // Quick Compare option
-    optionQuickCompare: 'Quick compare link',
+    // Quick Compare option (Variant A: fleet-based)
+    optionQuickCompare: 'Quick compare (with fleet)',
     optionQuickCompareDetailDefault: 'Opens the app for a quick compare of the fleet.',
     optionQuickCompareDetail: 'Opens a quick compare for fleet "{{name}}".',
+    // Quick Compare count-only option (Variant B: no fleet DB)
+    optionQuickCompareCount: 'Quick compare (count only)',
+    optionQuickCompareCountDetailDefault: 'Opens the app for a quick compare with a set number of machines. No internet needed.',
+    optionQuickCompareCountDetail: 'Opens a quick compare with {{count}} machines. No internet needed.',
+    quickCompareCountLabel: 'How many machines?',
+    quickCompareCountHint: 'No internet needed when scanning. Machines are named automatically.',
   },
 
   // ============================================================================
@@ -871,10 +877,14 @@ export const en: TranslationDict = {
     fleetSelectLabel: 'Select fleet',
     fleetLabel: 'Fleet',
     fleetPrintTitle: 'Fleet QR Code',
-    // Quick Compare option
-    optionQuickCompare: 'Quick compare link',
+    // Quick Compare option (Variant A: fleet-based)
+    optionQuickCompare: 'Quick compare (with fleet)',
     optionQuickCompareDetailDefault: 'Creates a QR code for a quick compare of the fleet.',
     optionQuickCompareDetail: 'Creates quick compare QR code for fleet "{{name}}".',
+    // Quick Compare count-only option (Variant B)
+    optionQuickCompareCount: 'Quick compare (count only)',
+    optionQuickCompareCountDetailDefault: 'Creates a QR code for a quick compare with a set number of machines.',
+    optionQuickCompareCountDetail: 'Creates quick compare QR code for {{count}} machines.',
   },
 
   review: {

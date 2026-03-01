@@ -40,6 +40,8 @@ export interface RouteMatch {
   fleetDbUrl?: string;
   /** External database URL for import route (#/import?url=...) */
   importUrl?: string;
+  /** Machine count for quick compare count-only variant (#/q/<number>) */
+  machineCount?: number;
 }
 
 /**
@@ -258,13 +260,47 @@ export class HashRouter {
       return result;
     }
 
-    // Match /q/<fleet_id> pattern (quick compare deep link)
+    // Match /q/<value> pattern (quick compare deep link)
+    // Variant A: #/q/<fleetId>?c=<customerId> → fleet-based (value is NOT a pure integer)
+    // Variant B: #/q/<number> → count-only (value is a pure integer 2-30)
     const qcMatch = path.match(/^\/q\/([^/?]+)/);
 
     if (qcMatch) {
+      const rawValue = decodeURIComponent(qcMatch[1]);
+      const parsedInt = parseInt(rawValue, 10);
+      const isPureInteger = /^\d+$/.test(rawValue);
+
+      // Variant B: Pure integer → count-only quick compare (no fleet DB needed)
+      if (isPureInteger && parsedInt >= 2 && parsedInt <= 30) {
+        logger.info(`Quick Compare count-only route: ${parsedInt} machines`);
+        return {
+          type: 'quickcompare',
+          machineCount: parsedInt,
+        };
+      }
+
+      // Variant B edge cases: integer out of range
+      if (isPureInteger && parsedInt === 1) {
+        logger.warn(`Quick Compare: count=1 rejected (minimum 2)`);
+        return { type: 'unknown' };
+      }
+      if (isPureInteger && parsedInt > 30) {
+        // Cap at 30
+        logger.warn(`Quick Compare: count=${parsedInt} capped to 30`);
+        return {
+          type: 'quickcompare',
+          machineCount: 30,
+        };
+      }
+      if (isPureInteger && parsedInt <= 0) {
+        logger.warn(`Quick Compare: count=${parsedInt} rejected (invalid)`);
+        return { type: 'unknown' };
+      }
+
+      // Variant A: Non-integer → fleet-based quick compare
       const result: RouteMatch = {
         type: 'quickcompare',
-        fleetId: decodeURIComponent(qcMatch[1]),
+        fleetId: rawValue,
       };
 
       if (queryString) {
@@ -405,6 +441,21 @@ export class HashRouter {
   }
 
   /**
+   * Generate hash fragment for quick compare count-only deep link (#/q/<number>)
+   */
+  public static getQuickCompareCountHash(count: number): string {
+    return `#/q/${count}`;
+  }
+
+  /**
+   * Generate full URL for quick compare count-only NFC/QR tag
+   */
+  public static getFullQuickCompareCountUrl(count: number): string {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}${this.getQuickCompareCountHash(count)}`;
+  }
+
+  /**
    * Handle hash change event
    */
   private async handleHashChange(): Promise<void> {
@@ -436,9 +487,14 @@ export class HashRouter {
       await this.handleFleetRoute(match.fleetId, match.fleetDbUrl);
     }
 
-    // Handle quick compare route (same provisioning as fleet, different callback)
+    // Handle quick compare route - Variant A (fleet-based)
     if (match.type === 'quickcompare' && match.fleetId && match.fleetDbUrl) {
       await this.handleQuickCompareRoute(match.fleetId, match.fleetDbUrl);
+    }
+
+    // Handle quick compare route - Variant B (count-only, no download needed)
+    if (match.type === 'quickcompare' && match.machineCount) {
+      await this.handleQuickCompareCountOnly(match.machineCount);
     }
 
     // Handle import route
@@ -861,6 +917,41 @@ export class HashRouter {
       logger.error('Quick compare fleet provisioning failed:', error);
       notify.error(t('fleet.provision.error'));
       this.onDownloadError?.(error instanceof Error ? error.message : 'qc_provision_failed');
+    }
+  }
+
+  /**
+   * Handle quick compare count-only route (#/q/<number>).
+   * Creates N machines locally with auto-names – no download needed.
+   * Completely offline-capable.
+   */
+  private async handleQuickCompareCountOnly(count: number): Promise<void> {
+    try {
+      const now = Date.now();
+      const dateStr = new Date(now).toLocaleDateString();
+      const groupName = `${t('quickCompare.wizard.title')} ${dateStr}`;
+      const machineIds: string[] = [];
+
+      for (let i = 1; i <= count; i++) {
+        const paddedNumber = i.toString().padStart(2, '0');
+        const machine: Machine = {
+          id: `qc-${now}-${paddedNumber}-${Math.random().toString(36).substring(2, 6)}`,
+          name: t('zeroFriction.autoMachineName', { number: paddedNumber }),
+          createdAt: now,
+          referenceModels: [],
+          fleetGroup: groupName,
+        };
+        await saveMachine(machine);
+        machineIds.push(machine.id);
+      }
+
+      logger.info(`Quick Compare count-only: created ${count} machines locally`);
+      this.onQuickCompareReady?.(groupName, machineIds);
+
+    } catch (error) {
+      logger.error('Quick compare count-only provisioning failed:', error);
+      notify.error(t('fleet.provision.error'));
+      this.onDownloadError?.(error instanceof Error ? error.message : 'qc_count_provision_failed');
     }
   }
 

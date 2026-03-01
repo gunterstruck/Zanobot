@@ -855,10 +855,16 @@ export const de: TranslationDict = {
     machine: 'Maschine',
     machines: 'Maschinen',
     fleetRequiresCustomerId: 'Bitte Kundenkennung und Flotte auswählen.',
-    // Quick Compare option
-    optionQuickCompare: 'Schnellvergleich-Link',
+    // Quick Compare option (Variant A: fleet-based)
+    optionQuickCompare: 'Schnellvergleich (mit Flotte)',
     optionQuickCompareDetailDefault: 'Öffnet die App für einen Schnellvergleich der Flotte.',
     optionQuickCompareDetail: 'Öffnet einen Schnellvergleich für Flotte „{{name}}".',
+    // Quick Compare count-only option (Variant B: no fleet DB)
+    optionQuickCompareCount: 'Schnellvergleich (nur Anzahl)',
+    optionQuickCompareCountDetailDefault: 'Öffnet die App für einen Schnellvergleich mit einer bestimmten Anzahl Maschinen. Kein Internet nötig.',
+    optionQuickCompareCountDetail: 'Öffnet einen Schnellvergleich mit {{count}} Maschinen. Kein Internet nötig.',
+    quickCompareCountLabel: 'Wie viele Maschinen?',
+    quickCompareCountHint: 'Kein Internet nötig beim Scannen. Maschinen werden automatisch benannt.',
   },
 
   // ============================================================================
@@ -897,10 +903,14 @@ export const de: TranslationDict = {
     fleetSelectLabel: 'Flotte auswählen',
     fleetLabel: 'Flotte',
     fleetPrintTitle: 'Flotten-QR-Code',
-    // Quick Compare option
-    optionQuickCompare: 'Schnellvergleich-Link',
+    // Quick Compare option (Variant A: fleet-based)
+    optionQuickCompare: 'Schnellvergleich (mit Flotte)',
     optionQuickCompareDetailDefault: 'Erstellt QR-Code für einen Schnellvergleich der Flotte.',
     optionQuickCompareDetail: 'Erstellt Schnellvergleich-QR-Code für Flotte „{{name}}".',
+    // Quick Compare count-only option (Variant B)
+    optionQuickCompareCount: 'Schnellvergleich (nur Anzahl)',
+    optionQuickCompareCountDetailDefault: 'Erstellt QR-Code für einen Schnellvergleich mit einer bestimmten Anzahl Maschinen.',
+    optionQuickCompareCountDetail: 'Erstellt Schnellvergleich-QR-Code für {{count}} Maschinen.',
   },
 
   // ============================================================================

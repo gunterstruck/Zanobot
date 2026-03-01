@@ -838,10 +838,31 @@
                     <label class="nfc-option">
                         <input type="radio" name="nfc-write-option" id="nfc-option-quickcompare" value="quickcompare">
                         <span class="nfc-option-text">
-                            <span class="nfc-option-title" data-i18n="nfc.optionQuickCompare">Schnellvergleich-Link</span>
+                            <span class="nfc-option-title" data-i18n="nfc.optionQuickCompare">Schnellvergleich (mit Flotte)</span>
                             <span class="nfc-option-detail" id="nfc-option-quickcompare-detail" data-i18n="nfc.optionQuickCompareDetailDefault">Öffnet die App für einen Schnellvergleich der Flotte.</span>
                         </span>
                     </label>
+                    <label class="nfc-option">
+                        <input type="radio" name="nfc-write-option" id="nfc-option-quickcompare-count" value="quickcompare-count">
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="nfc.optionQuickCompareCount">Schnellvergleich (nur Anzahl)</span>
+                            <span class="nfc-option-detail" id="nfc-option-quickcompare-count-detail" data-i18n="nfc.optionQuickCompareCountDetailDefault">Öffnet einen Schnellvergleich mit einer bestimmten Anzahl Maschinen. Kein Internet nötig.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Quick Compare count input (shown only when count-only option selected) -->
+                <div id="nfc-qc-count-section" class="nfc-customer-id-section" style="display: none;">
+                    <label class="setting-label" data-i18n="nfc.quickCompareCountLabel">Wie viele Maschinen?</label>
+                    <div class="qc-count-chips" id="nfc-qc-count-chips">
+                        <button type="button" class="qc-count-chip" data-count="3">3</button>
+                        <button type="button" class="qc-count-chip" data-count="5">5</button>
+                        <button type="button" class="qc-count-chip" data-count="8">8</button>
+                        <button type="button" class="qc-count-chip" data-count="10">10</button>
+                        <input type="number" id="nfc-qc-count-input" class="machine-input qc-custom-input" min="2" max="30" placeholder="__">
+                    </div>
+                    <p class="nfc-customer-id-description" data-i18n="nfc.quickCompareCountHint">Kein Internet nötig beim Scannen. Maschinen werden automatisch benannt.</p>
+                    <p class="nfc-db-url-preview" id="nfc-qc-count-url-preview" style="display: none;"></p>
                 </div>
 
                 <!-- Fleet selection (shown only when fleet option selected) -->
@@ -852,7 +873,7 @@
                 </div>
 
                 <!-- Customer ID Input Field (Variante B) -->
-                <div class="nfc-customer-id-section">
+                <div id="nfc-customer-id-section" class="nfc-customer-id-section">
                     <label for="nfc-customer-id-input" class="nfc-customer-id-label" data-i18n="nfc.customerIdLabel">Kundenkennung (c)</label>
                     <p class="nfc-customer-id-description" data-i18n="nfc.customerIdDescription">Diese Kennung bestimmt, welche Referenzdaten beim NFC-Scan geladen werden. Die App lädt automatisch: https://gunterstruck.github.io/&lt;Kundenkennung&gt;/db-latest.json</p>
                     <input
@@ -916,10 +937,31 @@
                     <label class="nfc-option">
                         <input type="radio" name="qr-option" id="qr-option-quickcompare" value="quickcompare">
                         <span class="nfc-option-text">
-                            <span class="nfc-option-title" data-i18n="qrCode.optionQuickCompare">Schnellvergleich-Link</span>
+                            <span class="nfc-option-title" data-i18n="qrCode.optionQuickCompare">Schnellvergleich (mit Flotte)</span>
                             <span class="nfc-option-detail" id="qr-option-quickcompare-detail" data-i18n="qrCode.optionQuickCompareDetailDefault">Erstellt QR-Code für einen Schnellvergleich der Flotte.</span>
                         </span>
                     </label>
+                    <label class="nfc-option">
+                        <input type="radio" name="qr-option" id="qr-option-quickcompare-count" value="quickcompare-count">
+                        <span class="nfc-option-text">
+                            <span class="nfc-option-title" data-i18n="qrCode.optionQuickCompareCount">Schnellvergleich (nur Anzahl)</span>
+                            <span class="nfc-option-detail" id="qr-option-quickcompare-count-detail" data-i18n="qrCode.optionQuickCompareCountDetailDefault">Erstellt QR-Code für einen Schnellvergleich mit einer bestimmten Anzahl Maschinen.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Quick Compare count input (shown only when count-only option selected) -->
+                <div id="qr-qc-count-section" class="nfc-customer-id-section" style="display: none;">
+                    <label class="setting-label" data-i18n="nfc.quickCompareCountLabel">Wie viele Maschinen?</label>
+                    <div class="qc-count-chips" id="qr-qc-count-chips">
+                        <button type="button" class="qc-count-chip" data-count="3">3</button>
+                        <button type="button" class="qc-count-chip" data-count="5">5</button>
+                        <button type="button" class="qc-count-chip" data-count="8">8</button>
+                        <button type="button" class="qc-count-chip" data-count="10">10</button>
+                        <input type="number" id="qr-qc-count-input" class="machine-input qc-custom-input" min="2" max="30" placeholder="__">
+                    </div>
+                    <p class="nfc-customer-id-description" data-i18n="nfc.quickCompareCountHint">Kein Internet nötig beim Scannen. Maschinen werden automatisch benannt.</p>
+                    <p class="nfc-db-url-preview" id="qr-qc-count-url-preview" style="display: none;"></p>
                 </div>
 
                 <!-- Fleet selection (shown only when fleet option selected) -->
