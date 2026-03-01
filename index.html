@@ -2082,6 +2082,32 @@
         </div>
     </div>
 
+    <!-- Modal: Machine Detail (shown after selecting a machine from quick-select or overview) -->
+    <div id="machine-detail-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="machine-detail-title" aria-modal="true">
+        <div class="modal-content machine-detail-content">
+            <div class="modal-header">
+                <h3 id="machine-detail-title" data-i18n="identify.machineDetail.title">Maschine</h3>
+                <button class="close-modal-btn" id="close-machine-detail-modal" aria-label="Schließen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="machine-detail-body">
+                <div class="machine-detail-info">
+                    <h4 id="machine-detail-name" class="machine-detail-name">—</h4>
+                    <p id="machine-detail-id" class="machine-detail-id">—</p>
+                </div>
+                <div id="machine-detail-signatures" class="machine-detail-signatures">
+                    <!-- Reference models / signatures will be populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-actions machine-detail-actions">
+                <button class="action-btn" id="machine-detail-select-btn" data-i18n="identify.machineDetail.select">Maschine laden</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Machine Recognized (Fall A - High Confidence ≥80%) -->
     <div id="machine-recognized-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="recognized-title" aria-modal="true">
         <div class="modal-content recognized-content">

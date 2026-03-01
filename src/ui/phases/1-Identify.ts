@@ -7,7 +7,7 @@
  * - Manual entry
  */
 
-import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses, deleteMachine, getRecordingsForMachine, getDiagnosesForMachine } from '@data/db.js';
+import { saveMachine, getMachine, getAllMachines, getLatestDiagnosis, getAllDiagnoses, deleteMachine, getRecordingsForMachine, getDiagnosesForMachine, deleteReferenceModel } from '@data/db.js';
 import { notify } from '@utils/notifications.js';
 import type { Machine, DiagnosisResult } from '@data/types.js';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -15,7 +15,7 @@ import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { escapeHtml } from '@utils/sanitize.js';
 import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
-import { t } from '../../i18n/index.js';
+import { t, getLocale } from '../../i18n/index.js';
 import { InfoBottomSheet } from '../components/InfoBottomSheet.js';
 import {
   HardwareCheck,
@@ -203,6 +203,9 @@ export class IdentifyPhase {
 
     // Initialize hardware check
     this.initializeHardwareCheck();
+
+    // Initialize machine detail modal
+    this.initMachineDetailModal();
 
     // Load and render machine history for quick select
     this.loadMachineHistory();
@@ -1209,6 +1212,172 @@ export class IdentifyPhase {
   private setCurrentMachine(machine: Machine): void {
     this.currentMachine = machine;
     this.updateNfcSpecificOption();
+  }
+
+  /**
+   * ========================================
+   * MACHINE DETAIL MODAL
+   * ========================================
+   */
+
+  /**
+   * Initialize machine detail modal event listeners
+   */
+  private initMachineDetailModal(): void {
+    const modal = document.getElementById('machine-detail-modal');
+    const closeBtn = document.getElementById('close-machine-detail-modal');
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeMachineDetailModal());
+    }
+
+    // Close on backdrop click
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeMachineDetailModal();
+        }
+      });
+    }
+  }
+
+  /**
+   * Show machine detail modal with reference models / signatures
+   */
+  private showMachineDetailModal(machine: Machine): void {
+    const modal = document.getElementById('machine-detail-modal');
+    const nameEl = document.getElementById('machine-detail-name');
+    const idEl = document.getElementById('machine-detail-id');
+    const signaturesContainer = document.getElementById('machine-detail-signatures');
+    const selectBtn = document.getElementById('machine-detail-select-btn');
+
+    if (!modal || !nameEl || !idEl || !signaturesContainer || !selectBtn) {
+      logger.warn('Machine detail modal elements not found');
+      // Fallback: direct selection
+      this.setCurrentMachine(machine);
+      this.onMachineSelected(machine);
+      return;
+    }
+
+    // Set machine info
+    nameEl.textContent = machine.name;
+    idEl.textContent = machine.id;
+
+    // Render signatures / reference models
+    this.renderMachineDetailSignatures(signaturesContainer, machine);
+
+    // Wire up select button (remove old listeners by cloning)
+    const newSelectBtn = selectBtn.cloneNode(true) as HTMLButtonElement;
+    selectBtn.parentNode!.replaceChild(newSelectBtn, selectBtn);
+    newSelectBtn.addEventListener('click', () => {
+      this.closeMachineDetailModal();
+      this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
+      this.setCurrentMachine(machine);
+      this.onMachineSelected(machine);
+    });
+
+    // Show modal
+    modal.style.display = 'flex';
+    logger.info(`Machine detail modal opened for: ${machine.name} (${machine.id})`);
+  }
+
+  /**
+   * Render reference model / signature list inside the machine detail modal
+   */
+  private renderMachineDetailSignatures(container: HTMLElement, machine: Machine): void {
+    container.innerHTML = '';
+
+    const title = document.createElement('h5');
+    title.textContent = t('reference.trainedStates');
+    container.appendChild(title);
+
+    const models = machine.referenceModels;
+
+    if (!models || models.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'machine-detail-empty';
+      empty.textContent = t('reference.noModels');
+      container.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement('ul');
+    list.className = 'machine-detail-signature-list';
+
+    models.forEach((model) => {
+      const li = document.createElement('li');
+      li.className = 'machine-detail-signature-item';
+
+      // Info section
+      const info = document.createElement('div');
+      info.className = 'machine-detail-signature-info';
+
+      const label = document.createElement('div');
+      label.className = 'machine-detail-signature-label';
+      label.textContent = model.label || t('reference.unnamed', { index: String(list.children.length + 1) });
+
+      const date = document.createElement('div');
+      date.className = 'machine-detail-signature-date';
+      date.textContent = model.trainingDate
+        ? new Date(model.trainingDate).toLocaleString(getLocale(), {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '';
+
+      info.appendChild(label);
+      info.appendChild(date);
+
+      // Type badge
+      const typeBadge = document.createElement('span');
+      typeBadge.className = `machine-detail-signature-type type-${model.type}`;
+      typeBadge.textContent = model.type === 'healthy' ? 'OK' : model.type;
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'machine-detail-delete-btn';
+      deleteBtn.setAttribute('aria-label', t('reference.deleteModel'));
+      deleteBtn.textContent = '\uD83D\uDDD1\uFE0F';
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const confirmed = confirm(
+          t('reference.confirmDeleteModel', { name: model.label || '' })
+        );
+        if (!confirmed) return;
+
+        const deleted = await deleteReferenceModel(machine.id, model.label || '');
+        if (deleted) {
+          notify.success(t('reference.modelDeleted', { name: model.label || '' }));
+          // Reload machine and re-render the modal
+          const updated = await getMachine(machine.id);
+          if (updated) {
+            this.renderMachineDetailSignatures(container, updated);
+            // Also refresh the overview lists
+            await this.refreshMachineLists();
+          }
+        }
+      });
+
+      li.appendChild(info);
+      li.appendChild(typeBadge);
+      li.appendChild(deleteBtn);
+      list.appendChild(li);
+    });
+
+    container.appendChild(list);
+  }
+
+  /**
+   * Close machine detail modal
+   */
+  private closeMachineDetailModal(): void {
+    const modal = document.getElementById('machine-detail-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
   }
 
   /**
@@ -2642,17 +2811,15 @@ export class IdentifyPhase {
     try {
       logger.info(`Quick select: ${machine.name} (${machine.id})`);
 
-      // DEBUG LOGGING: Show quick-selected machine
-      logger.debug('🎯 Quick-Select Clicked:', {
-        id: machine.id,
-        name: machine.name,
-        numModels: machine.referenceModels?.length || 0,
-      });
-      logger.debug('📞 Calling onMachineSelected() with quick-selected machine...');
+      // Reload machine from DB to get latest state
+      const freshMachine = await getMachine(machine.id);
+      if (!freshMachine) {
+        this.showError(t('identify.errors.machineNotFound'));
+        await this.refreshMachineLists();
+        return;
+      }
 
-      this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
-      this.setCurrentMachine(machine);
-      this.onMachineSelected(machine);
+      this.showMachineDetailModal(freshMachine);
     } catch (error) {
       logger.error('Failed to quick select machine:', error);
       this.showError(t('identify.errors.machineLoad'));
@@ -3877,9 +4044,16 @@ export class IdentifyPhase {
    */
   private async handleMachineSelect(machine: Machine): Promise<void> {
     logger.info(`Machine selected from overview: ${machine.name} (${machine.id})`);
-    this.showNotification(t('identify.success.machineLoaded', { name: machine.name }));
-    this.setCurrentMachine(machine);
-    this.onMachineSelected(machine);
+
+    // Reload machine from DB to get latest state
+    const freshMachine = await getMachine(machine.id);
+    if (!freshMachine) {
+      this.showError(t('identify.errors.machineNotFound'));
+      await this.refreshMachineLists();
+      return;
+    }
+
+    this.showMachineDetailModal(freshMachine);
   }
 
   /**

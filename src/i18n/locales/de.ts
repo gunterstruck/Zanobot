@@ -111,6 +111,12 @@ export const de: TranslationDict = {
     noMachines: 'Keine Maschinen vorhanden',
     statesTrained: '{{count}} Zustände trainiert',
 
+    // Machine detail modal
+    machineDetail: {
+      title: 'Maschine',
+      select: 'Maschine laden',
+    },
+
     // Sprint 2 UX: Empty state mini guide
     emptyGuide: {
       title: 'So funktioniert Zanobot',

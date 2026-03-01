@@ -109,6 +109,11 @@ export const es: TranslationDict = {
     noMachines: 'No hay máquinas disponibles',
     statesTrained: '{{count}} estados entrenados',
 
+    machineDetail: {
+      title: 'Máquina',
+      select: 'Cargar máquina',
+    },
+
     errors: {
       scannerStart: 'Error al iniciar el escáner',
       cameraAccessDenied: 'Acceso a la cámara denegado',
