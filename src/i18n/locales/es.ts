@@ -1113,6 +1113,7 @@ export const es: TranslationDict = {
       startButton: 'Check {{count}} machines',
       progress: '{{name}} ({{current}} of {{total}})',
       complete: 'Fleet check complete: {{count}} machines in "{{name}}" checked.',
+      completePartial: '{{checked}} of {{total}} machines checked ({{skipped}} skipped) – {{name}}',
       cancelled: 'Fleet check cancelled.',
       resumed: 'Fleet check resumed.',
       guided: {

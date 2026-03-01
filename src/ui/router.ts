@@ -49,6 +49,8 @@ export class Router {
   private isFleetQueueActive: boolean = false;
   private isFleetQueuePaused: boolean = false;
   private boundVisibilityHandler: (() => void) | null = null;
+  /** Sprint 6: Count skipped machines in guided fleet check */
+  private fleetQueueSkipped: number = 0;
 
   constructor() {
     // Initialize Phase 1 (always available)
@@ -977,6 +979,7 @@ export class Router {
     this.fleetQueueGroupName = groupName;
     this.isFleetQueueActive = true;
     this.isFleetQueuePaused = false;
+    this.fleetQueueSkipped = 0;
 
     // Sprint 5 Fix: Watch for app going to background to pause queue
     this.boundVisibilityHandler = () => this.handleVisibilityChange();
@@ -1147,6 +1150,7 @@ export class Router {
     skipBtn.textContent = t('fleet.queue.guided.skip');
     skipBtn.addEventListener('click', () => {
       prompt.remove();
+      this.fleetQueueSkipped++;
       this.fleetQueueIndex++;
       // Short delay before next prompt
       setTimeout(() => this.advanceFleetQueue(), 300);
@@ -1233,12 +1237,25 @@ export class Router {
    * Sprint 5: Complete fleet queue and show ranking
    */
   private completeFleetQueue(): void {
+    const total = this.fleetQueue.length;
+    const skipped = this.fleetQueueSkipped;
+    const checked = total - skipped;
+
     this.cleanupFleetQueue();
 
-    notify.success(t('fleet.queue.complete', {
-      count: String(this.fleetQueue.length),
-      name: this.fleetQueueGroupName,
-    }));
+    if (skipped > 0) {
+      notify.success(t('fleet.queue.completePartial', {
+        checked: String(checked),
+        total: String(total),
+        skipped: String(skipped),
+        name: this.fleetQueueGroupName,
+      }));
+    } else {
+      notify.success(t('fleet.queue.complete', {
+        count: String(total),
+        name: this.fleetQueueGroupName,
+      }));
+    }
 
     // Navigate back to fleet ranking
     this.identifyPhase.showFleetRanking();
