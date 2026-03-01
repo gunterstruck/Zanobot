@@ -1523,6 +1523,35 @@ export const de: TranslationDict = {
       updateRecommended: 'Die Flotten-Datei wurde mit einer neueren App-Version erstellt. App-Update empfohlen.',
       skippedDifferentFleet: '„{{name}}" gehört zu Flotte „{{fleet}}" – nicht umgehängt.',
     },
+    // Fleet Result Modal (after fleet queue completes)
+    result: {
+      title: 'Flotten-Ergebnis',
+      complete: 'Flottencheck abgeschlossen',
+      completeWithOutliers: 'Flottencheck abgeschlossen – Ausreißer erkannt',
+      summary: '„{{name}}" · {{checked}} von {{total}} geprüft',
+      summarySkipped: '{{skipped}} übersprungen',
+      statsMedian: 'Median',
+      statsSpread: 'Spannweite',
+      statsWorst: 'Schlechteste',
+      rankingTitle: 'Ranking',
+      notChecked: 'Nicht geprüft',
+      save: 'Ergebnisse speichern',
+      discard: 'Verwerfen',
+      discardConfirm: 'Diagnosen dieses Durchlaufs wirklich löschen? Die Maschinen und Referenzen bleiben erhalten.',
+      discardDone: '{{count}} Diagnosen verworfen',
+      viewHistory: 'Verlauf anzeigen',
+    },
+    // Fleet History Modal
+    history: {
+      title: 'Flottencheck-Verlauf',
+      subtitle: '{{name}}',
+      date: 'Datum',
+      median: 'Median',
+      spread: 'Spannweite',
+      checked: 'Geprüft',
+      noTrend: 'Noch kein Trend – erst nach mehreren Flottenprüfungen verfügbar.',
+      close: 'Schließen',
+    },
   },
 
   // ============================================================================

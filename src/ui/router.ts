@@ -17,7 +17,7 @@ import { SettingsPhase } from './phases/4-Settings.js';
 import { AutoDetectionPhase } from './phases/AutoDetectionPhase.js';
 import { DiagnoseCardController } from './components/DiagnoseCardController.js';
 import { ReferenceCardController } from './components/ReferenceCardController.js';
-import { getAllMachines, getMachine } from '@data/db.js';
+import { getAllMachines, getMachine, getLatestDiagnosis, getDiagnosesForMachine, deleteDiagnosis } from '@data/db.js';
 import type { AutoDetectionResult, MachineMatchResult } from '@data/types.js';
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
@@ -52,6 +52,8 @@ export class Router {
   private boundVisibilityHandler: (() => void) | null = null;
   /** Sprint 6: Count skipped machines in guided fleet check */
   private fleetQueueSkipped: number = 0;
+  /** Track diagnosis IDs created during fleet queue for discard functionality */
+  private fleetQueueDiagnosisIds: string[] = [];
 
   /** Sprint 7: Quick Compare Controller */
   private quickCompareController: QuickCompareController;
@@ -627,7 +629,10 @@ export class Router {
 
     // Sprint 5: Register fleet queue callbacks if queue is active
     if (this.isFleetQueueActive) {
-      this.diagnosePhase.setOnDiagnosisComplete(() => {
+      this.diagnosePhase.setOnDiagnosisComplete((diagnosis) => {
+        if (diagnosis?.id) {
+          this.fleetQueueDiagnosisIds.push(diagnosis.id);
+        }
         this.fleetQueueIndex++;
         // Short delay to show result, then advance
         setTimeout(() => this.advanceFleetQueue(), 1500);
@@ -1005,6 +1010,7 @@ export class Router {
     this.isFleetQueueActive = true;
     this.isFleetQueuePaused = false;
     this.fleetQueueSkipped = 0;
+    this.fleetQueueDiagnosisIds = [];
 
     // Sprint 5 Fix: Watch for app going to background to pause queue
     this.boundVisibilityHandler = () => this.handleVisibilityChange();
@@ -1259,10 +1265,13 @@ export class Router {
   /**
    * Sprint 5: Complete fleet queue and show ranking
    */
-  private completeFleetQueue(): void {
+  private async completeFleetQueue(): Promise<void> {
     const total = this.fleetQueue.length;
     const skipped = this.fleetQueueSkipped;
     const checked = total - skipped;
+    const groupName = this.fleetQueueGroupName;
+    const diagnosisIds = [...this.fleetQueueDiagnosisIds];
+    const machineIds = [...this.fleetQueue];
 
     this.cleanupFleetQueue();
 
@@ -1272,22 +1281,524 @@ export class Router {
       return;
     }
 
-    if (skipped > 0) {
-      notify.success(t('fleet.queue.completePartial', {
-        checked: String(checked),
-        total: String(total),
-        skipped: String(skipped),
-        name: this.fleetQueueGroupName,
-      }));
-    } else {
-      notify.success(t('fleet.queue.complete', {
-        count: String(total),
-        name: this.fleetQueueGroupName,
-      }));
+    // Show fleet result modal instead of toast + immediate ranking
+    await this.showFleetResultModal({
+      groupName,
+      machineIds,
+      diagnosisIds,
+      total,
+      checked,
+      skipped,
+    });
+  }
+
+  // ============================================================================
+  // FLEET RESULT MODAL
+  // ============================================================================
+
+  /**
+   * Calculate fleet statistics from an array of scores.
+   * Mirrors IdentifyPhase.calculateFleetStats() logic.
+   */
+  private calculateFleetStats(scores: number[]): {
+    median: number;
+    outlierThreshold: number;
+    min: number;
+    max: number;
+    spread: number;
+  } | null {
+    if (scores.length < 2) return null;
+
+    const sorted = [...scores].sort((a, b) => a - b);
+    const n = sorted.length;
+
+    const median = n % 2 === 0
+      ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+      : sorted[Math.floor(n / 2)];
+
+    // MAD (Median Absolute Deviation)
+    const deviations = sorted.map(s => Math.abs(s - median));
+    deviations.sort((a, b) => a - b);
+    const mad = deviations.length % 2 === 0
+      ? (deviations[deviations.length / 2 - 1] + deviations[deviations.length / 2]) / 2
+      : deviations[Math.floor(deviations.length / 2)];
+
+    const effectiveMAD = mad > 0 ? mad : 2.5;
+    const outlierThreshold = median - 2 * effectiveMAD;
+
+    return {
+      median,
+      outlierThreshold,
+      min: sorted[0],
+      max: sorted[n - 1],
+      spread: sorted[n - 1] - sorted[0],
+    };
+  }
+
+  /**
+   * Show fleet result modal after fleet queue completes.
+   */
+  private async showFleetResultModal(params: {
+    groupName: string;
+    machineIds: string[];
+    diagnosisIds: string[];
+    total: number;
+    checked: number;
+    skipped: number;
+  }): Promise<void> {
+    const { groupName, machineIds, diagnosisIds, total, checked, skipped } = params;
+
+    // Load machines and their latest diagnoses
+    const ranked: Array<{ machine: Machine; score: number | null }> = [];
+    for (const id of machineIds) {
+      const machine = await getMachine(id);
+      if (!machine) continue;
+      const diagnosis = await getLatestDiagnosis(id);
+      ranked.push({ machine, score: diagnosis ? diagnosis.healthScore : null });
     }
 
-    // Navigate back to fleet ranking
-    this.identifyPhase.showFleetRanking();
+    // Sort: lowest score first (outlier at top), null-scores at bottom
+    ranked.sort((a, b) => {
+      if (a.score === null && b.score === null) return 0;
+      if (a.score === null) return 1;
+      if (b.score === null) return -1;
+      return a.score - b.score;
+    });
+
+    // Calculate statistics
+    const scores = ranked.map(r => r.score).filter((s): s is number => s !== null);
+    const stats = this.calculateFleetStats(scores);
+    const outlierCount = stats ? scores.filter(s => s < stats.outlierThreshold).length : 0;
+    const hasOutliers = outlierCount > 0;
+
+    // Detect gold standard machine
+    let goldStandardId: string | null = null;
+    const refSourceIds = ranked.map(r => r.machine.fleetReferenceSourceId).filter(Boolean);
+    if (refSourceIds.length > 0) {
+      const counts = new Map<string, number>();
+      for (const id of refSourceIds) {
+        if (id) counts.set(id, (counts.get(id) || 0) + 1);
+      }
+      let maxCount = 0;
+      for (const [id, count] of counts) {
+        if (count > maxCount) {
+          goldStandardId = id;
+          maxCount = count;
+        }
+      }
+    }
+
+    // Build modal DOM
+    const overlay = document.createElement('div');
+    overlay.className = 'fleet-result-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'fleet-result-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    // --- Header ---
+    const header = document.createElement('div');
+    header.className = 'fleet-result-header';
+
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = t('fleet.result.title');
+    header.appendChild(titleEl);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'fleet-result-close';
+    closeBtn.setAttribute('aria-label', t('fleet.history.close'));
+    closeBtn.textContent = '\u2715';
+    header.appendChild(closeBtn);
+
+    modal.appendChild(header);
+
+    // --- Scrollable body ---
+    const body = document.createElement('div');
+    body.className = 'fleet-result-body';
+
+    // Status banner
+    const statusBanner = document.createElement('div');
+    statusBanner.className = `fleet-result-status ${hasOutliers ? 'fleet-result-status-warning' : 'fleet-result-status-ok'}`;
+
+    const statusIcon = document.createElement('div');
+    statusIcon.className = 'fleet-result-status-icon';
+    statusIcon.textContent = hasOutliers ? '\u26A0\uFE0F' : '\u2705';
+    statusBanner.appendChild(statusIcon);
+
+    const statusTitle = document.createElement('div');
+    statusTitle.className = 'fleet-result-status-title';
+    statusTitle.textContent = hasOutliers
+      ? t('fleet.result.completeWithOutliers')
+      : t('fleet.result.complete');
+    statusBanner.appendChild(statusTitle);
+
+    const statusSubtitle = document.createElement('div');
+    statusSubtitle.className = 'fleet-result-status-subtitle';
+    statusSubtitle.textContent = t('fleet.result.summary', {
+      name: groupName,
+      checked: String(checked),
+      total: String(total),
+    });
+    if (skipped > 0) {
+      statusSubtitle.textContent += ' · ' + t('fleet.result.summarySkipped', {
+        skipped: String(skipped),
+      });
+    }
+    statusBanner.appendChild(statusSubtitle);
+
+    body.appendChild(statusBanner);
+
+    // Statistics row (only if we have stats)
+    if (stats) {
+      const statsRow = document.createElement('div');
+      statsRow.className = 'fleet-result-stats';
+
+      const medianStat = this.createStatBlock(
+        t('fleet.result.statsMedian'),
+        `${stats.median.toFixed(0)}%`,
+      );
+      const spreadStat = this.createStatBlock(
+        t('fleet.result.statsSpread'),
+        `${stats.spread.toFixed(0)}%`,
+      );
+      const worstStat = this.createStatBlock(
+        t('fleet.result.statsWorst'),
+        `${stats.min.toFixed(0)}%`,
+      );
+
+      statsRow.appendChild(medianStat);
+      statsRow.appendChild(spreadStat);
+      statsRow.appendChild(worstStat);
+      body.appendChild(statsRow);
+    }
+
+    // Ranking list
+    const rankingSection = document.createElement('div');
+    rankingSection.className = 'fleet-result-ranking';
+
+    const rankingTitle = document.createElement('div');
+    rankingTitle.className = 'fleet-result-ranking-title';
+    rankingTitle.textContent = t('fleet.result.rankingTitle');
+    rankingSection.appendChild(rankingTitle);
+
+    for (const item of ranked) {
+      const isOutlier = stats !== null && item.score !== null
+        ? item.score < stats.outlierThreshold
+        : false;
+      const rankItem = this.createFleetResultRankingItem(
+        item.machine, item.score, stats, isOutlier, goldStandardId,
+      );
+      rankingSection.appendChild(rankItem);
+    }
+
+    body.appendChild(rankingSection);
+    modal.appendChild(body);
+
+    // --- Action buttons ---
+    const actions = document.createElement('div');
+    actions.className = 'fleet-result-actions';
+
+    const historyBtn = document.createElement('button');
+    historyBtn.className = 'fleet-result-btn-history';
+    historyBtn.textContent = '\uD83D\uDCCA ' + t('fleet.result.viewHistory');
+    historyBtn.addEventListener('click', () => {
+      this.showFleetHistory(groupName, machineIds);
+    });
+    actions.appendChild(historyBtn);
+
+    const btnRow = document.createElement('div');
+    btnRow.className = 'fleet-result-btn-row';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'fleet-result-btn-save';
+    saveBtn.textContent = '\u2705 ' + t('fleet.result.save');
+    saveBtn.addEventListener('click', () => {
+      overlay.remove();
+      this.identifyPhase.showFleetRanking();
+    });
+    btnRow.appendChild(saveBtn);
+
+    const discardBtn = document.createElement('button');
+    discardBtn.className = 'fleet-result-btn-discard';
+    discardBtn.textContent = '\uD83D\uDDD1 ' + t('fleet.result.discard');
+    discardBtn.addEventListener('click', async () => {
+      if (!confirm(t('fleet.result.discardConfirm'))) return;
+      await this.discardFleetResults(diagnosisIds);
+      notify.info(t('fleet.result.discardDone', { count: String(diagnosisIds.length) }));
+      overlay.remove();
+      this.identifyPhase.showFleetRanking();
+    });
+    btnRow.appendChild(discardBtn);
+
+    actions.appendChild(btnRow);
+    modal.appendChild(actions);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close handlers (implicit save)
+    const closeModal = () => {
+      overlay.remove();
+      this.identifyPhase.showFleetRanking();
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+
+    // Backdrop click closes (implicit save)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    // Escape key closes (implicit save)
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', escHandler);
+        closeModal();
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Focus the save button for keyboard accessibility
+    requestAnimationFrame(() => saveBtn.focus());
+  }
+
+  /**
+   * Create a stat display block (value + label).
+   */
+  private createStatBlock(label: string, value: string): HTMLElement {
+    const block = document.createElement('div');
+    block.className = 'fleet-result-stat';
+
+    const valueEl = document.createElement('div');
+    valueEl.className = 'fleet-result-stat-value';
+    valueEl.textContent = value;
+    block.appendChild(valueEl);
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'fleet-result-stat-label';
+    labelEl.textContent = label;
+    block.appendChild(labelEl);
+
+    return block;
+  }
+
+  /**
+   * Create a ranking item for the fleet result modal.
+   * Visually identical to the fleet ranking items, but without click handler.
+   */
+  private createFleetResultRankingItem(
+    machine: Machine,
+    score: number | null,
+    stats: { median: number; outlierThreshold: number; min: number; max: number; spread: number } | null,
+    isOutlier: boolean,
+    goldStandardId: string | null,
+  ): HTMLElement {
+    const item = document.createElement('div');
+    item.className = `fleet-rank-item${isOutlier ? ' fleet-outlier' : ''}`;
+
+    // Machine name
+    const nameEl = document.createElement('div');
+    nameEl.className = 'fleet-rank-name';
+    nameEl.textContent = machine.name;
+
+    // Gold Standard indicator
+    if (goldStandardId === machine.id) {
+      const goldBadge = document.createElement('span');
+      goldBadge.className = 'fleet-gold-badge';
+      goldBadge.textContent = '\uD83C\uDFC6';
+      goldBadge.title = t('fleet.goldStandard.badge');
+      nameEl.appendChild(goldBadge);
+    }
+
+    // Score bar container
+    const barContainer = document.createElement('div');
+    barContainer.className = 'fleet-rank-bar-container';
+
+    if (score !== null && stats) {
+      const bar = document.createElement('div');
+      bar.className = `fleet-rank-bar${isOutlier ? ' fleet-rank-bar-outlier' : ''}`;
+      bar.style.width = `${Math.max(score, 2)}%`;
+      barContainer.appendChild(bar);
+
+      const scoreLabel = document.createElement('span');
+      scoreLabel.className = `fleet-rank-score${isOutlier ? ' fleet-rank-score-outlier' : ''}`;
+      scoreLabel.textContent = isOutlier ? `\u26A0 ${score.toFixed(0)}%` : `${score.toFixed(0)}%`;
+      barContainer.appendChild(scoreLabel);
+    } else if (score !== null) {
+      // Score exists but no stats (single machine)
+      const bar = document.createElement('div');
+      bar.className = 'fleet-rank-bar';
+      bar.style.width = `${Math.max(score, 2)}%`;
+      barContainer.appendChild(bar);
+
+      const scoreLabel = document.createElement('span');
+      scoreLabel.className = 'fleet-rank-score';
+      scoreLabel.textContent = `${score.toFixed(0)}%`;
+      barContainer.appendChild(scoreLabel);
+    } else {
+      const noData = document.createElement('span');
+      noData.className = 'fleet-rank-nodata';
+      noData.textContent = t('fleet.result.notChecked');
+      barContainer.appendChild(noData);
+    }
+
+    item.appendChild(nameEl);
+    item.appendChild(barContainer);
+
+    // No click handler – this is a summary view, not navigation
+    return item;
+  }
+
+  /**
+   * Discard fleet results: delete diagnoses from this run.
+   */
+  private async discardFleetResults(diagnosisIds: string[]): Promise<void> {
+    for (const id of diagnosisIds) {
+      await deleteDiagnosis(id);
+    }
+  }
+
+  /**
+   * Show fleet check history modal (MVP table view).
+   */
+  private async showFleetHistory(groupName: string, machineIds: string[]): Promise<void> {
+    // Load all diagnoses for all fleet machines
+    const allDiagnoses: Array<{ machineId: string; timestamp: number; healthScore: number }> = [];
+    for (const id of machineIds) {
+      const diagnoses = await getDiagnosesForMachine(id);
+      for (const d of diagnoses) {
+        allDiagnoses.push({ machineId: d.machineId, timestamp: d.timestamp, healthScore: d.healthScore });
+      }
+    }
+
+    // Group by timestamp (±5 minutes = same run)
+    allDiagnoses.sort((a, b) => b.timestamp - a.timestamp);
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    const runs: Array<{ timestamp: number; scores: number[]; machineCount: number }> = [];
+
+    for (const d of allDiagnoses) {
+      const existingRun = runs.find(r => Math.abs(r.timestamp - d.timestamp) < FIVE_MINUTES);
+      if (existingRun) {
+        existingRun.scores.push(d.healthScore);
+        // Track unique machines
+        existingRun.machineCount = existingRun.scores.length;
+      } else {
+        runs.push({ timestamp: d.timestamp, scores: [d.healthScore], machineCount: 1 });
+      }
+    }
+
+    // Build history modal (reusing fleet-result-overlay pattern)
+    const overlay = document.createElement('div');
+    overlay.className = 'fleet-result-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'fleet-result-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'fleet-result-header';
+
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = t('fleet.history.title');
+    header.appendChild(titleEl);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'fleet-result-close';
+    closeBtn.setAttribute('aria-label', t('fleet.history.close'));
+    closeBtn.textContent = '\u2715';
+    header.appendChild(closeBtn);
+
+    modal.appendChild(header);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'fleet-result-body';
+
+    // Subtitle with group name
+    const subtitle = document.createElement('div');
+    subtitle.className = 'fleet-result-status-subtitle';
+    subtitle.style.textAlign = 'center';
+    subtitle.style.marginBottom = '16px';
+    subtitle.textContent = t('fleet.history.subtitle', { name: groupName });
+    body.appendChild(subtitle);
+
+    if (runs.length <= 1) {
+      // No trend yet
+      const noTrend = document.createElement('div');
+      noTrend.className = 'fleet-history-no-trend';
+      noTrend.textContent = t('fleet.history.noTrend');
+      body.appendChild(noTrend);
+    }
+
+    // Always show the runs we have (even if just one)
+    if (runs.length > 0) {
+      const list = document.createElement('ul');
+      list.className = 'fleet-history-list';
+
+      for (const run of runs) {
+        const runStats = this.calculateFleetStats(run.scores);
+        const li = document.createElement('li');
+        li.className = 'fleet-history-item';
+
+        const dateEl = document.createElement('span');
+        dateEl.className = 'fleet-history-date';
+        const dateObj = new Date(run.timestamp);
+        dateEl.textContent = dateObj.toLocaleDateString(getLocale(), {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }) + ' ' + dateObj.toLocaleTimeString(getLocale(), {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        li.appendChild(dateEl);
+
+        const statsEl = document.createElement('span');
+        statsEl.className = 'fleet-history-stats';
+        if (runStats) {
+          statsEl.textContent = `${t('fleet.history.median')} ${runStats.median.toFixed(0)}%  ·  ${t('fleet.history.spread')} ${runStats.spread.toFixed(0)}%  ·  ${run.machineCount}/${machineIds.length}`;
+        } else if (run.scores.length === 1) {
+          statsEl.textContent = `${run.scores[0].toFixed(0)}%  ·  1/${machineIds.length}`;
+        }
+        li.appendChild(statsEl);
+
+        list.appendChild(li);
+      }
+
+      body.appendChild(list);
+    }
+
+    modal.appendChild(body);
+
+    // Close button at bottom
+    const actions = document.createElement('div');
+    actions.className = 'fleet-result-actions';
+
+    const closeBtnBottom = document.createElement('button');
+    closeBtnBottom.className = 'fleet-result-btn-save';
+    closeBtnBottom.textContent = t('fleet.history.close');
+    closeBtnBottom.addEventListener('click', () => overlay.remove());
+    actions.appendChild(closeBtnBottom);
+
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    closeBtn.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', escHandler);
+        overlay.remove();
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   }
 
   /**

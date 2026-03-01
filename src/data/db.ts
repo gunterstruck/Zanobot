@@ -720,6 +720,16 @@ export async function getDiagnosesByStatus(
 }
 
 /**
+ * Delete a single diagnosis by ID
+ *
+ * @param diagnosisId - The diagnosis ID to delete
+ */
+export async function deleteDiagnosis(diagnosisId: string): Promise<void> {
+  const db = await initDB();
+  await db.delete('diagnoses', diagnosisId);
+}
+
+/**
  * Get all diagnoses sorted by timestamp (newest first)
  *
  * @param limit - Maximum number of results (optional)
