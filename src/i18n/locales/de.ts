@@ -847,7 +847,7 @@ export const de: TranslationDict = {
     customerIdRequired: 'Bitte geben Sie eine Kundenkennung ein.',
     dbUrlPreview: 'Daten-URL: {{url}}',
     // Fleet option
-    optionFleet: 'Flotten-Link',
+    optionFleet: 'Flotten-Link (Flottencheck)',
     optionFleetDetailDefault: 'Öffnet die App mit einer kompletten Flotte.',
     optionFleetDetail: 'Öffnet die App für Flotte „{{name}}".',
     fleetSelectLabel: 'Flotte auswählen',
@@ -855,6 +855,10 @@ export const de: TranslationDict = {
     machine: 'Maschine',
     machines: 'Maschinen',
     fleetRequiresCustomerId: 'Bitte Kundenkennung und Flotte auswählen.',
+    // Quick Compare option
+    optionQuickCompare: 'Schnellvergleich-Link',
+    optionQuickCompareDetailDefault: 'Öffnet die App für einen Schnellvergleich der Flotte.',
+    optionQuickCompareDetail: 'Öffnet einen Schnellvergleich für Flotte „{{name}}".',
   },
 
   // ============================================================================
@@ -887,12 +891,16 @@ export const de: TranslationDict = {
     printInstructions: 'QR-Code ausschneiden und an der Maschine anbringen.',
     genericLabel: 'App-Zugang',
     // Fleet option
-    optionFleet: 'Flotten-Link',
+    optionFleet: 'Flotten-Link (Flottencheck)',
     optionFleetDetailDefault: 'Erstellt einen QR-Code für eine komplette Flotte.',
     optionFleetDetail: 'Erstellt QR-Code für Flotte „{{name}}".',
     fleetSelectLabel: 'Flotte auswählen',
     fleetLabel: 'Flotte',
     fleetPrintTitle: 'Flotten-QR-Code',
+    // Quick Compare option
+    optionQuickCompare: 'Schnellvergleich-Link',
+    optionQuickCompareDetailDefault: 'Erstellt QR-Code für einen Schnellvergleich der Flotte.',
+    optionQuickCompareDetail: 'Erstellt Schnellvergleich-QR-Code für Flotte „{{name}}".',
   },
 
   // ============================================================================
@@ -1616,6 +1624,16 @@ export const de: TranslationDict = {
       cleanup: 'Testdaten löschen',
       cleanupConfirm: '{{count}} Maschinen aus diesem Schnellvergleich löschen?',
       cleanupDone: '{{count}} Maschinen gelöscht',
+    },
+    // NFC-triggered quick compare onboarding splash
+    nfcOnboarding: {
+      title: 'Schnellvergleich – {{count}} Maschinen',
+      titleSingular: 'Schnellvergleich – 1 Maschine',
+      concept: 'Klingt eine Maschine anders als die anderen? Diese App findet es heraus.',
+      method: 'Sie nehmen jede Maschine kurz auf – die App vergleicht die Geräusche und zeigt Ihnen das \u201Eschwarze Schaf\u201C.',
+      referenceHint: 'Zuerst brauchen wir eine Referenz: Gehen Sie zur Maschine, die sich NORMAL anhört, und nehmen Sie diese als erstes auf.',
+      startButton: 'Los geht\u2019s',
+      minMachines: 'Mindestens 2 Maschinen für einen Schnellvergleich nötig.',
     },
   },
 };
