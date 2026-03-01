@@ -1904,6 +1904,8 @@ export class IdentifyPhase {
         this.updateNfcFleetVisibility();
         this.updateNfcDbUrlPreview();
         this.updateNfcQcCountVisibility();
+        // Clear any previous validation error when switching radio options
+        this.setNfcStatus('');
       });
     });
 
@@ -2083,6 +2085,10 @@ export class IdentifyPhase {
     const { supported: supportsNfc, message } = this.getNfcSupportStatus();
     this.updateNfcSpecificOption();
     this.updateNfcSupportDetails();
+    // Ensure field visibility matches the currently selected radio option
+    this.updateNfcFleetVisibility();
+    this.updateNfcQcCountVisibility();
+    this.updateNfcDbUrlPreview();
     if (this.nfcWriteBtn) {
       this.nfcWriteBtn.disabled = !supportsNfc;
     }
@@ -2400,6 +2406,10 @@ export class IdentifyPhase {
     }
 
     this.updateQrSpecificOption();
+    // Ensure field visibility matches the currently selected radio option
+    this.updateQrFleetVisibility();
+    this.updateQrQcCountVisibility();
+    this.updateQrDbUrlPreview();
     this.qrModal.style.display = 'flex';
 
     // Generate initial QR code
