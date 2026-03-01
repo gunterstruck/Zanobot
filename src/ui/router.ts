@@ -25,6 +25,7 @@ import { notify } from '@utils/notifications.js';
 import { escapeHtml } from '@utils/sanitize.js';
 import { t, getLocale, LANGUAGE_CHANGE_EVENT } from '../i18n/index.js';
 import { getRecordingSettings, RECORDING_SETTINGS_EVENT } from '@utils/recordingSettings.js';
+import { QuickCompareController } from './QuickCompareController.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -52,6 +53,9 @@ export class Router {
   /** Sprint 6: Count skipped machines in guided fleet check */
   private fleetQueueSkipped: number = 0;
 
+  /** Sprint 7: Quick Compare Controller */
+  private quickCompareController: QuickCompareController;
+
   constructor() {
     // Initialize Phase 1 (always available)
     this.identifyPhase = new IdentifyPhase((machine) => this.onMachineSelected(machine));
@@ -64,6 +68,22 @@ export class Router {
     this.identifyPhase.onFleetProvisioned = (fleetName: string) => {
       this.handleFleetProvisioned(fleetName);
     };
+
+    // Sprint 7: Initialize Quick Compare Controller
+    this.quickCompareController = new QuickCompareController();
+    this.quickCompareController.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
+    this.quickCompareController.onSelectMachine = (machine) => this.onMachineSelected(machine);
+    this.quickCompareController.onNavigateHome = () => {
+      this.identifyPhase.refreshMachineLists();
+    };
+
+    // Sprint 7: Wire up Quick Compare button
+    const qcBtn = document.getElementById('quick-compare-btn');
+    if (qcBtn) {
+      qcBtn.addEventListener('click', () => {
+        this.quickCompareController.start();
+      });
+    }
 
     // Initialize Phase 4 (Settings - always available, independent of machine selection)
     this.settingsPhase = new SettingsPhase();
@@ -636,6 +656,11 @@ export class Router {
 
       // ZERO-FRICTION: Unlock diagnosis phase after machine is created/updated
       this.unlockPhases();
+
+      // Sprint 7: Notify QuickCompare if active (reference recording complete)
+      if (this.quickCompareController.isActive) {
+        this.quickCompareController.onReferenceComplete(updatedMachine);
+      }
     });
   }
 
@@ -1243,6 +1268,12 @@ export class Router {
 
     this.cleanupFleetQueue();
 
+    // Sprint 7: If Quick Compare is active, show its result screen instead
+    if (this.quickCompareController.isActive) {
+      this.quickCompareController.showResults();
+      return;
+    }
+
     if (skipped > 0) {
       notify.success(t('fleet.queue.completePartial', {
         checked: String(checked),
@@ -1265,8 +1296,17 @@ export class Router {
    * Sprint 5: Cancel fleet queue
    */
   private cancelFleetQueue(): void {
+    // Sprint 7: If Quick Compare is active, show results for what was already checked
+    const wasQuickCompare = this.quickCompareController.isActive;
+
     this.cleanupFleetQueue();
     this.fleetQueue = [];
+
+    if (wasQuickCompare) {
+      this.quickCompareController.showResults();
+      return;
+    }
+
     notify.info(t('fleet.queue.cancelled'));
   }
 
