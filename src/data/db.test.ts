@@ -469,6 +469,67 @@ describe('Database Operations', () => {
       expect(machine!.referenceModels[0].weightVector).toBeInstanceOf(Float64Array);
     });
 
+    it('should overwrite placeholder name with imported name (merge mode)', async () => {
+      // Simulate auto-created machine with placeholder name (NFC provisioning scenario)
+      await saveMachine({
+        id: '50hz',
+        name: '50hz', // Placeholder: same as ID
+        nameIsPlaceholder: true,
+        createdAt: Date.now(),
+        referenceModels: [],
+      });
+
+      // Import database that contains the real machine name
+      const importDataMock = {
+        machines: [
+          {
+            id: '50hz',
+            name: 'V20', // Real name from exported database
+            createdAt: Date.now(),
+            referenceModels: [],
+          },
+        ],
+        recordings: [],
+        diagnoses: [],
+      };
+
+      await importData(importDataMock, true); // merge mode
+
+      const machine = await getMachine('50hz');
+      expect(machine).toBeDefined();
+      expect(machine!.name).toBe('V20'); // Imported name should overwrite placeholder
+      expect(machine!.nameIsPlaceholder).toBeUndefined(); // Flag should be cleared
+    });
+
+    it('should NOT overwrite manually set name with imported name (merge mode)', async () => {
+      // Machine with a real user-given name (no placeholder flag)
+      await saveMachine({
+        id: '50hz',
+        name: 'My Custom Name',
+        createdAt: Date.now(),
+        referenceModels: [],
+      });
+
+      const importDataMock = {
+        machines: [
+          {
+            id: '50hz',
+            name: 'V20',
+            createdAt: Date.now(),
+            referenceModels: [],
+          },
+        ],
+        recordings: [],
+        diagnoses: [],
+      };
+
+      await importData(importDataMock, true); // merge mode
+
+      const machine = await getMachine('50hz');
+      expect(machine).toBeDefined();
+      expect(machine!.name).toBe('My Custom Name'); // Manual name preserved
+    });
+
     it('should handle empty export', async () => {
       const exported = await exportData();
 

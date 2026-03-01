@@ -870,6 +870,7 @@ export class IdentifyPhase {
       const newMachine: Machine = {
         id,
         name: autoName,
+        nameIsPlaceholder: true,
         createdAt: Date.now(),
         referenceModels: [],
         referenceDbUrl: referenceDbUrl, // Include URL from NFC link
