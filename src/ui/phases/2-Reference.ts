@@ -122,12 +122,6 @@ export class ReferencePhase {
       machineName: machine.name,
     });
 
-    // Sprint 6 Fix: Show existing references when machine is set after init
-    if (machine.referenceModels && machine.referenceModels.length > 0) {
-      requestAnimationFrame(() => {
-        this.showMulticlassStatus();
-      });
-    }
   }
 
   /**
@@ -159,12 +153,6 @@ export class ReferencePhase {
       logger.debug('📝 Zero-friction record button initialized');
     }
 
-    // Show existing reference models list (with delete buttons) if machine already has references.
-    // Without this, the multiclass status was only shown after saving/deleting a reference,
-    // so users couldn't see or delete existing references when loading a machine.
-    if (this.machine?.referenceModels && this.machine.referenceModels.length > 0) {
-      this.showMulticlassStatus();
-    }
   }
 
   /**
@@ -1827,8 +1815,6 @@ export class ReferencePhase {
       } else {
         // Show success with option to download reference audio
         this.showSuccessWithExport();
-        // Show multiclass status (list of trained states + "Train Another" button)
-        this.showMulticlassStatus();
       }
 
       // Clear stored data
@@ -1897,57 +1883,6 @@ export class ReferencePhase {
     // Reset auto-created flag
     this.wasAutoCreated = false;
 
-    // Also show multiclass status for additional state training
-    this.showMulticlassStatus();
-  }
-
-  /**
-   * Show multiclass training status
-   *
-   * Displays a brief summary of trained states and a "Train Another State" button.
-   * Signature management (list with delete) lives in the machine detail modal
-   * inside 1-Identify.ts.
-   */
-  private showMulticlassStatus(): void {
-    // Find or create status container
-    let statusContainer = document.getElementById('multiclass-status');
-    if (!statusContainer) {
-      // Use dedicated mount point that lives outside both state containers
-      // (reference-no-machine / reference-machine-ready) so it's visible
-      // regardless of which state is active
-      const mountPoint = document.getElementById('multiclass-status-mount');
-      if (!mountPoint) return;
-
-      statusContainer = document.createElement('div');
-      statusContainer.id = 'multiclass-status';
-      statusContainer.className = 'multiclass-status';
-      mountPoint.appendChild(statusContainer);
-    }
-
-    // Clear existing content
-    statusContainer.innerHTML = '';
-
-    // Brief summary of trained states count
-    const models = this.machine?.referenceModels;
-    const count = models?.length ?? 0;
-
-    if (count > 0) {
-      const summary = document.createElement('p');
-      summary.className = 'multiclass-summary';
-      summary.textContent = t('reference.trainedStates') + `: ${count}`;
-      statusContainer.appendChild(summary);
-    }
-
-    // "Train Another State" button
-    const trainAnotherBtn = document.createElement('button');
-    trainAnotherBtn.id = 'train-another-btn';
-    trainAnotherBtn.className = 'btn btn-secondary';
-    trainAnotherBtn.textContent = t('buttons.trainAnother');
-    trainAnotherBtn.onclick = () => this.startRecording();
-    statusContainer.appendChild(trainAnotherBtn);
-
-    // Show container
-    statusContainer.style.display = 'block';
   }
 
   private applyAppShellLayout(): void {
