@@ -1904,9 +1904,9 @@ export class ReferencePhase {
   /**
    * Show multiclass training status
    *
-   * Displays:
-   * - List of all trained states (with labels and dates)
-   * - "Train Another State" button
+   * Displays a brief summary of trained states and a "Train Another State" button.
+   * Signature management (list with delete) lives in the machine detail modal
+   * inside 1-Identify.ts.
    */
   private showMulticlassStatus(): void {
     // Find or create status container
@@ -1927,81 +1927,16 @@ export class ReferencePhase {
     // Clear existing content
     statusContainer.innerHTML = '';
 
-    // Title
-    const title = document.createElement('h3');
-    title.textContent = t('reference.trainedStates');
-    statusContainer.appendChild(title);
-
-    // List of trained states
-    const stateList = document.createElement('ul');
-    stateList.className = 'state-list';
-
-    // CRITICAL FIX: Store local reference to prevent race conditions
-    // This ensures we iterate over the same snapshot even if this.machine.referenceModels changes
+    // Brief summary of trained states count
     const models = this.machine?.referenceModels;
+    const count = models?.length ?? 0;
 
-    // CRITICAL FIX: Check if referenceModels exists before iterating
-    if (models && models.length > 0) {
-      models.forEach((model) => {
-        const li = document.createElement('li');
-        li.className = 'state-item';
-
-        const dateStr = model.trainingDate
-          ? new Date(model.trainingDate).toLocaleString(getLocale(), {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : t('common.unknown');
-
-        // Use textContent instead of innerHTML to prevent XSS attacks
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'state-label';
-        labelSpan.textContent = model.label;
-
-        const dateSpan = document.createElement('span');
-        dateSpan.className = 'state-date';
-        dateSpan.textContent = dateStr;
-
-        // Sprint 1 UX: Delete button for individual reference model
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'reference-delete-btn';
-        deleteBtn.setAttribute('aria-label', t('reference.deleteModel'));
-        deleteBtn.textContent = '\uD83D\uDDD1\uFE0F';
-        deleteBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const confirmed = confirm(
-            t('reference.confirmDeleteModel', { name: model.label || `#${stateList.children.length + 1}` })
-          );
-          if (!confirmed) return;
-
-          const { deleteReferenceModel, getMachine } = await import('@data/db.js');
-          const deleted = await deleteReferenceModel(this.machine!.id, model.label || '');
-          if (deleted) {
-            notify.success(t('reference.modelDeleted', { name: model.label || `#${stateList.children.length + 1}` }));
-            // Reload machine and re-render
-            const updated = await getMachine(this.machine!.id);
-            if (updated) {
-              this.machine = updated;
-              if (this.onMachineUpdated) {
-                this.onMachineUpdated(updated);
-              }
-              this.showMulticlassStatus();
-            }
-          }
-        });
-
-        li.appendChild(labelSpan);
-        li.appendChild(dateSpan);
-        li.appendChild(deleteBtn);
-
-        stateList.appendChild(li);
-      });
+    if (count > 0) {
+      const summary = document.createElement('p');
+      summary.className = 'multiclass-summary';
+      summary.textContent = t('reference.trainedStates') + `: ${count}`;
+      statusContainer.appendChild(summary);
     }
-
-    statusContainer.appendChild(stateList);
 
     // "Train Another State" button
     const trainAnotherBtn = document.createElement('button');
