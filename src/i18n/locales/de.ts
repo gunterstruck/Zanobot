@@ -1489,6 +1489,7 @@ export const de: TranslationDict = {
       startButton: '{{count}} Maschinen prüfen',
       progress: '{{name}} ({{current}} von {{total}})',
       complete: 'Flottencheck abgeschlossen: {{count}} Maschinen in „{{name}}" geprüft.',
+      completePartial: '{{checked}} von {{total}} Maschinen geprüft ({{skipped}} übersprungen) – {{name}}',
       cancelled: 'Flottencheck abgebrochen.',
       resumed: 'Flottencheck fortgesetzt.',
       // Sprint 6: Guided fleet check
