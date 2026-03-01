@@ -1107,11 +1107,16 @@ export async function importData(
 
             // Sprint 6 Fix: Merge preserving existing local data.
             // Existing fields take priority; import only fills gaps.
+            // Exception: If the existing name is a placeholder (auto-created),
+            // prefer the imported name so NFC provisioning gets the real name.
+            const preferImportedName = existingMachine.nameIsPlaceholder && normalizedMachine.name;
             const mergedMachine: Machine = {
               ...normalizedMachine,              // import as base
               ...existingMachine,                // existing data overwrites
               // Explicitly merge fields where we want "fill gaps" behavior:
-              name: existingMachine.name || normalizedMachine.name,
+              name: preferImportedName ? normalizedMachine.name : (existingMachine.name || normalizedMachine.name),
+              // Clear placeholder flag after merge (name is now definitive)
+              nameIsPlaceholder: preferImportedName ? undefined : existingMachine.nameIsPlaceholder,
               location: existingMachine.location || normalizedMachine.location,
               notes: existingMachine.notes || normalizedMachine.notes,
               fleetGroup: existingMachine.fleetGroup || normalizedMachine.fleetGroup,

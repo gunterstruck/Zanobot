@@ -103,6 +103,14 @@ export interface Machine {
    * null/undefined = uses own referenceModels (default, backward compatible).
    */
   fleetReferenceSourceId?: string | null;
+
+  /**
+   * Set to true when the machine was auto-created and the name is a placeholder
+   * (e.g. the machine ID or a generic "Maschine <id>" string).
+   * When true, the merge-import logic will prefer the imported name over the existing one.
+   * Cleared after a successful merge import overwrites the placeholder name.
+   */
+  nameIsPlaceholder?: boolean;
 }
 
 /**

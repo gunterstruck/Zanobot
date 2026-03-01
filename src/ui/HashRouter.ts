@@ -500,7 +500,8 @@ export class HashRouter {
         logger.info(`🆕 Auto-creating machine ${machineId} from NFC link`);
         machine = {
           id: machineId,
-          name: machineId, // Will be updated from reference DB metadata
+          name: machineId, // Placeholder – will be updated from reference DB metadata
+          nameIsPlaceholder: true,
           createdAt: Date.now(),
           referenceModels: [],
           referenceDbUrl: referenceDbUrl,
