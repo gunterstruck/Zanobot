@@ -1124,6 +1124,20 @@ export const es: TranslationDict = {
         waitingForUser: 'Ready? Hold your smartphone near the machine.',
       },
     },
+    // Onboarding Splash (after NFC fleet provisioning)
+    onboarding: {
+      title: 'Fleet Check – {{count}} machines',
+      titleSingular: 'Fleet Check – 1 machine',
+      concept: 'Does one machine sound different from the others? This app finds out.',
+      method: 'You briefly record each machine – the app compares the sounds and shows you the \u201Codd one out\u201D.',
+      howTo: 'How it works:',
+      step1: 'Go to the displayed machine',
+      step2: 'Hold your smartphone close to the machine',
+      step3: 'Tap \u201CStart recording\u201D',
+      step4: 'Hold still for 10 sec. – done',
+      startButton: 'First machine',
+      noMachines: 'No machines in the fleet.',
+    },
     goldStandard: { badge: 'Gold Standard (referencia para la flota)', deleted: 'El Gold Standard "{{name}}" fue eliminado – {{count}} máquinas ahora usan su propia referencia.' },
     export: {
       button: 'Export fleet',

@@ -1501,6 +1501,20 @@ export const de: TranslationDict = {
         waitingForUser: 'Bereit? Halte das Smartphone an die Maschine.',
       },
     },
+    // Onboarding Splash (after NFC fleet provisioning)
+    onboarding: {
+      title: 'Flottencheck – {{count}} Maschinen',
+      titleSingular: 'Flottencheck – 1 Maschine',
+      concept: 'Klingt eine Maschine anders als die anderen? Diese App findet es heraus.',
+      method: 'Sie nehmen jede Maschine kurz auf – die App vergleicht die Geräusche und zeigt Ihnen das \u201Eschwarze Schaf\u201C.',
+      howTo: 'So geht\u2019s:',
+      step1: 'Zur angezeigten Maschine gehen',
+      step2: 'Smartphone nah an die Maschine halten',
+      step3: '\u201EAufnahme starten\u201C tippen',
+      step4: '10 Sek. still halten – fertig',
+      startButton: 'Erste Maschine',
+      noMachines: 'Keine Maschinen in der Flotte.',
+    },
     // Sprint 5 UX: Gold Standard badge
     goldStandard: {
       badge: 'Gold-Standard (Referenz für die Flotte)',
