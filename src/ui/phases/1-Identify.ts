@@ -23,7 +23,7 @@ import {
   type AudioDeviceInfo,
 } from '@core/audio/HardwareCheck.js';
 import { getMicrophones, getRawAudioStream, AUDIO_CONSTRAINTS } from '@core/audio/audioHelper.js';
-import { HashRouter } from '../HashRouter.js';
+import { HashRouter, GITHUB_PAGES_BASE_URL } from '../HashRouter.js';
 import { ReferenceDbService } from '@data/ReferenceDbService.js';
 import { nfcImportService } from '@data/NfcImportService.js';
 import QRCode from 'qrcode';
@@ -1750,12 +1750,18 @@ export class IdentifyPhase {
 
     // Show/hide fleet section based on radio selection
     [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption].forEach(radio => {
-      radio?.addEventListener('change', () => this.updateNfcFleetVisibility());
+      radio?.addEventListener('change', () => {
+        this.updateNfcFleetVisibility();
+        this.updateNfcDbUrlPreview();
+      });
     });
 
     // Fleet select change
     if (this.nfcFleetSelect) {
-      this.nfcFleetSelect.addEventListener('change', () => this.updateNfcFleetDetail());
+      this.nfcFleetSelect.addEventListener('change', () => {
+        this.updateNfcFleetDetail();
+        this.updateNfcDbUrlPreview();
+      });
     }
 
     this.updateNfcSpecificOption();
@@ -1769,14 +1775,37 @@ export class IdentifyPhase {
       return;
     }
 
-    const customerId = this.nfcCustomerIdInput.value.trim();
-    if (customerId) {
-      const dbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
-      this.nfcDbUrlPreview.textContent = t('nfc.dbUrlPreview', { url: dbUrl });
-      this.nfcDbUrlPreview.style.display = 'block';
-    } else {
+    const selectedOption = this.nfcFleetOption?.checked ? 'fleet'
+      : this.nfcSpecificOption?.checked ? 'specific'
+      : 'generic';
+
+    // Generic link: no data URL preview needed
+    if (selectedOption === 'generic') {
       this.nfcDbUrlPreview.style.display = 'none';
+      return;
     }
+
+    const customerId = this.nfcCustomerIdInput.value.trim();
+    if (!customerId) {
+      this.nfcDbUrlPreview.style.display = 'none';
+      return;
+    }
+
+    let dataUrl: string;
+    if (selectedOption === 'fleet') {
+      const fleetName = this.nfcFleetSelect?.value;
+      if (!fleetName) {
+        this.nfcDbUrlPreview.style.display = 'none';
+        return;
+      }
+      const fleetId = ReferenceDbService.slugifyFleetName(fleetName);
+      dataUrl = `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(customerId)}/fleet-${fleetId}.json`;
+    } else {
+      dataUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+    }
+
+    this.nfcDbUrlPreview.textContent = t('nfc.dbUrlPreview', { url: dataUrl });
+    this.nfcDbUrlPreview.style.display = 'block';
   }
 
   private async updateNfcFleetVisibility(): Promise<void> {
@@ -2072,25 +2101,31 @@ export class IdentifyPhase {
     if (this.qrGenericOption) {
       this.qrGenericOption.addEventListener('change', () => {
         this.updateQrFleetVisibility();
+        this.updateQrDbUrlPreview();
         void this.generateQrPreview();
       });
     }
     if (this.qrSpecificOption) {
       this.qrSpecificOption.addEventListener('change', () => {
         this.updateQrFleetVisibility();
+        this.updateQrDbUrlPreview();
         void this.generateQrPreview();
       });
     }
     if (this.qrFleetOption) {
       this.qrFleetOption.addEventListener('change', () => {
         this.updateQrFleetVisibility();
+        this.updateQrDbUrlPreview();
         void this.generateQrPreview();
       });
     }
 
     // Fleet select change triggers QR regeneration
     if (this.qrFleetSelect) {
-      this.qrFleetSelect.addEventListener('change', () => void this.generateQrPreview());
+      this.qrFleetSelect.addEventListener('change', () => {
+        this.updateQrDbUrlPreview();
+        void this.generateQrPreview();
+      });
     }
 
     // Customer ID input changes trigger QR regeneration
@@ -2161,14 +2196,37 @@ export class IdentifyPhase {
       return;
     }
 
-    const customerId = this.qrCustomerIdInput.value.trim();
-    if (customerId) {
-      const dbUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
-      this.qrDbUrlPreview.textContent = t('qrCode.dbUrlPreview', { url: dbUrl });
-      this.qrDbUrlPreview.style.display = 'block';
-    } else {
+    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+      : this.qrSpecificOption?.checked ? 'specific'
+      : 'generic';
+
+    // Generic link: no data URL preview needed
+    if (selectedOption === 'generic') {
       this.qrDbUrlPreview.style.display = 'none';
+      return;
     }
+
+    const customerId = this.qrCustomerIdInput.value.trim();
+    if (!customerId) {
+      this.qrDbUrlPreview.style.display = 'none';
+      return;
+    }
+
+    let dataUrl: string;
+    if (selectedOption === 'fleet') {
+      const fleetName = this.qrFleetSelect?.value;
+      if (!fleetName) {
+        this.qrDbUrlPreview.style.display = 'none';
+        return;
+      }
+      const fleetId = ReferenceDbService.slugifyFleetName(fleetName);
+      dataUrl = `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(customerId)}/fleet-${fleetId}.json`;
+    } else {
+      dataUrl = HashRouter.buildDbUrlFromCustomerId(customerId);
+    }
+
+    this.qrDbUrlPreview.textContent = t('qrCode.dbUrlPreview', { url: dataUrl });
+    this.qrDbUrlPreview.style.display = 'block';
   }
 
   private async updateQrFleetVisibility(): Promise<void> {
