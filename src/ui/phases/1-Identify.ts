@@ -91,7 +91,7 @@ export class IdentifyPhase {
   public onStartFleetQueue: ((machineIds: string[], groupName: string) => void) | null = null;
 
   /** Sprint 6: Callback for when fleet provisioning is complete (set by Router) */
-  public onFleetProvisioned: ((fleetName: string) => void) | null = null;
+  public onFleetProvisioned: ((fleetName: string, autoStartCheck: boolean) => void) | null = null;
 
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
@@ -1486,9 +1486,9 @@ export class IdentifyPhase {
           // Refresh machine lists to show new fleet
           this.refreshMachineLists();
 
-          // Notify parent (Router) to switch to fleet mode
+          // Notify parent (Router) to switch to fleet mode (auto-start guided check from deep link)
           if (this.onFleetProvisioned) {
-            this.onFleetProvisioned(fleetName);
+            this.onFleetProvisioned(fleetName, true);
           }
         });
 

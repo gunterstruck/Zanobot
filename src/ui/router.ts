@@ -67,8 +67,8 @@ export class Router {
     this.identifyPhase.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
 
     // Sprint 6: Wire up fleet provisioning callback
-    this.identifyPhase.onFleetProvisioned = (fleetName: string) => {
-      this.handleFleetProvisioned(fleetName);
+    this.identifyPhase.onFleetProvisioned = (fleetName: string, autoStartCheck: boolean) => {
+      this.handleFleetProvisioned(fleetName, autoStartCheck);
     };
 
     // Sprint 7: Initialize Quick Compare Controller
@@ -994,8 +994,8 @@ export class Router {
    * Sprint 6: Handle fleet provisioning completion.
    * Switches to fleet mode and shows the fleet ranking.
    */
-  private async handleFleetProvisioned(fleetName: string): Promise<void> {
-    logger.info(`🚢 Fleet provisioned: "${fleetName}" – switching to fleet mode`);
+  private async handleFleetProvisioned(fleetName: string, autoStartCheck: boolean = false): Promise<void> {
+    logger.info(`🚢 Fleet provisioned: "${fleetName}" – switching to fleet mode (autoStart=${autoStartCheck})`);
 
     // Refresh machine data
     await this.identifyPhase.refreshMachineLists();
@@ -1005,6 +1005,66 @@ export class Router {
 
     // Switch to fleet mode and show the fleet
     await this.identifyPhase.activateFleetMode(fleetName);
+
+    // Auto-start guided fleet check via onboarding splash (only from NFC/deep link)
+    if (autoStartCheck) {
+      const allMachines = await getAllMachines();
+      const fleetMachines = allMachines.filter(m => m.fleetGroup === fleetName);
+
+      if (fleetMachines.length === 0) {
+        notify.info(t('fleet.onboarding.noMachines'));
+        return;
+      }
+
+      this.showFleetOnboardingSplash(fleetName, fleetMachines.map(m => m.id), fleetMachines.length);
+    }
+  }
+
+  /**
+   * Show onboarding splash overlay after NFC fleet provisioning.
+   * Explains the fleet check concept and starts the guided queue on button tap.
+   */
+  private showFleetOnboardingSplash(fleetName: string, machineIds: string[], machineCount: number): void {
+    // Remove any existing splash
+    const existing = document.getElementById('fleet-onboarding-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'fleet-onboarding-overlay';
+    overlay.className = 'fleet-onboarding-overlay';
+
+    const titleKey = machineCount === 1 ? 'fleet.onboarding.titleSingular' : 'fleet.onboarding.title';
+    const titleText = escapeHtml(t(titleKey, { count: String(machineCount) }));
+
+    overlay.innerHTML = `
+      <div class="fleet-onboarding-card">
+        <div class="fleet-onboarding-icon">\uD83D\uDD0A</div>
+        <div class="fleet-onboarding-title">${titleText}</div>
+        <div class="fleet-onboarding-concept">${escapeHtml(t('fleet.onboarding.concept'))}</div>
+        <div class="fleet-onboarding-method">${escapeHtml(t('fleet.onboarding.method'))}</div>
+        <div class="fleet-onboarding-howto">${escapeHtml(t('fleet.onboarding.howTo'))}</div>
+        <ol class="fleet-onboarding-steps">
+          <li data-step="1.">${escapeHtml(t('fleet.onboarding.step1'))}</li>
+          <li data-step="2.">${escapeHtml(t('fleet.onboarding.step2'))}</li>
+          <li data-step="3.">${escapeHtml(t('fleet.onboarding.step3'))}</li>
+          <li data-step="4.">${escapeHtml(t('fleet.onboarding.step4'))}</li>
+        </ol>
+        <button class="fleet-onboarding-start-btn" id="fleet-onboarding-start-btn">
+          \u25B6 ${escapeHtml(t('fleet.onboarding.startButton'))}
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Start guided fleet check on button tap
+    const startBtn = document.getElementById('fleet-onboarding-start-btn');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        overlay.remove();
+        this.startFleetQueue(machineIds, fleetName);
+      });
+    }
   }
 
   // ============================================================================
