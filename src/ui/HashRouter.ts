@@ -28,7 +28,7 @@ export const GITHUB_PAGES_BASE_URL = 'https://gunterstruck.github.io';
  * Route match result
  */
 export interface RouteMatch {
-  type: 'machine' | 'fleet' | 'import' | 'unknown';
+  type: 'machine' | 'fleet' | 'quickcompare' | 'import' | 'unknown';
   machineId?: string;
   /** Fleet ID from fleet deep link */
   fleetId?: string;
@@ -78,6 +78,7 @@ export class HashRouter {
   private onDownloadError?: (error: string) => void;
   private onImportRequested?: (importUrl: string) => void;
   private onFleetReady?: (fleetName: string, machineCount: number) => void;
+  private onQuickCompareReady?: (fleetName: string, machineIds: string[]) => void;
   private boundHandleHashChange: () => void;
 
   constructor() {
@@ -126,6 +127,13 @@ export class HashRouter {
    */
   public setOnFleetReady(callback: (fleetName: string, machineCount: number) => void): void {
     this.onFleetReady = callback;
+  }
+
+  /**
+   * Set callback for when quick compare fleet provisioning is complete
+   */
+  public setOnQuickCompareReady(callback: (fleetName: string, machineIds: string[]) => void): void {
+    this.onQuickCompareReady = callback;
   }
 
   /**
@@ -250,6 +258,29 @@ export class HashRouter {
       return result;
     }
 
+    // Match /q/<fleet_id> pattern (quick compare deep link)
+    const qcMatch = path.match(/^\/q\/([^/?]+)/);
+
+    if (qcMatch) {
+      const result: RouteMatch = {
+        type: 'quickcompare',
+        fleetId: decodeURIComponent(qcMatch[1]),
+      };
+
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        const customerId = params.get('c');
+        if (customerId) {
+          result.customerId = customerId;
+          // Uses same fleet DB format: <base>/<customerId>/fleet-<fleetId>.json
+          result.fleetDbUrl = `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(customerId)}/fleet-${result.fleetId}.json`;
+          logger.info(`Quick Compare route: "${result.fleetId}" -> ${result.fleetDbUrl}`);
+        }
+      }
+
+      return result;
+    }
+
     return { type: 'unknown' };
   }
 
@@ -355,6 +386,25 @@ export class HashRouter {
   }
 
   /**
+   * Generate hash fragment for quick compare deep link
+   */
+  public static getQuickCompareHash(fleetId: string, customerId?: string): string {
+    const base = `#/q/${encodeURIComponent(fleetId)}`;
+    if (customerId) {
+      return `${base}?c=${encodeURIComponent(customerId)}`;
+    }
+    return base;
+  }
+
+  /**
+   * Generate full URL for quick compare NFC/QR tag
+   */
+  public static getFullQuickCompareUrl(fleetId: string, customerId?: string): string {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}${this.getQuickCompareHash(fleetId, customerId)}`;
+  }
+
+  /**
    * Handle hash change event
    */
   private async handleHashChange(): Promise<void> {
@@ -384,6 +434,11 @@ export class HashRouter {
     // Handle fleet route
     if (match.type === 'fleet' && match.fleetId && match.fleetDbUrl) {
       await this.handleFleetRoute(match.fleetId, match.fleetDbUrl);
+    }
+
+    // Handle quick compare route (same provisioning as fleet, different callback)
+    if (match.type === 'quickcompare' && match.fleetId && match.fleetDbUrl) {
+      await this.handleQuickCompareRoute(match.fleetId, match.fleetDbUrl);
     }
 
     // Handle import route
@@ -721,6 +776,91 @@ export class HashRouter {
       logger.error('Fleet provisioning failed:', error);
       notify.error(t('fleet.provision.error'));
       this.onDownloadError?.(error instanceof Error ? error.message : 'fleet_provision_failed');
+    }
+  }
+
+  /**
+   * Handle quick compare deep link - same provisioning as fleet but triggers quick compare flow.
+   * Uses the same fleet DB file format (zanobot-fleet-db).
+   */
+  private async handleQuickCompareRoute(fleetId: string, fleetDbUrl: string): Promise<void> {
+    try {
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 10);
+
+      // 1. Validate URL
+      const validation = ReferenceDbService.validateUrl(fleetDbUrl);
+      if (!validation.valid) {
+        logger.error(`Invalid quick compare fleet DB URL: ${validation.error}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.('invalid_fleet_url');
+        return;
+      }
+
+      // 2. Download fleet DB JSON
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 30);
+      let response: Response;
+      try {
+        response = await fetch(fleetDbUrl);
+      } catch (fetchError) {
+        logger.error(`Quick compare fleet DB fetch failed:`, fetchError);
+        notify.error(t('fleet.provision.offline'), { duration: 0 });
+        this.onDownloadError?.('fleet_download_failed_offline');
+        return;
+      }
+      if (!response.ok) {
+        logger.error(`Quick compare fleet DB download failed: ${response.status}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.('fleet_download_failed');
+        return;
+      }
+
+      const rawData = await response.json();
+
+      // 3. Validate format (same schema as fleet)
+      const formatCheck = this.validateFleetDb(rawData);
+      if (!formatCheck.valid) {
+        logger.error(`Quick compare fleet DB validation failed: ${formatCheck.error}`);
+        notify.error(t('fleet.provision.error'));
+        this.onDownloadError?.(`fleet_validation_failed: ${formatCheck.error}`);
+        return;
+      }
+
+      const fleetData = rawData as FleetDbFile;
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 50);
+
+      // 4. DB version compatibility warning
+      if (fleetData.exportDbVersion > 7) {
+        notify.warning(t('fleet.provision.updateRecommended'), { duration: 5000 });
+      }
+
+      // 5. Prepare import plan (Phase 1: RAM only)
+      const plan = await this.prepareFleetImport(fleetData);
+
+      for (const warning of plan.warnings) {
+        notify.warning(warning, { duration: 5000 });
+      }
+
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 70);
+
+      // 6. Commit import plan (Phase 2: DB writes with rollback)
+      if (plan.toCreate.length > 0 || plan.toUpdate.length > 0) {
+        await this.commitFleetImport(plan);
+      }
+
+      this.onDownloadProgress?.(t('fleet.provision.downloading'), 100);
+
+      // 7. Collect all machine IDs from the fleet DB
+      const machineIds = fleetData.machines.map(m => m.id as string);
+
+      logger.info(`Quick Compare fleet "${fleetData.fleet.name}" provisioned: ${machineIds.length} machines`);
+
+      // 8. Notify UI with machine IDs for quick compare flow
+      this.onQuickCompareReady?.(fleetData.fleet.name, machineIds);
+
+    } catch (error) {
+      logger.error('Quick compare fleet provisioning failed:', error);
+      notify.error(t('fleet.provision.error'));
+      this.onDownloadError?.(error instanceof Error ? error.message : 'qc_provision_failed');
     }
   }
 

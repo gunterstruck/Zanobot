@@ -71,6 +71,11 @@ export class Router {
       this.handleFleetProvisioned(fleetName, autoStartCheck);
     };
 
+    // Sprint 8: Wire up quick compare provisioning callback
+    this.identifyPhase.onQuickCompareProvisioned = (fleetName: string, machineIds: string[]) => {
+      this.handleQuickCompareProvisioned(fleetName, machineIds);
+    };
+
     // Sprint 7: Initialize Quick Compare Controller
     this.quickCompareController = new QuickCompareController();
     this.quickCompareController.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
@@ -1063,6 +1068,71 @@ export class Router {
       startBtn.addEventListener('click', () => {
         overlay.remove();
         this.startFleetQueue(machineIds, fleetName);
+      });
+    }
+  }
+
+  // ============================================================================
+  // SPRINT 8: QUICK COMPARE VIA NFC (Schnellvergleich per Deep Link)
+  // ============================================================================
+
+  /**
+   * Handle quick compare fleet provisioning completion.
+   * Shows the quick compare onboarding splash and starts the QC flow.
+   */
+  private async handleQuickCompareProvisioned(fleetName: string, machineIds: string[]): Promise<void> {
+    logger.info(`⚡ Quick Compare provisioned: "${fleetName}" with ${machineIds.length} machines`);
+
+    // Edge case: need at least 2 machines (1 reference + 1 comparison)
+    if (machineIds.length < 2) {
+      notify.error(t('quickCompare.nfcOnboarding.minMachines'));
+      return;
+    }
+
+    // Refresh machine data
+    await this.identifyPhase.refreshMachineLists();
+
+    // Show onboarding splash
+    this.showQuickCompareOnboardingSplash(fleetName, machineIds);
+  }
+
+  /**
+   * Show onboarding splash for NFC-triggered quick compare.
+   * Explains the quick compare concept and starts the flow on button tap.
+   */
+  private showQuickCompareOnboardingSplash(fleetName: string, machineIds: string[]): void {
+    const existing = document.getElementById('qc-onboarding-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'qc-onboarding-overlay';
+    overlay.className = 'fleet-onboarding-overlay';
+
+    const machineCount = machineIds.length;
+    const titleKey = machineCount === 1 ? 'quickCompare.nfcOnboarding.titleSingular' : 'quickCompare.nfcOnboarding.title';
+    const titleText = escapeHtml(t(titleKey, { count: String(machineCount) }));
+
+    overlay.innerHTML = `
+      <div class="fleet-onboarding-card">
+        <div class="fleet-onboarding-icon">\uD83D\uDD0A</div>
+        <div class="fleet-onboarding-title">${titleText}</div>
+        <div class="fleet-onboarding-concept">${escapeHtml(t('quickCompare.nfcOnboarding.concept'))}</div>
+        <div class="fleet-onboarding-method">${escapeHtml(t('quickCompare.nfcOnboarding.method'))}</div>
+        <div class="fleet-onboarding-howto">${escapeHtml(t('quickCompare.nfcOnboarding.referenceHint'))}</div>
+        <button class="fleet-onboarding-start-btn" id="qc-onboarding-start-btn">
+          \u25B6 ${escapeHtml(t('quickCompare.nfcOnboarding.startButton'))}
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const startBtn = document.getElementById('qc-onboarding-start-btn');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        overlay.remove();
+        // Start the Quick Compare controller with pre-provisioned machines
+        this.quickCompareController.startWithFleet(machineIds, fleetName);
       });
     }
   }

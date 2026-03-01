@@ -76,6 +76,9 @@ export class IdentifyPhase {
   private nfcFleetSelect: HTMLSelectElement | null = null;
   private nfcFleetDetail: HTMLElement | null = null;
   private nfcFleetUrlPreview: HTMLElement | null = null;
+  // NFC Quick Compare option
+  private nfcQuickCompareOption: HTMLInputElement | null = null;
+  private nfcQuickCompareDetail: HTMLElement | null = null;
 
   // NFC Onboarding context tracking
   // Used to restore view level after NFC flow ends
@@ -92,6 +95,9 @@ export class IdentifyPhase {
 
   /** Sprint 6: Callback for when fleet provisioning is complete (set by Router) */
   public onFleetProvisioned: ((fleetName: string, autoStartCheck: boolean) => void) | null = null;
+
+  /** Sprint 8: Callback for when quick compare fleet provisioning is complete (set by Router) */
+  public onQuickCompareProvisioned: ((fleetName: string, machineIds: string[]) => void) | null = null;
 
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
@@ -112,6 +118,9 @@ export class IdentifyPhase {
   private qrFleetOption: HTMLInputElement | null = null;
   private qrFleetSection: HTMLElement | null = null;
   private qrFleetSelect: HTMLSelectElement | null = null;
+  // QR Quick Compare option
+  private qrQuickCompareOption: HTMLInputElement | null = null;
+  private qrQuickCompareDetail: HTMLElement | null = null;
 
   constructor(onMachineSelected: (machine: Machine) => void) {
     this.onMachineSelected = onMachineSelected;
@@ -1505,6 +1514,57 @@ export class IdentifyPhase {
       }
     }
 
+    // Sprint 8: Handle quick compare deep links (#/q/<fleet_id>?c=<customer_id>)
+    if (hash && hash.startsWith('#/q/')) {
+      logger.info('⚡ Quick Compare deep link detected');
+
+      const qcRouter = new HashRouter();
+      const qcMatch = qcRouter.parseHash(hash);
+
+      if (qcMatch.type === 'quickcompare' && qcMatch.fleetId && qcMatch.fleetDbUrl) {
+        logger.info(`⚡ Quick Compare route: ${qcMatch.fleetId} → ${qcMatch.fleetDbUrl}`);
+
+        // Show loading overlay
+        const overlay = new ReferenceLoadingOverlay();
+        overlay.show();
+
+        // Configure callbacks
+        qcRouter.setOnDownloadProgress((status, progress) => {
+          overlay.updateStatus(status, progress || 50);
+        });
+
+        qcRouter.setOnDownloadError((error) => {
+          logger.error(`Quick Compare provisioning failed: ${error}`);
+          overlay.showError(t('fleet.provision.error'));
+          setTimeout(() => overlay.hide(), 3000);
+        });
+
+        qcRouter.setOnQuickCompareReady((fleetName, machineIds) => {
+          logger.info(`✅ Quick Compare fleet "${fleetName}" ready with ${machineIds.length} machines`);
+          overlay.showSuccess();
+          setTimeout(() => overlay.hide(), 1500);
+
+          // Refresh machine lists to show provisioned machines
+          this.refreshMachineLists();
+
+          // Notify parent (Router) to start quick compare flow
+          if (this.onQuickCompareProvisioned) {
+            this.onQuickCompareProvisioned(fleetName, machineIds);
+          }
+        });
+
+        // Trigger quick compare route handling
+        await qcRouter.init();
+
+        // Clean up URL after processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Destroy router to remove hashchange listener
+        qcRouter.destroy();
+        return; // Don't fall through to machine ID handling
+      }
+    }
+
     // Fallback to legacy query param: ?machineId=<id>
     if (!machineId) {
       const params = new URLSearchParams(window.location.search);
@@ -1748,8 +1808,12 @@ export class IdentifyPhase {
     this.nfcFleetDetail = document.getElementById('nfc-option-fleet-detail');
     this.nfcFleetUrlPreview = document.getElementById('nfc-fleet-url-preview');
 
+    // Quick Compare option
+    this.nfcQuickCompareOption = document.getElementById('nfc-option-quickcompare') as HTMLInputElement | null;
+    this.nfcQuickCompareDetail = document.getElementById('nfc-option-quickcompare-detail');
+
     // Show/hide fleet section based on radio selection
-    [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption].forEach(radio => {
+    [this.nfcGenericOption, this.nfcSpecificOption, this.nfcFleetOption, this.nfcQuickCompareOption].forEach(radio => {
       radio?.addEventListener('change', () => {
         this.updateNfcFleetVisibility();
         this.updateNfcDbUrlPreview();
@@ -1775,7 +1839,8 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.nfcFleetOption?.checked ? 'fleet'
+    const selectedOption = this.nfcQuickCompareOption?.checked ? 'quickcompare'
+      : this.nfcFleetOption?.checked ? 'fleet'
       : this.nfcSpecificOption?.checked ? 'specific'
       : 'generic';
 
@@ -1792,7 +1857,7 @@ export class IdentifyPhase {
     }
 
     let dataUrl: string;
-    if (selectedOption === 'fleet') {
+    if (selectedOption === 'fleet' || selectedOption === 'quickcompare') {
       const fleetName = this.nfcFleetSelect?.value;
       if (!fleetName) {
         this.nfcDbUrlPreview.style.display = 'none';
@@ -1809,7 +1874,7 @@ export class IdentifyPhase {
   }
 
   private async updateNfcFleetVisibility(): Promise<void> {
-    const isFleet = this.nfcFleetOption?.checked;
+    const isFleet = this.nfcFleetOption?.checked || this.nfcQuickCompareOption?.checked;
 
     if (this.nfcFleetSection) {
       this.nfcFleetSection.style.display = isFleet ? 'block' : 'none';
@@ -1849,13 +1914,19 @@ export class IdentifyPhase {
     if (this.nfcFleetDetail && selected) {
       this.nfcFleetDetail.textContent = t('nfc.optionFleetDetail', { name: selected });
     }
+    if (this.nfcQuickCompareDetail && selected) {
+      this.nfcQuickCompareDetail.textContent = t('nfc.optionQuickCompareDetail', { name: selected });
+    }
 
     // Update URL preview
     if (this.nfcFleetUrlPreview && selected) {
       const customerId = this.nfcCustomerIdInput?.value.trim();
       if (customerId) {
         const fleetId = ReferenceDbService.slugifyFleetName(selected);
-        const url = HashRouter.getFullFleetUrl(fleetId, customerId);
+        const isQuickCompare = this.nfcQuickCompareOption?.checked;
+        const url = isQuickCompare
+          ? HashRouter.getFullQuickCompareUrl(fleetId, customerId)
+          : HashRouter.getFullFleetUrl(fleetId, customerId);
         this.nfcFleetUrlPreview.textContent = url;
         this.nfcFleetUrlPreview.style.display = 'block';
       } else {
@@ -1977,7 +2048,8 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.nfcFleetOption?.checked ? 'fleet'
+    const selectedOption = this.nfcQuickCompareOption?.checked ? 'quickcompare'
+      : this.nfcFleetOption?.checked ? 'fleet'
       : this.nfcSpecificOption?.checked ? 'specific'
       : 'generic';
 
@@ -1995,7 +2067,7 @@ export class IdentifyPhase {
       return;
     }
 
-    if (selectedOption === 'fleet') {
+    if (selectedOption === 'fleet' || selectedOption === 'quickcompare') {
       const fleetName = this.nfcFleetSelect?.value;
       if (!fleetName || !customerId) {
         this.setNfcStatus(t('nfc.fleetRequiresCustomerId'), 'error');
@@ -2005,7 +2077,10 @@ export class IdentifyPhase {
 
     const baseUrl = this.getBaseAppUrl();
     let url: string;
-    if (selectedOption === 'fleet' && this.nfcFleetSelect?.value) {
+    if (selectedOption === 'quickcompare' && this.nfcFleetSelect?.value) {
+      const fleetId = ReferenceDbService.slugifyFleetName(this.nfcFleetSelect.value);
+      url = HashRouter.getFullQuickCompareUrl(fleetId, customerId);
+    } else if (selectedOption === 'fleet' && this.nfcFleetSelect?.value) {
       const fleetId = ReferenceDbService.slugifyFleetName(this.nfcFleetSelect.value);
       url = HashRouter.getFullFleetUrl(fleetId, customerId);
     } else if (selectedOption === 'specific' && this.currentMachine) {
@@ -2097,27 +2172,20 @@ export class IdentifyPhase {
     this.qrFleetSelect = document.getElementById('qr-fleet-select') as HTMLSelectElement | null;
     this.qrFleetSection = document.getElementById('qr-fleet-section');
 
+    // QR Quick Compare option
+    this.qrQuickCompareOption = document.getElementById('qr-option-quickcompare') as HTMLInputElement | null;
+    this.qrQuickCompareDetail = document.getElementById('qr-option-quickcompare-detail');
+
     // Radio button changes trigger QR regeneration
-    if (this.qrGenericOption) {
-      this.qrGenericOption.addEventListener('change', () => {
-        this.updateQrFleetVisibility();
-        this.updateQrDbUrlPreview();
-        void this.generateQrPreview();
-      });
-    }
-    if (this.qrSpecificOption) {
-      this.qrSpecificOption.addEventListener('change', () => {
-        this.updateQrFleetVisibility();
-        this.updateQrDbUrlPreview();
-        void this.generateQrPreview();
-      });
-    }
-    if (this.qrFleetOption) {
-      this.qrFleetOption.addEventListener('change', () => {
-        this.updateQrFleetVisibility();
-        this.updateQrDbUrlPreview();
-        void this.generateQrPreview();
-      });
+    const qrRadios = [this.qrGenericOption, this.qrSpecificOption, this.qrFleetOption, this.qrQuickCompareOption];
+    for (const radio of qrRadios) {
+      if (radio) {
+        radio.addEventListener('change', () => {
+          this.updateQrFleetVisibility();
+          this.updateQrDbUrlPreview();
+          void this.generateQrPreview();
+        });
+      }
     }
 
     // Fleet select change triggers QR regeneration
@@ -2196,7 +2264,8 @@ export class IdentifyPhase {
       return;
     }
 
-    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+    const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+      : this.qrFleetOption?.checked ? 'fleet'
       : this.qrSpecificOption?.checked ? 'specific'
       : 'generic';
 
@@ -2213,7 +2282,7 @@ export class IdentifyPhase {
     }
 
     let dataUrl: string;
-    if (selectedOption === 'fleet') {
+    if (selectedOption === 'fleet' || selectedOption === 'quickcompare') {
       const fleetName = this.qrFleetSelect?.value;
       if (!fleetName) {
         this.qrDbUrlPreview.style.display = 'none';
@@ -2230,7 +2299,7 @@ export class IdentifyPhase {
   }
 
   private async updateQrFleetVisibility(): Promise<void> {
-    const isFleet = this.qrFleetOption?.checked;
+    const isFleet = this.qrFleetOption?.checked || this.qrQuickCompareOption?.checked;
 
     if (this.qrFleetSection) {
       this.qrFleetSection.style.display = isFleet ? 'block' : 'none';
@@ -2263,10 +2332,21 @@ export class IdentifyPhase {
   }
 
   private getQrUrl(): string {
-    const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+    const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+      : this.qrFleetOption?.checked ? 'fleet'
       : this.qrSpecificOption?.checked ? 'specific'
       : 'generic';
     const baseUrl = this.getBaseAppUrl();
+
+    if (selectedOption === 'quickcompare') {
+      const fleetName = this.qrFleetSelect?.value;
+      const customerId = this.qrCustomerIdInput?.value.trim();
+      if (fleetName && customerId) {
+        const fleetId = ReferenceDbService.slugifyFleetName(fleetName);
+        return HashRouter.getFullQuickCompareUrl(fleetId, customerId);
+      }
+      return baseUrl;
+    }
 
     if (selectedOption === 'fleet') {
       const fleetName = this.qrFleetSelect?.value;
@@ -2321,10 +2401,14 @@ export class IdentifyPhase {
 
       // Update label info
       if (this.qrLabelInfo) {
-        const selectedOption = this.qrFleetOption?.checked ? 'fleet'
+        const selectedOption = this.qrQuickCompareOption?.checked ? 'quickcompare'
+          : this.qrFleetOption?.checked ? 'fleet'
           : this.qrSpecificOption?.checked ? 'specific'
           : 'generic';
-        if (selectedOption === 'fleet' && this.qrFleetSelect?.value) {
+        if (selectedOption === 'quickcompare' && this.qrFleetSelect?.value) {
+          this.qrLabelInfo.innerHTML =
+            `<strong>${t('quickCompare.startButton')}:</strong> ${escapeHtml(this.qrFleetSelect.value)}`;
+        } else if (selectedOption === 'fleet' && this.qrFleetSelect?.value) {
           this.qrLabelInfo.innerHTML =
             `<strong>${t('qrCode.fleetLabel')}:</strong> ${escapeHtml(this.qrFleetSelect.value)}`;
         } else if (selectedOption === 'specific' && this.currentMachine) {

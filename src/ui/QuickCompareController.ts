@@ -26,6 +26,10 @@ export class QuickCompareController {
   private createdMachineIds: string[] = [];
   private _isActive: boolean = false;
   private currentStep: 'idle' | 'count' | 'reference' | 'compare' | 'result' = 'idle';
+  /** NFC fleet mode: pre-provisioned machine IDs from fleet DB */
+  private fleetMachineIds: string[] | null = null;
+  /** NFC fleet mode: fleet name for display */
+  private fleetName: string | null = null;
 
   /** Callback: start the fleet queue with comparison machine IDs */
   public onStartFleetQueue: ((machineIds: string[], groupName: string) => void) | null = null;
@@ -51,7 +55,27 @@ export class QuickCompareController {
     this.machineCount = 0;
     this.goldStandardId = null;
     this.createdMachineIds = [];
+    this.fleetMachineIds = null;
+    this.fleetName = null;
     this.showCountSelection();
+  }
+
+  /**
+   * Start quick compare with pre-provisioned fleet machines (NFC deep link flow).
+   * Skips the count selection wizard entirely – machine count and names come from fleet DB.
+   * The first machine in the list is suggested as gold standard candidate.
+   */
+  public startWithFleet(machineIds: string[], fleetName: string): void {
+    this._isActive = true;
+    this.currentStep = 'reference';
+    this.machineCount = machineIds.length - 1; // N-1 comparison machines (1 is reference)
+    this.goldStandardId = null;
+    this.createdMachineIds = [];
+    this.fleetMachineIds = machineIds;
+    this.fleetName = fleetName;
+
+    // Skip straight to reference step (no wizard)
+    this.showReferenceStep();
   }
 
   /** Cancel and clean up the quick compare flow */
@@ -300,6 +324,9 @@ export class QuickCompareController {
    * Called by Router when reference model is saved during Quick Compare.
    * Creates N comparison machines with copied Gold Standard reference,
    * then starts the fleet queue for the guided compare loop.
+   *
+   * In fleet mode (NFC deep link): copies reference to pre-provisioned machines
+   * instead of creating new ones.
    */
   public async onReferenceComplete(goldMachine: Machine): Promise<void> {
     if (this.currentStep !== 'reference') return;
@@ -311,7 +338,43 @@ export class QuickCompareController {
     // Update stored Gold Standard with fresh data
     this.goldStandardId = goldMachine.id;
 
-    // Create N comparison machines with copied Gold Standard reference
+    // NFC fleet mode: copy reference to pre-provisioned machines
+    if (this.fleetMachineIds) {
+      const compareIds: string[] = [];
+      for (const id of this.fleetMachineIds) {
+        // Skip the gold standard machine itself
+        if (id === goldMachine.id) continue;
+
+        const machine = await getMachine(id);
+        if (!machine) continue;
+
+        // Copy Gold Standard reference to this machine
+        machine.referenceModels = goldMachine.referenceModels.map(m => ({
+          ...m,
+          weightVector: new Float64Array(m.weightVector),
+        }));
+        machine.refLogMean = goldMachine.refLogMean ? [...goldMachine.refLogMean] : null;
+        machine.refLogStd = goldMachine.refLogStd ? [...goldMachine.refLogStd] : null;
+        machine.refLogResidualStd = goldMachine.refLogResidualStd ? [...goldMachine.refLogResidualStd] : null;
+        machine.refDriftBaseline = goldMachine.refDriftBaseline ? { ...goldMachine.refDriftBaseline } : null;
+        machine.refT60 = goldMachine.refT60 ?? null;
+        machine.refT60Classification = goldMachine.refT60Classification ?? null;
+        machine.fleetReferenceSourceId = goldMachine.id;
+        await saveMachine(machine);
+
+        this.createdMachineIds.push(id);
+        compareIds.push(id);
+      }
+
+      logger.info(`[QuickCompare] Fleet mode: copied reference to ${compareIds.length} pre-provisioned machines`);
+
+      if (this.onStartFleetQueue) {
+        this.onStartFleetQueue(compareIds, this.fleetName || t('quickCompare.wizard.title'));
+      }
+      return;
+    }
+
+    // Manual mode: Create N comparison machines with copied Gold Standard reference
     const compareIds: string[] = [];
     for (let i = 1; i <= this.machineCount; i++) {
       const paddedNumber = i.toString().padStart(2, '0');
@@ -360,7 +423,12 @@ export class QuickCompareController {
       isGold: boolean;
     }> = [];
 
-    for (const id of this.createdMachineIds) {
+    // Build the full list of IDs to show: gold standard + comparison machines
+    const allIds = new Set<string>();
+    if (this.goldStandardId) allIds.add(this.goldStandardId);
+    for (const id of this.createdMachineIds) allIds.add(id);
+
+    for (const id of allIds) {
       const machine = await getMachine(id);
       if (!machine) continue;
 
@@ -483,12 +551,14 @@ export class QuickCompareController {
     const actions = document.createElement('div');
     actions.className = 'qc-result-actions';
 
-    // Save as fleet button
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'qc-save-fleet-btn';
-    saveBtn.textContent = t('quickCompare.result.saveAsFleet');
-    saveBtn.addEventListener('click', () => this.showSaveFleetDialog(overlay));
-    actions.appendChild(saveBtn);
+    // Save as fleet button (hidden in fleet mode – machines already belong to a fleet)
+    if (!this.fleetMachineIds) {
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'qc-save-fleet-btn';
+      saveBtn.textContent = t('quickCompare.result.saveAsFleet');
+      saveBtn.addEventListener('click', () => this.showSaveFleetDialog(overlay));
+      actions.appendChild(saveBtn);
+    }
 
     // Secondary actions row
     const secondaryRow = document.createElement('div');
@@ -629,13 +699,23 @@ export class QuickCompareController {
   // ============================================================================
 
   private async cleanupTestData(): Promise<void> {
-    const count = this.createdMachineIds.length;
+    // In fleet mode, only delete the gold standard (auto-created), not the provisioned machines
+    const idsToDelete = this.fleetMachineIds
+      ? (this.goldStandardId ? [this.goldStandardId] : [])
+      : this.createdMachineIds;
+
+    if (idsToDelete.length === 0) {
+      this.finish();
+      return;
+    }
+
+    const count = idsToDelete.length;
 
     if (!confirm(t('quickCompare.result.cleanupConfirm', { count: String(count) }))) {
       return;
     }
 
-    for (const id of this.createdMachineIds) {
+    for (const id of idsToDelete) {
       await deleteMachine(id);
     }
 

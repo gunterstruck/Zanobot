@@ -821,7 +821,7 @@ export const en: TranslationDict = {
     dbUrlPreview: 'Data URL: {{url}}',
     closeDialog: 'Close NFC dialog',
     // Fleet option
-    optionFleet: 'Fleet link',
+    optionFleet: 'Fleet link (fleet check)',
     optionFleetDetailDefault: 'Opens the app with a complete fleet.',
     optionFleetDetail: 'Opens the app for fleet "{{name}}".',
     fleetSelectLabel: 'Select fleet',
@@ -829,6 +829,10 @@ export const en: TranslationDict = {
     machine: 'machine',
     machines: 'machines',
     fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
+    // Quick Compare option
+    optionQuickCompare: 'Quick compare link',
+    optionQuickCompareDetailDefault: 'Opens the app for a quick compare of the fleet.',
+    optionQuickCompareDetail: 'Opens a quick compare for fleet "{{name}}".',
   },
 
   // ============================================================================
@@ -861,12 +865,16 @@ export const en: TranslationDict = {
     printInstructions: 'Cut out QR code and attach to the machine.',
     genericLabel: 'App Access',
     // Fleet option
-    optionFleet: 'Fleet link',
+    optionFleet: 'Fleet link (fleet check)',
     optionFleetDetailDefault: 'Creates a QR code for a complete fleet.',
     optionFleetDetail: 'Creates QR code for fleet "{{name}}".',
     fleetSelectLabel: 'Select fleet',
     fleetLabel: 'Fleet',
     fleetPrintTitle: 'Fleet QR Code',
+    // Quick Compare option
+    optionQuickCompare: 'Quick compare link',
+    optionQuickCompareDetailDefault: 'Creates a QR code for a quick compare of the fleet.',
+    optionQuickCompareDetail: 'Creates quick compare QR code for fleet "{{name}}".',
   },
 
   review: {
@@ -1573,6 +1581,16 @@ export const en: TranslationDict = {
       cleanup: 'Delete test data',
       cleanupConfirm: 'Delete {{count}} machines from this quick compare?',
       cleanupDone: '{{count}} machines deleted',
+    },
+    // NFC-triggered quick compare onboarding splash
+    nfcOnboarding: {
+      title: 'Quick Compare \u2013 {{count}} machines',
+      titleSingular: 'Quick Compare \u2013 1 machine',
+      concept: 'Does one machine sound different from the others? This app finds out.',
+      method: 'You briefly record each machine \u2013 the app compares the sounds and shows you the \u201Codd one out\u201D.',
+      referenceHint: 'First, we need a reference: Go to the machine that sounds NORMAL and record it first.',
+      startButton: 'Let\u2019s go',
+      minMachines: 'At least 2 machines required for quick compare.',
     },
   },
 };
