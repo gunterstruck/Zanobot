@@ -1480,6 +1480,35 @@ export const en: TranslationDict = {
       updateRecommended: 'Fleet file was exported from a newer app version. App update recommended.',
       skippedDifferentFleet: '"{{name}}" belongs to fleet "{{fleet}}" – not reassigned.',
     },
+    // Fleet Result Modal (after fleet queue completes)
+    result: {
+      title: 'Fleet Result',
+      complete: 'Fleet check complete',
+      completeWithOutliers: 'Fleet check complete – outliers detected',
+      summary: '"{{name}}" · {{checked}} of {{total}} checked',
+      summarySkipped: '{{skipped}} skipped',
+      statsMedian: 'Median',
+      statsSpread: 'Spread',
+      statsWorst: 'Worst',
+      rankingTitle: 'Ranking',
+      notChecked: 'Not checked',
+      save: 'Save results',
+      discard: 'Discard',
+      discardConfirm: 'Delete diagnoses from this run? Machines and references will be kept.',
+      discardDone: '{{count}} diagnoses discarded',
+      viewHistory: 'View history',
+    },
+    // Fleet History Modal
+    history: {
+      title: 'Fleet Check History',
+      subtitle: '{{name}}',
+      date: 'Date',
+      median: 'Median',
+      spread: 'Spread',
+      checked: 'Checked',
+      noTrend: 'No trend yet – available after multiple fleet checks.',
+      close: 'Close',
+    },
   },
 
   // ============================================================================
