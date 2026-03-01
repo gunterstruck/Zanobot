@@ -177,6 +177,17 @@ export class Router {
 
     // Initialize Phase 2 and 3 with the selected machine
     this.initializePhases(machine);
+
+    // Quick Compare: auto-expand reference section and scroll to it so the
+    // user lands directly on the recording UI instead of seeing the main page
+    // with all sections collapsed.
+    if (this.quickCompareController.isActive) {
+      this.expandSection('record-reference-content');
+      requestAnimationFrame(() => {
+        const refSection = document.getElementById('record-reference-content');
+        refSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
 
   /**
