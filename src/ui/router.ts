@@ -1066,22 +1066,21 @@ export class Router {
     // Update progress
     this.updateFleetProgress(this.fleetQueueIndex + 1, this.fleetQueue.length, machine.name);
 
-    // Select machine (loads it into Phase 2 & 3)
-    this.onMachineSelected(machine);
-
-    // Sprint 6: Show guided prompt instead of auto-starting diagnosis
+    // Sprint 6 Fix: Do NOT call onMachineSelected() here!
+    // Phase navigation rebuilds <main> DOM and destroys the guided prompt.
+    // Instead, show the guided prompt first – navigation happens on user tap.
     this.showGuidedPrompt(machine, this.fleetQueueIndex + 1, this.fleetQueue.length);
   }
 
   /**
    * Sprint 5 Fix: Wait for diagnose button to be ready and click it.
-   * Retries up to 10 times (50ms intervals = 500ms max) to handle slow devices
+   * Retries up to 20 times (100ms intervals = 2s max) to handle slow devices
    * where DiagnosePhase.init() may not have registered the click handler yet.
    */
   private waitForDiagnoseButton(): Promise<void> {
     return new Promise((resolve) => {
       let attempts = 0;
-      const maxAttempts = 10;
+      const maxAttempts = 20;
 
       const tryClick = () => {
         attempts++;
@@ -1092,7 +1091,7 @@ export class Router {
           return;
         }
         if (attempts < maxAttempts) {
-          setTimeout(tryClick, 50);
+          setTimeout(tryClick, 100);
         } else {
           // Button not found after retries - skip this machine
           logger.warn(`Fleet queue: diagnose-btn not found after ${maxAttempts} attempts, skipping`);
@@ -1103,7 +1102,7 @@ export class Router {
       };
 
       // Start after one animation frame to let DOM settle
-      requestAnimationFrame(() => setTimeout(tryClick, 50));
+      requestAnimationFrame(() => setTimeout(tryClick, 100));
     });
   }
 
@@ -1153,7 +1152,11 @@ export class Router {
       // Remove prompt
       prompt.remove();
 
-      // Now trigger the diagnosis (same as before, but user-initiated)
+      // NOW select the machine (triggers phase navigation: Identify → Diagnose)
+      this.onMachineSelected(machine);
+
+      // Wait for phase to initialize before looking for the diagnose button
+      await new Promise(resolve => setTimeout(resolve, 300));
       await this.waitForDiagnoseButton();
     });
     prompt.appendChild(startBtn);
@@ -1184,13 +1187,8 @@ export class Router {
 
     prompt.appendChild(bottomRow);
 
-    // Insert prominently in the page (over the main content area)
-    const main = document.querySelector('main');
-    if (main) {
-      main.appendChild(prompt);
-    } else {
-      document.body.appendChild(prompt);
-    }
+    // Append to body (not <main>) so it survives phase navigation DOM rebuilds
+    document.body.appendChild(prompt);
 
     // Focus the start button for keyboard accessibility
     requestAnimationFrame(() => startBtn.focus());
