@@ -212,7 +212,7 @@ export const en: TranslationDict = {
     modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
-    statesRecorded: '{{count}} state recorded',
+    statesRecorded: '{{count}} signature(s) available',
     noReferenceYet: 'No reference yet',
     changeMachine: 'Change machine',
     noMachinesYet: 'No machines created yet.',

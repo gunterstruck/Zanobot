@@ -214,7 +214,7 @@ export const de: TranslationDict = {
     modelDeleted: '\uD83D\uDDD1\uFE0F Referenz „{{name}}" gelöscht',
 
     // State-based card UI (mirrors diagnose card)
-    statesRecorded: '{{count}} Zustand aufgenommen',
+    statesRecorded: '{{count}} Signatur(en) vorhanden',
     noReferenceYet: 'Noch keine Referenz',
     changeMachine: 'Maschine wechseln',
     noMachinesYet: 'Noch keine Maschinen angelegt.',
