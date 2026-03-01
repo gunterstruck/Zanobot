@@ -8553,3 +8553,295 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
+
+/* ===================================
+   SPRINT 7: QUICK COMPARE
+   =================================== */
+
+/* CTA Button on start page */
+.quick-compare-cta {
+    text-align: center;
+    padding: var(--spacing-sm, 12px) 0;
+    margin-bottom: var(--spacing-sm, 12px);
+}
+
+.quick-compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-color, #00D4FF);
+    background: transparent;
+    border: 2px solid var(--primary-color, #00D4FF);
+    border-radius: var(--radius-md, 12px);
+    cursor: pointer;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s, color 0.2s;
+}
+
+.quick-compare-btn:hover,
+.quick-compare-btn:active {
+    background: var(--primary-color, #00D4FF);
+    color: #fff;
+}
+
+.quick-compare-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.quick-compare-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #999);
+    margin-top: 0.25rem;
+}
+
+/* Quick Compare Modal */
+.qc-modal {
+    max-width: 380px;
+    padding: var(--spacing-md, 1.5rem);
+}
+
+.qc-question {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm, 1rem);
+    text-align: center;
+}
+
+/* Count selection chips */
+.qc-count-chips {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm, 1rem);
+}
+
+.qc-count-chip {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0.625rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: var(--radius-md, 12px);
+    background: var(--card-bg, #fff);
+    color: var(--text-primary, #333);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.qc-count-chip:hover {
+    border-color: var(--primary-color, #00D4FF);
+    background: rgba(0, 212, 255, 0.08);
+}
+
+.qc-count-chip.active {
+    border-color: var(--primary-color, #00D4FF);
+    background: var(--primary-color, #00D4FF);
+    color: #fff;
+}
+
+.qc-custom-input {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.qc-error-msg {
+    color: var(--status-error, #FF5252);
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.qc-explanation {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #999);
+    text-align: center;
+    margin-bottom: var(--spacing-md, 1.5rem);
+    line-height: 1.4;
+}
+
+.qc-next-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+/* Reference step */
+.qc-reference-instruction {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: var(--spacing-sm, 1rem);
+}
+
+.qc-reference-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #999);
+    text-align: center;
+    margin-bottom: var(--spacing-md, 1.5rem);
+}
+
+.qc-reference-record-btn {
+    width: 100%;
+}
+
+/* Result screen */
+.qc-result-screen {
+    max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: var(--spacing-md, 1.5rem);
+}
+
+.qc-result-header {
+    text-align: center;
+    margin-bottom: var(--spacing-md, 1.5rem);
+}
+
+.qc-result-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.qc-result-summary {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #666);
+    margin-bottom: 0.25rem;
+}
+
+.qc-result-outlier-alert {
+    color: var(--status-warning, #FFB74D);
+    font-weight: 600;
+}
+
+.qc-result-all-good {
+    color: var(--status-healthy, #00E676);
+    font-weight: 600;
+}
+
+/* Result ranking items */
+.qc-result-list {
+    margin-bottom: var(--spacing-md, 1.5rem);
+}
+
+.qc-result-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.qc-result-item.qc-gold {
+    opacity: 0.7;
+}
+
+.qc-result-item.qc-outlier {
+    background: rgba(255, 183, 77, 0.08);
+    border-radius: var(--radius-sm, 8px);
+    padding: 0.625rem;
+}
+
+.qc-result-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qc-result-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.qc-result-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 20px;
+}
+
+.qc-result-bar {
+    height: 8px;
+    background: var(--status-healthy, #00E676);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.qc-result-bar-outlier {
+    background: var(--status-warning, #FFB74D);
+}
+
+.qc-result-score {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.qc-result-score-outlier {
+    color: var(--status-warning, #FFB74D);
+}
+
+.qc-result-gold-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #999);
+}
+
+.qc-result-rename-btn {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #999);
+    cursor: pointer;
+    padding: 4px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Bottom actions */
+.qc-result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.qc-save-fleet-btn {
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-color, #00D4FF);
+    border: none;
+    border-radius: var(--radius-md, 12px);
+    cursor: pointer;
+    min-height: 48px;
+}
+
+.qc-save-fleet-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.qc-secondary-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+}
+
+.qc-secondary-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #999);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}

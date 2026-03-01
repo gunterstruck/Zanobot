@@ -1524,4 +1524,55 @@ export const de: TranslationDict = {
       skippedDifferentFleet: '„{{name}}" gehört zu Flotte „{{fleet}}" – nicht umgehängt.',
     },
   },
+
+  // ============================================================================
+  // SPRINT 7: QUICK COMPARE (Schnellvergleich)
+  // ============================================================================
+  quickCompare: {
+    startButton: 'Schnellvergleich',
+    hint: 'Maschinen vergleichen – ohne Setup',
+    wizard: {
+      title: 'Schnellvergleich',
+      howMany: 'Wie viele Maschinen willst du vergleichen?',
+      customCount: 'Eigene Anzahl',
+      explanation: 'Du nimmst zuerst die gesunde Maschine auf. Dann gehst du zu den anderen und die App sagt dir, welche anders klingt.',
+      next: 'Weiter',
+      minMachines: 'Mindestens 2 Maschinen',
+      maxMachines: 'Maximal 30 Maschinen',
+    },
+    reference: {
+      title: 'Schritt 1: Referenz aufnehmen',
+      instruction: 'Geh zur Maschine, die sich NORMAL anhört.',
+      hint: 'Diese Aufnahme wird als Vergleichsbasis für alle anderen verwendet.',
+      startRecording: 'Referenz aufnehmen',
+      saved: 'Referenz gespeichert',
+      goldName: 'Referenz (Gold)',
+      recordingHint: 'Nimm jetzt die Referenz-Maschine auf.',
+    },
+    compare: {
+      goTo: 'Geh zu:',
+      machineOf: 'Maschine {{current}} von {{total}}',
+      startRecording: 'Aufnahme starten',
+      skip: 'Überspringen',
+      hint: 'Halte das Smartphone an die Maschine.',
+    },
+    result: {
+      title: 'Ergebnis',
+      summary: '{{checked}} von {{total}} Maschinen geprüft',
+      allGood: 'Alle Maschinen im Normalbereich',
+      outlierFound: '{{count}} Maschine(n) weichen ab',
+      notChecked: 'Nicht geprüft',
+      goldLabel: 'Vergleichsbasis',
+      saveAsFleet: 'Als Flotte speichern',
+      saveFleetName: 'Flottenname (optional):',
+      saveFleetPlaceholder: 'z.B. Fernwärme Ost',
+      defaultFleetName: 'Schnellvergleich {{date}}',
+      fleetSaved: 'Flotte „{{name}}" mit {{count}} Maschinen gespeichert.',
+      done: 'Fertig',
+      rename: 'Umbenennen',
+      cleanup: 'Testdaten löschen',
+      cleanupConfirm: '{{count}} Maschinen aus diesem Schnellvergleich löschen?',
+      cleanupDone: '{{count}} Maschinen gelöscht',
+    },
+  },
 };
