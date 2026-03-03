@@ -855,11 +855,7 @@ export const de: TranslationDict = {
     machine: 'Maschine',
     machines: 'Maschinen',
     fleetRequiresCustomerId: 'Bitte Kundenkennung und Flotte auswählen.',
-    // Quick Compare option (Variant A: fleet-based)
-    optionQuickCompare: 'Schnellvergleich (mit Flotte)',
-    optionQuickCompareDetailDefault: 'Öffnet die App für einen Schnellvergleich der Flotte.',
-    optionQuickCompareDetail: 'Öffnet einen Schnellvergleich für Flotte „{{name}}".',
-    // Quick Compare count-only option (Variant B: no fleet DB)
+    // Quick Compare count-only option
     optionQuickCompareCount: 'Schnellvergleich (nur Anzahl)',
     optionQuickCompareCountDetailDefault: 'Öffnet die App für einen Schnellvergleich mit einer bestimmten Anzahl Maschinen. Kein Internet nötig.',
     optionQuickCompareCountDetail: 'Öffnet einen Schnellvergleich mit {{count}} Maschinen. Kein Internet nötig.',
@@ -903,11 +899,7 @@ export const de: TranslationDict = {
     fleetSelectLabel: 'Flotte auswählen',
     fleetLabel: 'Flotte',
     fleetPrintTitle: 'Flotten-QR-Code',
-    // Quick Compare option (Variant A: fleet-based)
-    optionQuickCompare: 'Schnellvergleich (mit Flotte)',
-    optionQuickCompareDetailDefault: 'Erstellt QR-Code für einen Schnellvergleich der Flotte.',
-    optionQuickCompareDetail: 'Erstellt Schnellvergleich-QR-Code für Flotte „{{name}}".',
-    // Quick Compare count-only option (Variant B)
+    // Quick Compare count-only option
     optionQuickCompareCount: 'Schnellvergleich (nur Anzahl)',
     optionQuickCompareCountDetailDefault: 'Erstellt QR-Code für einen Schnellvergleich mit einer bestimmten Anzahl Maschinen.',
     optionQuickCompareCountDetail: 'Erstellt Schnellvergleich-QR-Code für {{count}} Maschinen.',
@@ -1596,15 +1588,15 @@ export const de: TranslationDict = {
       title: 'Schnellvergleich',
       howMany: 'Wie viele Maschinen willst du vergleichen?',
       customCount: 'Eigene Anzahl',
-      explanation: 'Du nimmst zuerst die gesunde Maschine auf. Dann gehst du zu den anderen und die App sagt dir, welche anders klingt.',
+      explanation: 'Geh der Reihe nach zu jeder Maschine und nimm sie auf. Die erste Aufnahme wird automatisch als Vergleichsbasis verwendet.',
       next: 'Weiter',
       minMachines: 'Mindestens 2 Maschinen',
       maxMachines: 'Maximal 30 Maschinen',
     },
     reference: {
-      title: 'Schritt 1: Referenz aufnehmen',
-      instruction: 'Geh zur Maschine, die sich NORMAL anhört.',
-      hint: 'Diese Aufnahme wird als Vergleichsbasis für alle anderen verwendet.',
+      title: 'Referenz aufnehmen',
+      instruction: 'Erste Maschine aufnehmen',
+      hint: 'Wird automatisch als Vergleichsbasis verwendet.',
       startRecording: 'Referenz aufnehmen',
       saved: 'Referenz gespeichert',
       goldName: 'Referenz (Gold)',
@@ -1640,8 +1632,7 @@ export const de: TranslationDict = {
       title: 'Schnellvergleich – {{count}} Maschinen',
       titleSingular: 'Schnellvergleich – 1 Maschine',
       concept: 'Klingt eine Maschine anders als die anderen? Diese App findet es heraus.',
-      method: 'Sie nehmen jede Maschine kurz auf – die App vergleicht die Geräusche und zeigt Ihnen das \u201Eschwarze Schaf\u201C.',
-      referenceHint: 'Zuerst brauchen wir eine Referenz: Gehen Sie zur Maschine, die sich NORMAL anhört, und nehmen Sie diese als erstes auf.',
+      method: 'Gehen Sie der Reihe nach zu jeder Maschine und nehmen Sie sie kurz auf. Die App vergleicht alle Geräusche und zeigt Ihnen, welche anders klingt.',
       startButton: 'Los geht\u2019s',
       minMachines: 'Mindestens 2 Maschinen für einen Schnellvergleich nötig.',
     },

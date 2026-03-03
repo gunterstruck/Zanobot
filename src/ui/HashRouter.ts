@@ -80,7 +80,7 @@ export class HashRouter {
   private onDownloadError?: (error: string) => void;
   private onImportRequested?: (importUrl: string) => void;
   private onFleetReady?: (fleetName: string, machineCount: number) => void;
-  private onQuickCompareReady?: (fleetName: string, machineIds: string[]) => void;
+  private onQuickCompareCountReady?: (count: number) => void;
   private boundHandleHashChange: () => void;
 
   constructor() {
@@ -132,10 +132,10 @@ export class HashRouter {
   }
 
   /**
-   * Set callback for when quick compare fleet provisioning is complete
+   * Set callback for when quick compare count-only route is detected
    */
-  public setOnQuickCompareReady(callback: (fleetName: string, machineIds: string[]) => void): void {
-    this.onQuickCompareReady = callback;
+  public setOnQuickCompareCountReady(callback: (count: number) => void): void {
+    this.onQuickCompareCountReady = callback;
   }
 
   /**
@@ -260,9 +260,8 @@ export class HashRouter {
       return result;
     }
 
-    // Match /q/<value> pattern (quick compare deep link)
-    // Variant A: #/q/<fleetId>?c=<customerId> → fleet-based (value is NOT a pure integer)
-    // Variant B: #/q/<number> → count-only (value is a pure integer 2-30)
+    // Match /q/<value> pattern (quick compare deep link – count only)
+    // #/q/<number> → count-only quick compare (value must be a valid integer 2-30)
     const qcMatch = path.match(/^\/q\/([^/?]+)/);
 
     if (qcMatch) {
@@ -270,7 +269,6 @@ export class HashRouter {
       const parsedInt = parseInt(rawValue, 10);
       const isPureInteger = /^\d+$/.test(rawValue);
 
-      // Variant B: Pure integer → count-only quick compare (no fleet DB needed)
       if (isPureInteger && parsedInt >= 2 && parsedInt <= 30) {
         logger.info(`Quick Compare count-only route: ${parsedInt} machines`);
         return {
@@ -279,42 +277,17 @@ export class HashRouter {
         };
       }
 
-      // Variant B edge cases: integer out of range
-      if (isPureInteger && parsedInt === 1) {
-        logger.warn(`Quick Compare: count=1 rejected (minimum 2)`);
-        return { type: 'unknown' };
-      }
       if (isPureInteger && parsedInt > 30) {
-        // Cap at 30
         logger.warn(`Quick Compare: count=${parsedInt} capped to 30`);
         return {
           type: 'quickcompare',
           machineCount: 30,
         };
       }
-      if (isPureInteger && parsedInt <= 0) {
-        logger.warn(`Quick Compare: count=${parsedInt} rejected (invalid)`);
-        return { type: 'unknown' };
-      }
 
-      // Variant A: Non-integer → fleet-based quick compare
-      const result: RouteMatch = {
-        type: 'quickcompare',
-        fleetId: rawValue,
-      };
-
-      if (queryString) {
-        const params = new URLSearchParams(queryString);
-        const customerId = params.get('c');
-        if (customerId) {
-          result.customerId = customerId;
-          // Uses same fleet DB format: <base>/<customerId>/fleet-<fleetId>.json
-          result.fleetDbUrl = `${GITHUB_PAGES_BASE_URL}/${encodeURIComponent(customerId)}/fleet-${result.fleetId}.json`;
-          logger.info(`Quick Compare route: "${result.fleetId}" -> ${result.fleetDbUrl}`);
-        }
-      }
-
-      return result;
+      // Invalid: not a valid count (non-integer, <=0, or 1)
+      logger.warn(`Quick Compare: invalid parameter "${rawValue}"`);
+      return { type: 'unknown' };
     }
 
     return { type: 'unknown' };
@@ -422,25 +395,6 @@ export class HashRouter {
   }
 
   /**
-   * Generate hash fragment for quick compare deep link
-   */
-  public static getQuickCompareHash(fleetId: string, customerId?: string): string {
-    const base = `#/q/${encodeURIComponent(fleetId)}`;
-    if (customerId) {
-      return `${base}?c=${encodeURIComponent(customerId)}`;
-    }
-    return base;
-  }
-
-  /**
-   * Generate full URL for quick compare NFC/QR tag
-   */
-  public static getFullQuickCompareUrl(fleetId: string, customerId?: string): string {
-    const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}${this.getQuickCompareHash(fleetId, customerId)}`;
-  }
-
-  /**
    * Generate hash fragment for quick compare count-only deep link (#/q/<number>)
    */
   public static getQuickCompareCountHash(count: number): string {
@@ -487,12 +441,7 @@ export class HashRouter {
       await this.handleFleetRoute(match.fleetId, match.fleetDbUrl);
     }
 
-    // Handle quick compare route - Variant A (fleet-based)
-    if (match.type === 'quickcompare' && match.fleetId && match.fleetDbUrl) {
-      await this.handleQuickCompareRoute(match.fleetId, match.fleetDbUrl);
-    }
-
-    // Handle quick compare route - Variant B (count-only, no download needed)
+    // Handle quick compare route (count-only, no download needed)
     if (match.type === 'quickcompare' && match.machineCount) {
       await this.handleQuickCompareCountOnly(match.machineCount);
     }
@@ -836,123 +785,12 @@ export class HashRouter {
   }
 
   /**
-   * Handle quick compare deep link - same provisioning as fleet but triggers quick compare flow.
-   * Uses the same fleet DB file format (zanobot-fleet-db).
-   */
-  private async handleQuickCompareRoute(fleetId: string, fleetDbUrl: string): Promise<void> {
-    try {
-      this.onDownloadProgress?.(t('fleet.provision.downloading'), 10);
-
-      // 1. Validate URL
-      const validation = ReferenceDbService.validateUrl(fleetDbUrl);
-      if (!validation.valid) {
-        logger.error(`Invalid quick compare fleet DB URL: ${validation.error}`);
-        notify.error(t('fleet.provision.error'));
-        this.onDownloadError?.('invalid_fleet_url');
-        return;
-      }
-
-      // 2. Download fleet DB JSON
-      this.onDownloadProgress?.(t('fleet.provision.downloading'), 30);
-      let response: Response;
-      try {
-        response = await fetch(fleetDbUrl);
-      } catch (fetchError) {
-        logger.error(`Quick compare fleet DB fetch failed:`, fetchError);
-        notify.error(t('fleet.provision.offline'), { duration: 0 });
-        this.onDownloadError?.('fleet_download_failed_offline');
-        return;
-      }
-      if (!response.ok) {
-        logger.error(`Quick compare fleet DB download failed: ${response.status}`);
-        notify.error(t('fleet.provision.error'));
-        this.onDownloadError?.('fleet_download_failed');
-        return;
-      }
-
-      const rawData = await response.json();
-
-      // 3. Validate format (same schema as fleet)
-      const formatCheck = this.validateFleetDb(rawData);
-      if (!formatCheck.valid) {
-        logger.error(`Quick compare fleet DB validation failed: ${formatCheck.error}`);
-        notify.error(t('fleet.provision.error'));
-        this.onDownloadError?.(`fleet_validation_failed: ${formatCheck.error}`);
-        return;
-      }
-
-      const fleetData = rawData as FleetDbFile;
-      this.onDownloadProgress?.(t('fleet.provision.downloading'), 50);
-
-      // 4. DB version compatibility warning
-      if (fleetData.exportDbVersion > 7) {
-        notify.warning(t('fleet.provision.updateRecommended'), { duration: 5000 });
-      }
-
-      // 5. Prepare import plan (Phase 1: RAM only)
-      const plan = await this.prepareFleetImport(fleetData);
-
-      for (const warning of plan.warnings) {
-        notify.warning(warning, { duration: 5000 });
-      }
-
-      this.onDownloadProgress?.(t('fleet.provision.downloading'), 70);
-
-      // 6. Commit import plan (Phase 2: DB writes with rollback)
-      if (plan.toCreate.length > 0 || plan.toUpdate.length > 0) {
-        await this.commitFleetImport(plan);
-      }
-
-      this.onDownloadProgress?.(t('fleet.provision.downloading'), 100);
-
-      // 7. Collect all machine IDs from the fleet DB
-      const machineIds = fleetData.machines.map(m => m.id as string);
-
-      logger.info(`Quick Compare fleet "${fleetData.fleet.name}" provisioned: ${machineIds.length} machines`);
-
-      // 8. Notify UI with machine IDs for quick compare flow
-      this.onQuickCompareReady?.(fleetData.fleet.name, machineIds);
-
-    } catch (error) {
-      logger.error('Quick compare fleet provisioning failed:', error);
-      notify.error(t('fleet.provision.error'));
-      this.onDownloadError?.(error instanceof Error ? error.message : 'qc_provision_failed');
-    }
-  }
-
-  /**
    * Handle quick compare count-only route (#/q/<number>).
-   * Creates N machines locally with auto-names – no download needed.
-   * Completely offline-capable.
+   * Signals the count to the UI – machine creation is handled by QuickCompareController.
    */
   private async handleQuickCompareCountOnly(count: number): Promise<void> {
-    try {
-      const now = Date.now();
-      const dateStr = new Date(now).toLocaleDateString();
-      const groupName = `${t('quickCompare.wizard.title')} ${dateStr}`;
-      const machineIds: string[] = [];
-
-      for (let i = 1; i <= count; i++) {
-        const paddedNumber = i.toString().padStart(2, '0');
-        const machine: Machine = {
-          id: `qc-${now}-${paddedNumber}-${Math.random().toString(36).substring(2, 6)}`,
-          name: t('zeroFriction.autoMachineName', { number: paddedNumber }),
-          createdAt: now,
-          referenceModels: [],
-          fleetGroup: groupName,
-        };
-        await saveMachine(machine);
-        machineIds.push(machine.id);
-      }
-
-      logger.info(`Quick Compare count-only: created ${count} machines locally`);
-      this.onQuickCompareReady?.(groupName, machineIds);
-
-    } catch (error) {
-      logger.error('Quick compare count-only provisioning failed:', error);
-      notify.error(t('fleet.provision.error'));
-      this.onDownloadError?.(error instanceof Error ? error.message : 'qc_count_provision_failed');
-    }
+    logger.info(`Quick Compare count-only route: ${count} machines`);
+    this.onQuickCompareCountReady?.(count);
   }
 
   /**

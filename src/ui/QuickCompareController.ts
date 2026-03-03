@@ -1,10 +1,10 @@
 /**
- * ZANOBOT - SPRINT 7: QUICK COMPARE CONTROLLER
+ * ZANOBOT - QUICK COMPARE CONTROLLER (Simplified)
  *
  * Enables "zero-friction" fleet comparison:
- * 1. Choose machine count
- * 2. Record reference (Gold Standard)
- * 3. Guided compare loop (reuses existing Fleet Queue)
+ * 1. Choose machine count (or receive via NFC/QR deep link)
+ * 2. All n machines are created immediately
+ * 3. Unified guided loop: Machine 01 = reference, Machine 02-n = diagnosis
  * 4. Result screen with outlier detection + save-as-fleet option
  *
  * Design principles:
@@ -12,6 +12,7 @@
  * - Reuses existing Fleet Queue (startFleetQueue / advanceFleetQueue / completeFleetQueue)
  * - Reuses existing Recording + GMIA infrastructure
  * - All machines persisted immediately in IndexedDB (crash-safe)
+ * - Machine 01 is always the reference – no separate reference step
  */
 
 import { saveMachine, getMachine, deleteMachine, getLatestDiagnosis } from '@data/db.js';
@@ -26,15 +27,9 @@ export class QuickCompareController {
   private createdMachineIds: string[] = [];
   private _isActive: boolean = false;
   private currentStep: 'idle' | 'count' | 'reference' | 'compare' | 'result' = 'idle';
-  /** NFC fleet mode: pre-provisioned machine IDs from fleet DB */
-  private fleetMachineIds: string[] | null = null;
-  /** NFC fleet mode: fleet name for display */
-  private fleetName: string | null = null;
 
-  /** Callback: start the fleet queue with comparison machine IDs */
+  /** Callback: start the fleet queue with ALL machine IDs */
   public onStartFleetQueue: ((machineIds: string[], groupName: string) => void) | null = null;
-  /** Callback: select a machine (triggers Router.onMachineSelected) */
-  public onSelectMachine: ((machine: Machine) => void) | null = null;
   /** Callback: navigate back to start screen */
   public onNavigateHome: (() => void) | null = null;
 
@@ -42,10 +37,15 @@ export class QuickCompareController {
     return this._isActive;
   }
 
+  /** Public getter: ID of the gold standard (reference) machine */
+  public get goldStandardMachineId(): string | null {
+    return this.goldStandardId;
+  }
+
   constructor() {}
 
   // ============================================================================
-  // STEP 1: COUNT SELECTION (Maßnahme 1)
+  // STEP 1: COUNT SELECTION
   // ============================================================================
 
   /** Start the quick compare flow – shows the count selection wizard */
@@ -55,27 +55,19 @@ export class QuickCompareController {
     this.machineCount = 0;
     this.goldStandardId = null;
     this.createdMachineIds = [];
-    this.fleetMachineIds = null;
-    this.fleetName = null;
     this.showCountSelection();
   }
 
   /**
-   * Start quick compare with pre-provisioned fleet machines (NFC deep link flow).
-   * Skips the count selection wizard entirely – machine count and names come from fleet DB.
-   * The first machine in the list is suggested as gold standard candidate.
+   * Start quick compare with a pre-set count (NFC/QR deep link flow).
+   * Skips the count selection wizard – directly creates machines and starts the loop.
    */
-  public startWithFleet(machineIds: string[], fleetName: string): void {
+  public async startWithCount(count: number): Promise<void> {
     this._isActive = true;
-    this.currentStep = 'reference';
-    this.machineCount = machineIds.length - 1; // N-1 comparison machines (1 is reference)
+    this.machineCount = count;
     this.goldStandardId = null;
     this.createdMachineIds = [];
-    this.fleetMachineIds = machineIds;
-    this.fleetName = fleetName;
-
-    // Skip straight to reference step (no wizard)
-    this.showReferenceStep();
+    await this.createMachinesAndStartLoop(count);
   }
 
   /** Cancel and clean up the quick compare flow */
@@ -195,12 +187,12 @@ export class QuickCompareController {
     explanation.className = 'qc-explanation';
     explanation.textContent = t('quickCompare.wizard.explanation');
 
-    // Next button
-    nextBtn.addEventListener('click', () => {
+    // Next button – directly creates machines and starts the guided loop
+    nextBtn.addEventListener('click', async () => {
       if (selectedCount >= 2 && selectedCount <= 30) {
         this.machineCount = selectedCount;
         this.removeOverlay();
-        this.showReferenceStep();
+        await this.createMachinesAndStartLoop(selectedCount);
       }
     });
 
@@ -223,194 +215,90 @@ export class QuickCompareController {
   }
 
   // ============================================================================
-  // STEP 2: GOLD-STANDARD REFERENCE (Maßnahme 2)
-  // ============================================================================
-
-  private showReferenceStep(): void {
-    this.currentStep = 'reference';
-
-    const overlay = document.createElement('div');
-    overlay.id = 'qc-overlay';
-    overlay.className = 'fleet-modal-overlay';
-
-    const modal = document.createElement('div');
-    modal.className = 'fleet-modal qc-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-
-    // Header
-    const header = document.createElement('div');
-    header.className = 'fleet-modal-header';
-
-    const titleEl = document.createElement('h3');
-    titleEl.className = 'fleet-modal-title';
-    titleEl.textContent = t('quickCompare.reference.title');
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'bottomsheet-close fleet-modal-close';
-    closeBtn.setAttribute('aria-label', t('buttons.close'));
-    closeBtn.textContent = '\u2715';
-    closeBtn.addEventListener('click', () => this.cancel());
-
-    header.appendChild(titleEl);
-    header.appendChild(closeBtn);
-
-    // Instruction
-    const instruction = document.createElement('div');
-    instruction.className = 'qc-reference-instruction';
-    instruction.textContent = t('quickCompare.reference.instruction');
-
-    // Hint
-    const hint = document.createElement('p');
-    hint.className = 'qc-reference-hint';
-    hint.textContent = t('quickCompare.reference.hint');
-
-    // Record button
-    const recordBtn = document.createElement('button');
-    recordBtn.className = 'action-btn qc-reference-record-btn';
-    recordBtn.textContent = t('quickCompare.reference.startRecording');
-    recordBtn.addEventListener('click', async () => {
-      await this.startReferenceRecording();
-    });
-
-    // Assemble
-    modal.appendChild(header);
-    modal.appendChild(instruction);
-    modal.appendChild(hint);
-    modal.appendChild(recordBtn);
-    overlay.appendChild(modal);
-
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) this.cancel();
-    });
-
-    document.body.appendChild(overlay);
-  }
-
-  /** Create the Gold Standard machine and trigger recording via Router callback */
-  private async startReferenceRecording(): Promise<void> {
-    // Create Gold Standard machine
-    const goldMachine: Machine = {
-      id: `qc-${Date.now()}-gold`,
-      name: t('quickCompare.reference.goldName'),
-      createdAt: Date.now(),
-      referenceModels: [],
-    };
-    await saveMachine(goldMachine);
-    this.goldStandardId = goldMachine.id;
-    this.createdMachineIds.push(goldMachine.id);
-
-    logger.info(`[QuickCompare] Gold Standard machine created: ${goldMachine.id}`);
-
-    // Select this machine in the Router (triggers Phase 2 Reference).
-    // MUST happen BEFORE removeOverlay() so phases are initialized and the
-    // reference section is expanded before the overlay disappears.
-    if (this.onSelectMachine) {
-      this.onSelectMachine(goldMachine);
-    }
-
-    // NOW remove overlay – phases are already set up underneath
-    this.removeOverlay();
-
-    // Show a toast to guide user
-    notify.info(t('quickCompare.reference.recordingHint'));
-  }
-
-  // ============================================================================
-  // STEP 2b: AFTER REFERENCE SAVED → CREATE COMPARISON MACHINES (Maßnahme 2)
+  // STEP 2: CREATE MACHINES AND START GUIDED LOOP
   // ============================================================================
 
   /**
-   * Called by Router when reference model is saved during Quick Compare.
-   * Creates N comparison machines with copied Gold Standard reference,
-   * then starts the fleet queue for the guided compare loop.
-   *
-   * In fleet mode (NFC deep link): copies reference to pre-provisioned machines
-   * instead of creating new ones.
+   * Create all n machines in IndexedDB and start the guided loop.
+   * Machine 01 is the gold standard (reference). The loop covers ALL machines.
+   * The Router will detect which machine is the gold standard and route accordingly.
+   */
+  private async createMachinesAndStartLoop(count: number): Promise<void> {
+    this.currentStep = 'reference';
+
+    const now = Date.now();
+    const allIds: string[] = [];
+
+    for (let i = 1; i <= count; i++) {
+      const paddedNumber = i.toString().padStart(2, '0');
+      const machine: Machine = {
+        id: `qc-${now}-${paddedNumber}-${Math.random().toString(36).substring(2, 6)}`,
+        name: t('zeroFriction.autoMachineName', { number: paddedNumber }),
+        createdAt: now,
+        referenceModels: [],
+      };
+      await saveMachine(machine);
+      allIds.push(machine.id);
+      this.createdMachineIds.push(machine.id);
+    }
+
+    // First machine is the gold standard
+    this.goldStandardId = allIds[0];
+
+    logger.info(`[QuickCompare] Created ${count} machines, gold standard: ${this.goldStandardId}`);
+
+    // Start the fleet queue with ALL machines (including the gold standard)
+    if (this.onStartFleetQueue) {
+      this.onStartFleetQueue(allIds, t('quickCompare.wizard.title'));
+    }
+  }
+
+  // ============================================================================
+  // STEP 2b: AFTER REFERENCE SAVED → COPY TO REMAINING MACHINES
+  // ============================================================================
+
+  /**
+   * Called by Router when the reference model is saved for the gold standard machine.
+   * Copies the reference to all remaining machines (02-n) so they can run diagnosis.
+   * The fleet queue is already running – Router will advance after this completes.
    */
   public async onReferenceComplete(goldMachine: Machine): Promise<void> {
     if (this.currentStep !== 'reference') return;
     this.currentStep = 'compare';
 
-    logger.info(`[QuickCompare] Reference complete for Gold Standard: ${goldMachine.name}`);
+    logger.info(`[QuickCompare] Reference complete for gold standard: ${goldMachine.name}`);
     notify.success(t('quickCompare.reference.saved'));
 
-    // Update stored Gold Standard with fresh data
+    // Update stored Gold Standard ID with fresh data
     this.goldStandardId = goldMachine.id;
 
-    // NFC fleet mode: copy reference to pre-provisioned machines
-    if (this.fleetMachineIds) {
-      const compareIds: string[] = [];
-      for (const id of this.fleetMachineIds) {
-        // Skip the gold standard machine itself
-        if (id === goldMachine.id) continue;
+    // Copy reference to all remaining machines (02-n)
+    for (const id of this.createdMachineIds) {
+      if (id === goldMachine.id) continue;
 
-        const machine = await getMachine(id);
-        if (!machine) continue;
+      const machine = await getMachine(id);
+      if (!machine) continue;
 
-        // Copy Gold Standard reference to this machine
-        machine.referenceModels = goldMachine.referenceModels.map(m => ({
-          ...m,
-          weightVector: new Float64Array(m.weightVector),
-        }));
-        machine.refLogMean = goldMachine.refLogMean ? [...goldMachine.refLogMean] : null;
-        machine.refLogStd = goldMachine.refLogStd ? [...goldMachine.refLogStd] : null;
-        machine.refLogResidualStd = goldMachine.refLogResidualStd ? [...goldMachine.refLogResidualStd] : null;
-        machine.refDriftBaseline = goldMachine.refDriftBaseline ? { ...goldMachine.refDriftBaseline } : null;
-        machine.refT60 = goldMachine.refT60 ?? null;
-        machine.refT60Classification = goldMachine.refT60Classification ?? null;
-        machine.fleetReferenceSourceId = goldMachine.id;
-        await saveMachine(machine);
-
-        this.createdMachineIds.push(id);
-        compareIds.push(id);
-      }
-
-      logger.info(`[QuickCompare] Fleet mode: copied reference to ${compareIds.length} pre-provisioned machines`);
-
-      if (this.onStartFleetQueue) {
-        this.onStartFleetQueue(compareIds, this.fleetName || t('quickCompare.wizard.title'));
-      }
-      return;
-    }
-
-    // Manual mode: Create N comparison machines with copied Gold Standard reference
-    const compareIds: string[] = [];
-    for (let i = 1; i <= this.machineCount; i++) {
-      const paddedNumber = i.toString().padStart(2, '0');
-      const machine: Machine = {
-        id: `qc-${Date.now()}-${paddedNumber}-${Math.random().toString(36).substring(2, 6)}`,
-        name: t('zeroFriction.autoMachineName', { number: paddedNumber }),
-        createdAt: Date.now(),
-        // Deep copy reference models (especially Float64Array weightVector)
-        referenceModels: goldMachine.referenceModels.map(m => ({
-          ...m,
-          weightVector: new Float64Array(m.weightVector),
-        })),
-        refLogMean: goldMachine.refLogMean ? [...goldMachine.refLogMean] : null,
-        refLogStd: goldMachine.refLogStd ? [...goldMachine.refLogStd] : null,
-        refLogResidualStd: goldMachine.refLogResidualStd ? [...goldMachine.refLogResidualStd] : null,
-        refDriftBaseline: goldMachine.refDriftBaseline ? { ...goldMachine.refDriftBaseline } : null,
-        refT60: goldMachine.refT60 ?? null,
-        refT60Classification: goldMachine.refT60Classification ?? null,
-        fleetReferenceSourceId: goldMachine.id,
-        fleetGroup: null,
-      };
+      // Deep copy reference models (especially Float64Array weightVector!)
+      machine.referenceModels = goldMachine.referenceModels.map(m => ({
+        ...m,
+        weightVector: new Float64Array(m.weightVector),
+      }));
+      machine.refLogMean = goldMachine.refLogMean ? [...goldMachine.refLogMean] : null;
+      machine.refLogStd = goldMachine.refLogStd ? [...goldMachine.refLogStd] : null;
+      machine.refLogResidualStd = goldMachine.refLogResidualStd ? [...goldMachine.refLogResidualStd] : null;
+      machine.refDriftBaseline = goldMachine.refDriftBaseline ? { ...goldMachine.refDriftBaseline } : null;
+      machine.refT60 = goldMachine.refT60 ?? null;
+      machine.refT60Classification = goldMachine.refT60Classification ?? null;
+      machine.fleetReferenceSourceId = goldMachine.id;
       await saveMachine(machine);
-      this.createdMachineIds.push(machine.id);
-      compareIds.push(machine.id);
     }
 
-    logger.info(`[QuickCompare] Created ${compareIds.length} comparison machines`);
-
-    // Start the fleet queue (reuse existing guided fleet check from Sprint 6)
-    if (this.onStartFleetQueue) {
-      this.onStartFleetQueue(compareIds, t('quickCompare.wizard.title'));
-    }
+    logger.info(`[QuickCompare] Copied reference to ${this.createdMachineIds.length - 1} machines`);
   }
 
   // ============================================================================
-  // STEP 4: RESULT SCREEN (Maßnahme 4)
+  // STEP 4: RESULT SCREEN
   // ============================================================================
 
   /** Called by Router when fleet queue completes during Quick Compare */
@@ -423,12 +311,7 @@ export class QuickCompareController {
       isGold: boolean;
     }> = [];
 
-    // Build the full list of IDs to show: gold standard + comparison machines
-    const allIds = new Set<string>();
-    if (this.goldStandardId) allIds.add(this.goldStandardId);
-    for (const id of this.createdMachineIds) allIds.add(id);
-
-    for (const id of allIds) {
+    for (const id of this.createdMachineIds) {
       const machine = await getMachine(id);
       if (!machine) continue;
 
@@ -453,11 +336,11 @@ export class QuickCompareController {
       return a.score - b.score;
     });
 
-    // Calculate statistics
+    // Calculate statistics (exclude gold standard)
     const scores = results.map(r => r.score).filter((s): s is number => s !== null);
     const stats = this.calculateStats(scores);
     const checked = scores.length;
-    const total = this.machineCount;
+    const total = this.machineCount - 1; // Exclude gold standard from total
     const outlierCount = stats ? scores.filter(s => s < stats.outlierThreshold).length : 0;
 
     this.renderResultScreen(results, stats, checked, total, outlierCount);
@@ -551,14 +434,12 @@ export class QuickCompareController {
     const actions = document.createElement('div');
     actions.className = 'qc-result-actions';
 
-    // Save as fleet button (hidden in fleet mode – machines already belong to a fleet)
-    if (!this.fleetMachineIds) {
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'qc-save-fleet-btn';
-      saveBtn.textContent = t('quickCompare.result.saveAsFleet');
-      saveBtn.addEventListener('click', () => this.showSaveFleetDialog(overlay));
-      actions.appendChild(saveBtn);
-    }
+    // Save as fleet button
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'qc-save-fleet-btn';
+    saveBtn.textContent = t('quickCompare.result.saveAsFleet');
+    saveBtn.addEventListener('click', () => this.showSaveFleetDialog(overlay));
+    actions.appendChild(saveBtn);
 
     // Secondary actions row
     const secondaryRow = document.createElement('div');
@@ -658,7 +539,7 @@ export class QuickCompareController {
   }
 
   // ============================================================================
-  // SAVE AS FLEET (Maßnahme 4)
+  // SAVE AS FLEET
   // ============================================================================
 
   private showSaveFleetDialog(_parentOverlay: HTMLElement): void {
@@ -695,14 +576,11 @@ export class QuickCompareController {
   }
 
   // ============================================================================
-  // CLEANUP (Maßnahme 4)
+  // CLEANUP
   // ============================================================================
 
   private async cleanupTestData(): Promise<void> {
-    // In fleet mode, only delete the gold standard (auto-created), not the provisioned machines
-    const idsToDelete = this.fleetMachineIds
-      ? (this.goldStandardId ? [this.goldStandardId] : [])
-      : this.createdMachineIds;
+    const idsToDelete = this.createdMachineIds;
 
     if (idsToDelete.length === 0) {
       this.finish();
