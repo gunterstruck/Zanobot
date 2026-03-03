@@ -161,6 +161,15 @@ export class DiagnosePhase {
   /** Sprint 5 Fix: Optional callback fired when diagnosis fails to start (for fleet queue error recovery) */
   private onDiagnosisError: ((error: unknown) => void) | null = null;
 
+  /** Quick Compare context: gold standard machine name for UX hints */
+  private qcGoldStandardName: string | null = null;
+
+  /** Track whether ghost overlay hint has been shown this session */
+  private static ghostOverlayHintShown = false;
+
+  /** Track whether score explanation has been shown this session */
+  private static scoreExplanationShown = false;
+
   constructor(machine: Machine, selectedDeviceId?: string) {
     this.machine = machine;
     this.selectedDeviceId = selectedDeviceId;
@@ -206,6 +215,14 @@ export class DiagnosePhase {
    */
   public setOnDiagnosisError(cb: (error: unknown) => void): void {
     this.onDiagnosisError = cb;
+  }
+
+  /**
+   * Set Quick Compare context for UX hints in the inspection modal.
+   * @param goldStandardName - Name of the gold standard (reference) machine
+   */
+  public setQcContext(goldStandardName: string): void {
+    this.qcGoldStandardName = goldStandardName;
   }
 
   /**
@@ -1619,6 +1636,16 @@ export class DiagnosePhase {
         duration: 3000,
       });
 
+      // UX improvement: One-time score explanation after first QC diagnosis
+      if (this.qcGoldStandardName && !DiagnosePhase.scoreExplanationShown) {
+        DiagnosePhase.scoreExplanationShown = true;
+        setTimeout(() => {
+          notify.info(t('quickCompare.scoreExplanation.hint', { score: String(Math.round(finalScore)) }), {
+            duration: 6000,
+          });
+        }, 500);
+      }
+
       logger.info('✅ Diagnosis saved successfully!');
 
       // Sprint 5: Fire fleet queue callback if set
@@ -1731,10 +1758,14 @@ export class DiagnosePhase {
       machineNameElement.textContent = this.machine.name;
     }
 
-    // Set initial subtitle (initializing state)
+    // Set initial subtitle (initializing state) – show QC comparison context if available
     const subtitleElement = document.getElementById('inspection-subtitle');
     if (subtitleElement) {
-      subtitleElement.textContent = t('inspection.subtitleInitializing');
+      if (this.qcGoldStandardName) {
+        subtitleElement.textContent = t('quickCompare.inspectionReference.comparingWith', { name: this.qcGoldStandardName });
+      } else {
+        subtitleElement.textContent = t('inspection.subtitleInitializing');
+      }
     }
 
     // Set reference state info
@@ -1764,6 +1795,21 @@ export class DiagnosePhase {
 
         // Initialize camera video element
         this.initCamera();
+
+        // Ghost overlay hint: show once per session when overlay is visible
+        if (this.cameraStream && this.machine.referenceImage && !DiagnosePhase.ghostOverlayHintShown) {
+          DiagnosePhase.ghostOverlayHintShown = true;
+          const ghostHintEl = document.createElement('div');
+          ghostHintEl.className = 'qc-ghost-overlay-hint';
+          ghostHintEl.textContent = t('quickCompare.ghostOverlay.hint');
+          const camContainer = contentElement.querySelector('.dashboard-left-cam');
+          if (camContainer) {
+            camContainer.appendChild(ghostHintEl);
+            // Fade out after 5 seconds
+            setTimeout(() => ghostHintEl.classList.add('qc-hint-fade-out'), 5000);
+            setTimeout(() => ghostHintEl.remove(), 6000);
+          }
+        }
 
         // Add reference info line (same position as advanced/expert view)
         const rightScore = contentElement.querySelector('.dashboard-right-score');

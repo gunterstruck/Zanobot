@@ -1248,6 +1248,32 @@ export const es: TranslationDict = {
       method: 'Go to each machine in order and briefly record it. The app compares all sounds and shows you which one sounds different.',
       startButton: 'Let\u2019s go',
       minMachines: 'At least 2 machines required for quick compare.',
+      timeEstimate: 'Duraci\u00F3n: aprox. {{minutes}} minutos para {{count}} m\u00E1quinas.',
+      privacyHint: 'El micr\u00F3fono y la c\u00E1mara solo se usan para el an\u00E1lisis. Todos los datos permanecen en su dispositivo.',
+    },
+    guidedPrompt: {
+      referenceHint: 'Esta grabaci\u00F3n se usar\u00E1 como base de comparaci\u00F3n.',
+      positionInstruction: 'Sostenga el smartphone a aprox. 10\u201320 cm de la m\u00E1quina. Por favor, no hable.',
+      positionMemory: 'Consejo: recuerde el lugar \u2013 misma posici\u00F3n para todas las m\u00E1quinas.',
+      noiseHint: 'Por favor, no hable ni se mueva durante la grabaci\u00F3n.',
+    },
+    inspectionReference: {
+      mainQuestion: 'Grabando referencia...',
+      subtitle: 'Esta grabaci\u00F3n se guardar\u00E1 como base de comparaci\u00F3n.',
+      scorePlaceholder: 'Referencia \u2013 sin comparaci\u00F3n',
+      comparingWith: 'Comparando con {{name}}...',
+    },
+    ghostOverlay: {
+      hint: 'Gu\u00EDa de posici\u00F3n: alinee la imagen en vivo con el contorno semitransparente.',
+    },
+    scoreExplanation: {
+      hint: '{{score}}% = Similitud con la referencia. Verde = normal, Naranja = revisar, Rojo = anomal\u00EDa.',
+    },
+    resultContext: {
+      allGood: 'Todas las m\u00E1quinas suenan similar \u2013 no se detectaron anomal\u00EDas.',
+      outlierWarning: 'Atenci\u00F3n: {{name}} muestra una desviaci\u00F3n significativa. Recomendaci\u00F3n: inspeccionar m\u00E1s a fondo.',
+      outlierWarningMultiple: 'Atenci\u00F3n: {{count}} m\u00E1quinas muestran una desviaci\u00F3n significativa. Recomendaci\u00F3n: inspeccionar m\u00E1s a fondo.',
+      fleetSaveHint: 'Las flotas guardadas permiten revisiones regulares con gu\u00EDa de posici\u00F3n.',
     },
   },
 };

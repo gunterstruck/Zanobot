@@ -658,6 +658,16 @@ export class Router {
         this.fleetQueueIndex++;
         setTimeout(() => this.advanceFleetQueue(), 500);
       });
+
+      // UX improvement: Set QC context for inspection modal hints
+      if (this.quickCompareController.isActive && this.quickCompareController.goldStandardMachineId) {
+        const goldId = this.quickCompareController.goldStandardMachineId;
+        getMachine(goldId).then(goldMachine => {
+          if (goldMachine && this.diagnosePhase) {
+            this.diagnosePhase.setQcContext(goldMachine.name);
+          }
+        });
+      }
     }
 
     // Register callback to update UI when reference model is saved
@@ -1115,12 +1125,22 @@ export class Router {
     const titleKey = count === 1 ? 'quickCompare.nfcOnboarding.titleSingular' : 'quickCompare.nfcOnboarding.title';
     const titleText = escapeHtml(t(titleKey, { count: String(count) }));
 
+    // Calculate time estimate: ~15s per machine, rounded to nearest 0.5 min
+    const totalSeconds = count * 15;
+    const minutes = (Math.ceil(totalSeconds / 30) * 0.5).toFixed(1).replace('.0', '');
+    const timeEstimate = escapeHtml(t('quickCompare.nfcOnboarding.timeEstimate', { minutes, count: String(count) }));
+    const privacyHint = escapeHtml(t('quickCompare.nfcOnboarding.privacyHint'));
+
     overlay.innerHTML = `
       <div class="fleet-onboarding-card">
         <div class="fleet-onboarding-icon">\uD83D\uDD0A</div>
         <div class="fleet-onboarding-title">${titleText}</div>
         <div class="fleet-onboarding-concept">${escapeHtml(t('quickCompare.nfcOnboarding.concept'))}</div>
         <div class="fleet-onboarding-method">${escapeHtml(t('quickCompare.nfcOnboarding.method'))}</div>
+        <div class="qc-onboarding-meta">
+          <div class="qc-onboarding-time-estimate">${timeEstimate}</div>
+          <div class="qc-onboarding-privacy-hint">${privacyHint}</div>
+        </div>
         <button class="fleet-onboarding-start-btn" id="qc-onboarding-start-btn">
           \u25B6 ${escapeHtml(t('quickCompare.nfcOnboarding.startButton'))}
         </button>
@@ -1286,8 +1306,8 @@ export class Router {
     // Quick Compare: Reference hint for gold standard machine
     if (isQcGoldStandard) {
       const refHint = document.createElement('div');
-      refHint.className = 'fleet-guided-location';
-      refHint.textContent = t('quickCompare.reference.hint');
+      refHint.className = 'fleet-guided-ref-hint';
+      refHint.textContent = t('quickCompare.guidedPrompt.referenceHint');
       prompt.appendChild(refHint);
     }
 
@@ -1299,13 +1319,26 @@ export class Router {
       prompt.appendChild(locationHint);
     }
 
-    // Instruction text
+    // Instruction text – improved for reference machine
     const instruction = document.createElement('div');
     instruction.className = 'fleet-guided-instruction';
     instruction.textContent = isQcGoldStandard
-      ? t('quickCompare.reference.instruction')
+      ? t('quickCompare.guidedPrompt.positionInstruction')
       : t('fleet.queue.guided.waitingForUser');
     prompt.appendChild(instruction);
+
+    // Quick Compare: Position memory tip + noise hint (only for machine 01)
+    if (isQcGoldStandard) {
+      const positionTip = document.createElement('div');
+      positionTip.className = 'fleet-guided-tip';
+      positionTip.textContent = t('quickCompare.guidedPrompt.positionMemory');
+      prompt.appendChild(positionTip);
+
+      const noiseHint = document.createElement('div');
+      noiseHint.className = 'fleet-guided-noise-hint';
+      noiseHint.textContent = t('quickCompare.guidedPrompt.noiseHint');
+      prompt.appendChild(noiseHint);
+    }
 
     // Start button (large, prominent, touch-friendly)
     const startBtn = document.createElement('button');

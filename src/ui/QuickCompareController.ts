@@ -416,6 +416,26 @@ export class QuickCompareController {
       headerDiv.appendChild(allGood);
     }
 
+    // UX improvement: Context explanation and recommendation
+    const contextEl = document.createElement('div');
+    contextEl.className = 'qc-result-context';
+    if (outlierCount > 0) {
+      // Find outlier names
+      const outlierNames = results
+        .filter(r => !r.isGold && r.score !== null && stats !== null && r.score < stats.outlierThreshold)
+        .map(r => r.machine.name);
+      if (outlierNames.length === 1) {
+        contextEl.textContent = t('quickCompare.resultContext.outlierWarning', { name: outlierNames[0] });
+      } else {
+        contextEl.textContent = t('quickCompare.resultContext.outlierWarningMultiple', { count: String(outlierCount) });
+      }
+    } else if (checked > 0) {
+      contextEl.textContent = t('quickCompare.resultContext.allGood');
+    }
+    if (contextEl.textContent) {
+      headerDiv.appendChild(contextEl);
+    }
+
     screen.appendChild(headerDiv);
 
     // Ranking list
@@ -440,6 +460,12 @@ export class QuickCompareController {
     saveBtn.textContent = t('quickCompare.result.saveAsFleet');
     saveBtn.addEventListener('click', () => this.showSaveFleetDialog(overlay));
     actions.appendChild(saveBtn);
+
+    // Fleet save hint
+    const fleetHint = document.createElement('div');
+    fleetHint.className = 'qc-fleet-save-hint';
+    fleetHint.textContent = t('quickCompare.resultContext.fleetSaveHint');
+    actions.appendChild(fleetHint);
 
     // Secondary actions row
     const secondaryRow = document.createElement('div');
