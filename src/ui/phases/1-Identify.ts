@@ -310,8 +310,10 @@ export class IdentifyPhase {
     // NFC diagnosis prompt modal
     this.initNfcDiagnosisPrompt();
 
-    // Deep link handling
-    void this.handleDeepLink();
+    // Deep link handling (catch errors so they are not silently swallowed)
+    this.handleDeepLink().catch((err) => {
+      logger.error('❌ Deep link handling failed:', err);
+    });
   }
 
   /**
@@ -1528,28 +1530,21 @@ export class IdentifyPhase {
 
       const qcRouter = new HashRouter();
       const qcMatch = qcRouter.parseHash(hash);
+      qcRouter.destroy(); // Not needed beyond parsing
 
       if (qcMatch.type === 'quickcompare' && qcMatch.machineCount) {
-        // Count-only quick compare (fully offline, no download)
-        logger.info(`⚡ Quick Compare route (count-only): ${qcMatch.machineCount} machines`);
+        const count = qcMatch.machineCount;
+        logger.info(`⚡ Quick Compare route (count-only): ${count} machines`);
 
-        qcRouter.setOnQuickCompareCountReady((count) => {
-          logger.info(`✅ Quick Compare count-only: ${count} machines`);
-
-          // Notify parent (Router) to start quick compare flow with count
-          if (this.onQuickCompareProvisioned) {
-            this.onQuickCompareProvisioned(count);
-          }
-        });
-
-        // Trigger count-only handling
-        await qcRouter.init();
-
-        // Clean up URL after processing
+        // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        // Destroy router to remove hashchange listener
-        qcRouter.destroy();
+        // Directly notify parent – no async round-trip needed for count-only
+        if (this.onQuickCompareProvisioned) {
+          this.onQuickCompareProvisioned(count);
+        } else {
+          logger.error('❌ Quick Compare deep link: onQuickCompareProvisioned callback not set');
+        }
         return; // Don't fall through to machine ID handling
       }
     }
