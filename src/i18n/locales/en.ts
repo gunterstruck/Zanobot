@@ -1592,6 +1592,38 @@ export const en: TranslationDict = {
       method: 'Go to each machine in order and briefly record it. The app compares all sounds and shows you which one sounds different.',
       startButton: 'Let\u2019s go',
       minMachines: 'At least 2 machines required for quick compare.',
+      // UX improvement: time estimate and privacy hint
+      timeEstimate: 'Duration: approx. {{minutes}} minutes for {{count}} machines.',
+      privacyHint: 'Microphone and camera are only used for analysis. All data stays on your device.',
+    },
+    // UX improvement: Guided prompt hints
+    guidedPrompt: {
+      referenceHint: 'This recording will be used as the comparison baseline.',
+      positionInstruction: 'Hold smartphone approx. 10\u201320 cm near the machine. Please keep quiet.',
+      positionMemory: 'Tip: Remember the spot \u2013 same position for all machines.',
+      noiseHint: 'Please keep quiet and avoid moving during the recording.',
+    },
+    // UX improvement: Inspection modal in reference mode
+    inspectionReference: {
+      mainQuestion: 'Recording reference...',
+      subtitle: 'This recording will be saved as comparison baseline.',
+      scorePlaceholder: 'Reference \u2013 no comparison',
+      comparingWith: 'Comparing with {{name}}...',
+    },
+    // UX improvement: Ghost overlay hint
+    ghostOverlay: {
+      hint: 'Position guide: Align live image with semi-transparent outline.',
+    },
+    // UX improvement: One-time score explanation
+    scoreExplanation: {
+      hint: '{{score}}% = Similarity to reference. Green = normal, Orange = check, Red = anomaly.',
+    },
+    // UX improvement: Result screen context
+    resultContext: {
+      allGood: 'All machines sound similar \u2013 no anomalies detected.',
+      outlierWarning: 'Warning: {{name}} shows significant deviation. Recommendation: inspect further.',
+      outlierWarningMultiple: 'Warning: {{count}} machines show significant deviation. Recommendation: inspect further.',
+      fleetSaveHint: 'Saved fleets enable regular checks with position guidance.',
     },
   },
 };

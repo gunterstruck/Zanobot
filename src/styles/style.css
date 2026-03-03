@@ -9244,3 +9244,90 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     color: var(--text-muted, #999);
     font-style: italic;
 }
+
+/* ===================================
+   UX IMPROVEMENT: NFC Quick Compare Explanatory Texts
+   =================================== */
+
+/* Onboarding Splash: Meta info (time estimate + privacy) */
+.qc-onboarding-meta {
+    margin-top: var(--spacing-md, 12px);
+    padding-top: var(--spacing-sm, 8px);
+    border-top: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.qc-onboarding-time-estimate {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #666);
+    margin-bottom: var(--spacing-xs, 4px);
+}
+
+.qc-onboarding-privacy-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted, #999);
+    line-height: 1.4;
+}
+
+/* Guided Prompt: Reference hint badge */
+.fleet-guided-ref-hint {
+    font-size: 0.8rem;
+    color: var(--primary-color, #00bcd4);
+    background: rgba(0, 188, 212, 0.08);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    border-radius: var(--radius-sm, 8px);
+    padding: 6px 10px;
+    margin-bottom: var(--spacing-sm, 8px);
+    text-align: center;
+}
+
+/* Guided Prompt: Position memory tip */
+.fleet-guided-tip {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #666);
+    font-style: italic;
+    margin-bottom: var(--spacing-sm, 8px);
+    padding: 4px 0;
+}
+
+/* Guided Prompt: Noise hint */
+.fleet-guided-noise-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted, #999);
+    margin-bottom: var(--spacing-md, 12px);
+}
+
+/* Ghost Overlay: One-time explanation hint */
+.qc-ghost-overlay-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #666);
+    text-align: center;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-sm, 8px);
+    margin-top: 4px;
+    transition: opacity 1s ease-out;
+}
+
+.qc-ghost-overlay-hint.qc-hint-fade-out {
+    opacity: 0;
+}
+
+/* Result Screen: Context explanation */
+.qc-result-context {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #666);
+    margin-top: var(--spacing-sm, 8px);
+    line-height: 1.4;
+    padding: 8px 12px;
+    background: rgba(128, 128, 128, 0.06);
+    border-radius: var(--radius-sm, 8px);
+}
+
+/* Result Screen: Fleet save hint */
+.qc-fleet-save-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted, #999);
+    text-align: center;
+    margin-top: var(--spacing-xs, 4px);
+    line-height: 1.3;
+}

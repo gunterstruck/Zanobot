@@ -1635,6 +1635,38 @@ export const de: TranslationDict = {
       method: 'Gehen Sie der Reihe nach zu jeder Maschine und nehmen Sie sie kurz auf. Die App vergleicht alle Geräusche und zeigt Ihnen, welche anders klingt.',
       startButton: 'Los geht\u2019s',
       minMachines: 'Mindestens 2 Maschinen für einen Schnellvergleich nötig.',
+      // UX improvement: time estimate and privacy hint
+      timeEstimate: 'Dauer: ca. {{minutes}} Minuten für {{count}} Maschinen.',
+      privacyHint: 'Mikrofon und Kamera werden nur zur Analyse genutzt. Alle Daten bleiben auf Ihrem Gerät.',
+    },
+    // UX improvement: Guided prompt hints
+    guidedPrompt: {
+      referenceHint: 'Diese Aufnahme wird als Vergleichsbasis verwendet.',
+      positionInstruction: 'Smartphone ca. 10–20 cm nah an die Maschine halten. Bitte wenig sprechen.',
+      positionMemory: 'Tipp: Merken Sie sich die Stelle – bei allen Maschinen gleiche Position.',
+      noiseHint: 'Bitte möglichst wenig sprechen oder bewegen während der Aufnahme.',
+    },
+    // UX improvement: Inspection modal in reference mode
+    inspectionReference: {
+      mainQuestion: 'Referenzaufnahme läuft...',
+      subtitle: 'Diese Aufnahme wird als Vergleichsbasis gespeichert.',
+      scorePlaceholder: 'Referenz – kein Vergleich',
+      comparingWith: 'Vergleich mit {{name}} läuft...',
+    },
+    // UX improvement: Ghost overlay hint
+    ghostOverlay: {
+      hint: 'Positionierhilfe: Livebild am halbtransparenten Umriss ausrichten.',
+    },
+    // UX improvement: One-time score explanation
+    scoreExplanation: {
+      hint: '{{score}}% = Ähnlichkeit zur Referenz. Grün = unauffällig, Orange = prüfen, Rot = auffällig.',
+    },
+    // UX improvement: Result screen context
+    resultContext: {
+      allGood: 'Alle Maschinen klingen ähnlich – keine Auffälligkeiten.',
+      outlierWarning: 'Achtung: {{name}} weicht deutlich ab. Empfehlung: genauer prüfen.',
+      outlierWarningMultiple: 'Achtung: {{count}} Maschinen weichen deutlich ab. Empfehlung: genauer prüfen.',
+      fleetSaveHint: 'Gespeicherte Flotten ermöglichen regelmäßige Checks mit Positionierhilfe.',
     },
   },
 };

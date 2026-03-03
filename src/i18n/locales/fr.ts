@@ -1248,6 +1248,32 @@ export const fr: TranslationDict = {
       method: 'Go to each machine in order and briefly record it. The app compares all sounds and shows you which one sounds different.',
       startButton: 'Let\u2019s go',
       minMachines: 'At least 2 machines required for quick compare.',
+      timeEstimate: 'Dur\u00E9e : env. {{minutes}} minutes pour {{count}} machines.',
+      privacyHint: 'Le micro et la cam\u00E9ra ne servent qu\u2019\u00E0 l\u2019analyse. Toutes les donn\u00E9es restent sur votre appareil.',
+    },
+    guidedPrompt: {
+      referenceHint: 'Cet enregistrement servira de base de comparaison.',
+      positionInstruction: 'Tenez le smartphone \u00E0 env. 10\u201320 cm de la machine. \u00C9vitez de parler.',
+      positionMemory: 'Astuce : retenez l\u2019emplacement \u2013 m\u00EAme position pour toutes les machines.',
+      noiseHint: '\u00C9vitez de parler ou de bouger pendant l\u2019enregistrement.',
+    },
+    inspectionReference: {
+      mainQuestion: 'Enregistrement de r\u00E9f\u00E9rence en cours...',
+      subtitle: 'Cet enregistrement sera sauvegard\u00E9 comme base de comparaison.',
+      scorePlaceholder: 'R\u00E9f\u00E9rence \u2013 pas de comparaison',
+      comparingWith: 'Comparaison avec {{name}} en cours...',
+    },
+    ghostOverlay: {
+      hint: 'Aide au positionnement : alignez l\u2019image en direct avec le contour semi-transparent.',
+    },
+    scoreExplanation: {
+      hint: '{{score}}% = Similarit\u00E9 avec la r\u00E9f\u00E9rence. Vert = normal, Orange = \u00E0 v\u00E9rifier, Rouge = anomalie.',
+    },
+    resultContext: {
+      allGood: 'Toutes les machines ont un son similaire \u2013 aucune anomalie d\u00E9tect\u00E9e.',
+      outlierWarning: 'Attention : {{name}} pr\u00E9sente un \u00E9cart important. Recommandation : inspecter de plus pr\u00E8s.',
+      outlierWarningMultiple: 'Attention : {{count}} machines pr\u00E9sentent un \u00E9cart important. Recommandation : inspecter de plus pr\u00E8s.',
+      fleetSaveHint: 'Les flottes sauvegard\u00E9es permettent des v\u00E9rifications r\u00E9guli\u00E8res avec aide au positionnement.',
     },
   },
 };
