@@ -829,11 +829,7 @@ export const en: TranslationDict = {
     machine: 'machine',
     machines: 'machines',
     fleetRequiresCustomerId: 'Please enter a customer ID and select a fleet.',
-    // Quick Compare option (Variant A: fleet-based)
-    optionQuickCompare: 'Quick compare (with fleet)',
-    optionQuickCompareDetailDefault: 'Opens the app for a quick compare of the fleet.',
-    optionQuickCompareDetail: 'Opens a quick compare for fleet "{{name}}".',
-    // Quick Compare count-only option (Variant B: no fleet DB)
+    // Quick Compare count-only option
     optionQuickCompareCount: 'Quick compare (count only)',
     optionQuickCompareCountDetailDefault: 'Opens the app for a quick compare with a set number of machines. No internet needed.',
     optionQuickCompareCountDetail: 'Opens a quick compare with {{count}} machines. No internet needed.',
@@ -877,11 +873,7 @@ export const en: TranslationDict = {
     fleetSelectLabel: 'Select fleet',
     fleetLabel: 'Fleet',
     fleetPrintTitle: 'Fleet QR Code',
-    // Quick Compare option (Variant A: fleet-based)
-    optionQuickCompare: 'Quick compare (with fleet)',
-    optionQuickCompareDetailDefault: 'Creates a QR code for a quick compare of the fleet.',
-    optionQuickCompareDetail: 'Creates quick compare QR code for fleet "{{name}}".',
-    // Quick Compare count-only option (Variant B)
+    // Quick Compare count-only option
     optionQuickCompareCount: 'Quick compare (count only)',
     optionQuickCompareCountDetailDefault: 'Creates a QR code for a quick compare with a set number of machines.',
     optionQuickCompareCountDetail: 'Creates quick compare QR code for {{count}} machines.',
@@ -1553,15 +1545,15 @@ export const en: TranslationDict = {
       title: 'Quick Compare',
       howMany: 'How many machines do you want to compare?',
       customCount: 'Custom count',
-      explanation: 'First, record the machine that sounds NORMAL. Then go to the others and the app will tell you which one sounds different.',
+      explanation: 'Go to each machine in order and record it. The first recording is automatically used as the comparison baseline.',
       next: 'Next',
       minMachines: 'At least 2 machines',
       maxMachines: 'Maximum 30 machines',
     },
     reference: {
-      title: 'Step 1: Record reference',
-      instruction: 'Go to the machine that sounds NORMAL.',
-      hint: 'This recording will be used as the baseline for all others.',
+      title: 'Record reference',
+      instruction: 'Record the first machine',
+      hint: 'Automatically used as the comparison baseline.',
       startRecording: 'Record reference',
       saved: 'Reference saved',
       goldName: 'Reference (Gold)',
@@ -1597,8 +1589,7 @@ export const en: TranslationDict = {
       title: 'Quick Compare \u2013 {{count}} machines',
       titleSingular: 'Quick Compare \u2013 1 machine',
       concept: 'Does one machine sound different from the others? This app finds out.',
-      method: 'You briefly record each machine \u2013 the app compares the sounds and shows you the \u201Codd one out\u201D.',
-      referenceHint: 'First, we need a reference: Go to the machine that sounds NORMAL and record it first.',
+      method: 'Go to each machine in order and briefly record it. The app compares all sounds and shows you which one sounds different.',
       startButton: 'Let\u2019s go',
       minMachines: 'At least 2 machines required for quick compare.',
     },

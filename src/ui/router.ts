@@ -71,15 +71,14 @@ export class Router {
       this.handleFleetProvisioned(fleetName, autoStartCheck);
     };
 
-    // Sprint 8: Wire up quick compare provisioning callback
-    this.identifyPhase.onQuickCompareProvisioned = (fleetName: string, machineIds: string[]) => {
-      this.handleQuickCompareProvisioned(fleetName, machineIds);
+    // Sprint 8: Wire up quick compare count-only deep link callback
+    this.identifyPhase.onQuickCompareProvisioned = (count: number) => {
+      this.handleQuickCompareCountDeepLink(count);
     };
 
     // Sprint 7: Initialize Quick Compare Controller
     this.quickCompareController = new QuickCompareController();
     this.quickCompareController.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
-    this.quickCompareController.onSelectMachine = (machine) => this.onMachineSelected(machine);
     this.quickCompareController.onNavigateHome = () => {
       this.identifyPhase.refreshMachineLists();
     };
@@ -678,9 +677,17 @@ export class Router {
       // ZERO-FRICTION: Unlock diagnosis phase after machine is created/updated
       this.unlockPhases();
 
-      // Sprint 7: Notify QuickCompare if active (reference recording complete)
-      if (this.quickCompareController.isActive) {
-        this.quickCompareController.onReferenceComplete(updatedMachine);
+      // Sprint 7: Quick Compare – handle reference recording complete
+      if (this.quickCompareController.isActive &&
+          updatedMachine.id === this.quickCompareController.goldStandardMachineId) {
+        // Reference recording for gold standard machine 01 is complete.
+        // Copy reference to remaining machines (async – wait before advancing).
+        this.quickCompareController.onReferenceComplete(updatedMachine).then(() => {
+          // Advance the fleet queue to the next machine (02)
+          this.fleetQueueIndex++;
+          setTimeout(() => this.advanceFleetQueue(), 500);
+        });
+        return; // Don't execute normal post-reference flow
       }
     });
   }
@@ -1077,30 +1084,27 @@ export class Router {
   // ============================================================================
 
   /**
-   * Handle quick compare fleet provisioning completion.
-   * Shows the quick compare onboarding splash and starts the QC flow.
+   * Handle quick compare count-only deep link.
+   * Shows the onboarding splash and starts the QC flow with the given count.
    */
-  private async handleQuickCompareProvisioned(fleetName: string, machineIds: string[]): Promise<void> {
-    logger.info(`⚡ Quick Compare provisioned: "${fleetName}" with ${machineIds.length} machines`);
+  private handleQuickCompareCountDeepLink(count: number): void {
+    logger.info(`⚡ Quick Compare deep link: ${count} machines`);
 
-    // Edge case: need at least 2 machines (1 reference + 1 comparison)
-    if (machineIds.length < 2) {
+    // Edge case: need at least 2 machines
+    if (count < 2) {
       notify.error(t('quickCompare.nfcOnboarding.minMachines'));
       return;
     }
 
-    // Refresh machine data
-    await this.identifyPhase.refreshMachineLists();
-
     // Show onboarding splash
-    this.showQuickCompareOnboardingSplash(fleetName, machineIds);
+    this.showQuickCompareOnboardingSplash(count);
   }
 
   /**
-   * Show onboarding splash for NFC-triggered quick compare.
-   * Explains the quick compare concept and starts the flow on button tap.
+   * Show onboarding splash for NFC/QR-triggered quick compare.
+   * Explains the concept and starts the flow on button tap.
    */
-  private showQuickCompareOnboardingSplash(fleetName: string, machineIds: string[]): void {
+  private showQuickCompareOnboardingSplash(count: number): void {
     const existing = document.getElementById('qc-onboarding-overlay');
     if (existing) existing.remove();
 
@@ -1108,9 +1112,8 @@ export class Router {
     overlay.id = 'qc-onboarding-overlay';
     overlay.className = 'fleet-onboarding-overlay';
 
-    const machineCount = machineIds.length;
-    const titleKey = machineCount === 1 ? 'quickCompare.nfcOnboarding.titleSingular' : 'quickCompare.nfcOnboarding.title';
-    const titleText = escapeHtml(t(titleKey, { count: String(machineCount) }));
+    const titleKey = count === 1 ? 'quickCompare.nfcOnboarding.titleSingular' : 'quickCompare.nfcOnboarding.title';
+    const titleText = escapeHtml(t(titleKey, { count: String(count) }));
 
     overlay.innerHTML = `
       <div class="fleet-onboarding-card">
@@ -1118,7 +1121,6 @@ export class Router {
         <div class="fleet-onboarding-title">${titleText}</div>
         <div class="fleet-onboarding-concept">${escapeHtml(t('quickCompare.nfcOnboarding.concept'))}</div>
         <div class="fleet-onboarding-method">${escapeHtml(t('quickCompare.nfcOnboarding.method'))}</div>
-        <div class="fleet-onboarding-howto">${escapeHtml(t('quickCompare.nfcOnboarding.referenceHint'))}</div>
         <button class="fleet-onboarding-start-btn" id="qc-onboarding-start-btn">
           \u25B6 ${escapeHtml(t('quickCompare.nfcOnboarding.startButton'))}
         </button>
@@ -1131,8 +1133,8 @@ export class Router {
     if (startBtn) {
       startBtn.addEventListener('click', () => {
         overlay.remove();
-        // Start the Quick Compare controller with pre-provisioned machines
-        this.quickCompareController.startWithFleet(machineIds, fleetName);
+        // Start the Quick Compare controller with count (creates machines + starts loop)
+        this.quickCompareController.startWithCount(count);
       });
     }
   }
@@ -1262,6 +1264,10 @@ export class Router {
     // Remove any existing prompt
     document.getElementById('fleet-guided-prompt')?.remove();
 
+    // Detect if this is the gold standard machine in a Quick Compare flow
+    const isQcGoldStandard = this.quickCompareController.isActive &&
+      machine.id === this.quickCompareController.goldStandardMachineId;
+
     const prompt = document.createElement('div');
     prompt.id = 'fleet-guided-prompt';
     prompt.className = 'fleet-guided-prompt';
@@ -1277,8 +1283,16 @@ export class Router {
     machineName.textContent = machine.name;
     prompt.appendChild(machineName);
 
+    // Quick Compare: Reference hint for gold standard machine
+    if (isQcGoldStandard) {
+      const refHint = document.createElement('div');
+      refHint.className = 'fleet-guided-location';
+      refHint.textContent = t('quickCompare.reference.hint');
+      prompt.appendChild(refHint);
+    }
+
     // Location hint (if available)
-    if (machine.location) {
+    if (machine.location && !isQcGoldStandard) {
       const locationHint = document.createElement('div');
       locationHint.className = 'fleet-guided-location';
       locationHint.textContent = machine.location;
@@ -1288,23 +1302,32 @@ export class Router {
     // Instruction text
     const instruction = document.createElement('div');
     instruction.className = 'fleet-guided-instruction';
-    instruction.textContent = t('fleet.queue.guided.waitingForUser');
+    instruction.textContent = isQcGoldStandard
+      ? t('quickCompare.reference.instruction')
+      : t('fleet.queue.guided.waitingForUser');
     prompt.appendChild(instruction);
 
     // Start button (large, prominent, touch-friendly)
     const startBtn = document.createElement('button');
     startBtn.className = 'fleet-guided-start-btn';
-    startBtn.textContent = t('fleet.queue.guided.startRecording');
+    startBtn.textContent = isQcGoldStandard
+      ? t('quickCompare.reference.startRecording')
+      : t('fleet.queue.guided.startRecording');
     startBtn.addEventListener('click', async () => {
       // Remove prompt
       prompt.remove();
 
-      // NOW select the machine (triggers phase navigation: Identify → Diagnose)
-      this.onMachineSelected(machine);
-
-      // Wait for phase to initialize before looking for the diagnose button
-      await new Promise(resolve => setTimeout(resolve, 300));
-      await this.waitForDiagnoseButton();
+      if (isQcGoldStandard) {
+        // Gold standard: select machine for REFERENCE phase (Phase 2)
+        this.onMachineSelected(machine);
+        // Don't click diagnose button – user records reference manually
+        // The fleet queue will advance after onReferenceComplete
+      } else {
+        // Normal comparison: select machine and auto-start diagnosis (Phase 3)
+        this.onMachineSelected(machine);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await this.waitForDiagnoseButton();
+      }
     });
     prompt.appendChild(startBtn);
 
