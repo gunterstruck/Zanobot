@@ -61,7 +61,9 @@ export class Router {
   constructor() {
     // Initialize Phase 1 (always available)
     this.identifyPhase = new IdentifyPhase((machine) => this.onMachineSelected(machine));
-    this.identifyPhase.init();
+
+    // Wire up all deep link callbacks BEFORE init(), because init() fires handleDeepLink()
+    // synchronously and count-only quick compare resolves without yielding to the event loop.
 
     // Sprint 5: Wire up fleet queue callback
     this.identifyPhase.onStartFleetQueue = (ids, name) => this.startFleetQueue(ids, name);
@@ -75,6 +77,9 @@ export class Router {
     this.identifyPhase.onQuickCompareProvisioned = (count: number) => {
       this.handleQuickCompareCountDeepLink(count);
     };
+
+    // Now initialize – deep link handler can safely invoke the callbacks above
+    this.identifyPhase.init();
 
     // Sprint 7: Initialize Quick Compare Controller
     this.quickCompareController = new QuickCompareController();
