@@ -12,6 +12,7 @@
 
 import { logger } from '@utils/logger.js';
 import { isIOS } from '@utils/platform.js';
+import { notify } from '@utils/notifications.js';
 import { t } from '../../i18n/index.js';
 
 /**
@@ -278,6 +279,10 @@ export class HardwareCheck {
 
     try {
       logger.info('📱 iOS detected: Attempting rear microphone via camera workaround...');
+
+      // Explain to user why camera permission is needed before the system dialog appears
+      notify.info(t('hardware.iosMicHint'), { duration: 3000 });
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Request video+audio with back camera (facingMode: "environment")
       // This forces iOS to use the rear microphone associated with the back camera

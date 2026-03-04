@@ -504,6 +504,7 @@ export const en: TranslationDict = {
     microphoneDenied: 'Microphone access denied or not available',
     iphoneBackMic: 'iPhone rear microphone',
     micReady: 'Microphone ready',
+    iosMicHint: 'iOS briefly needs camera access to select the best microphone – camera will not be used.',
   },
 
 

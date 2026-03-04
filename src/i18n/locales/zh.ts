@@ -472,6 +472,7 @@ export const zh: TranslationDict = {
     microphoneDenied: '麦克风访问被拒绝或不可用',
     iphoneBackMic: 'iPhone后置麦克风',
     micReady: '麦克风就绪',
+    iosMicHint: 'iOS需要短暂的相机访问权限来选择最佳麦克风——不会使用相机。',
   },
 
 
