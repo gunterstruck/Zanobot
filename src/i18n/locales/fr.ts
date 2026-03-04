@@ -473,6 +473,7 @@ export const fr: TranslationDict = {
     microphoneDenied: 'Accès au microphone refusé ou non disponible',
     iphoneBackMic: 'Microphone arrière iPhone',
     micReady: 'Microphone prêt',
+    iosMicHint: 'iOS a brièvement besoin de l\'accès caméra pour sélectionner le meilleur microphone – la caméra ne sera pas utilisée.',
   },
 
 

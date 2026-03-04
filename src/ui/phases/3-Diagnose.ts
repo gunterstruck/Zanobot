@@ -340,19 +340,27 @@ export class DiagnosePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // VISUAL POSITIONING: Request camera access for ghost overlay
-      // Non-blocking: If camera access fails, continue with audio only
-      try {
-        this.cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }, // Prefer back camera on mobile
-          audio: false,
-        });
-        logger.info('📷 Camera access granted for ghost overlay');
-      } catch (cameraError) {
-        logger.warn('⚠️ Camera access denied or not available - continuing without ghost overlay', cameraError);
-        notify.info(t('diagnose.cameraNotAvailable'), {
-          title: t('modals.cameraOptional'),
-        });
+      // VISUAL POSITIONING: Only request camera if Room Compensation is active
+      // AND a reference image exists – otherwise camera is not needed
+      const roomCompForCamera = getRoomCompSettings();
+      const hasReferenceImage = !!this.machine?.referenceImage;
+
+      if (roomCompForCamera.enabled && hasReferenceImage) {
+        try {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }, // Prefer back camera on mobile
+            audio: false,
+          });
+          logger.info('📷 Camera access granted for visual positioning');
+        } catch (cameraError) {
+          logger.warn('⚠️ Camera access denied – continuing without visual positioning', cameraError);
+          notify.info(t('diagnose.cameraNotAvailable'), {
+            title: t('modals.cameraOptional'),
+          });
+          this.cameraStream = null;
+        }
+      } else {
+        logger.debug('📷 Camera not requested (Room Comp. inactive or no reference image)');
         this.cameraStream = null;
       }
 
