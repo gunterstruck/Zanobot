@@ -14,7 +14,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { escapeHtml } from '@utils/sanitize.js';
-import { setViewLevelTemporary, restoreViewLevel } from '@utils/viewLevelSettings.js';
+import { setViewLevelTemporary, restoreViewLevel, restoreTheme } from '@utils/viewLevelSettings.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { InfoBottomSheet } from '../components/InfoBottomSheet.js';
 import {
@@ -1442,6 +1442,10 @@ export class IdentifyPhase {
       }
       logger.info(`🎨 NFC-Onboarding: View Level von '${previousViewLevel}' auf 'basic' gesetzt`);
 
+      // SCHRITT 1b: Theme temporär auf "focus" setzen (DOM only, kein localStorage)
+      document.documentElement.setAttribute('data-theme', 'focus');
+      logger.info('🎨 NFC-Onboarding: Theme temporär auf "focus" gesetzt');
+
       // SCHRITT 2: Trace-Session starten (für Debugging/Protokoll)
       onboardingTrace.start('nfc');
 
@@ -1678,7 +1682,8 @@ export class IdentifyPhase {
     if (this.isNfcOnboardingActive && !startingTest) {
       this.isNfcOnboardingActive = false;
       restoreViewLevel();
-      logger.debug('[NFC Onboarding] View level restored to user preference (dialog closed)');
+      restoreTheme();
+      logger.debug('[NFC Onboarding] View level and theme restored to user preference (dialog closed)');
     }
   }
 

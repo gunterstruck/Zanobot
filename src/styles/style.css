@@ -4936,6 +4936,49 @@ select:focus-visible {
     margin: var(--spacing-md) 0;
 }
 
+.settings-divider--strong {
+    height: 2px;
+    margin: var(--spacing-lg, 1.5rem) 0;
+    background: linear-gradient(
+        to right,
+        transparent,
+        var(--border-color) 10%,
+        var(--border-color) 90%,
+        transparent
+    );
+}
+
+/* Reset to Defaults button */
+.reset-defaults-btn {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+    border-radius: var(--radius-sm, 8px);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    margin-top: var(--spacing-sm, 0.5rem);
+}
+
+.reset-defaults-btn:hover,
+.reset-defaults-btn:focus-visible {
+    background: rgba(var(--primary-color-rgb, 0, 184, 217), 0.08);
+}
+
+.reset-defaults-btn.confirming {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: var(--status-warning, #ff9800);
+    color: var(--status-warning, #ff9800);
+    font-weight: 700;
+}
+
 .theme-cards {
     display: flex;
     flex-direction: column;

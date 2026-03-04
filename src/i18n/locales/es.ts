@@ -621,6 +621,13 @@ export const es: TranslationDict = {
     bannerResetError: 'Error al restablecer el banner.',
     themeToggle: 'Cambiar tema',
     closeSettings: 'Cerrar configuración',
+    // Reset to Defaults
+    resetSection: 'Configuración predeterminada',
+    resetDescription: 'Restablece todas las opciones de visualización al estado inicial. Los datos de la máquina se conservan.',
+    resetButton: 'Restaurar configuración predeterminada',
+    resetConfirm: '¿Realmente restablecer?',
+    resetSuccess: 'Configuración predeterminada restaurada.',
+    resetDescriptionShort: 'Los datos de la máquina se conservan.',
   },
   nfc: {
     title: 'Escribir etiqueta NFC',

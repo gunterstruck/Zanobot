@@ -730,6 +730,13 @@ export const de: TranslationDict = {
     sigmaLabel: 'Empfindlichkeit (σ)',
     sigmaHint: 'Niedrig = strenger (mehr Frames verworfen), Hoch = toleranter',
     cherryPickActiveHint: 'Cherry-Picking aktiv: Transiente Störgeräusche werden automatisch erkannt und verworfen.',
+    // Reset to Defaults
+    resetSection: 'Grundeinstellung',
+    resetDescription: 'Setzt alle Anzeigeoptionen auf den Ausgangszustand zurück. Maschinendaten bleiben erhalten.',
+    resetButton: 'Grundeinstellung wiederherstellen',
+    resetConfirm: 'Wirklich zurücksetzen?',
+    resetSuccess: 'Grundeinstellung wiederhergestellt.',
+    resetDescriptionShort: 'Maschinendaten bleiben erhalten.',
   },
 
   // ============================================================================

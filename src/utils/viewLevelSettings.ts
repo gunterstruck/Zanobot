@@ -205,3 +205,97 @@ export const restoreViewLevel = (): ViewLevel => {
 
   return savedLevel;
 };
+
+// ════════════════════════════════════════════════════════════
+// Defaults / Reset
+// ════════════════════════════════════════════════════════════
+
+const INITIALIZED_KEY = 'zanobot.initialized';
+
+/**
+ * All localStorage keys managed by the app's UI settings.
+ * IndexedDB data (machines, recordings, diagnoses) is NOT included.
+ */
+const UI_SETTINGS_KEYS = [
+  'zanobot.visualizer.settings',
+  'zanobot.recording.settings',
+  'zanobot-drift-detector-settings',
+  'zanobot-room-comp-settings',
+  'zanobot-cherry-pick-settings',
+] as const;
+
+/**
+ * Apply factory defaults: reset all UI settings to their initial state.
+ *
+ * - Sets view level to 'basic' (persisted)
+ * - Sets theme to 'focus' (persisted)
+ * - Removes localStorage keys for visualizer, recording, drift, room-comp,
+ *   and cherry-pick settings so each module falls back to its built-in defaults.
+ * - Does NOT touch IndexedDB (machines, recordings, diagnoses, references).
+ * - Does NOT touch microphone selection, banner images, or language.
+ */
+export const applyDefaults = (): void => {
+  // 1. View level → basic (persists + DOM + event)
+  setViewLevel('basic');
+
+  // 2. Theme → focus (persists + DOM + event)
+  if (window.ZanobotTheme?.setTheme) {
+    window.ZanobotTheme.setTheme('focus');
+  } else {
+    try { localStorage.setItem('zanobot-theme', 'focus'); } catch { /* ignore */ }
+    document.documentElement.setAttribute('data-theme', 'focus');
+  }
+
+  // 3. Remove all other UI-setting keys → modules fall back to built-in defaults
+  for (const key of UI_SETTINGS_KEYS) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+
+  logger.info('[Defaults] All UI settings reset to factory defaults');
+};
+
+/**
+ * Apply defaults temporarily (DOM only, no localStorage writes).
+ * Used during NFC/QR onboarding to present a clean UI without
+ * overwriting the user's saved preferences.
+ *
+ * Call `restoreViewLevel()` + `restoreTheme()` to undo.
+ */
+export const applyDefaultsTemporary = (): void => {
+  // View level → basic (DOM only, already handled by setViewLevelTemporary)
+  setViewLevelTemporary('basic', 'temporary_defaults');
+
+  // Theme → focus (DOM only)
+  document.documentElement.setAttribute('data-theme', 'focus');
+};
+
+/**
+ * Restore theme from localStorage after a temporary override.
+ */
+export const restoreTheme = (): void => {
+  try {
+    const savedTheme = localStorage.getItem('zanobot-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: savedTheme } }));
+    }
+  } catch { /* ignore */ }
+  logger.debug('[Theme] Restored to saved preference');
+};
+
+/**
+ * First-launch check: if the app has never been initialized,
+ * apply defaults and set the initialized marker.
+ * Should be called early in the app init flow, before UI rendering.
+ */
+export const checkFirstLaunch = (): void => {
+  try {
+    if (!localStorage.getItem(INITIALIZED_KEY)) {
+      applyDefaults();
+      localStorage.setItem(INITIALIZED_KEY, 'true');
+      logger.info('[Defaults] First launch detected – defaults applied');
+    }
+  } catch {
+    // localStorage not available – defaults will be used by each module anyway
+  }
+};
