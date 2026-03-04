@@ -1796,20 +1796,10 @@ export class DiagnosePhase {
         // Initialize camera video element
         this.initCamera();
 
-        // Ghost overlay hint: show once per session when overlay is visible
+        // Ghost overlay hint: show once per session when overlay is visible (as toast, not overlay)
         if (this.cameraStream && this.machine.referenceImage && !DiagnosePhase.ghostOverlayHintShown) {
           DiagnosePhase.ghostOverlayHintShown = true;
-          const ghostHintEl = document.createElement('div');
-          ghostHintEl.className = 'qc-ghost-overlay-hint';
-          ghostHintEl.textContent = t('quickCompare.ghostOverlay.hint');
-          // Insert ABOVE the dashboard grid (before camera, not after)
-          const dashboardGrid = contentElement.querySelector('.diagnosis-dashboard-grid');
-          if (dashboardGrid) {
-            dashboardGrid.insertAdjacentElement('beforebegin', ghostHintEl);
-            // Fade out after 5 seconds
-            setTimeout(() => ghostHintEl.classList.add('qc-hint-fade-out'), 5000);
-            setTimeout(() => ghostHintEl.remove(), 6000);
-          }
+          notify.info(t('quickCompare.ghostOverlay.hint'), { duration: 5000 });
         }
 
         // Add reference info line (same position as advanced/expert view)
