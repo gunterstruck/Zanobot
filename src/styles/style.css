@@ -129,6 +129,25 @@
     --primary-card-badge-border: rgba(0, 212, 255, 0.25);
 }
 
+/* ─── Globales Downscaling für kleine Bildschirme ────────────────────────────
+   Der Nutzer hat sich für ein kleines Gerät entschieden – die App respektiert das.
+   Da die gesamte App rem + CSS-Variablen nutzt, zieht eine kleinere root-font-size
+   automatisch durch alle Komponenten durch.
+   Normale und große Smartphones (≥ 700px Höhe) bleiben vollständig unverändert.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media screen and (max-height: 700px) {
+  :root {
+    font-size: 13px; /* Standard ist 16px → ca. 80% */
+  }
+}
+
+@media screen and (max-height: 570px) {
+  :root {
+    font-size: 11.5px; /* Ca. 72% – für iPhone SE 1st gen */
+  }
+}
+
 /* ===================================
    RESPONSIVE SPACING SYSTEM
    Deliberate vertical rhythm for different screen sizes
