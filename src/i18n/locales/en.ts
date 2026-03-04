@@ -704,6 +704,13 @@ export const en: TranslationDict = {
     sigmaLabel: 'Sensitivity (σ)',
     sigmaHint: 'Low = stricter (more frames rejected), High = more tolerant',
     cherryPickActiveHint: 'Cherry-Picking active: Transient interference is automatically detected and removed.',
+    // Reset to Defaults
+    resetSection: 'Default Settings',
+    resetDescription: 'Resets all display options to the initial state. Machine data is preserved.',
+    resetButton: 'Restore Default Settings',
+    resetConfirm: 'Really reset?',
+    resetSuccess: 'Default settings restored.',
+    resetDescriptionShort: 'Machine data is preserved.',
   },
 
   // ============================================================================

@@ -621,6 +621,13 @@ export const fr: TranslationDict = {
     bannerResetError: 'Erreur lors de la réinitialisation de la bannière.',
     themeToggle: 'Changer de thème',
     closeSettings: 'Fermer les paramètres',
+    // Reset to Defaults
+    resetSection: 'Paramètres par défaut',
+    resetDescription: 'Réinitialise toutes les options d\'affichage à l\'état initial. Les données machine sont conservées.',
+    resetButton: 'Restaurer les paramètres par défaut',
+    resetConfirm: 'Vraiment réinitialiser ?',
+    resetSuccess: 'Paramètres par défaut restaurés.',
+    resetDescriptionShort: 'Les données machine sont conservées.',
   },
   nfc: {
     title: 'Écrire un tag NFC',

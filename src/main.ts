@@ -28,6 +28,7 @@ import { initErrorBoundary } from '@utils/errorBoundary.js';
 import {
   applyViewLevel,
   setViewLevel,
+  checkFirstLaunch,
   type ViewLevel,
 } from '@utils/viewLevelSettings.js';
 import { initI18n, t, translateDOM } from './i18n/index.js';
@@ -71,6 +72,9 @@ class ZanobotApp {
     // Initialize i18n FIRST (before any UI text is displayed)
     const detectedLang = initI18n();
     logger.info(`🌐 Language: ${detectedLang}`);
+
+    // First-launch check: apply defaults if the app has never been initialized
+    checkFirstLaunch();
 
     logger.info('🤖 Zanobo AI Assistant starting...');
     logger.info('   Version: 2.0.0 (GMIA Algorithm)');

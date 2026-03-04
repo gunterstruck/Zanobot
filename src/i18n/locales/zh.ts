@@ -617,6 +617,13 @@ export const zh: TranslationDict = {
     bannerResetError: '重置横幅时出错。',
     themeToggle: '切换主题',
     closeSettings: '关闭设置',
+    // Reset to Defaults
+    resetSection: '默认设置',
+    resetDescription: '将所有显示选项重置为初始状态。机器数据将被保留。',
+    resetButton: '恢复默认设置',
+    resetConfirm: '确定要重置吗？',
+    resetSuccess: '已恢复默认设置。',
+    resetDescriptionShort: '机器数据将被保留。',
   },
   nfc: {
     title: '写入 NFC 标签',

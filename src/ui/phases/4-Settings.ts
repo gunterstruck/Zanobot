@@ -41,6 +41,8 @@ import {
   getHzPerBin,
 } from '@core/dsp/driftDetector.js';
 import { DEFAULT_DSP_CONFIG } from '@core/dsp/features.js';
+import { applyDefaults } from '@utils/viewLevelSettings.js';
+import { toast } from '@ui/components/Toast.js';
 
 export class SettingsPhase {
 
@@ -67,6 +69,9 @@ export class SettingsPhase {
     this.registerEventHandler('share-data-btn', () => this.handleShareData());
     this.registerEventHandler('clear-data-btn', () => this.handleClearData());
     this.registerEventHandler('show-stats-btn', () => this.showStats());
+
+    // Reset to Defaults – two-step button pattern
+    this.initResetDefaultsButton();
 
     this.initVisualizerScaleSettings();
     this.initRecordingSettings();
@@ -1134,6 +1139,50 @@ export class SettingsPhase {
         duration: 0,
       });
     }
+  }
+
+  /**
+   * Two-step "Reset to Defaults" button.
+   * First tap → button enters confirming state (warning color, different text).
+   * Second tap within 3 s → executes reset.
+   * Timeout → reverts to initial state.
+   */
+  private initResetDefaultsButton(): void {
+    const btn = document.getElementById('reset-defaults-btn');
+    if (!btn) return;
+
+    let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+    let isConfirming = false;
+
+    const resetButtonState = (): void => {
+      isConfirming = false;
+      btn.classList.remove('confirming');
+      const label = btn.querySelector('span');
+      if (label) label.textContent = t('settingsUI.resetButton');
+      if (confirmTimer) { clearTimeout(confirmTimer); confirmTimer = null; }
+    };
+
+    btn.addEventListener('click', () => {
+      if (!isConfirming) {
+        // First tap → enter confirming state
+        isConfirming = true;
+        btn.classList.add('confirming');
+        const label = btn.querySelector('span');
+        if (label) label.textContent = t('settingsUI.resetConfirm');
+        confirmTimer = setTimeout(resetButtonState, 3000);
+      } else {
+        // Second tap → execute reset
+        resetButtonState();
+        applyDefaults();
+
+        // Close settings modal
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.style.display = 'none';
+
+        toast.success(t('settingsUI.resetSuccess'));
+        logger.info('↺ User reset to defaults');
+      }
+    });
   }
 
   /**
