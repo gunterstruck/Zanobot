@@ -14,7 +14,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { logger } from '@utils/logger.js';
 import { onboardingTrace, OnboardingTraceService } from '@utils/onboardingTrace.js';
 import { escapeHtml } from '@utils/sanitize.js';
-import { setViewLevelTemporary, restoreViewLevel, restoreTheme } from '@utils/viewLevelSettings.js';
+import { setViewLevelTemporary, restoreViewLevel, restoreTheme, getViewLevel } from '@utils/viewLevelSettings.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { InfoBottomSheet } from '../components/InfoBottomSheet.js';
 import {
@@ -2689,8 +2689,10 @@ export class IdentifyPhase {
         // Get new stream with the optimal microphone
         tempStream = await getRawAudioStream(this.selectedDeviceId);
 
-        // Notify user of automatic optimization
-        notify.success(t('identify.success.microphoneOptimized', { label: bestMic.label }));
+        // Notify user of automatic optimization (technical status, skip in basic mode)
+        if (getViewLevel() !== 'basic') {
+          notify.success(t('identify.success.microphoneOptimized', { label: bestMic.label }));
+        }
       }
 
       // Step 3: Analyze the (potentially new) hardware
@@ -2808,7 +2810,9 @@ export class IdentifyPhase {
         logger.warn(
           `🎤 Selected microphone "${this.selectedDeviceId}" not found in live device list.`
         );
-        notify.warning(t('identify.warnings.preferredMicrophoneUnavailable'));
+        if (getViewLevel() !== 'basic') {
+          notify.warning(t('identify.warnings.preferredMicrophoneUnavailable'));
+        }
         this.selectedDeviceId = undefined;
       }
 

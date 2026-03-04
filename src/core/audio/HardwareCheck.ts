@@ -245,6 +245,13 @@ export class HardwareCheck {
   public static readonly IOS_REAR_MIC_DEVICE_ID = '__ios_rear_mic__';
 
   /**
+   * Cached result of iOS rear mic availability check.
+   * Prevents duplicate getUserMedia calls (camera+mic) within the same session.
+   * null = not yet checked, true = available, false = not available
+   */
+  private static iosRearMicAvailable: boolean | null = null;
+
+  /**
    * iOS-specific: Get rear microphone stream via Video+Audio workaround
    *
    * CRITICAL iOS LIMITATION:
@@ -376,6 +383,19 @@ export class HardwareCheck {
       if (isIOS()) {
         logger.info('📱 findBestMicrophone: iOS detected, attempting rear mic workaround...');
 
+        // Use cached result if available to avoid duplicate camera+mic prompts
+        if (this.iosRearMicAvailable === true) {
+          logger.info('📱 findBestMicrophone: Using cached iOS rear mic availability (available)');
+          return {
+            deviceId: this.IOS_REAR_MIC_DEVICE_ID,
+            label: t('hardware.optimizedForDiagnosis', { label: t('hardware.iphoneBackMic') }),
+          };
+        }
+        if (this.iosRearMicAvailable === false) {
+          logger.info('📱 findBestMicrophone: Using cached iOS rear mic availability (not available)');
+          return undefined;
+        }
+
         // Try to get rear microphone via camera API
         const iosStream = await this.getiOSRearMicStream();
 
@@ -385,6 +405,7 @@ export class HardwareCheck {
           iosStream.getTracks().forEach((track) => track.stop());
 
           logger.info(`✅ iOS: Rear microphone available: "${label}"`);
+          this.iosRearMicAvailable = true;
 
           // Return special marker deviceId - getRawAudioStream() will handle this
           return {
@@ -395,6 +416,7 @@ export class HardwareCheck {
 
         // Fallback: iOS rear mic not available, use default
         logger.info('📱 iOS: Rear mic not available, using default microphone');
+        this.iosRearMicAvailable = false;
         return undefined;
       }
 
