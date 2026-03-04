@@ -9365,22 +9365,6 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     margin-bottom: var(--spacing-md, 12px);
 }
 
-/* Ghost Overlay: One-time explanation hint – positioned above camera as pill banner */
-.qc-ghost-overlay-hint {
-    font-size: 0.85rem;
-    color: #fff;
-    text-align: center;
-    padding: 8px 16px;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: var(--radius-sm, 8px);
-    margin-bottom: var(--spacing-sm, 8px);
-    line-height: 1.4;
-    transition: opacity 1s ease-out;
-}
-
-.qc-ghost-overlay-hint.qc-hint-fade-out {
-    opacity: 0;
-}
 
 /* Result Screen: Context explanation */
 .qc-result-context {
