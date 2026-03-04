@@ -58,6 +58,7 @@ export class ToastManager {
   private toastCounter = 0;
   private pendingToasts: Array<{ id: string; options: Required<ToastOptions> }> = [];
   private currentPosition: Required<ToastOptions>['position'] = 'top-right';
+  private activeMessages: Map<string, string> = new Map(); // message-key → toastId
 
   constructor() {
     this.initContainer();
@@ -114,7 +115,24 @@ export class ToastManager {
     };
 
     const config = { ...defaults, ...options, actions: options.actions || [] };
+
+    // Deduplication: skip duplicate info/warning/success toasts (errors always show)
+    if (config.type !== 'error') {
+      const messageKey = `${config.type}:${config.message}`;
+      const existingToastId = this.activeMessages.get(messageKey);
+      if (existingToastId && this.toasts.has(existingToastId)) {
+        this.pulseToast(existingToastId);
+        return existingToastId;
+      }
+    }
+
     const toastId = this.createToastId();
+
+    // Track active message for deduplication (errors excluded above)
+    if (config.type !== 'error') {
+      const messageKey = `${config.type}:${config.message}`;
+      this.activeMessages.set(messageKey, toastId);
+    }
 
     if (!this.container) {
       this.initContainer();
@@ -207,6 +225,11 @@ export class ToastManager {
         this.container.removeChild(toast);
       }
       this.toasts.delete(toastId);
+
+      // Clean up deduplication tracking
+      this.activeMessages.forEach((id, key) => {
+        if (id === toastId) this.activeMessages.delete(key);
+      });
     }, 300);
   }
 
@@ -215,6 +238,26 @@ export class ToastManager {
    */
   public hideAll(): void {
     this.toasts.forEach((_, toastId) => this.hide(toastId));
+    this.activeMessages.clear();
+  }
+
+  /**
+   * Briefly pulse an existing toast to indicate a duplicate was suppressed
+   */
+  private pulseToast(toastId: string): void {
+    const toast = this.toasts.get(toastId);
+    if (!toast) return;
+
+    toast.classList.remove('toast-pulse');
+    // Force reflow so re-adding the class restarts the animation
+    void toast.offsetWidth;
+    toast.classList.add('toast-pulse');
+
+    const onEnd = (): void => {
+      toast.classList.remove('toast-pulse');
+      toast.removeEventListener('animationend', onEnd);
+    };
+    toast.addEventListener('animationend', onEnd);
   }
 
   /**
