@@ -236,53 +236,66 @@
   }
 }
 
-/* Light theme support - uses data-theme attribute for consistency */
-[data-theme="light"] .toast {
-  background: var(--bg-card, #ffffff);
+/* Light-background theme support (light, focus, brand all use white bg-card) */
+[data-theme="light"] .toast,
+[data-theme="focus"] .toast,
+[data-theme="brand"] .toast {
+  background: #ffffff;
   color: var(--text-primary, #1e293b);
   box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
 }
 
-[data-theme="light"] .toast-success {
-  background: var(--bg-card, #ffffff);
+[data-theme="light"] .toast-success,
+[data-theme="focus"] .toast-success,
+[data-theme="brand"] .toast-success,
+[data-theme="light"] .toast-error,
+[data-theme="focus"] .toast-error,
+[data-theme="brand"] .toast-error,
+[data-theme="light"] .toast-warning,
+[data-theme="focus"] .toast-warning,
+[data-theme="brand"] .toast-warning,
+[data-theme="light"] .toast-info,
+[data-theme="focus"] .toast-info,
+[data-theme="brand"] .toast-info {
+  background: #ffffff;
 }
 
-[data-theme="light"] .toast-error {
-  background: var(--bg-card, #ffffff);
-}
-
-[data-theme="light"] .toast-warning {
-  background: var(--bg-card, #ffffff);
-}
-
-[data-theme="light"] .toast-info {
-  background: var(--bg-card, #ffffff);
-}
-
-[data-theme="light"] .toast-title {
+[data-theme="light"] .toast-title,
+[data-theme="focus"] .toast-title,
+[data-theme="brand"] .toast-title {
   color: var(--text-primary, #0f172a);
 }
 
-[data-theme="light"] .toast-message {
+[data-theme="light"] .toast-message,
+[data-theme="focus"] .toast-message,
+[data-theme="brand"] .toast-message {
   color: var(--text-secondary, rgba(15, 23, 42, 0.8));
 }
 
-[data-theme="light"] .toast-close {
+[data-theme="light"] .toast-close,
+[data-theme="focus"] .toast-close,
+[data-theme="brand"] .toast-close {
   color: var(--text-muted, rgba(15, 23, 42, 0.5));
 }
 
-[data-theme="light"] .toast-close:hover {
+[data-theme="light"] .toast-close:hover,
+[data-theme="focus"] .toast-close:hover,
+[data-theme="brand"] .toast-close:hover {
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-primary, #0f172a);
 }
 
-[data-theme="light"] .toast-action-btn {
+[data-theme="light"] .toast-action-btn,
+[data-theme="focus"] .toast-action-btn,
+[data-theme="brand"] .toast-action-btn {
   background: rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.15);
   color: var(--text-primary, #0f172a);
 }
 
-[data-theme="light"] .toast-action-btn:hover {
+[data-theme="light"] .toast-action-btn:hover,
+[data-theme="focus"] .toast-action-btn:hover,
+[data-theme="brand"] .toast-action-btn:hover {
   background: rgba(0, 0, 0, 0.12);
   border-color: rgba(0, 0, 0, 0.2);
 }
