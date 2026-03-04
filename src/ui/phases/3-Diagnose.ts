@@ -1802,9 +1802,10 @@ export class DiagnosePhase {
           const ghostHintEl = document.createElement('div');
           ghostHintEl.className = 'qc-ghost-overlay-hint';
           ghostHintEl.textContent = t('quickCompare.ghostOverlay.hint');
-          const camContainer = contentElement.querySelector('.dashboard-left-cam');
-          if (camContainer) {
-            camContainer.appendChild(ghostHintEl);
+          // Insert ABOVE the dashboard grid (before camera, not after)
+          const dashboardGrid = contentElement.querySelector('.diagnosis-dashboard-grid');
+          if (dashboardGrid) {
+            dashboardGrid.insertAdjacentElement('beforebegin', ghostHintEl);
             // Fade out after 5 seconds
             setTimeout(() => ghostHintEl.classList.add('qc-hint-fade-out'), 5000);
             setTimeout(() => ghostHintEl.remove(), 6000);

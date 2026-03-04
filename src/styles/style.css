@@ -8503,9 +8503,13 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     border-top: 3px solid var(--primary-color, #00bcd4);
     border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
     padding: var(--spacing-xl, 24px) var(--spacing-lg, 20px);
+    padding-bottom: max(var(--spacing-lg, 20px), env(safe-area-inset-bottom));
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     text-align: center;
     animation: fleetGuideSlideUp 0.3s ease-out;
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes fleetGuideSlideUp {
@@ -8592,8 +8596,8 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     cursor: pointer;
     padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
     border-radius: var(--radius-sm, 8px);
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 44px;
+    min-height: 44px;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -8634,6 +8638,9 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     border-radius: var(--radius-lg, 16px);
     padding: var(--spacing-xl, 32px) var(--spacing-lg, 24px);
     max-width: 380px;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     width: 100%;
     text-align: center;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -9339,15 +9346,16 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     margin-bottom: var(--spacing-md, 12px);
 }
 
-/* Ghost Overlay: One-time explanation hint */
+/* Ghost Overlay: One-time explanation hint – positioned above camera as pill banner */
 .qc-ghost-overlay-hint {
-    font-size: 0.75rem;
-    color: var(--text-secondary, #666);
+    font-size: 0.85rem;
+    color: #fff;
     text-align: center;
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.7);
     border-radius: var(--radius-sm, 8px);
-    margin-top: 4px;
+    margin-bottom: var(--spacing-sm, 8px);
+    line-height: 1.4;
     transition: opacity 1s ease-out;
 }
 
@@ -9373,4 +9381,156 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     text-align: center;
     margin-top: var(--spacing-xs, 4px);
     line-height: 1.3;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMALL SCREEN / iOS RESPONSIVE FIXES
+   iPhone SE (568px), iPhone 8 (667px), small Android devices
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Short screens: reduce header/footer, compact fleet UI */
+@media (max-height: 667px) {
+    /* Inspection: reduce header size */
+    .inspection-header {
+        min-height: 65px;
+        padding: var(--spacing-sm) var(--spacing-sm);
+    }
+
+    .inspection-question {
+        font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+    }
+
+    /* Inspection: reduce footer size */
+    .inspection-footer {
+        min-height: 60px;
+        padding: var(--spacing-sm) var(--spacing-sm);
+        padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
+    }
+
+    .inspection-stop-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    /* Fleet guided prompt: compact on small screens */
+    .fleet-guided-prompt {
+        padding: var(--spacing-md, 16px) var(--spacing-md, 16px);
+        padding-bottom: max(var(--spacing-md, 16px), env(safe-area-inset-bottom));
+    }
+
+    .fleet-guided-machine-name {
+        font-size: 1.25rem;
+        margin-bottom: var(--spacing-xs, 4px);
+    }
+
+    .fleet-guided-instruction {
+        margin-bottom: var(--spacing-md, 12px);
+    }
+
+    .fleet-guided-start-btn {
+        min-height: 48px;
+        padding: var(--spacing-sm, 12px) var(--spacing-lg, 20px);
+        font-size: 1rem;
+        margin-bottom: var(--spacing-md, 12px);
+    }
+
+    /* Fleet result modal: use more of the viewport */
+    .fleet-result-modal {
+        max-height: 95vh;
+    }
+
+    .fleet-result-body {
+        padding: 12px;
+    }
+}
+
+/* Very short screens: iPhone SE and similar (< 600px viewport height) */
+@media (max-height: 568px) {
+    /* Inspection: minimal header */
+    .inspection-header {
+        min-height: 50px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .inspection-question {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .inspection-subtitle {
+        font-size: 0.75rem;
+    }
+
+    /* Inspection: minimal footer */
+    .inspection-footer {
+        min-height: 52px;
+    }
+
+    /* Fleet guided prompt: ultra-compact */
+    .fleet-guided-prompt {
+        padding: var(--spacing-sm, 8px) var(--spacing-sm, 8px);
+        padding-bottom: max(var(--spacing-sm, 8px), env(safe-area-inset-bottom));
+        max-height: 70vh;
+    }
+
+    .fleet-guided-machine-name {
+        font-size: 1.1rem;
+    }
+
+    .fleet-guided-goto {
+        font-size: 0.75rem;
+    }
+
+    .fleet-guided-start-btn {
+        min-height: 44px;
+        padding: var(--spacing-xs, 8px) var(--spacing-md, 16px);
+        font-size: 0.95rem;
+        margin-bottom: var(--spacing-sm, 8px);
+    }
+
+    /* Fleet result: maximize space */
+    .fleet-result-modal {
+        max-height: 98vh;
+        border-radius: var(--radius-md, 12px);
+    }
+
+    .fleet-result-header {
+        padding: 10px 14px;
+    }
+
+    .fleet-result-body {
+        padding: 10px;
+    }
+
+    /* Fleet onboarding overlay: reduce padding */
+    .fleet-onboarding-content {
+        padding: var(--spacing-md, 16px);
+    }
+
+    /* Modal body: reduce padding on very small screens */
+    .modal-body {
+        padding: var(--spacing-sm);
+    }
+
+    /* Ghost overlay hint: smaller on tiny screens */
+    .qc-ghost-overlay-hint {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+}
+
+/* Narrow screens (iPhone SE width = 320px) */
+@media (max-width: 375px) {
+    /* Fleet guided prompt: full-width buttons */
+    .fleet-guided-start-btn {
+        max-width: 100%;
+    }
+
+    .fleet-guided-bottom {
+        max-width: 100%;
+    }
+
+    /* Reduce modal padding */
+    .modal-content {
+        padding: var(--spacing-sm);
+    }
 }
