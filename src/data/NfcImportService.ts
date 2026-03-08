@@ -327,7 +327,7 @@ export class NfcImportService {
                 <ul>
                   <li><strong>${currentStats.machines}</strong> ${t('common.machines') || 'Maschinen'}</li>
                   <li><strong>${currentStats.recordings}</strong> ${t('common.recordings') || 'Aufnahmen'}</li>
-                  <li><strong>${currentStats.diagnoses}</strong> ${t('common.diagnoses') || 'Diagnosen'}</li>
+                  <li><strong>${currentStats.diagnoses}</strong> ${t('common.diagnoses') || 'Prüfungen'}</li>
                 </ul>
               </div>
               <div class="import-arrow">→</div>
@@ -336,7 +336,7 @@ export class NfcImportService {
                 <ul>
                   <li><strong>${metadata.machineCount}</strong> ${t('common.machines') || 'Maschinen'}</li>
                   <li><strong>${metadata.recordingCount}</strong> ${t('common.recordings') || 'Aufnahmen'}</li>
-                  <li><strong>${metadata.diagnosisCount}</strong> ${t('common.diagnoses') || 'Diagnosen'}</li>
+                  <li><strong>${metadata.diagnosisCount}</strong> ${t('common.diagnoses') || 'Prüfungen'}</li>
                 </ul>
                 <p class="export-date">${t('nfcImport.exportedAt') || 'Exportiert am'}: ${exportDateStr}</p>
               </div>

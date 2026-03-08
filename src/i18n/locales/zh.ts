@@ -57,7 +57,7 @@ export const zh: TranslationDict = {
   // ============================================================================
   modals: {
     referenceRecording: '录制正常状态',
-    liveDiagnosis: '实时诊断 - 寻找最佳点',
+    liveDiagnosis: '实时检查 - 寻找最佳点',
     qrScanner: '二维码/条形码扫描器',
     databaseError: '数据库错误',
     browserIncompatible: '浏览器不兼容',
@@ -96,7 +96,7 @@ export const zh: TranslationDict = {
     machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
     machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
     deleteMachine: 'Delete machine',
-    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All checks will be lost.',
     confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
     machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: '快速访问',
@@ -144,7 +144,7 @@ export const zh: TranslationDict = {
       machineLoaded: '机器"{{name}}"已加载',
       machineCreated: '机器已创建：{{name}}',
       machineAutoCreated: '新机器"{{name}}"已自动创建。',
-      microphoneOptimized: '麦克风已自动设置为"{{label}}"以获得最佳诊断效果',
+      microphoneOptimized: '麦克风已自动设置为"{{label}}"以获得最佳检查效果',
       microphoneChanged: '麦克风已切换：{{label}}',
     },
 
@@ -170,7 +170,7 @@ export const zh: TranslationDict = {
 
     // Sprint 3 UX: Sparkline accessibility
     sparkline: {
-      ariaLabel: 'Trend of last {{count}} diagnoses',
+      ariaLabel: 'Trend of last {{count}} checks',
     },
   },
 
@@ -186,7 +186,7 @@ export const zh: TranslationDict = {
     existingModels: '现有模型：',
     statesTrainedCount: '{{count}} 个状态已训练',
     recordingStatusHighQuality: '检测到高音频质量',
-    explainBefore: '正常状态定义了机器在健康运行时的声音。所有未来的比较都基于此。',
+    explainBefore: '正常状态定义了机器在正常运行时的声音。所有未来的比较都基于此。',
     explainDuring: '缓慢移动智能手机围绕机器。这有助于过滤环境影响。',
     savedSuccess: '✅ 正常状态已保存 – 环境配置已识别',
     savedTitle: '正常状态已创建',
@@ -256,7 +256,7 @@ export const zh: TranslationDict = {
     labels: {
       baseline: '参考',
       prompt: '为此机器状态输入名称：\n\n示例：\n• 正常运行状态："空转"、"满载"、"部分负载"\n• 故障："模拟不平衡"、"轴承损坏"、"风扇故障"',
-      confirmType: '状态："{{label}}"\n\n这是正常运行状态吗？\n\n🟢 确定（是）→ 正常状态（如"空转"、"满载"）\n🔴 取消（否）→ 已知故障（如"不平衡"、"轴承损坏"）\n\n注意：此选择决定诊断显示为"健康"还是"故障"。',
+      confirmType: '状态："{{label}}"\n\n这是正常运行状态吗？\n\n🟢 确定（是）→ 正常状态（如"空转"、"满载"）\n🔴 取消（否）→ 已知故障（如"不平衡"、"轴承损坏"）\n\n注意：此选择决定检查显示为"正常"还是"异常"。',
       enterName: '请输入名称',
       cancelled: '已取消',
     },
@@ -276,19 +276,19 @@ export const zh: TranslationDict = {
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
-    alreadyRunning: '诊断已在进行中。',
+    alreadyRunning: '检查已在进行中。',
     noReferenceModel: '未找到参考模型。请先创建参考录制。',
-    browserNotCompatible: '您的浏览器不支持实时诊断。请使用Chrome、Edge或Safari。',
+    browserNotCompatible: '您的浏览器不支持实时检查。请使用Chrome、Edge或Safari。',
     noValidSampleRate: '未找到具有有效采样率的参考模型。',
-    cameraNotAvailable: '摄像头不可用。诊断将在无位置指南的情况下继续。',
-    diagnosisRunning: '诊断运行中',
+    cameraNotAvailable: '摄像头不可用。检查将在无位置指南的情况下继续。',
+    diagnosisRunning: '检查运行中',
     compareComplete: '\u2705 Comparison complete',
-    saveFailed: '无法保存诊断',
+    saveFailed: '无法保存检查',
     liveAnalysis: '执行实时分析',
 
     // Welle 1 UX: Action recommendations
     recommendation: {
-      healthy: '无需采取行动',
+      healthy: '未检测到异常',
       warning: '观察 – 下次维护时检查',
       critical: '建议现场检查',
     },
@@ -326,7 +326,7 @@ export const zh: TranslationDict = {
 
     analysis: {
       healthyMatch: '声学特征与参考状态"{{state}}"匹配（{{score}}%）。无异常。',
-      faultyMatch: '检测到异常：特征与训练模式"{{state}}"匹配（{{score}}%）。建议检查。',
+      faultyMatch: '检测到异常：特征与训练模式"{{state}}"匹配（{{score}}%）。考虑检查。',
     },
 
     // State-based card UI (horizontal tiles)
@@ -418,22 +418,22 @@ export const zh: TranslationDict = {
     import: {
       confirmMerge: '从以下位置导入数据库：{{filename}}\n\n您想合并数据吗？\n\n是 = 与现有数据合并\n否 = 替换所有现有数据',
       confirmReplace: '⚠️ 警告！\n\n所有现有数据将被删除并替换为导入数据！\n\n您要继续吗？',
-      success: '机器：{{machines}}\n录制：{{recordings}}\n诊断：{{diagnoses}}\n\n模式：{{mode}}',
+      success: '机器：{{machines}}\n录制：{{recordings}}\n检查：{{diagnoses}}\n\n模式：{{mode}}',
       modeMerged: '已合并',
       modeReplaced: '已替换',
-      partialWarning: '机器：{{machinesImported}} 已导入，{{machinesSkipped}} 已跳过\n录制：{{recordingsImported}} 已导入，{{recordingsSkipped}} 已跳过\n诊断：{{diagnosesImported}} 已导入，{{diagnosesSkipped}} 已跳过\n\n{{totalSkipped}} 条记录无法导入。\n模式：{{mode}}',
+      partialWarning: '机器：{{machinesImported}} 已导入，{{machinesSkipped}} 已跳过\n录制：{{recordingsImported}} 已导入，{{recordingsSkipped}} 已跳过\n检查：{{diagnosesImported}} 已导入，{{diagnosesSkipped}} 已跳过\n\n{{totalSkipped}} 条记录无法导入。\n模式：{{mode}}',
       setupError: '准备导入时出错',
     },
 
     clear: {
-      confirmFirst: '⚠️ 警告！\n\n所有数据将被永久删除：\n- 所有机器\n- 所有参考模型\n- 所有录制\n- 所有诊断\n\n您要继续吗？',
+      confirmFirst: '⚠️ 警告！\n\n所有数据将被永久删除：\n- 所有机器\n- 所有参考模型\n- 所有录制\n- 所有检查\n\n您要继续吗？',
       confirmSecond: '您绝对确定吗？\n\n此操作无法撤消！',
       success: '所有数据已删除',
       error: '删除数据时出错',
     },
 
     export: {
-      success: '文件：{{filename}}\n\n机器：{{machines}}\n录制：{{recordings}}\n诊断：{{diagnoses}}',
+      success: '文件：{{filename}}\n\n机器：{{machines}}\n录制：{{recordings}}\n检查：{{diagnoses}}',
     },
 
     share: {
@@ -482,7 +482,7 @@ export const zh: TranslationDict = {
   // HARDWARE CHECK
   // ============================================================================
   hardware: {
-    suitable: '硬件适合机器诊断',
+    suitable: '硬件适合机器检查',
     voiceOptimized: '语音优化的硬件会过滤机器声音。',
     useStudioMic: '使用录音室麦克风或设备内置麦克风',
     headsetsOptimized: '耳机针对语音频率进行了优化',
@@ -551,7 +551,7 @@ export const zh: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} 个状态已训练（最近：{{date}}）- 添加更多',
-    referenceRequired: '{{duration}}秒正常状态录制（诊断必需）',
+    referenceRequired: '{{duration}}秒正常状态录制（检查必需）',
     liveAnalysis: '执行实时分析',
     lastCheck: '上次检查 {{time}}',
   },
@@ -575,7 +575,7 @@ export const zh: TranslationDict = {
     hardwareHint: '请确保您的麦克风/摄像头已连接。',
     audioSystemError: '音频系统错误',
     audioSystemHint: '请重新加载页面。如果问题仍然存在，请使用最新版本的浏览器。',
-    storageFull: '请删除旧的诊断或参考录制。',
+    storageFull: '请删除旧的检查或参考录制。',
     networkError: '请检查您的网络连接。',
     technicalDetails: '技术详情',
     noStackTrace: '无堆栈跟踪可用',
@@ -616,12 +616,12 @@ export const zh: TranslationDict = {
     level1Info: '等级 1：上方的频率和振幅设置处于活动状态',
     dataManagement: '数据管理', exportDatabase: '导出数据库', shareDatabase: '发送数据库',
     importDatabase: '导入数据库', statistics: '统计：',
-    machines: '机器', recordings: '录制', diagnoses: '诊断',
+    machines: '机器', recordings: '录制', diagnoses: '检查',
     clearAllData: '删除所有数据', deleteAllData: '删除所有数据',
     quickAccessDesc: '快速访问最近使用的机器',
     noMachines: '没有可用的机器', or: '或',
     selectMicrophone: '选择麦克风',
-    microphoneAdvice: '选择最佳麦克风进行机器诊断。避免使用耳机和蓝牙设备，因为它们针对语音进行了优化。',
+    microphoneAdvice: '选择最佳麦克风进行机器检查。避免使用耳机和蓝牙设备，因为它们针对语音进行了优化。',
     manualInput: '手动输入', machineIdInput: '输入机器ID', continue: '继续',
     qrHint: '将二维码或条形码放入框内', codeRecognized: '识别成功！',
     // 横幅设置
@@ -743,7 +743,7 @@ export const zh: TranslationDict = {
     saveAsReference: '保存为参考',
   },
   diagnosisResults: {
-    title: '诊断结果',
+    title: '检查结果',
     fingerprintLabel: '指纹',
     confidenceScoreLabel: '置信度分数',
     varianceTitle: '方差',
@@ -754,7 +754,7 @@ export const zh: TranslationDict = {
     referenceQualityDescription: '录制符合推荐条件',
     featureModeLabel: '特征模式',
     viewHistory: '查看历史',
-    closeDialog: '关闭诊断',
+    closeDialog: '关闭检查',
   },
   results: {
     envMatch: {
@@ -769,9 +769,9 @@ export const zh: TranslationDict = {
     dataPoints: '数据点',
     timeRange: '时间范围',
     xAxisLabel: '时间',
-    yAxisLabel: '健康评分 (%)',
+    yAxisLabel: '相似度评分 (%)',
     noData: '暂无历史记录',
-    noDataMessage: '此机器尚未保存任何诊断记录。',
+    noDataMessage: '此机器尚未保存任何检查记录。',
     errorMessage: '加载历史记录时出错。',
     closeDialog: '关闭历史',
   },
@@ -833,7 +833,7 @@ export const zh: TranslationDict = {
     states: '状态',
     ariaLabel: '检测到的机器状态排名',
     statusHealthy: '正常',
-    statusFaulty: '故障',
+    statusFaulty: '异常',
     noData: '没有可用的分析数据',
     rank: '排名',
     probability: '概率',
@@ -846,7 +846,7 @@ export const zh: TranslationDict = {
   migration: {
     title: '数据库更新',
     dataCleared:
-      '由于更新，数据库已被重置。所有机器、录音和诊断都已删除。',
+      '由于更新，数据库已被重置。所有机器、录音和检查都已删除。',
   },
 
   // ============================================================================
@@ -1019,7 +1019,7 @@ export const zh: TranslationDict = {
     // Legal Position
     legalTitle: '法律地位和知识产权审查',
     legalIntro: 'Zanobo 作为<strong>私人非商业开源项目</strong>独立开发，采用 <strong>MIT 许可证</strong>。其功能基于<strong>公开描述的数学程序</strong>（例如频率分析和类 GMIA 余弦比较），不包含<strong>任何专利系统逻辑</strong>、<strong>任何分类机制</strong>和<strong>任何学习模型</strong>。',
-    legalReview: '在发布之前进行了<strong>技术和内容审查</strong>，以确保 Zanobo 不与现有专利或已知的工业诊断方法冲突。',
+    legalReview: '在发布之前进行了<strong>技术和内容审查</strong>，以确保 Zanobo 不与现有专利或已知的工业检查方法冲突。',
 
     // IP Table
     ipTableTitle: '相关知识产权和技术差异',
@@ -1035,13 +1035,13 @@ export const zh: TranslationDict = {
           reference: '<strong>PAPDEOTT005125</strong><br><em>机器诊断程序</em>',
           source: '防御性出版物，西门子公司，2016',
           protectedScope: '使用中央数据库和移动传感器的基于云的诊断系统',
-          zanoboDiff: 'Zanobo 完全在本地运行，无云、无中央数据库、无诊断',
+          zanoboDiff: 'Zanobo 完全在本地运行，无云、无中央数据库、无检查',
         },
         '1': {
           reference: '<strong>EP3701708B1</strong><br><em>远程机器状态分析</em>',
           source: '欧洲专利，西门子公司，2022',
           protectedScope: '基于机器学习的远程诊断，带有训练模型和传感器',
-          zanoboDiff: 'Zanobo 不使用机器学习，无云、无嵌入式诊断逻辑',
+          zanoboDiff: 'Zanobo 不使用机器学习，无云、无嵌入式检查逻辑',
         },
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>使用 GMIA 进行噪声中的信道检测</em>',
@@ -1065,7 +1065,7 @@ export const zh: TranslationDict = {
           reference: '<strong>ABB – Integration of Mobile Measurement</strong>',
           source: '公开工业演示，ABB，2015',
           protectedScope: '用于临时诊断的移动传感器，带有云和服务集成',
-          zanoboDiff: 'Zanobo 避免诊断、服务工作流程和云连接，专注于本地比较',
+          zanoboDiff: 'Zanobo 避免检查、服务工作流程和云连接，专注于本地比较',
         },
       },
     },
@@ -1112,7 +1112,7 @@ export const zh: TranslationDict = {
       hint: 'e.g. "Heating West" – machines in the same group are compared',
       recent24h: 'Last 24 hours',
       noMachines: 'No machines for fleet check',
-      noMachinesHint: 'Run diagnoses or assign machines to a fleet group.',
+      noMachinesHint: 'Run checks or assign machines to a fleet group.',
     },
     ranking: {
       noData: '未检查',
@@ -1201,8 +1201,8 @@ export const zh: TranslationDict = {
       notChecked: 'Not checked',
       save: 'Save results',
       discard: 'Discard',
-      discardConfirm: 'Delete diagnoses from this run? Machines and references will be kept.',
-      discardDone: '{{count}} diagnoses discarded',
+      discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
+      discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
     },
     history: {
@@ -1338,9 +1338,9 @@ export const zh: TranslationDict = {
   history: {
     openHistory: 'View history for {{name}}',
     viewHistory: 'History',
-    diagnosisCount: '{{count}} diagnoses',
-    noDiagnoses: '{{name}} has no diagnoses yet.',
-    noMatchingDiagnoses: 'No diagnoses match this filter.',
+    diagnosisCount: '{{count}} checks',
+    noDiagnoses: '{{name}} has no checks yet.',
+    noMatchingDiagnoses: 'No checks match this filter.',
     filterAll: 'All',
     filter7d: '7 days',
     filter30d: '30 days',
@@ -1374,7 +1374,7 @@ export const zh: TranslationDict = {
     colTrend: '趋势',
     colRecommendation: '建议',
     colDate: '日期',
-    footer: '由 Zanobo 生成 · 声学机器诊断',
+    footer: '由 Zanobo 生成 · 声学机器检查',
     exported: '报告已导出',
   },
 

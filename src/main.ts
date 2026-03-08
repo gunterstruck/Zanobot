@@ -439,7 +439,7 @@ class ZanobotApp {
       // Show success toast
       const meta = result.metadata;
       const details = meta
-        ? `${meta.machineCount} Maschinen, ${meta.recordingCount} Aufnahmen, ${meta.diagnosisCount} Diagnosen`
+        ? `${meta.machineCount} Maschinen, ${meta.recordingCount} Aufnahmen, ${meta.diagnosisCount} Prüfungen`
         : '';
 
       notify.success(
