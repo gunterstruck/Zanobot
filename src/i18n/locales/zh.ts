@@ -1351,6 +1351,54 @@ export const zh: TranslationDict = {
     detectedState: 'Detected state',
   },
 
+  // ============================================================================
+  // WELLE 4: REPORT EXPORT (SV1)
+  // ============================================================================
+  report: {
+    exportButton: '导出报告',
+    formatChoiceTitle: '报告格式',
+    formatPDF: 'PDF（可打印）',
+    formatCSV: 'CSV（Excel）',
+    formatJSON: 'JSON（工单系统）',
+    title: 'Zanobo 检查报告',
+    fleetTitle: '车队检查报告',
+    allMachinesTitle: '机器概览',
+    totalLabel: '总计',
+    healthyLabel: '正常',
+    warningLabel: '偏差',
+    criticalLabel: '异常',
+    medianLabel: '中位数',
+    colMachine: '机器',
+    colScore: '分数',
+    colStatus: '状态',
+    colTrend: '趋势',
+    colRecommendation: '建议',
+    colDate: '日期',
+    footer: '由 Zanobo 生成 · 声学机器诊断',
+    exported: '报告已导出',
+  },
+
+  // ============================================================================
+  // WELLE 4: MAINTENANCE INTEGRATION (SV3)
+  // ============================================================================
+  maintenance: {
+    exportTitle: '报告维护',
+    copyToClipboard: '复制到剪贴板',
+    exportJSON: '下载 JSON 报告',
+    exportCSV: '下载 CSV 报告',
+    reportButton: '报告维护',
+    reportTitle: '维护报告',
+  },
+
+  // ============================================================================
+  // WELLE 4: TREND ANALYSIS (SV4)
+  // ============================================================================
+  trendAnalysis: {
+    criticalDecline: '分数在 {{count}} 次检查中急剧下降（{{from}}% → {{to}}%）。建议立即检查。',
+    declining: '分数在 {{count}} 次检查中下降（{{from}}% → {{to}}%）。密切监控。',
+    improving: '分数在 {{count}} 次检查中上升（{{from}}% → {{to}}%）。',
+  },
+
   unifiedFlow: {
     newMachineTitle: 'New Machine',
     missingRefTitle: 'Normal State Missing',

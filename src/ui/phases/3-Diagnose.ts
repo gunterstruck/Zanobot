@@ -44,6 +44,7 @@ import { t, getLocale } from '../../i18n/index.js';
 import { getViewLevel } from '@utils/viewLevelSettings.js';
 import { AudioVisualizer } from '@ui/components/AudioVisualizer.js';
 import { InfoBottomSheet } from '@ui/components/InfoBottomSheet.js';
+import { exportMaintenanceJSON, exportAsCSV, type ReportData, type ReportEntry } from '@utils/reportExport.js';
 import { getRecordingSettings } from '@utils/recordingSettings.js';
 import {
   getRoomCompSettings,
@@ -2452,7 +2453,7 @@ export class DiagnosePhase {
         const newNextBtn = resultBtnNext.cloneNode(true) as HTMLElement;
         resultBtnNext.parentNode?.replaceChild(newNextBtn, resultBtnNext);
         newNextBtn.addEventListener('click', () => {
-          this.copyMaintenanceReport(diagnosis);
+          this.showMaintenanceExportChoice(diagnosis);
         });
       } else {
         // Normal: "New check"
@@ -2631,6 +2632,63 @@ export class DiagnosePhase {
       // Fallback for older browsers
       notify.info(text, { title: t('resultActions.maintenanceReportTitle'), duration: 10000 });
     }
+  }
+
+  /**
+   * Welle 4: Show maintenance export format choice (Clipboard / JSON / CSV).
+   * Replaces the direct clipboard copy for richer export options.
+   */
+  private showMaintenanceExportChoice(diagnosis: DiagnosisResult): void {
+    const entry: ReportEntry = {
+      machineName: this.machine.name,
+      machineId: this.machine.id,
+      score: diagnosis.healthScore,
+      status: diagnosis.status,
+      timestamp: diagnosis.timestamp,
+      recommendation: t('diagnose.recommendation.critical'),
+      detectedState: (diagnosis.metadata as Record<string, unknown>)?.detectedState as string | undefined,
+    };
+
+    InfoBottomSheet.show({
+      title: t('maintenance.exportTitle'),
+      content: `
+        <div class="maintenance-export-options">
+          <button class="maintenance-export-btn" id="maint-clipboard">
+            \uD83D\uDCCB ${t('maintenance.copyToClipboard')}
+          </button>
+          <button class="maintenance-export-btn" id="maint-json">
+            \uD83D\uDCC4 ${t('maintenance.exportJSON')}
+          </button>
+          <button class="maintenance-export-btn" id="maint-csv">
+            \uD83D\uDCC8 ${t('maintenance.exportCSV')}
+          </button>
+        </div>
+      `,
+      icon: '\uD83D\uDD27',
+    });
+
+    requestAnimationFrame(() => {
+      document.getElementById('maint-clipboard')?.addEventListener('click', () => {
+        this.copyMaintenanceReport(diagnosis);
+        InfoBottomSheet.close();
+      });
+      document.getElementById('maint-json')?.addEventListener('click', () => {
+        exportMaintenanceJSON([entry], this.machine.name);
+        InfoBottomSheet.close();
+        notify.success(t('report.exported'));
+      });
+      document.getElementById('maint-csv')?.addEventListener('click', () => {
+        const data: ReportData = {
+          title: t('maintenance.reportTitle'),
+          date: new Date().toLocaleString(),
+          entries: [entry],
+          summary: { total: 1, healthy: 0, warning: 0, critical: 1, unchecked: 0 },
+        };
+        exportAsCSV(data, `zanobo-maintenance-${this.machine.name.replace(/[^a-z0-9]/gi, '_')}.csv`);
+        InfoBottomSheet.close();
+        notify.success(t('report.exported'));
+      });
+    });
   }
 
   /**

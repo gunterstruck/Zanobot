@@ -1355,6 +1355,54 @@ export const es: TranslationDict = {
     detectedState: 'Detected state',
   },
 
+  // ============================================================================
+  // WELLE 4: REPORT EXPORT (SV1)
+  // ============================================================================
+  report: {
+    exportButton: 'Exportar informe',
+    formatChoiceTitle: 'Formato del informe',
+    formatPDF: 'PDF (Imprimible)',
+    formatCSV: 'CSV (Excel)',
+    formatJSON: 'JSON (Sistema de tickets)',
+    title: 'Informe de inspección Zanobo',
+    fleetTitle: 'Informe de verificación de flota',
+    allMachinesTitle: 'Resumen de máquinas',
+    totalLabel: 'Total',
+    healthyLabel: 'Normal',
+    warningLabel: 'Desviación',
+    criticalLabel: 'Anormal',
+    medianLabel: 'Mediana',
+    colMachine: 'Máquina',
+    colScore: 'Puntuación',
+    colStatus: 'Estado',
+    colTrend: 'Tendencia',
+    colRecommendation: 'Recomendación',
+    colDate: 'Fecha',
+    footer: 'Generado por Zanobo · Diagnóstico acústico de máquinas',
+    exported: 'Informe exportado',
+  },
+
+  // ============================================================================
+  // WELLE 4: MAINTENANCE INTEGRATION (SV3)
+  // ============================================================================
+  maintenance: {
+    exportTitle: 'Reportar mantenimiento',
+    copyToClipboard: 'Copiar al portapapeles',
+    exportJSON: 'Descargar informe JSON',
+    exportCSV: 'Descargar informe CSV',
+    reportButton: 'Reportar mantenimiento',
+    reportTitle: 'Informe de mantenimiento',
+  },
+
+  // ============================================================================
+  // WELLE 4: TREND ANALYSIS (SV4)
+  // ============================================================================
+  trendAnalysis: {
+    criticalDecline: 'Puntuación cayendo fuertemente en {{count}} verificaciones ({{from}}% → {{to}}%). Inspección inmediata recomendada.',
+    declining: 'Puntuación en descenso en {{count}} verificaciones ({{from}}% → {{to}}%). Monitorear de cerca.',
+    improving: 'Puntuación mejorando en {{count}} verificaciones ({{from}}% → {{to}}%).',
+  },
+
   unifiedFlow: {
     newMachineTitle: 'New Machine',
     missingRefTitle: 'Normal State Missing',

@@ -1355,6 +1355,54 @@ export const fr: TranslationDict = {
     detectedState: 'Detected state',
   },
 
+  // ============================================================================
+  // WELLE 4: REPORT EXPORT (SV1)
+  // ============================================================================
+  report: {
+    exportButton: 'Exporter le rapport',
+    formatChoiceTitle: 'Format du rapport',
+    formatPDF: 'PDF (Imprimable)',
+    formatCSV: 'CSV (Excel)',
+    formatJSON: 'JSON (Système de tickets)',
+    title: 'Rapport d\'inspection Zanobo',
+    fleetTitle: 'Rapport de contrôle de flotte',
+    allMachinesTitle: 'Aperçu des machines',
+    totalLabel: 'Total',
+    healthyLabel: 'Normal',
+    warningLabel: 'Déviation',
+    criticalLabel: 'Anormal',
+    medianLabel: 'Médiane',
+    colMachine: 'Machine',
+    colScore: 'Score',
+    colStatus: 'Statut',
+    colTrend: 'Tendance',
+    colRecommendation: 'Recommandation',
+    colDate: 'Date',
+    footer: 'Généré par Zanobo · Diagnostic acoustique de machines',
+    exported: 'Rapport exporté',
+  },
+
+  // ============================================================================
+  // WELLE 4: MAINTENANCE INTEGRATION (SV3)
+  // ============================================================================
+  maintenance: {
+    exportTitle: 'Signaler la maintenance',
+    copyToClipboard: 'Copier dans le presse-papiers',
+    exportJSON: 'Télécharger le rapport JSON',
+    exportCSV: 'Télécharger le rapport CSV',
+    reportButton: 'Signaler la maintenance',
+    reportTitle: 'Rapport de maintenance',
+  },
+
+  // ============================================================================
+  // WELLE 4: TREND ANALYSIS (SV4)
+  // ============================================================================
+  trendAnalysis: {
+    criticalDecline: 'Score en forte baisse sur {{count}} contrôles ({{from}}% → {{to}}%). Inspection immédiate recommandée.',
+    declining: 'Score en baisse sur {{count}} contrôles ({{from}}% → {{to}}%). À surveiller.',
+    improving: 'Score en hausse sur {{count}} contrôles ({{from}}% → {{to}}%).',
+  },
+
   unifiedFlow: {
     newMachineTitle: 'New Machine',
     missingRefTitle: 'Normal State Missing',
