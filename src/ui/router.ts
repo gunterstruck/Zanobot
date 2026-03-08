@@ -882,12 +882,6 @@ export class Router {
       // ZERO-FRICTION: Unlock diagnosis phase after machine is created/updated
       this.unlockPhases();
 
-      // Welle 3: Enhanced post-reference feedback + dashboard refresh
-      this.identifyPhase.updateDashboard();
-      notify.info(t('unifiedFlow.referenceSavedHint', { name: updatedMachine.name }), {
-        duration: 5000,
-      });
-
       // Sprint 7: Quick Compare – handle reference recording complete
       if (this.quickCompareController.isActive &&
           updatedMachine.id === this.quickCompareController.goldStandardMachineId) {
@@ -900,6 +894,13 @@ export class Router {
         });
         return; // Don't execute normal post-reference flow
       }
+
+      // Welle 3: Enhanced post-reference feedback + dashboard refresh
+      // (Only for normal flows, not Quick Compare)
+      this.identifyPhase.updateDashboard();
+      notify.info(t('unifiedFlow.referenceSavedHint', { name: updatedMachine.name }), {
+        duration: 5000,
+      });
     });
   }
 
