@@ -23,7 +23,7 @@ export const es: TranslationDict = {
     trainAnother: 'Entrenar otro estado',
     newMachine: 'Nueva máquina',
     stopRecording: 'Detener grabación',
-    saveReference: 'Guardar referencia',
+    saveReference: 'Guardar estado normal',
   },
 
   // ============================================================================
@@ -56,7 +56,7 @@ export const es: TranslationDict = {
   // MODAL TITLES
   // ============================================================================
   modals: {
-    referenceRecording: 'Grabación de referencia',
+    referenceRecording: 'Grabar estado normal',
     liveDiagnosis: 'Diagnóstico en vivo - Encontrar punto óptimo',
     qrScanner: 'Escáner QR/Código de barras',
     databaseError: 'Error de base de datos',
@@ -179,28 +179,28 @@ export const es: TranslationDict = {
   // PHASE 2: REFERENCE (Training)
   // ============================================================================
   reference: {
-    recordReference: 'Grabar referencia',
-    tenSecondRecording: 'Grabación de referencia de {{duration}} segundos',
-    noReferenceModel: 'No hay modelo de referencia disponible',
+    recordReference: 'Grabar estado normal',
+    tenSecondRecording: 'Grabación del estado normal de {{duration}} segundos',
+    noReferenceModel: 'No hay estado normal disponible',
     trainedStates: 'Estados entrenados',
-    noModelsYet: 'Aún no hay modelos de referencia disponibles',
+    noModelsYet: 'Aún no hay estados normales disponibles',
     existingModels: 'MODELOS EXISTENTES:',
     statesTrainedCount: '{{count}} estado(s) ya entrenado(s)',
     recordingStatusHighQuality: 'Alta calidad de audio detectada',
-    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainBefore: 'El estado normal define cómo suena su máquina durante el funcionamiento normal. Todas las comparaciones futuras se basan en él.',
     explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
-    savedSuccess: '\u2705 Reference saved – Environment profile detected',
-    savedTitle: 'Reference created',
+    savedSuccess: '\u2705 Estado normal guardado – Perfil de entorno detectado',
+    savedTitle: 'Estado normal creado',
     cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
-    noModels: 'No references yet.',
-    unnamed: 'Reference #{{index}}',
-    deleteModel: 'Delete reference',
-    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
-    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
+    noModels: 'Aún no hay estados normales.',
+    unnamed: 'Estado normal #{{index}}',
+    deleteModel: 'Eliminar estado normal',
+    confirmDeleteModel: 'Eliminar estado normal "{{name}}"? Esta acción no se puede deshacer.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Estado normal "{{name}}" eliminado',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} estado grabado',
-    noReferenceYet: 'Sin referencia aún',
+    noReferenceYet: 'Sin estado normal aún',
     changeMachine: 'Cambiar máquina',
     noMachinesYet: 'No hay máquinas creadas aún.',
     noMachinesHint: 'Por favor cree una nueva máquina primero.',
@@ -221,6 +221,8 @@ export const es: TranslationDict = {
       iosAudioBlocked: 'Micrófono bloqueado',
       iosAudioBlockedMessage: 'El micrófono no está proporcionando datos de audio.\n\nPosibles causas:\n• Otra aplicación está usando el micrófono\n• iOS está bloqueando el acceso al micrófono\n• El volumen del sistema está silenciado\n\nPor favor cierre otras aplicaciones e intente de nuevo.',
       iosAudioBlockedRetry: 'Intentar de nuevo',
+      // Welle 1 UX: Countdown tip
+      countdownTip: 'Mantenga el dispositivo cerca de la máquina',
     },
 
     quality: {
@@ -231,7 +233,7 @@ export const es: TranslationDict = {
       good: 'Ref: Good',
       ok: 'Ref: OK',
       unknown: 'Ref: ?',
-      ariaLabel: 'Reference quality: {{rating}}',
+      ariaLabel: 'Calidad de grabación: {{rating}}',
     },
 
     errors: {
@@ -262,6 +264,16 @@ export const es: TranslationDict = {
   },
 
   // ============================================================================
+  // MACHINE LIST
+  // ============================================================================
+  machineList: {
+    statusHealthy: 'Normal',
+    statusWarning: 'Desviación',
+    statusCritical: 'Anormal',
+    statusUnknown: 'Aún no verificado',
+  },
+
+  // ============================================================================
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
@@ -274,6 +286,13 @@ export const es: TranslationDict = {
     compareComplete: '\u2705 Comparison complete',
     saveFailed: 'No se pudo guardar el diagnóstico',
     liveAnalysis: 'Realizar análisis en vivo',
+
+    // Welle 1 UX: Action recommendations
+    recommendation: {
+      healthy: 'No se requiere acción',
+      warning: 'Observar – verificar en el próximo mantenimiento',
+      critical: 'Inspección in situ recomendada',
+    },
 
     sampleRateError: 'Error de configuración de audio: Su micrófono funciona a {{actual}}Hz, pero ningún modelo de referencia fue entrenado a esta frecuencia de muestreo (Modelos: {{expected}}Hz). Por favor use la misma configuración de audio que durante el entrenamiento o cree un nuevo modelo de referencia con la frecuencia de muestreo actual.',
 
@@ -316,7 +335,7 @@ export const es: TranslationDict = {
     selectExisting: 'Seleccionar máquina',
     createNew: 'Nueva máquina',
     statesReady: '{{count}} estado entrenado',
-    noReference: 'Sin referencia aún',
+    noReference: 'Sin estado normal aún',
     changeMachine: 'Cambiar máquina',
     noMachinesYet: 'No hay m\u00e1quinas creadas a\u00fan.',
     noMachinesHint: 'Cree una nueva m\u00e1quina primero.',
@@ -482,7 +501,7 @@ export const es: TranslationDict = {
   // ============================================================================
   zeroFriction: {
     autoMachineName: 'Máquina {{number}}',
-    referenceCreatedToast: 'Referencia para {{machineName}} creada',
+    referenceCreatedToast: 'Estado normal para {{machineName}} creado',
     editMachineName: 'Editar',
     editMachineNamePrompt: 'Introduzca un nuevo nombre para la máquina:',
     machineRenamed: 'Máquina renombrada a "{{newName}}"',
@@ -508,8 +527,8 @@ export const es: TranslationDict = {
     uncertainMatch: '¿Qué máquina es esta?',
     selectMachine: 'Por favor, seleccione la máquina correspondiente',
     noMatch: 'No reconozco este sonido todavía',
-    noMatchHint: '¿Desea grabar una referencia?',
-    recordReference: 'Grabar referencia',
+    noMatchHint: '¿Desea grabar un estado normal?',
+    recordReference: 'Grabar estado normal',
     newMachine: 'Crear nueva máquina',
   },
 
@@ -533,7 +552,7 @@ export const es: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} estado{{plural}} entrenado(s) (último: {{date}}) - Agregar más',
-    referenceRequired: 'Grabación de referencia de {{duration}} segundos (requerido para diagnóstico)',
+    referenceRequired: 'Grabación del estado normal de {{duration}} segundos (requerido para diagnóstico)',
     liveAnalysis: 'Realizar análisis en vivo',
     lastCheck: 'Última verificación {{time}}',
   },
@@ -734,9 +753,9 @@ export const es: TranslationDict = {
     varianceTitle: 'Varianza',
     frequencyAnomalyLabel: 'Anomalía de frecuencia',
     analysisHintDefault: 'Consejo: señal ligeramente elevada alrededor de 20 kHz',
-    referenceQualityTitle: 'Calidad de referencia',
+    referenceQualityTitle: 'Calidad de grabación',
     referenceQualityStatusGood: 'BUENA',
-    referenceQualityDescription: 'La grabación de referencia cumple las condiciones recomendadas',
+    referenceQualityDescription: 'La grabación cumple las condiciones recomendadas',
     featureModeLabel: 'Modo de características',
     viewHistory: 'Ver historial',
     closeDialog: 'Cerrar diagnóstico',
@@ -1216,13 +1235,13 @@ export const es: TranslationDict = {
       maxMachines: 'Maximum 30 machines',
     },
     reference: {
-      title: 'Record reference',
+      title: 'Grabar estado normal',
       instruction: 'Record the first machine',
       hint: 'Automatically used as the comparison baseline.',
-      startRecording: 'Record reference',
-      saved: 'Reference saved',
+      startRecording: 'Grabar estado normal',
+      saved: 'Estado normal guardado',
       goldName: 'Reference (Gold)',
-      recordingHint: 'Record the reference machine now.',
+      recordingHint: 'Grabe el estado normal ahora.',
     },
     compare: {
       goTo: 'Go to:',
@@ -1266,9 +1285,9 @@ export const es: TranslationDict = {
       noiseHint: 'Por favor, no hable ni se mueva durante la grabaci\u00F3n.',
     },
     inspectionReference: {
-      mainQuestion: 'Grabando referencia...',
+      mainQuestion: 'Grabando estado normal...',
       subtitle: 'Esta grabaci\u00F3n se guardar\u00E1 como base de comparaci\u00F3n.',
-      scorePlaceholder: 'Referencia \u2013 sin comparaci\u00F3n',
+      scorePlaceholder: 'Estado normal \u2013 sin comparaci\u00F3n',
       comparingWith: 'Comparando con {{name}}...',
     },
     ghostOverlay: {

@@ -4101,7 +4101,27 @@ export class IdentifyPhase {
 
     const machineName = document.createElement('h4');
     machineName.className = 'machine-name';
-    machineName.textContent = machine.name;
+
+    // Welle 1 UX: Status dot next to machine name
+    const statusDot = document.createElement('span');
+    statusDot.className = 'machine-status-dot';
+    if (latestDiagnosis) {
+      if (latestDiagnosis.healthScore >= 75) {
+        statusDot.classList.add('status-dot-healthy');
+        statusDot.setAttribute('aria-label', t('machineList.statusHealthy'));
+      } else if (latestDiagnosis.healthScore >= 50) {
+        statusDot.classList.add('status-dot-warning');
+        statusDot.setAttribute('aria-label', t('machineList.statusWarning'));
+      } else {
+        statusDot.classList.add('status-dot-critical');
+        statusDot.setAttribute('aria-label', t('machineList.statusCritical'));
+      }
+    } else {
+      statusDot.classList.add('status-dot-unknown');
+      statusDot.setAttribute('aria-label', t('machineList.statusUnknown'));
+    }
+    machineName.appendChild(statusDot);
+    machineName.appendChild(document.createTextNode(machine.name));
 
     const machineStatus = document.createElement('p');
     machineStatus.className = `machine-status ${statusClass}`;

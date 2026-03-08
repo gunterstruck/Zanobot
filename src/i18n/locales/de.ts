@@ -25,7 +25,7 @@ export const de: TranslationDict = {
     trainAnother: 'Weiteren Zustand trainieren',
     newMachine: 'Neue Maschine',
     stopRecording: 'Aufnahme stoppen',
-    saveReference: 'Referenz speichern',
+    saveReference: 'Normalzustand speichern',
   },
 
   // ============================================================================
@@ -58,17 +58,17 @@ export const de: TranslationDict = {
   // MODAL TITLES
   // ============================================================================
   modals: {
-    referenceRecording: 'Referenzaufnahme',
+    referenceRecording: 'Normalzustand aufnehmen',
     liveDiagnosis: 'Live Diagnosis - Find Sweet Spot',
     qrScanner: 'QR/Barcode Scanner',
     databaseError: 'Datenbank-Fehler',
-    browserIncompatible: 'Browser nicht kompatibel',
+    browserIncompatible: 'Browser nicht unterstützt',
     accessDenied: 'Zugriff verweigert',
     processingError: 'Verarbeitungsfehler',
     saveError: 'Speicherfehler',
-    sampleRateMismatch: 'Inkompatible Sample Rate',
-    unsuitable: 'Ungeeignetes Signal',
-    referenceUnsuitable: 'Referenzaufnahme ungeeignet',
+    sampleRateMismatch: 'Audiogeräte nicht kompatibel',
+    unsuitable: 'Geräusch nicht erkennbar',
+    referenceUnsuitable: 'Aufnahme ungeeignet',
     recordingDiscarded: 'Aufnahme verworfen',
     cameraOptional: 'Kamera optional',
     noSignalDetected: 'Kein Signal erkannt',
@@ -122,10 +122,10 @@ export const de: TranslationDict = {
       title: 'So funktioniert Zanobot',
       step1Title: 'Maschine anlegen',
       step1Desc: 'Gib deiner Maschine einen eindeutigen Namen.',
-      step2Title: 'Referenz aufnehmen',
+      step2Title: 'Normalzustand aufnehmen',
       step2Desc: '10 Sekunden Normalzustand aufnehmen.',
       step3Title: 'Zustand prüfen',
-      step3Desc: 'Vergleiche jederzeit gegen die Referenz.',
+      step3Desc: 'Vergleiche jederzeit gegen den Normalzustand.',
       cta: 'Erste Maschine anlegen',
     },
 
@@ -194,28 +194,28 @@ export const de: TranslationDict = {
   // PHASE 2: REFERENCE (Training)
   // ============================================================================
   reference: {
-    recordReference: 'Referenz aufnehmen',
-    tenSecondRecording: '{{duration}}-Sekunden Referenzaufnahme',
-    noReferenceModel: 'Kein Referenzmodell vorhanden',
+    recordReference: 'Normalzustand aufnehmen',
+    tenSecondRecording: '{{duration}}-Sekunden Aufnahme des Normalzustands',
+    noReferenceModel: 'Kein Normalzustand vorhanden',
     trainedStates: 'Trainierte Zustände',
-    noModelsYet: 'Noch keine Referenzmodelle vorhanden',
+    noModelsYet: 'Noch keine Normalzustände vorhanden',
     existingModels: 'VORHANDENE MODELLE:',
     statesTrainedCount: '{{count}} Zustand(e) bereits trainiert',
     recordingStatusHighQuality: 'Hohe Audioqualität erkannt',
-    explainBefore: 'Die Referenz definiert den Normalzustand deiner Maschine. Alle zukünftigen Vergleiche basieren darauf.',
+    explainBefore: 'Der Normalzustand definiert, wie sich deine Maschine im Normalbetrieb anhört. Alle zukünftigen Vergleiche basieren darauf.',
     explainDuring: 'Bewege das Smartphone langsam um die Maschine. So können Umgebungseinflüsse herausgerechnet werden.',
-    savedSuccess: '\u2705 Referenz gespeichert – Umgebungsprofil erkannt',
-    savedTitle: 'Referenz erstellt',
+    savedSuccess: '✅ Normalzustand gespeichert – Umgebungsprofil erkannt',
+    savedTitle: 'Normalzustand erstellt',
     cherryPickingHint: '\uD83D\uDEE1\uFE0F Störgeräusche werden automatisch erkannt und verworfen.',
-    noModels: 'Noch keine Referenzen vorhanden.',
-    unnamed: 'Referenz #{{index}}',
-    deleteModel: 'Referenz löschen',
-    confirmDeleteModel: 'Referenz „{{name}}" löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-    modelDeleted: '\uD83D\uDDD1\uFE0F Referenz „{{name}}" gelöscht',
+    noModels: 'Noch keine Normalzustände vorhanden.',
+    unnamed: 'Normalzustand #{{index}}',
+    deleteModel: 'Normalzustand löschen',
+    confirmDeleteModel: 'Normalzustand „{{name}}" löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+    modelDeleted: '🗑️ Normalzustand „{{name}}" gelöscht',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} Signatur(en) vorhanden',
-    noReferenceYet: 'Noch keine Referenz',
+    noReferenceYet: 'Noch kein Normalzustand',
     changeMachine: 'Maschine wechseln',
     noMachinesYet: 'Noch keine Maschinen angelegt.',
     noMachinesHint: 'Legen Sie zuerst eine neue Maschine an.',
@@ -223,19 +223,21 @@ export const de: TranslationDict = {
     recording: {
       alreadyRunning: 'Eine Aufnahme läuft bereits.',
       cameraNotAvailable: 'Kamera nicht verfügbar. Aufnahme wird ohne Positionsbild fortgesetzt.',
-      browserNotCompatible: 'Ihr Browser unterstützt keine Audioaufnahme. Bitte verwenden Sie einen aktuellen Browser.',
+      browserNotCompatible: 'Ihr Browser unterstützt leider keine Audioaufnahme. Bitte verwenden Sie Chrome oder Edge.',
       stabilizing: 'Stabilisierung...',
       waitingForSignal: 'Warte auf Signal',
       recording: 'Aufnahme läuft',
-      microphoneFailed: 'Mikrofonzugriff fehlgeschlagen',
-      processingFailed: 'Aufnahme konnte nicht verarbeitet werden',
-      noSignal: 'Bitte näher an die Maschine gehen und erneut versuchen.',
+      microphoneFailed: 'Bitte erlauben Sie den Zugriff auf das Mikrofon in Ihren Geräteeinstellungen.',
+      processingFailed: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es noch einmal.',
+      noSignal: 'Kein Maschinengeräusch erkannt. Läuft die Maschine? Bitte näher an die Maschine halten und erneut versuchen.',
       positionImage: '📷 Positionsbild wird automatisch aufgenommen',
       instruction: 'Halten Sie das Mikrofon 10–30 cm vor die Maschine.',
       // iOS Audio Blocked (watchdog detection)
       iosAudioBlocked: 'Mikrofon blockiert',
       iosAudioBlockedMessage: 'Das Mikrofon liefert keine Audiodaten.\n\nMögliche Ursachen:\n• Eine andere App verwendet das Mikrofon\n• iOS blockiert den Mikrofonzugriff\n• Systemlautstärke ist stummgeschaltet\n\nBitte schließen Sie andere Apps und versuchen Sie es erneut.',
       iosAudioBlockedRetry: 'Erneut versuchen',
+      // Welle 1 UX: Countdown tip
+      countdownTip: 'Halten Sie das Gerät nah an die Maschine',
     },
 
     quality: {
@@ -246,7 +248,7 @@ export const de: TranslationDict = {
       good: 'Ref: Gut',
       ok: 'Ref: OK',
       unknown: 'Ref: ?',
-      ariaLabel: 'Referenzqualität: {{rating}}',
+      ariaLabel: 'Aufnahmequalität: {{rating}}',
     },
 
     errors: {
@@ -277,20 +279,37 @@ export const de: TranslationDict = {
   },
 
   // ============================================================================
+  // WELLE 1 UX: Machine List Status Dots
+  // ============================================================================
+  machineList: {
+    statusHealthy: 'Unauffällig',
+    statusWarning: 'Abweichung',
+    statusCritical: 'Auffällig',
+    statusUnknown: 'Noch nicht geprüft',
+  },
+
+  // ============================================================================
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
     alreadyRunning: 'Eine Diagnose läuft bereits.',
-    noReferenceModel: 'Kein Referenzmodell gefunden. Bitte zuerst eine Referenzaufnahme erstellen.',
-    browserNotCompatible: 'Ihr Browser unterstützt keine Real-Time-Diagnose. Bitte verwenden Sie Chrome, Edge oder Safari.',
-    noValidSampleRate: 'Kein Referenzmodell mit gültiger Sample Rate gefunden.',
+    noReferenceModel: 'Kein Normalzustand vorhanden. Bitte zuerst einen Normalzustand aufnehmen.',
+    browserNotCompatible: 'Ihr Browser unterstützt leider keine Live-Diagnose. Bitte verwenden Sie Chrome, Edge oder Safari.',
+    noValidSampleRate: 'Kein Normalzustand mit passender Audioqualität gefunden.',
     cameraNotAvailable: 'Kamera nicht verfügbar. Diagnose wird ohne Positionshilfe fortgesetzt.',
     diagnosisRunning: 'Diagnose läuft',
     compareComplete: '\u2705 Vergleich durchgeführt',
     saveFailed: 'Diagnose konnte nicht gespeichert werden',
     liveAnalysis: 'Live-Analyse durchführen',
 
-    sampleRateError: 'Audio-Setup Fehler: Ihr Mikrofon läuft bei {{actual}}Hz, aber kein Referenzmodell wurde bei dieser Sample Rate trainiert (Modelle: {{expected}}Hz). Bitte verwenden Sie das gleiche Audio-Setup wie beim Training oder erstellen Sie ein neues Referenzmodell mit der aktuellen Sample Rate.',
+    // Welle 1 UX: Action recommendations
+    recommendation: {
+      healthy: 'Kein Handlungsbedarf',
+      warning: 'Beobachten – bei nächster Wartung prüfen',
+      critical: 'Prüfung vor Ort empfohlen',
+    },
+
+    sampleRateError: 'Die Aufnahme konnte nicht verglichen werden. Ihr Gerät verwendet eine andere Audioqualität ({{actual}}Hz) als bei der Aufnahme des Normalzustands ({{expected}}Hz). Bitte verwenden Sie das gleiche Gerät oder nehmen Sie den Normalzustand mit diesem Gerät neu auf.',
 
     display: {
       referenceModels: 'REFERENZMODELL(E):',
@@ -322,7 +341,7 @@ export const de: TranslationDict = {
     },
 
     analysis: {
-      healthyMatch: 'Akustische Signatur entspricht Referenzzustand "{{state}}" ({{score}}%). Keine Auffälligkeiten.',
+      healthyMatch: 'Akustische Signatur entspricht Normalzustand "{{state}}" ({{score}}%). Keine Auffälligkeiten.',
       faultyMatch: 'Auffälligkeit erkannt: Signatur entspricht trainiertem Muster "{{state}}" ({{score}}%). Inspektion empfohlen.',
     },
 
@@ -331,7 +350,7 @@ export const de: TranslationDict = {
     selectExisting: 'Maschine wählen',
     createNew: 'Neue Maschine',
     statesReady: '{{count}} Zustand trainiert',
-    noReference: 'Noch keine Referenz',
+    noReference: 'Noch kein Normalzustand',
     changeMachine: 'Maschine wechseln',
     noMachinesYet: 'Noch keine Maschinen angelegt.',
     noMachinesHint: 'Legen Sie zuerst eine neue Maschine an.',
@@ -425,7 +444,7 @@ export const de: TranslationDict = {
   // PHASE 4: SETTINGS
   // ============================================================================
   settings: {
-    databaseNotAvailable: 'Datenbank nicht verfügbar. Bitte erlauben Sie IndexedDB in Ihren Browser-Einstellungen oder deaktivieren Sie den strikten Privacy-Modus.',
+    databaseNotAvailable: 'Speicher nicht verfügbar. Bitte deaktivieren Sie den strikten Privacy-Modus in Ihren Browser-Einstellungen oder verwenden Sie einen anderen Browser.',
     exportError: 'Fehler beim Exportieren der Datenbank',
     importError: 'Fehler beim Importieren',
     shareError: 'Fehler beim Versenden der Datenbank',
@@ -474,14 +493,14 @@ export const de: TranslationDict = {
   // CORE ML / SCORING
   // ============================================================================
   scoring: {
-    matchesReference: 'Akustische Signatur entspricht der Referenz. Keine Auffälligkeiten.',
-    moderateDeviation: 'Moderate Abweichung vom Referenzmuster. Überprüfung empfohlen.',
-    significantDeviation: 'Signifikante Abweichung vom Referenzmuster erkannt. Inspektion empfohlen.',
-    noMatch: 'Signifikante Abweichung vom Referenzmuster ({{score}}%). Das Signal passt zu keinem trainierten Zustand. Inspektion empfohlen.',
+    matchesReference: 'Akustische Signatur entspricht dem Normalzustand. Keine Auffälligkeiten.',
+    moderateDeviation: 'Moderate Abweichung vom Normalzustand. Überprüfung empfohlen.',
+    significantDeviation: 'Signifikante Abweichung vom Normalzustand erkannt. Inspektion empfohlen.',
+    noMatch: 'Signifikante Abweichung vom Normalzustand ({{score}}%). Das Signal passt zu keinem trainierten Zustand. Inspektion empfohlen.',
     hints: {
-      matchesReference: 'Akustische Signatur entspricht der Referenz.',
+      matchesReference: 'Akustische Signatur entspricht dem Normalzustand.',
       minorDeviations: 'Geringfügige Abweichungen im akzeptablen Bereich.',
-      moderateDeviation: 'Moderate Abweichung vom Referenzmuster erkannt.',
+      moderateDeviation: 'Moderate Abweichung vom Normalzustand erkannt.',
       recommendInspection: 'Inspektion empfohlen.',
       significantAnomaly: 'Signifikante Anomalie erkannt.',
       immediateInspection: 'Sofortige Inspektion empfohlen.',
@@ -533,7 +552,7 @@ export const de: TranslationDict = {
   // ============================================================================
   router: {
     statesTrained: '{{count}} Zustand{{plural}} trainiert (zuletzt: {{date}}) - Weitere hinzufügen',
-    referenceRequired: '{{duration}}-Sekunden Referenzaufnahme (Erforderlich für Diagnose)',
+    referenceRequired: '{{duration}}-Sekunden Aufnahme des Normalzustands (Erforderlich für Diagnose)',
     liveAnalysis: 'Live-Analyse durchführen',
     lastCheck: 'Letzte Prüfung {{time}}',
   },
@@ -575,7 +594,7 @@ export const de: TranslationDict = {
     hardwareHint: 'Bitte stellen Sie sicher, dass Ihr Mikrofon/Kamera angeschlossen ist.',
     audioSystemError: 'Audio-System-Fehler',
     audioSystemHint: 'Bitte laden Sie die Seite neu. Falls das Problem weiterhin besteht, verwenden Sie einen aktuellen Browser.',
-    storageFull: 'Bitte löschen Sie alte Diagnosen oder Referenzaufnahmen.',
+    storageFull: 'Bitte löschen Sie alte Diagnosen oder Normalzustands-Aufnahmen.',
     networkError: 'Bitte überprüfen Sie Ihre Internetverbindung.',
     technicalDetails: 'Technische Details',
     noStackTrace: 'Kein Stack Trace verfügbar',
@@ -605,7 +624,7 @@ export const de: TranslationDict = {
     normal: 'UNAUFFÄLLIG',
     deviation: 'ABWEICHUNG',
     abnormal: 'AUFFÄLLIG',
-    explain: 'Der Score zeigt die Ähnlichkeit zum Referenzzustand (0–100%). 100% = nahezu identisch. Ein sinkender Trend ist wichtiger als ein einzelner Wert.',
+    explain: 'Der Score zeigt die Ähnlichkeit zum Normalzustand (0–100%). 100% = nahezu identisch. Ein sinkender Trend ist wichtiger als ein einzelner Wert.',
     explainTitle: 'Was bedeutet der Score?',
   },
 
@@ -622,7 +641,7 @@ export const de: TranslationDict = {
     statusUncertain: 'Unsicher',
     statusDeviation: 'Abweichung',
     // Reference info
-    referenceState: 'Referenzzustand',
+    referenceState: 'Normalzustand',
     referenceDefault: 'Normalbetrieb',
     // Dynamic hints for poor signal quality
     hintMoveCloser: 'Bitte näher an die Maschine gehen',
@@ -777,7 +796,7 @@ export const de: TranslationDict = {
     // Auto-generated machine names
     autoMachineName: 'Maschine {{number}}',
     // Success toast after silent save
-    referenceCreatedToast: 'Referenz für {{machineName}} erstellt',
+    referenceCreatedToast: 'Normalzustand für {{machineName}} erstellt',
     // Edit button in toast/success screen
     editMachineName: 'Bearbeiten',
     // Prompt for editing machine name after creation
@@ -818,8 +837,8 @@ export const de: TranslationDict = {
 
     // Fall C: No match (<40%)
     noMatch: 'Dieses Geräusch kenne ich noch nicht',
-    noMatchHint: 'Möchten Sie eine Referenz aufnehmen?',
-    recordReference: 'Referenz aufnehmen',
+    noMatchHint: 'Möchten Sie einen Normalzustand aufnehmen?',
+    recordReference: 'Normalzustand aufnehmen',
     newMachine: 'Neue Maschine anlegen',
   },
 
@@ -929,7 +948,7 @@ export const de: TranslationDict = {
     quality: 'Qualität',
     issuesTitle: 'Erkannte Probleme:',
     discardNew: 'Verwerfen / Neu',
-    saveAsReference: 'Als Referenz speichern',
+    saveAsReference: 'Als Normalzustand speichern',
   },
 
   // ============================================================================
@@ -942,9 +961,9 @@ export const de: TranslationDict = {
     varianceTitle: 'Varianz',
     frequencyAnomalyLabel: 'Frequenzabweichung',
     analysisHintDefault: 'Hinweis: Leicht erhöhtes Signal um 20 kHz',
-    referenceQualityTitle: 'Referenzqualität',
+    referenceQualityTitle: 'Aufnahmequalität',
     referenceQualityStatusGood: 'GUT',
-    referenceQualityDescription: 'Referenzaufnahme erfüllt empfohlene Bedingungen',
+    referenceQualityDescription: 'Aufnahme erfüllt empfohlene Bedingungen',
     featureModeLabel: 'Feature-Modus',
     viewHistory: 'Verlauf anzeigen',
     closeDialog: 'Diagnose schließen',
@@ -1416,8 +1435,8 @@ export const de: TranslationDict = {
   // Sprint 2 UX: Contextual help texts (InfoBottomSheet)
   help: {
     reference: {
-      title: 'Was ist eine Referenz?',
-      body: '<p>Die Referenz ist der „Normalzustand" deiner Maschine – eine 10-Sekunden-Aufnahme bei normalem Betrieb.</p><p>Alle zukünftigen Diagnosen vergleichen gegen diesen Zustand. Je besser die Referenz, desto genauer die Erkennung von Veränderungen.</p><p><strong>Tipp:</strong> Nimm die Referenz bei normalem Betrieb auf und bewege das Smartphone langsam um die Maschine, damit Umgebungseinflüsse herausgerechnet werden können.</p>',
+      title: 'Was ist der Normalzustand?',
+      body: '<p>Der Normalzustand ist eine 10-Sekunden-Aufnahme deiner Maschine bei normalem Betrieb.</p><p>Alle zukünftigen Diagnosen vergleichen gegen diesen Zustand. Je besser die Aufnahme, desto genauer die Erkennung von Veränderungen.</p><p><strong>Tipp:</strong> Nimm den Normalzustand bei normalem Betrieb auf und bewege das Smartphone langsam um die Maschine, damit Umgebungseinflüsse herausgerechnet werden können.</p>',
     },
     diagnose: {
       title: 'Was passiert bei „Zustand prüfen"?',
@@ -1602,13 +1621,13 @@ export const de: TranslationDict = {
       maxMachines: 'Maximal 30 Maschinen',
     },
     reference: {
-      title: 'Referenz aufnehmen',
+      title: 'Normalzustand aufnehmen',
       instruction: 'Erste Maschine aufnehmen',
       hint: 'Wird automatisch als Vergleichsbasis verwendet.',
-      startRecording: 'Referenz aufnehmen',
-      saved: 'Referenz gespeichert',
+      startRecording: 'Normalzustand aufnehmen',
+      saved: 'Normalzustand gespeichert',
       goldName: 'Referenz (Gold)',
-      recordingHint: 'Nimm jetzt die Referenz-Maschine auf.',
+      recordingHint: 'Nimm jetzt den Normalzustand auf.',
     },
     compare: {
       goTo: 'Geh zu:',
@@ -1656,9 +1675,9 @@ export const de: TranslationDict = {
     },
     // UX improvement: Inspection modal in reference mode
     inspectionReference: {
-      mainQuestion: 'Referenzaufnahme läuft...',
+      mainQuestion: 'Normalzustand wird aufgenommen...',
       subtitle: 'Diese Aufnahme wird als Vergleichsbasis gespeichert.',
-      scorePlaceholder: 'Referenz – kein Vergleich',
+      scorePlaceholder: 'Normalzustand – kein Vergleich',
       comparingWith: 'Vergleich mit {{name}} läuft...',
     },
     // UX improvement: Ghost overlay hint

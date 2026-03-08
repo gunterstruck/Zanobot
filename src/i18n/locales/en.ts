@@ -23,7 +23,7 @@ export const en: TranslationDict = {
     trainAnother: 'Train Another State',
     newMachine: 'New Machine',
     stopRecording: 'Stop Recording',
-    saveReference: 'Save Reference',
+    saveReference: 'Save Normal State',
   },
 
   // ============================================================================
@@ -56,17 +56,17 @@ export const en: TranslationDict = {
   // MODAL TITLES
   // ============================================================================
   modals: {
-    referenceRecording: 'Reference Recording',
+    referenceRecording: 'Record Normal State',
     liveDiagnosis: 'Live Diagnosis - Find Sweet Spot',
     qrScanner: 'QR/Barcode Scanner',
     databaseError: 'Database Error',
-    browserIncompatible: 'Browser Not Compatible',
+    browserIncompatible: 'Browser Not Supported',
     accessDenied: 'Access Denied',
     processingError: 'Processing Error',
     saveError: 'Save Error',
-    sampleRateMismatch: 'Incompatible Sample Rate',
-    unsuitable: 'Unsuitable Signal',
-    referenceUnsuitable: 'Reference Recording Unsuitable',
+    sampleRateMismatch: 'Audio Devices Not Compatible',
+    unsuitable: 'Sound Not Recognizable',
+    referenceUnsuitable: 'Recording Unsuitable',
     recordingDiscarded: 'Recording Discarded',
     cameraOptional: 'Camera Optional',
     noSignalDetected: 'No Signal Detected',
@@ -120,10 +120,10 @@ export const en: TranslationDict = {
       title: 'How Zanobot works',
       step1Title: 'Create machine',
       step1Desc: 'Give your machine a unique name.',
-      step2Title: 'Record reference',
+      step2Title: 'Record normal state',
       step2Desc: '10 seconds of normal operation.',
       step3Title: 'Check condition',
-      step3Desc: 'Compare against the reference anytime.',
+      step3Desc: 'Compare against the normal state anytime.',
       cta: 'Create first machine',
     },
 
@@ -192,28 +192,28 @@ export const en: TranslationDict = {
   // PHASE 2: REFERENCE (Training)
   // ============================================================================
   reference: {
-    recordReference: 'Record Reference',
-    tenSecondRecording: '{{duration}}-second reference recording',
-    noReferenceModel: 'No reference model available',
+    recordReference: 'Record Normal State',
+    tenSecondRecording: '{{duration}}-second normal state recording',
+    noReferenceModel: 'No normal state available',
     trainedStates: 'Trained States',
-    noModelsYet: 'No reference models available yet',
+    noModelsYet: 'No normal states available yet',
     existingModels: 'EXISTING MODELS:',
     statesTrainedCount: '{{count}} state(s) already trained',
     recordingStatusHighQuality: 'High audio quality detected',
-    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
+    explainBefore: 'The normal state defines how your machine sounds during healthy operation. All future comparisons are based on it.',
     explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
-    savedSuccess: '\u2705 Reference saved – Environment profile detected',
-    savedTitle: 'Reference created',
+    savedSuccess: '\u2705 Normal state saved – Environment profile detected',
+    savedTitle: 'Normal state created',
     cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
-    noModels: 'No references yet.',
-    unnamed: 'Reference #{{index}}',
-    deleteModel: 'Delete reference',
-    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
-    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
+    noModels: 'No normal states yet.',
+    unnamed: 'Normal state #{{index}}',
+    deleteModel: 'Delete normal state',
+    confirmDeleteModel: 'Delete normal state "{{name}}"? This cannot be undone.',
+    modelDeleted: '\uD83D\uDDD1\uFE0F Normal state "{{name}}" deleted',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} signature(s) available',
-    noReferenceYet: 'No reference yet',
+    noReferenceYet: 'No normal state yet',
     changeMachine: 'Change machine',
     noMachinesYet: 'No machines created yet.',
     noMachinesHint: 'Please create a new machine first.',
@@ -221,19 +221,21 @@ export const en: TranslationDict = {
     recording: {
       alreadyRunning: 'A recording is already in progress.',
       cameraNotAvailable: 'Camera not available. Recording will continue without position image.',
-      browserNotCompatible: 'Your browser does not support audio recording. Please use a modern browser.',
+      browserNotCompatible: 'Your browser does not support audio recording. Please use Chrome or Edge.',
       stabilizing: 'Stabilizing...',
       waitingForSignal: 'Waiting for signal',
       recording: 'Recording in progress',
-      microphoneFailed: 'Microphone access failed',
-      processingFailed: 'Recording could not be processed',
-      noSignal: 'Please move closer to the machine and try again.',
+      microphoneFailed: 'Please allow microphone access in your device settings.',
+      processingFailed: 'An error occurred. Please try again.',
+      noSignal: 'No machine sound detected. Is the machine running? Please hold the device closer and try again.',
       positionImage: '📷 Position image will be captured automatically',
       instruction: 'Hold the microphone 10-30 cm in front of the machine.',
       // iOS Audio Blocked (watchdog detection)
       iosAudioBlocked: 'Microphone blocked',
       iosAudioBlockedMessage: 'The microphone is not providing audio data.\n\nPossible causes:\n• Another app is using the microphone\n• iOS is blocking microphone access\n• System volume is muted\n\nPlease close other apps and try again.',
       iosAudioBlockedRetry: 'Try again',
+      // Welle 1 UX: Countdown tip
+      countdownTip: 'Hold the device close to the machine',
     },
 
     quality: {
@@ -244,7 +246,7 @@ export const en: TranslationDict = {
       good: 'Ref: Good',
       ok: 'Ref: OK',
       unknown: 'Ref: ?',
-      ariaLabel: 'Reference quality: {{rating}}',
+      ariaLabel: 'Recording quality: {{rating}}',
     },
 
     errors: {
@@ -275,6 +277,16 @@ export const en: TranslationDict = {
   },
 
   // ============================================================================
+  // WELLE 1 UX: Machine List Status Dots
+  // ============================================================================
+  machineList: {
+    statusHealthy: 'Normal',
+    statusWarning: 'Deviation',
+    statusCritical: 'Abnormal',
+    statusUnknown: 'Not yet checked',
+  },
+
+  // ============================================================================
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
@@ -288,7 +300,14 @@ export const en: TranslationDict = {
     saveFailed: 'Diagnosis could not be saved',
     liveAnalysis: 'Run live analysis',
 
-    sampleRateError: 'Audio setup error: Your microphone runs at {{actual}}Hz, but no reference model was trained at this sample rate (Models: {{expected}}Hz). Please use the same audio setup as during training or create a new reference model with the current sample rate.',
+    // Welle 1 UX: Action recommendations
+    recommendation: {
+      healthy: 'No action required',
+      warning: 'Monitor – check during next maintenance',
+      critical: 'On-site inspection recommended',
+    },
+
+    sampleRateError: 'The recording could not be compared. Your device uses a different audio quality ({{actual}}Hz) than during the normal state recording ({{expected}}Hz). Please use the same device or record the normal state again with this device.',
 
     display: {
       referenceModels: 'REFERENCE MODEL(S):',
@@ -329,7 +348,7 @@ export const en: TranslationDict = {
     selectExisting: 'Select machine',
     createNew: 'New machine',
     statesReady: '{{count}} state trained',
-    noReference: 'No reference yet',
+    noReference: 'No normal state yet',
     changeMachine: 'Change machine',
     noMachinesYet: 'No machines created yet.',
     noMachinesHint: 'Create a new machine first.',
@@ -423,7 +442,7 @@ export const en: TranslationDict = {
   // PHASE 4: SETTINGS
   // ============================================================================
   settings: {
-    databaseNotAvailable: 'Database not available. Please allow IndexedDB in your browser settings or disable strict privacy mode.',
+    databaseNotAvailable: 'Storage not available. Please disable strict privacy mode in your browser settings or use a different browser.',
     exportError: 'Error exporting database',
     importError: 'Error importing',
     shareError: 'Error sharing database',
@@ -531,7 +550,7 @@ export const en: TranslationDict = {
   // ============================================================================
   router: {
     statesTrained: '{{count}} state{{plural}} trained (last: {{date}}) - Add more',
-    referenceRequired: '{{duration}}-second reference recording (Required for diagnosis)',
+    referenceRequired: '{{duration}}-second normal state recording (Required for diagnosis)',
     liveAnalysis: 'Run live analysis',
     lastCheck: 'Last check {{time}}',
   },
@@ -751,7 +770,7 @@ export const en: TranslationDict = {
     // Auto-generated machine names
     autoMachineName: 'Machine {{number}}',
     // Success toast after silent save
-    referenceCreatedToast: 'Reference for {{machineName}} created',
+    referenceCreatedToast: 'Normal state for {{machineName}} created',
     // Edit button in toast/success screen
     editMachineName: 'Edit',
     // Prompt for editing machine name after creation
@@ -792,8 +811,8 @@ export const en: TranslationDict = {
 
     // Fall C: No match (<40%)
     noMatch: "I don't recognize this sound yet",
-    noMatchHint: 'Would you like to record a reference?',
-    recordReference: 'Record reference',
+    noMatchHint: 'Would you like to record a normal state?',
+    recordReference: 'Record normal state',
     newMachine: 'Create new machine',
   },
 
@@ -910,9 +929,9 @@ export const en: TranslationDict = {
     varianceTitle: 'Variance',
     frequencyAnomalyLabel: 'Frequency anomaly',
     analysisHintDefault: 'Hint: Slightly increased signal around 20 kHz',
-    referenceQualityTitle: 'Reference Quality',
+    referenceQualityTitle: 'Recording Quality',
     referenceQualityStatusGood: 'GOOD',
-    referenceQualityDescription: 'Reference recording meets recommended conditions',
+    referenceQualityDescription: 'Recording meets recommended conditions',
     featureModeLabel: 'Feature Mode',
     viewHistory: 'View History',
     closeDialog: 'Close diagnosis',
@@ -1373,8 +1392,8 @@ export const en: TranslationDict = {
   // Sprint 2 UX: Contextual help texts (InfoBottomSheet)
   help: {
     reference: {
-      title: 'What is a reference?',
-      body: '<p>The reference is your machine\'s "normal state" – a 10-second recording during normal operation.</p><p>All future diagnoses compare against this state. The better the reference, the more accurately changes are detected.</p><p><strong>Tip:</strong> Record the reference during normal operation and slowly move the smartphone around the machine so environmental influences can be filtered out.</p>',
+      title: 'What is the normal state?',
+      body: '<p>The normal state is a 10-second recording of your machine during healthy operation.</p><p>All future diagnoses compare against this state. The better the recording, the more accurately changes are detected.</p><p><strong>Tip:</strong> Record the normal state during normal operation and slowly move the smartphone around the machine so environmental influences can be filtered out.</p>',
     },
     diagnose: {
       title: 'What happens during "Check condition"?',
@@ -1559,13 +1578,13 @@ export const en: TranslationDict = {
       maxMachines: 'Maximum 30 machines',
     },
     reference: {
-      title: 'Record reference',
+      title: 'Record normal state',
       instruction: 'Record the first machine',
       hint: 'Automatically used as the comparison baseline.',
-      startRecording: 'Record reference',
-      saved: 'Reference saved',
+      startRecording: 'Record normal state',
+      saved: 'Normal state saved',
       goldName: 'Reference (Gold)',
-      recordingHint: 'Record the reference machine now.',
+      recordingHint: 'Record the normal state now.',
     },
     compare: {
       goTo: 'Go to:',
@@ -1613,9 +1632,9 @@ export const en: TranslationDict = {
     },
     // UX improvement: Inspection modal in reference mode
     inspectionReference: {
-      mainQuestion: 'Recording reference...',
+      mainQuestion: 'Recording normal state...',
       subtitle: 'This recording will be saved as comparison baseline.',
-      scorePlaceholder: 'Reference \u2013 no comparison',
+      scorePlaceholder: 'Normal state \u2013 no comparison',
       comparingWith: 'Comparing with {{name}}...',
     },
     // UX improvement: Ghost overlay hint

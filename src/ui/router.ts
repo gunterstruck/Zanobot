@@ -26,6 +26,7 @@ import { escapeHtml } from '@utils/sanitize.js';
 import { t, getLocale, LANGUAGE_CHANGE_EVENT } from '../i18n/index.js';
 import { getRecordingSettings, RECORDING_SETTINGS_EVENT } from '@utils/recordingSettings.js';
 import { QuickCompareController } from './QuickCompareController.js';
+import { hapticForScore } from '@utils/haptics.js';
 
 export class Router {
   private currentMachine: Machine | null = null;
@@ -652,6 +653,10 @@ export class Router {
       this.diagnosePhase.setOnDiagnosisComplete((diagnosis) => {
         if (diagnosis?.id) {
           this.fleetQueueDiagnosisIds.push(diagnosis.id);
+        }
+        // Welle 1 UX: Haptic feedback after each fleet diagnosis
+        if (diagnosis?.healthScore !== undefined) {
+          hapticForScore(diagnosis.healthScore);
         }
         this.fleetQueueIndex++;
         // Short delay to show result, then advance

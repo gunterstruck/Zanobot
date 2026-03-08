@@ -9537,3 +9537,110 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
         padding: var(--spacing-sm);
     }
 }
+
+/* ===================================
+   WELLE 1 UX: Machine Status Dots
+   =================================== */
+.machine-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: var(--spacing-xs);
+    vertical-align: middle;
+}
+
+.status-dot-healthy {
+    background: var(--status-healthy, #4caf50);
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.4);
+}
+
+.status-dot-warning {
+    background: var(--status-warning, #ff9800);
+    box-shadow: 0 0 4px rgba(255, 152, 0, 0.4);
+}
+
+.status-dot-critical {
+    background: var(--status-error, #ef4444);
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+
+.status-dot-unknown {
+    background: var(--text-muted, #78909C);
+    opacity: 0.5;
+}
+
+/* ===================================
+   WELLE 1 UX: Referenz-Countdown
+   =================================== */
+.recording-countdown-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) 0;
+}
+
+.recording-countdown-number {
+    font-size: clamp(3rem, 15vw, 5rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary-color);
+    line-height: 1;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.recording-countdown-number.countdown-tick {
+    transform: scale(1.15);
+    opacity: 0.7;
+}
+
+.recording-countdown-bar-track {
+    width: 80%;
+    max-width: 280px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.recording-countdown-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: width 1s linear;
+    width: 0%;
+}
+
+.recording-countdown-tip {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    text-align: center;
+    margin: 0;
+    padding: 0 var(--spacing-md);
+}
+
+/* Light/Brand theme adjustments */
+[data-theme="light"] .recording-countdown-bar-track,
+[data-theme="brand"] .recording-countdown-bar-track {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* ===================================
+   WELLE 1 UX: Diagnosis Recommendation
+   =================================== */
+.diagnosis-recommendation {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Bei Advanced/Expert: kompakter, weniger prominent */
+html[data-view-level="advanced"] .diagnosis-recommendation,
+html[data-view-level="expert"] .diagnosis-recommendation {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+}

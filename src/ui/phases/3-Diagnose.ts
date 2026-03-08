@@ -66,6 +66,7 @@ import {
   type DriftDetectorSettings,
   type RefDriftBaseline,
 } from '@core/dsp/driftDetector.js';
+import { hapticForScore } from '@utils/haptics.js';
 
 export class DiagnosePhase {
   private machine: Machine;
@@ -1643,6 +1644,9 @@ export class DiagnosePhase {
         duration: 3000,
       });
 
+      // Welle 1 UX: Haptic feedback on diagnosis completion
+      hapticForScore(finalScore);
+
       // UX improvement: One-time score explanation after first QC diagnosis
       if (this.qcGoldStandardName && !DiagnosePhase.scoreExplanationShown) {
         DiagnosePhase.scoreExplanationShown = true;
@@ -2328,6 +2332,18 @@ export class DiagnosePhase {
     const verbalStatus = document.getElementById('result-verbal-status');
     if (verbalStatus) {
       verbalStatus.textContent = this.getScoreVerbalStatus(diagnosis.healthScore);
+    }
+
+    // Welle 1 UX: Action recommendation
+    const recommendationEl = document.getElementById('diagnosis-recommendation');
+    if (recommendationEl) {
+      if (diagnosis.healthScore >= 75) {
+        recommendationEl.textContent = t('diagnose.recommendation.healthy');
+      } else if (diagnosis.healthScore >= 50) {
+        recommendationEl.textContent = t('diagnose.recommendation.warning');
+      } else {
+        recommendationEl.textContent = t('diagnose.recommendation.critical');
+      }
     }
 
     // Sprint 3 UX: Calculate and show trend arrow
