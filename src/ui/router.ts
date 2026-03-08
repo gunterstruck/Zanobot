@@ -26,6 +26,7 @@ import { escapeHtml } from '@utils/sanitize.js';
 import { t, getLocale, LANGUAGE_CHANGE_EVENT } from '../i18n/index.js';
 import { getRecordingSettings, RECORDING_SETTINGS_EVENT } from '@utils/recordingSettings.js';
 import { QuickCompareController } from './QuickCompareController.js';
+import { exportAsPrintablePDF, type ReportData, type ReportEntry } from '@utils/reportExport.js';
 import { hapticForScore } from '@utils/haptics.js';
 
 export class Router {
@@ -1741,6 +1742,51 @@ export class Router {
   }
 
   /**
+   * Welle 4: Export fleet report as PDF or CSV.
+   */
+  private exportFleetReport(
+    groupName: string,
+    ranked: Array<{ machine: Machine; score: number | null }>,
+    stats: { median: number; outlierThreshold: number; min: number; max: number; spread: number } | null,
+  ): void {
+    const entries: ReportEntry[] = ranked
+      .filter((r): r is { machine: Machine; score: number } => r.score !== null)
+      .map(r => {
+        const statusText = r.score >= 75 ? t('status.healthy') : r.score >= 50 ? t('status.uncertain') : t('status.faulty');
+        return {
+          machineName: r.machine.name,
+          machineId: r.machine.id,
+          score: r.score,
+          status: statusText,
+          timestamp: Date.now(),
+          recommendation: r.score >= 75
+            ? t('diagnose.recommendation.healthy')
+            : r.score >= 50
+              ? t('diagnose.recommendation.warning')
+              : t('diagnose.recommendation.critical'),
+        };
+      });
+
+    const data: ReportData = {
+      title: t('report.fleetTitle'),
+      subtitle: groupName,
+      date: new Date().toLocaleString(),
+      entries,
+      summary: {
+        total: ranked.length,
+        healthy: entries.filter(e => e.score >= 75).length,
+        warning: entries.filter(e => e.score >= 50 && e.score < 75).length,
+        critical: entries.filter(e => e.score < 50).length,
+        unchecked: ranked.filter(r => r.score === null).length,
+        medianScore: stats?.median,
+      },
+    };
+
+    // Direct PDF export for fleet results (most common use case)
+    exportAsPrintablePDF(data);
+  }
+
+  /**
    * Show fleet result modal after fleet queue completes.
    */
   private async showFleetResultModal(params: {
@@ -1911,6 +1957,15 @@ export class Router {
       this.showFleetHistory(groupName, machineIds);
     });
     actions.appendChild(historyBtn);
+
+    // Welle 4: Report export button
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'fleet-result-btn-history';
+    reportBtn.textContent = '\uD83D\uDCC4 ' + t('report.exportButton');
+    reportBtn.addEventListener('click', () => {
+      this.exportFleetReport(groupName, ranked, stats);
+    });
+    actions.appendChild(reportBtn);
 
     const btnRow = document.createElement('div');
     btnRow.className = 'fleet-result-btn-row';

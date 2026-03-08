@@ -17,6 +17,8 @@ import { escapeHtml } from '@utils/sanitize.js';
 import { setViewLevelTemporary, restoreViewLevel, restoreTheme, getViewLevel } from '@utils/viewLevelSettings.js';
 import { t, getLocale } from '../../i18n/index.js';
 import { InfoBottomSheet } from '../components/InfoBottomSheet.js';
+import { analyzeTrend } from '@utils/trendAnalysis.js';
+import { exportAsPrintablePDF, exportAsCSV, exportMaintenanceJSON, type ReportData, type ReportEntry } from '@utils/reportExport.js';
 import {
   HardwareCheck,
   type AudioQualityReport,
@@ -1292,8 +1294,74 @@ export class IdentifyPhase {
           }
         });
       }
+      // Welle 4: Maintenance button on attention card (Score < 50)
+      if (mostUrgent.score < 50) {
+        const existingMaintBtn = attentionCard.querySelector('.dashboard-attention-btn-secondary');
+        if (!existingMaintBtn) {
+          const maintBtn = document.createElement('button');
+          maintBtn.className = 'dashboard-attention-btn dashboard-attention-btn-secondary';
+          maintBtn.textContent = t('maintenance.reportButton');
+          const capturedMostUrgent = mostUrgent;
+          maintBtn.addEventListener('click', () => {
+            const entry: ReportEntry = {
+              machineName: capturedMostUrgent.machine.name,
+              machineId: capturedMostUrgent.machine.id,
+              score: capturedMostUrgent.score,
+              status: capturedMostUrgent.score < 50 ? 'faulty' : 'uncertain',
+              timestamp: capturedMostUrgent.timestamp,
+              recommendation: t('diagnose.recommendation.critical'),
+            };
+            exportMaintenanceJSON([entry], capturedMostUrgent.machine.name);
+            notify.success(t('report.exported'));
+          });
+          const btnContainer = attentionCard.querySelector('.dashboard-attention-body');
+          if (btnContainer) btnContainer.appendChild(maintBtn);
+        }
+      }
     } else if (attentionCard) {
       attentionCard.style.display = 'none';
+    }
+
+    // Welle 4: Trend warnings
+    const trendContainer = document.getElementById('dashboard-trend-warnings');
+    if (trendContainer) {
+      trendContainer.innerHTML = '';
+      const trendWarnings: Array<{ machine: Machine; message: string; category: string }> = [];
+
+      for (const machine of machines) {
+        const machineDiagnoses = await getDiagnosesForMachine(machine.id, 10);
+        const trend = analyzeTrend(machineDiagnoses, t);
+        if (trend && (trend.category === 'declining' || trend.category === 'critical_decline')) {
+          trendWarnings.push({ machine, message: trend.message, category: trend.category });
+        }
+      }
+
+      if (trendWarnings.length > 0) {
+        trendContainer.style.display = '';
+        for (const { machine, message, category } of trendWarnings) {
+          const warning = document.createElement('div');
+          warning.className = `dashboard-trend-warning ${category === 'critical_decline' ? 'trend-critical' : 'trend-declining'}`;
+          warning.innerHTML = `
+            <span class="trend-warning-icon">${category === 'critical_decline' ? '\uD83D\uDD34' : '\uD83D\uDFE1'}</span>
+            <div class="trend-warning-text">
+              <strong>${escapeHtml(machine.name)}</strong>
+              <span>${escapeHtml(message)}</span>
+            </div>
+          `;
+          trendContainer.appendChild(warning);
+        }
+      } else {
+        trendContainer.style.display = 'none';
+      }
+    }
+
+    // Welle 4: Report link in dashboard (only if machines > 0)
+    const reportLink = document.getElementById('dashboard-report-link');
+    if (reportLink) {
+      reportLink.style.display = machines.length > 0 ? '' : 'none';
+      const newLink = reportLink.cloneNode(true) as HTMLElement;
+      reportLink.parentNode?.replaceChild(newLink, reportLink);
+      newLink.addEventListener('click', () => this.exportAllMachinesReport());
     }
   }
 
@@ -1314,6 +1382,110 @@ export class IdentifyPhase {
     return sorted.length % 2 === 0
       ? (sorted[mid - 1] + sorted[mid]) / 2
       : sorted[mid];
+  }
+
+  /**
+   * Welle 4: Export a report for all machines (dashboard link).
+   * Shows format choice via InfoBottomSheet.
+   */
+  private async exportAllMachinesReport(): Promise<void> {
+    const machines = await getAllMachines();
+    const entries: ReportEntry[] = [];
+    let healthy = 0;
+    let warning = 0;
+    let critical = 0;
+    let unchecked = 0;
+    const scores: number[] = [];
+
+    for (const machine of machines) {
+      const diagnosis = await getLatestDiagnosis(machine.id);
+      if (!diagnosis) {
+        unchecked++;
+        continue;
+      }
+
+      const score = diagnosis.healthScore;
+      scores.push(score);
+      if (score >= 75) healthy++;
+      else if (score >= 50) warning++;
+      else critical++;
+
+      // Trend calculation
+      const machineDiagnoses = await getDiagnosesForMachine(machine.id, 6);
+      let trendStr = '';
+      if (machineDiagnoses.length >= 2) {
+        const olderScores = machineDiagnoses.slice(1).map(d => d.healthScore);
+        const median = this.calculateMedian(olderScores);
+        const delta = score - median;
+        if (Math.abs(delta) > 3) {
+          trendStr = delta > 0 ? `\u2197 +${delta.toFixed(0)}%` : `\u2198 ${delta.toFixed(0)}%`;
+        }
+      }
+
+      const statusText = score >= 75 ? t('status.healthy') : score >= 50 ? t('status.uncertain') : t('status.faulty');
+
+      entries.push({
+        machineName: machine.name,
+        machineId: machine.id,
+        score,
+        status: statusText,
+        timestamp: diagnosis.timestamp,
+        trend: trendStr,
+        recommendation: score >= 75
+          ? t('diagnose.recommendation.healthy')
+          : score >= 50
+            ? t('diagnose.recommendation.warning')
+            : t('diagnose.recommendation.critical'),
+      });
+    }
+
+    // Sort by score ascending (worst first)
+    entries.sort((a, b) => a.score - b.score);
+
+    const medianScore = scores.length > 0 ? this.calculateMedian(scores) : undefined;
+
+    const data: ReportData = {
+      title: t('report.allMachinesTitle'),
+      date: new Date().toLocaleString(),
+      entries,
+      summary: {
+        total: machines.length,
+        healthy,
+        warning,
+        critical,
+        unchecked,
+        medianScore,
+      },
+    };
+
+    // Show format choice
+    InfoBottomSheet.show({
+      title: t('report.formatChoiceTitle'),
+      content: `
+        <div class="report-format-options">
+          <button class="report-format-btn" id="report-fmt-pdf">
+            \uD83D\uDCC4 ${t('report.formatPDF')}
+          </button>
+          <button class="report-format-btn" id="report-fmt-csv">
+            \uD83D\uDCC8 ${t('report.formatCSV')}
+          </button>
+        </div>
+      `,
+      icon: '\uD83D\uDCCB',
+    });
+
+    // Wait for sheet to render then attach listeners
+    requestAnimationFrame(() => {
+      document.getElementById('report-fmt-pdf')?.addEventListener('click', () => {
+        exportAsPrintablePDF(data);
+        InfoBottomSheet.close();
+      });
+      document.getElementById('report-fmt-csv')?.addEventListener('click', () => {
+        exportAsCSV(data);
+        InfoBottomSheet.close();
+        notify.success(t('report.exported'));
+      });
+    });
   }
 
   /**
@@ -4614,6 +4786,18 @@ export class IdentifyPhase {
     chartSection.appendChild(chartSvg);
     body.appendChild(chartSection);
 
+    // Welle 4: Trend analysis banner
+    const trend = analyzeTrend(diagnoses, t);
+    if (trend && (trend.category === 'declining' || trend.category === 'critical_decline')) {
+      const banner = document.createElement('div');
+      banner.className = `history-trend-banner ${trend.category === 'critical_decline' ? 'trend-critical' : 'trend-declining'}`;
+      banner.innerHTML = `
+        <span class="trend-warning-icon">${trend.category === 'critical_decline' ? '\uD83D\uDD34' : '\uD83D\uDFE1'}</span>
+        <span>${escapeHtml(trend.message)}</span>
+      `;
+      body.appendChild(banner);
+    }
+
     // Filter Section
     const filterSection = document.createElement('div');
     filterSection.className = 'history-filter-section';
@@ -4646,6 +4830,43 @@ export class IdentifyPhase {
     listSection.className = 'history-list-section';
     this.renderHistoryList(listSection, diagnoses, 'all');
     body.appendChild(listSection);
+
+    // Welle 4: Export button at bottom of history modal
+    const exportSection = document.createElement('div');
+    exportSection.style.padding = 'var(--spacing-sm)';
+    exportSection.style.textAlign = 'center';
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'fleet-result-btn-history';
+    exportBtn.textContent = '\uD83D\uDCC4 ' + t('report.exportButton');
+    exportBtn.addEventListener('click', () => {
+      const histEntries: ReportEntry[] = diagnoses.map(d => {
+        const statusText = d.healthScore >= 75 ? t('status.healthy') : d.healthScore >= 50 ? t('status.uncertain') : t('status.faulty');
+        return {
+          machineName: machine.name,
+          machineId: machine.id,
+          score: d.healthScore,
+          status: statusText,
+          timestamp: d.timestamp,
+          detectedState: (d.metadata as Record<string, unknown>)?.detectedState as string | undefined,
+        };
+      });
+      const histData: ReportData = {
+        title: `${t('report.title')} – ${machine.name}`,
+        date: new Date().toLocaleString(),
+        entries: histEntries,
+        summary: {
+          total: diagnoses.length,
+          healthy: diagnoses.filter(d => d.healthScore >= 75).length,
+          warning: diagnoses.filter(d => d.healthScore >= 50 && d.healthScore < 75).length,
+          critical: diagnoses.filter(d => d.healthScore < 50).length,
+          unchecked: 0,
+        },
+      };
+      exportAsCSV(histData, `zanobo-history-${machine.name.replace(/[^a-z0-9]/gi, '_')}.csv`);
+      notify.success(t('report.exported'));
+    });
+    exportSection.appendChild(exportBtn);
+    body.appendChild(exportSection);
 
     modal.appendChild(body);
     overlay.appendChild(modal);

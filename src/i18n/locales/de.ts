@@ -1752,6 +1752,54 @@ export const de: TranslationDict = {
     detectedState: 'Erkannter Zustand',
   },
 
+  // ============================================================================
+  // WELLE 4: REPORT EXPORT (SV1)
+  // ============================================================================
+  report: {
+    exportButton: 'Bericht exportieren',
+    formatChoiceTitle: 'Bericht-Format',
+    formatPDF: 'PDF (Druckbar)',
+    formatCSV: 'CSV (Excel)',
+    formatJSON: 'JSON (Ticketsystem)',
+    title: 'Zanobo Prüfbericht',
+    fleetTitle: 'Flottencheck-Bericht',
+    allMachinesTitle: 'Maschinenübersicht',
+    totalLabel: 'Gesamt',
+    healthyLabel: 'Unauffällig',
+    warningLabel: 'Abweichung',
+    criticalLabel: 'Auffällig',
+    medianLabel: 'Median',
+    colMachine: 'Maschine',
+    colScore: 'Score',
+    colStatus: 'Status',
+    colTrend: 'Trend',
+    colRecommendation: 'Empfehlung',
+    colDate: 'Datum',
+    footer: 'Erstellt mit Zanobo · Akustische Maschinendiagnose',
+    exported: 'Bericht exportiert',
+  },
+
+  // ============================================================================
+  // WELLE 4: MAINTENANCE INTEGRATION (SV3)
+  // ============================================================================
+  maintenance: {
+    exportTitle: 'Wartung melden',
+    copyToClipboard: 'In Zwischenablage kopieren',
+    exportJSON: 'JSON-Bericht herunterladen',
+    exportCSV: 'CSV-Bericht herunterladen',
+    reportButton: 'Wartung melden',
+    reportTitle: 'Wartungsbericht',
+  },
+
+  // ============================================================================
+  // WELLE 4: TREND ANALYSIS (SV4)
+  // ============================================================================
+  trendAnalysis: {
+    criticalDecline: 'Score sinkt stark seit {{count}} Prüfungen ({{from}}% → {{to}}%). Sofortige Prüfung empfohlen.',
+    declining: 'Score sinkt seit {{count}} Prüfungen ({{from}}% → {{to}}%). Beobachten.',
+    improving: 'Score steigt seit {{count}} Prüfungen ({{from}}% → {{to}}%).',
+  },
+
   unifiedFlow: {
     newMachineTitle: 'Neue Maschine',
     missingRefTitle: 'Normalzustand fehlt',
