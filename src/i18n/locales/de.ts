@@ -1732,4 +1732,37 @@ export const de: TranslationDict = {
     date: 'Datum',
     recommendation: 'Empfehlung',
   },
+
+  // ============================================================================
+  // WELLE 3: HISTORY MODAL + UNIFIED FLOW
+  // ============================================================================
+  history: {
+    openHistory: 'Verlauf von {{name}} anzeigen',
+    viewHistory: 'Verlauf',
+    diagnosisCount: '{{count}} Diagnosen',
+    noDiagnoses: '{{name}} hat noch keine Diagnosen.',
+    noMatchingDiagnoses: 'Keine Diagnosen für diesen Filter.',
+    filterAll: 'Alle',
+    filter7d: '7 Tage',
+    filter30d: '30 Tage',
+    filterAbnormal: 'Auffällige',
+    chartAriaLabel: 'Verlaufschart mit {{count}} Datenpunkten',
+    stableVsPrevious: 'stabil zur Vorprüfung',
+    vsPrevious: 'zur Vorprüfung',
+    detectedState: 'Erkannter Zustand',
+  },
+
+  unifiedFlow: {
+    newMachineTitle: 'Neue Maschine',
+    missingRefTitle: 'Normalzustand fehlt',
+    noMachinesExplanation: 'Keine bekannte Maschine erkannt. Legen Sie eine neue Maschine an \u2013 der Normalzustand wird direkt aufgenommen.',
+    missingRefExplanation: 'Folgende Maschinen haben noch keinen Normalzustand. W\u00e4hlen Sie eine aus, um den Normalzustand jetzt aufzunehmen.',
+    machineNameLabel: 'Name der Maschine',
+    machineNamePlaceholder: 'z.B. Pumpe 3 \u2013 Westhalle',
+    createAndRecord: 'Anlegen & Normalzustand aufnehmen',
+    recordNormalState: 'Normalzustand aufnehmen \u2192',
+    recordingStarted: 'Normalzustand wird aufgenommen f\u00fcr {{name}}...',
+    referenceSavedSuccess: 'Normalzustand f\u00fcr {{name}} gespeichert.',
+    referenceSavedHint: 'Beim n\u00e4chsten Pr\u00fcfen wird {{name}} automatisch erkannt.',
+  },
 };

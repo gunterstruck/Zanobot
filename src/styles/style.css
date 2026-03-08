@@ -9932,3 +9932,237 @@ html[data-view-level="expert"] .diagnosis-recommendation {
 [data-theme="neon"] .result-ampel.ampel-critical { background: rgba(239, 68, 68, 0.12); }
 [data-theme="neon"] .result-ampel-recommendation { border-top-color: rgba(255, 255, 255, 0.08); }
 [data-theme="neon"] .result-action-primary { color: var(--bg-primary); }
+
+/* ============================================================================
+   WELLE 3: HISTORY MODAL
+   ============================================================================ */
+.history-modal {
+    max-height: 92vh;
+}
+
+.history-subtitle {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+/* Chart */
+.history-chart-section {
+    margin-bottom: var(--spacing-sm);
+}
+
+.history-chart-svg {
+    width: 100%;
+    height: auto;
+    max-height: 180px;
+}
+
+.history-chart-grid {
+    stroke: var(--divider-color);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 2;
+}
+
+.history-chart-threshold-ok { stroke: rgba(76, 175, 80, 0.3); stroke-width: 1; stroke-dasharray: 4 3; }
+.history-chart-threshold-warn { stroke: rgba(255, 152, 0, 0.3); stroke-width: 1; stroke-dasharray: 4 3; }
+
+.history-chart-label {
+    font-size: 8px;
+    fill: var(--text-muted);
+    font-family: var(--font-primary);
+}
+
+.history-chart-line {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.history-chart-point { stroke: var(--bg-card, #fff); stroke-width: 1.5; cursor: pointer; }
+.history-chart-point.point-healthy { fill: var(--status-healthy, #4caf50); }
+.history-chart-point.point-warning { fill: var(--status-warning, #ff9800); }
+.history-chart-point.point-critical { fill: var(--status-error, #ef4444); }
+.history-chart-point:hover, .history-chart-point:focus { r: 6; }
+
+/* Filters */
+.history-filter-section {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+}
+
+.history-filter-btn {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    min-height: 32px;
+}
+
+.history-filter-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Diagnosis list */
+.history-list-section { display: flex; flex-direction: column; gap: 1px; }
+
+.history-list-item {
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.history-list-item.expanded {
+    background: rgba(0, 212, 255, 0.03);
+}
+
+.history-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    gap: var(--spacing-sm);
+}
+
+.history-item-date {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.history-item-score {
+    font-weight: 700;
+    font-size: var(--font-sm);
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: right;
+}
+
+.history-item-score.point-healthy { color: var(--status-healthy, #4caf50); }
+.history-item-score.point-warning { color: var(--status-warning, #ff9800); }
+.history-item-score.point-critical { color: var(--status-error, #ef4444); }
+
+.history-item-status {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    min-width: 70px;
+    text-align: right;
+}
+
+.history-item-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: 0 0 10px;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+.history-item-trend.trend-improving { color: var(--status-healthy, #4caf50); }
+.history-item-trend.trend-declining { color: var(--status-warning, #ff9800); }
+
+.history-list-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: var(--spacing-lg) 0;
+    font-style: italic;
+}
+
+/* Machine list: History link */
+.machine-history-link {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: var(--font-xs);
+    cursor: pointer;
+    padding: 2px 0;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.machine-history-link:hover { text-decoration-style: solid; }
+
+/* Neon theme */
+[data-theme="neon"] .history-chart-point { stroke: var(--bg-primary); }
+[data-theme="neon"] .history-list-item.expanded { background: rgba(0, 212, 255, 0.06); }
+
+/* ============================================================================
+   WELLE 3: UNIFIED FLOW MODAL
+   ============================================================================ */
+.unified-flow-explanation {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.unified-flow-input-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.unified-flow-label {
+    display: block;
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.unified-flow-input {
+    width: 100%;
+}
+
+.unified-flow-cta {
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+}
+
+.unified-flow-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.unified-flow-machine-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-bottom: var(--spacing-xs);
+    transition: background 0.15s, border-color 0.15s;
+    text-align: left;
+    min-height: 48px;
+}
+
+.unified-flow-machine-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 212, 255, 0.03);
+}
+
+.unified-flow-machine-btn strong {
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+}
+
+.unified-flow-machine-btn span {
+    font-size: var(--font-xs);
+    color: var(--primary-color);
+}
+
+.unified-flow-cancel {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+}
