@@ -340,12 +340,11 @@ export class DiagnosePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // VISUAL POSITIONING: Only request camera if Room Compensation is active
-      // AND a reference image exists – otherwise camera is not needed
-      const roomCompForCamera = getRoomCompSettings();
+      // VISUAL POSITIONING: Request camera whenever a reference image exists
+      // so the ghost overlay (semi-transparent position image) is always available
       const hasReferenceImage = !!this.machine?.referenceImage;
 
-      if (roomCompForCamera.enabled && hasReferenceImage) {
+      if (hasReferenceImage) {
         try {
           this.cameraStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' }, // Prefer back camera on mobile
@@ -360,7 +359,7 @@ export class DiagnosePhase {
           this.cameraStream = null;
         }
       } else {
-        logger.debug('📷 Camera not requested (Room Comp. inactive or no reference image)');
+        logger.debug('📷 Camera not requested (no reference image)');
         this.cameraStream = null;
       }
 
