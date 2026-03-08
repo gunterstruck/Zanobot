@@ -23,7 +23,7 @@ export const zh: TranslationDict = {
     trainAnother: '训练另一个状态',
     newMachine: '新建机器',
     stopRecording: '停止录制',
-    saveReference: '保存参考',
+    saveReference: '保存正常状态',
   },
 
   // ============================================================================
@@ -56,7 +56,7 @@ export const zh: TranslationDict = {
   // MODAL TITLES
   // ============================================================================
   modals: {
-    referenceRecording: '参考录制',
+    referenceRecording: '录制正常状态',
     liveDiagnosis: '实时诊断 - 寻找最佳点',
     qrScanner: '二维码/条形码扫描器',
     databaseError: '数据库错误',
@@ -178,28 +178,28 @@ export const zh: TranslationDict = {
   // PHASE 2: REFERENCE (Training)
   // ============================================================================
   reference: {
-    recordReference: '录制参考',
-    tenSecondRecording: '{{duration}}秒参考录制',
-    noReferenceModel: '无可用的参考模型',
+    recordReference: '录制正常状态',
+    tenSecondRecording: '{{duration}}秒正常状态录制',
+    noReferenceModel: '无可用的正常状态',
     trainedStates: '已训练状态',
-    noModelsYet: '尚无参考模型',
+    noModelsYet: '尚无正常状态',
     existingModels: '现有模型：',
     statesTrainedCount: '{{count}} 个状态已训练',
     recordingStatusHighQuality: '检测到高音频质量',
-    explainBefore: 'The reference defines your machine\u2019s normal state. All future comparisons are based on it.',
-    explainDuring: 'Slowly move the smartphone around the machine. This helps filter out environmental influences.',
-    savedSuccess: '\u2705 Reference saved – Environment profile detected',
-    savedTitle: 'Reference created',
+    explainBefore: '正常状态定义了机器在健康运行时的声音。所有未来的比较都基于此。',
+    explainDuring: '缓慢移动智能手机围绕机器。这有助于过滤环境影响。',
+    savedSuccess: '✅ 正常状态已保存 – 环境配置已识别',
+    savedTitle: '正常状态已创建',
     cherryPickingHint: '\uD83D\uDEE1\uFE0F Background noise is automatically detected and discarded.',
-    noModels: 'No references yet.',
-    unnamed: 'Reference #{{index}}',
-    deleteModel: 'Delete reference',
-    confirmDeleteModel: 'Delete reference "{{name}}"? This cannot be undone.',
-    modelDeleted: '\uD83D\uDDD1\uFE0F Reference "{{name}}" deleted',
+    noModels: '尚无正常状态。',
+    unnamed: '正常状态 #{{index}}',
+    deleteModel: '删除正常状态',
+    confirmDeleteModel: '删除正常状态 "{{name}}"？此操作无法撤消。',
+    modelDeleted: '🗑️ 正常状态 "{{name}}" 已删除',
 
     // State-based card UI (mirrors diagnose card)
     statesRecorded: '{{count}} 个状态已录制',
-    noReferenceYet: '尚无参考',
+    noReferenceYet: '尚无正常状态',
     changeMachine: '更换机器',
     noMachinesYet: '尚未创建机器。',
     noMachinesHint: '请先创建一台新机器。',
@@ -220,6 +220,8 @@ export const zh: TranslationDict = {
       iosAudioBlocked: '麦克风被阻止',
       iosAudioBlockedMessage: '麦克风未提供音频数据。\n\n可能原因：\n• 其他应用正在使用麦克风\n• iOS 阻止了麦克风访问\n• 系统音量已静音\n\n请关闭其他应用并重试。',
       iosAudioBlockedRetry: '重试',
+      // Welle 1 UX: Countdown tip
+      countdownTip: '将设备靠近机器',
     },
 
     quality: {
@@ -230,7 +232,7 @@ export const zh: TranslationDict = {
       good: 'Ref: Good',
       ok: 'Ref: OK',
       unknown: 'Ref: ?',
-      ariaLabel: 'Reference quality: {{rating}}',
+      ariaLabel: '录制质量：{{rating}}',
     },
 
     errors: {
@@ -261,6 +263,16 @@ export const zh: TranslationDict = {
   },
 
   // ============================================================================
+  // MACHINE LIST
+  // ============================================================================
+  machineList: {
+    statusHealthy: '正常',
+    statusWarning: '偏差',
+    statusCritical: '异常',
+    statusUnknown: '尚未检查',
+  },
+
+  // ============================================================================
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
@@ -273,6 +285,13 @@ export const zh: TranslationDict = {
     compareComplete: '\u2705 Comparison complete',
     saveFailed: '无法保存诊断',
     liveAnalysis: '执行实时分析',
+
+    // Welle 1 UX: Action recommendations
+    recommendation: {
+      healthy: '无需采取行动',
+      warning: '观察 – 下次维护时检查',
+      critical: '建议现场检查',
+    },
 
     sampleRateError: '音频设置错误：您的麦克风运行在{{actual}}Hz，但没有参考模型是在此采样率下训练的（模型：{{expected}}Hz）。请使用与训练时相同的音频设置，或使用当前采样率创建新的参考模型。',
 
@@ -315,7 +334,7 @@ export const zh: TranslationDict = {
     selectExisting: '选择机器',
     createNew: '新建机器',
     statesReady: '{{count}} 个状态已训练',
-    noReference: '尚无参考',
+    noReference: '尚无正常状态',
     changeMachine: '更换机器',
     noMachinesYet: '\u5c1a\u672a\u521b\u5efa\u673a\u5668\u3002',
     noMachinesHint: '\u8bf7\u5148\u521b\u5efa\u4e00\u53f0\u65b0\u673a\u5668\u3002',
@@ -481,7 +500,7 @@ export const zh: TranslationDict = {
   // ============================================================================
   zeroFriction: {
     autoMachineName: '机器 {{number}}',
-    referenceCreatedToast: '已为 {{machineName}} 创建参考',
+    referenceCreatedToast: '已为 {{machineName}} 创建正常状态',
     editMachineName: '编辑',
     editMachineNamePrompt: '输入机器的新名称：',
     machineRenamed: '机器已重命名为 "{{newName}}"',
@@ -507,8 +526,8 @@ export const zh: TranslationDict = {
     uncertainMatch: '这是哪台机器？',
     selectMachine: '请选择匹配的机器',
     noMatch: '我还不认识这个声音',
-    noMatchHint: '您想录制参考吗？',
-    recordReference: '录制参考',
+    noMatchHint: '您想录制正常状态吗？',
+    recordReference: '录制正常状态',
     newMachine: '创建新机器',
   },
 
@@ -532,7 +551,7 @@ export const zh: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} 个状态已训练（最近：{{date}}）- 添加更多',
-    referenceRequired: '{{duration}}秒参考录制（诊断必需）',
+    referenceRequired: '{{duration}}秒正常状态录制（诊断必需）',
     liveAnalysis: '执行实时分析',
     lastCheck: '上次检查 {{time}}',
   },
@@ -730,9 +749,9 @@ export const zh: TranslationDict = {
     varianceTitle: '方差',
     frequencyAnomalyLabel: '频率异常',
     analysisHintDefault: '提示：约 20 kHz 附近信号略有升高',
-    referenceQualityTitle: '参考质量',
+    referenceQualityTitle: '录制质量',
     referenceQualityStatusGood: '良好',
-    referenceQualityDescription: '参考录制符合推荐条件',
+    referenceQualityDescription: '录制符合推荐条件',
     featureModeLabel: '特征模式',
     viewHistory: '查看历史',
     closeDialog: '关闭诊断',
@@ -1212,13 +1231,13 @@ export const zh: TranslationDict = {
       maxMachines: 'Maximum 30 machines',
     },
     reference: {
-      title: 'Record reference',
-      instruction: 'Record the first machine',
-      hint: 'Automatically used as the comparison baseline.',
-      startRecording: 'Record reference',
-      saved: 'Reference saved',
+      title: '录制正常状态',
+      instruction: '录制第一台机器',
+      hint: '自动用作比较基准。',
+      startRecording: '录制正常状态',
+      saved: '正常状态已保存',
       goldName: 'Reference (Gold)',
-      recordingHint: 'Record the reference machine now.',
+      recordingHint: '现在录制正常状态。',
     },
     compare: {
       goTo: 'Go to:',
@@ -1262,9 +1281,9 @@ export const zh: TranslationDict = {
       noiseHint: '\u5F55\u97F3\u671F\u95F4\u8BF7\u4FDD\u6301\u5B89\u9759\uFF0C\u907F\u514D\u79FB\u52A8\u3002',
     },
     inspectionReference: {
-      mainQuestion: '\u6B63\u5728\u5F55\u5236\u53C2\u8003...',
+      mainQuestion: '正在录制正常状态...',
       subtitle: '\u6B64\u5F55\u97F3\u5C06\u4FDD\u5B58\u4E3A\u6BD4\u8F83\u57FA\u51C6\u3002',
-      scorePlaceholder: '\u53C2\u8003 \u2013 \u65E0\u6BD4\u8F83',
+      scorePlaceholder: '正常状态 \u2013 无比较',
       comparingWith: '\u6B63\u5728\u4E0E {{name}} \u6BD4\u8F83...',
     },
     ghostOverlay: {

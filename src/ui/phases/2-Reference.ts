@@ -422,6 +422,14 @@ export class ReferencePhase {
     closeAudioContext(this.audioContext);
     this.audioContext = null;
 
+    // Welle 1 UX: Reset countdown
+    const countdownContainer = document.getElementById('recording-countdown-container');
+    if (countdownContainer) countdownContainer.style.display = 'none';
+    const countdownBarFill = document.getElementById('recording-countdown-bar-fill');
+    if (countdownBarFill) countdownBarFill.style.width = '0%';
+    const fallbackTimer = document.getElementById('recording-timer');
+    if (fallbackTimer) fallbackTimer.style.display = '';
+
     logger.debug('🧹 Reference phase cleanup complete');
   }
 
@@ -1207,11 +1215,32 @@ export class ReferencePhase {
         // Phase 2: Aufnahme - actual recording phase (after warmup if applicable)
         const recordingElapsed = this.smartStartWasUsed ? elapsed : elapsed - warmupPhase;
         const recordingTotal = this.recordingDuration;
+        const remaining = Math.max(0, recordingTotal - recordingElapsed);
 
         if (statusElement) {
           statusElement.textContent = `${t('reference.recording.recording')}...`;
         }
-        if (timerElement) {
+
+        // Welle 1 UX: Show countdown during recording phase
+        const countdownContainer = document.getElementById('recording-countdown-container');
+        const countdownNumber = document.getElementById('recording-countdown-number');
+        const countdownBarFill = document.getElementById('recording-countdown-bar-fill');
+
+        if (countdownContainer && countdownNumber && countdownBarFill) {
+          // Show countdown, hide MM:SS timer
+          countdownContainer.style.display = 'flex';
+          if (timerElement) timerElement.style.display = 'none';
+
+          // Update countdown number with tick animation
+          countdownNumber.textContent = String(remaining);
+          countdownNumber.classList.add('countdown-tick');
+          setTimeout(() => countdownNumber.classList.remove('countdown-tick'), 150);
+
+          // Update progress bar
+          const progress = (recordingElapsed / recordingTotal) * 100;
+          countdownBarFill.style.width = `${Math.min(100, progress)}%`;
+        } else if (timerElement) {
+          // Fallback: show MM:SS timer if countdown elements not found
           const minutes = Math.floor(recordingElapsed / 60);
           const seconds = recordingElapsed % 60;
           timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} / ${Math.floor(
