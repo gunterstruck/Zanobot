@@ -102,7 +102,7 @@
                     'neon': 'Cyberpunk-Style mit Neon Cyan & Orange. Perfekt für dunkle Umgebungen.',
                     'light': 'Heller High-Contrast-Modus. Optimal für Sonnenlicht & Outdoor.',
                     'brand': 'Original Zanobo Design. Ausgewogen & professionell.',
-                    'focus': 'Diagnose-first Design. Klar, ruhig, zielgerichtet.'
+                    'focus': 'Prüfungs-Design. Klar, ruhig, zielgerichtet.'
                 }[theme] || '';
             },
             applyCustomColors: applyBrandColors,
@@ -427,7 +427,7 @@
                             </button>
                         </div>
 
-                        <!-- Historie (Diagnose-Verlauf) -->
+                        <!-- Historie (Prüf-Verlauf) -->
                         <div class="machine-selection-option" id="history-section">
                             <div class="option-divider">
                                 <span data-i18n="identify.history">Verlauf</span>
@@ -556,7 +556,7 @@
                             <circle cx="18" cy="12" r="2"/>
                         </svg>
                         <h3 class="container-title" data-i18n="buttons.startDiagnosis">Zustand prüfen</h3>
-                        <button class="help-icon-btn" id="help-diagnose" aria-label="Hilfe: Diagnose">
+                        <button class="help-icon-btn" id="help-diagnose" aria-label="Hilfe: Prüfung">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                             </svg>
@@ -1132,9 +1132,9 @@
     <div id="diagnosis-modal" class="modal" style="display: none;">
         <div class="modal-content app-shell-container">
             <div class="modal-header shell-header">
-                <h3 data-i18n="diagnosisResults.title">Diagnoseergebnisse</h3>
+                <h3 data-i18n="diagnosisResults.title">Prüfergebnisse</h3>
                 <div class="modal-header-actions">
-                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Diagnose schließen" data-i18n-aria="diagnosisResults.closeDialog">
+                    <button class="close-modal-btn" id="close-diagnosis-modal" aria-label="Prüfung schließen" data-i18n-aria="diagnosisResults.closeDialog">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18"/>
                             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1275,7 +1275,7 @@
             </div>
             <div class="modal-body">
                 <p class="modal-description" data-i18n="settingsUI.microphoneAdvice">
-                    Wählen Sie das beste Mikrofon für die Maschinendiagnose.
+                    Wählen Sie das beste Mikrofon für die Maschinenprüfung.
                     Vermeiden Sie Headsets und Bluetooth-Geräte, da diese für Sprache optimiert sind.
                 </p>
                 <div id="microphone-device-list" class="microphone-device-list">
@@ -1584,7 +1584,7 @@
                                 </div>
                             </div>
 
-                            <!-- Theme Card: Focus (Diagnose-first) -->
+                            <!-- Theme Card: Focus (Prüfung-first) -->
                             <div class="theme-card" data-theme="focus">
                                 <div class="theme-card-icon">
                                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1596,7 +1596,7 @@
                                 </div>
                                 <div class="theme-card-content">
                                     <h5 class="theme-card-title" data-i18n="themes.focusTitle">Focus</h5>
-                                    <p class="theme-card-description" data-i18n="themes.focusDescription">Diagnose-first Design. Klar, ruhig, zielgerichtet.</p>
+                                    <p class="theme-card-description" data-i18n="themes.focusDescription">Prüfungs-Design. Klar, ruhig, zielgerichtet.</p>
                                 </div>
                                 <div class="theme-card-colors">
                                     <span class="theme-color-dot" style="background: #0891b2;"></span>
@@ -1931,7 +1931,7 @@
                     <div class="setting-category" data-view-level="expert">
                         <h4 class="setting-category-title" data-i18n="drift.settingsTitle">Änderungsanalyse</h4>
                         <p class="setting-category-description" data-i18n="drift.settingsDescription">
-                            Analysiert ob Score-Änderungen durch die Umgebung (Raum) oder die Maschine verursacht werden. Zeigt während der Diagnose eine separate Bewertung an.
+                            Analysiert ob Score-Änderungen durch die Umgebung (Raum) oder die Maschine verursacht werden. Zeigt während der Prüfung eine separate Bewertung an.
                         </p>
 
                         <!-- Master Toggle -->
@@ -2055,7 +2055,7 @@
                                     </div>
                                     <div class="data-management-stat">
                                         <span class="data-management-stat-value" id="stats-diagnoses">0</span>
-                                        <span class="data-management-stat-label" data-i18n="settingsUI.diagnoses">Diagnosen</span>
+                                        <span class="data-management-stat-label" data-i18n="settingsUI.diagnoses">Prüfungen</span>
                                     </div>
                                 </div>
                             </div>
@@ -2156,12 +2156,12 @@
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>PAPDEOTT005125</strong><br><em>Verfahren zur Diagnose von Maschinen</em></td>
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Defensive Veröffentlichung, Siemens AG, 2016</td>
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cloudbasiertes Diagnosesystem mit zentralen Datenbanken und mobilen Sensoren</td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo ist <strong>vollständig lokal</strong>, keine Cloud, keine Remote-DB, keine Diagnose</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo ist <strong>vollständig lokal</strong>, keine Cloud, keine Remote-DB, keine Befundung</td>
                             </tr>
                             <tr style="border-bottom: 1px solid var(--border-color);">
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>EP3701708B1</strong><br><em>Remote machine condition analysis</em></td>
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Europäisches Patent, Siemens AG, 2022</td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ML-basierte Remote-Diagnose mit trainierten Modellen und Sensoren</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ML-basierte Remote-Befundung mit trainierten Modellen und Sensoren</td>
                                 <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zanobo verwendet <strong>kein ML</strong>, keine Cloud, keine eingebettete Logik</td>
                             </tr>
                             <tr style="border-bottom: 1px solid var(--border-color);">
@@ -2188,7 +2188,7 @@
 
                 <h4>Transparenz und Intention</h4>
                 <p>
-                    Zanobo ist <strong>kein Diagnosewerkzeug</strong> und nimmt keine automatisierten technischen Bewertungen vor. Es bietet lediglich eine visuelle und mathematische Vergleichshilfe unter vollständiger Kontrolle des Nutzers. Alle Verarbeitungen erfolgen offline. Es werden keine Nutzerdaten übertragen, extern gespeichert oder ausgewertet.
+                    Zanobo ist <strong>kein Befundungswerkzeug</strong> und nimmt keine automatisierten technischen Bewertungen vor. Es bietet lediglich eine visuelle und mathematische Vergleichshilfe unter vollständiger Kontrolle des Nutzers. Alle Verarbeitungen erfolgen offline. Es werden keine Nutzerdaten übertragen, extern gespeichert oder ausgewertet.
                 </p>
                 <p>
                     Diese Transparenz spiegelt ein starkes Engagement für verantwortungsvolle Open-Source-Entwicklung und Respekt vor Rechten Dritter wider.

@@ -57,7 +57,7 @@ export const fr: TranslationDict = {
   // ============================================================================
   modals: {
     referenceRecording: 'Enregistrer l\'état normal',
-    liveDiagnosis: 'Diagnostic en direct - Trouver le point optimal',
+    liveDiagnosis: 'Vérification en direct - Trouver le point optimal',
     qrScanner: 'Scanner QR/Code-barres',
     databaseError: 'Erreur de base de données',
     browserIncompatible: 'Navigateur incompatible',
@@ -96,7 +96,7 @@ export const fr: TranslationDict = {
     machineNamePlaceholder: 'e.g. Pump 3 – West Hall',
     machineIdHint: 'Optional: Internal ID (e.g. SAP number). Not used for analysis.',
     deleteMachine: 'Delete machine',
-    confirmDeleteMachine: 'Delete machine "{{name}}"? All diagnoses will be lost.',
+    confirmDeleteMachine: 'Delete machine "{{name}}"? All checks will be lost.',
     confirmDeleteMachineWithData: 'Machine "{{name}}" has {{count}} recordings. Really delete EVERYTHING?',
     machineDeleted: '\uD83D\uDDD1\uFE0F Machine "{{name}}" deleted',
     quickAccess: 'Accès rapide',
@@ -144,7 +144,7 @@ export const fr: TranslationDict = {
       machineLoaded: 'Machine "{{name}}" chargée',
       machineCreated: 'Machine créée : {{name}}',
       machineAutoCreated: 'Nouvelle machine "{{name}}" créée automatiquement.',
-      microphoneOptimized: 'Microphone automatiquement réglé sur "{{label}}" pour un meilleur diagnostic',
+      microphoneOptimized: 'Microphone automatiquement réglé sur "{{label}}" pour une meilleure vérification',
       microphoneChanged: 'Microphone changé : {{label}}',
     },
 
@@ -171,7 +171,7 @@ export const fr: TranslationDict = {
 
     // Sprint 3 UX: Sparkline accessibility
     sparkline: {
-      ariaLabel: 'Trend of last {{count}} diagnoses',
+      ariaLabel: 'Trend of last {{count}} checks',
     },
   },
 
@@ -257,7 +257,7 @@ export const fr: TranslationDict = {
     labels: {
       baseline: 'Référence',
       prompt: 'Entrez un nom pour cet état de machine :\n\nExemples :\n• États de fonctionnement normaux : "Ralenti", "Pleine charge", "Charge partielle"\n• Défauts : "Déséquilibre simulé", "Dommage de roulement", "Erreur de ventilateur"',
-      confirmType: 'État : "{{label}}"\n\nEst-ce un état de fonctionnement NORMAL ?\n\n🟢 OK (Oui) → État normal (ex. "Ralenti", "Pleine charge")\n🔴 Annuler (Non) → Défaut connu (ex. "Déséquilibre", "Dommage de roulement")\n\nNote : Ce choix détermine si un diagnostic est affiché comme "sain" ou "défectueux".',
+      confirmType: 'État : "{{label}}"\n\nEst-ce un état de fonctionnement NORMAL ?\n\n🟢 OK (Oui) → État normal (ex. "Ralenti", "Pleine charge")\n🔴 Annuler (Non) → Défaut connu (ex. "Déséquilibre", "Dommage de roulement")\n\nNote : Ce choix détermine si une vérification est affichée comme "normal" ou "anormal".',
       enterName: 'Veuillez entrer un nom',
       cancelled: 'Annulé',
     },
@@ -277,21 +277,21 @@ export const fr: TranslationDict = {
   // PHASE 3: DIAGNOSE (Real-time)
   // ============================================================================
   diagnose: {
-    alreadyRunning: 'Un diagnostic est déjà en cours.',
+    alreadyRunning: 'Une vérification est déjà en cours.',
     noReferenceModel: 'Aucun modèle de référence trouvé. Veuillez d\'abord créer un enregistrement de référence.',
-    browserNotCompatible: 'Votre navigateur ne prend pas en charge le diagnostic en temps réel. Veuillez utiliser Chrome, Edge ou Safari.',
+    browserNotCompatible: 'Votre navigateur ne prend pas en charge la vérification en temps réel. Veuillez utiliser Chrome, Edge ou Safari.',
     noValidSampleRate: 'Aucun modèle de référence avec une fréquence d\'échantillonnage valide trouvé.',
-    cameraNotAvailable: 'Caméra non disponible. Le diagnostic continuera sans guide de position.',
-    diagnosisRunning: 'Diagnostic en cours',
+    cameraNotAvailable: 'Caméra non disponible. La vérification continuera sans guide de position.',
+    diagnosisRunning: 'Vérification en cours',
     compareComplete: '\u2705 Comparison complete',
-    saveFailed: 'Le diagnostic n\'a pas pu être sauvegardé',
+    saveFailed: 'La vérification n\'a pas pu être sauvegardée',
     liveAnalysis: 'Effectuer une analyse en direct',
 
     // Welle 1 UX: Action recommendations
     recommendation: {
-      healthy: 'Aucune action requise',
+      healthy: 'Aucune anomalie détectée',
       warning: 'Surveiller – vérifier lors de la prochaine maintenance',
-      critical: 'Inspection sur site recommandée',
+      critical: 'Inspection sur site à envisager',
     },
 
     sampleRateError: 'Erreur de configuration audio : Votre microphone fonctionne à {{actual}}Hz, mais aucun modèle de référence n\'a été entraîné à cette fréquence d\'échantillonnage (Modèles : {{expected}}Hz). Veuillez utiliser la même configuration audio que lors de l\'entraînement ou créer un nouveau modèle de référence avec la fréquence d\'échantillonnage actuelle.',
@@ -327,7 +327,7 @@ export const fr: TranslationDict = {
 
     analysis: {
       healthyMatch: 'La signature acoustique correspond à l\'état de référence "{{state}}" ({{score}}%). Aucune anomalie.',
-      faultyMatch: 'Anomalie détectée : La signature correspond au motif entraîné "{{state}}" ({{score}}%). Inspection recommandée.',
+      faultyMatch: 'Anomalie détectée : La signature correspond au motif entraîné "{{state}}" ({{score}}%). Inspection à envisager.',
     },
 
     // State-based card UI (horizontal tiles)
@@ -419,22 +419,22 @@ export const fr: TranslationDict = {
     import: {
       confirmMerge: 'Importer la base de données depuis : {{filename}}\n\nVoulez-vous FUSIONNER les données ?\n\nOUI = Fusionner avec les données existantes\nNON = REMPLACER toutes les données existantes',
       confirmReplace: '⚠️ ATTENTION !\n\nToutes les données existantes seront SUPPRIMÉES et remplacées par les données importées !\n\nVoulez-vous continuer ?',
-      success: 'Machines : {{machines}}\nEnregistrements : {{recordings}}\nDiagnostics : {{diagnoses}}\n\nMode : {{mode}}',
+      success: 'Machines : {{machines}}\nEnregistrements : {{recordings}}\nVérifications : {{diagnoses}}\n\nMode : {{mode}}',
       modeMerged: 'Fusionné',
       modeReplaced: 'Remplacé',
-      partialWarning: 'Machines : {{machinesImported}} importées, {{machinesSkipped}} ignorées\nEnregistrements : {{recordingsImported}} importés, {{recordingsSkipped}} ignorés\nDiagnostics : {{diagnosesImported}} importés, {{diagnosesSkipped}} ignorés\n\n{{totalSkipped}} enregistrement(s) n\'ont pas pu être importés.\nMode : {{mode}}',
+      partialWarning: 'Machines : {{machinesImported}} importées, {{machinesSkipped}} ignorées\nEnregistrements : {{recordingsImported}} importés, {{recordingsSkipped}} ignorés\nVérifications : {{diagnosesImported}} importées, {{diagnosesSkipped}} ignorées\n\n{{totalSkipped}} enregistrement(s) n\'ont pas pu être importés.\nMode : {{mode}}',
       setupError: 'Erreur lors de la préparation de l\'importation',
     },
 
     clear: {
-      confirmFirst: '⚠️ ATTENTION !\n\nToutes les données seront DÉFINITIVEMENT supprimées :\n- Toutes les machines\n- Tous les modèles de référence\n- Tous les enregistrements\n- Tous les diagnostics\n\nVoulez-vous continuer ?',
+      confirmFirst: '⚠️ ATTENTION !\n\nToutes les données seront DÉFINITIVEMENT supprimées :\n- Toutes les machines\n- Tous les modèles de référence\n- Tous les enregistrements\n- Toutes les vérifications\n\nVoulez-vous continuer ?',
       confirmSecond: 'Êtes-vous ABSOLUMENT SÛR ?\n\nCette action NE PEUT PAS être annulée !',
       success: 'Toutes les données ont été supprimées',
       error: 'Erreur lors de la suppression des données',
     },
 
     export: {
-      success: 'Fichier : {{filename}}\n\nMachines : {{machines}}\nEnregistrements : {{recordings}}\nDiagnostics : {{diagnoses}}',
+      success: 'Fichier : {{filename}}\n\nMachines : {{machines}}\nEnregistrements : {{recordings}}\nVérifications : {{diagnoses}}',
     },
 
     share: {
@@ -461,16 +461,16 @@ export const fr: TranslationDict = {
   // ============================================================================
   scoring: {
     matchesReference: 'La signature acoustique correspond à la référence. Aucune anomalie.',
-    moderateDeviation: 'Déviation modérée par rapport au motif de référence. Révision recommandée.',
-    significantDeviation: 'Déviation significative par rapport au motif de référence détectée. Inspection recommandée.',
-    noMatch: 'Déviation significative par rapport au motif de référence ({{score}}%). Le signal ne correspond à aucun état entraîné. Inspection recommandée.',
+    moderateDeviation: 'Déviation modérée par rapport au motif de référence. Révision à envisager.',
+    significantDeviation: 'Déviation significative par rapport au motif de référence détectée. Inspection à envisager.',
+    noMatch: 'Déviation significative par rapport au motif de référence ({{score}}%). Le signal ne correspond à aucun état entraîné. Inspection à envisager.',
     hints: {
       matchesReference: 'La signature acoustique correspond à la référence.',
       minorDeviations: 'Déviations mineures dans la plage acceptable.',
       moderateDeviation: 'Déviation modérée du motif de référence détectée.',
-      recommendInspection: 'Inspection recommandée.',
+      recommendInspection: 'Inspection à envisager.',
       significantAnomaly: 'Anomalie significative détectée.',
-      immediateInspection: 'Inspection immédiate recommandée.',
+      immediateInspection: 'Inspection immédiate à envisager.',
     },
     multiclass: {
       noMatch: 'Pas de correspondance avec les états entraînés ({{score}}%). Signal peu clair.',
@@ -483,7 +483,7 @@ export const fr: TranslationDict = {
   // HARDWARE CHECK
   // ============================================================================
   hardware: {
-    suitable: 'Matériel adapté au diagnostic de machine',
+    suitable: 'Matériel adapté à la vérification de machine',
     voiceOptimized: 'Le matériel optimisé pour la voix filtre les sons de machine.',
     useStudioMic: 'Utilisez un microphone de studio ou le microphone intégré de l\'appareil',
     headsetsOptimized: 'Les casques sont optimisés pour les fréquences vocales',
@@ -552,7 +552,7 @@ export const fr: TranslationDict = {
 
   router: {
     statesTrained: '{{count}} état{{plural}} entraîné(s) (dernier : {{date}}) - Ajouter plus',
-    referenceRequired: 'Enregistrement de l\'état normal de {{duration}} secondes (requis pour le diagnostic)',
+    referenceRequired: 'Enregistrement de l\'état normal de {{duration}} secondes (requis pour la vérification)',
     liveAnalysis: 'Effectuer une analyse en direct',
     lastCheck: 'Dernière vérification {{time}}',
   },
@@ -579,7 +579,7 @@ export const fr: TranslationDict = {
     hardwareHint: 'Veuillez vérifier que votre microphone/caméra est connecté(e).',
     audioSystemError: 'Erreur du système audio',
     audioSystemHint: 'Veuillez recharger la page. Si le problème persiste, utilisez un navigateur à jour.',
-    storageFull: 'Veuillez supprimer d\'anciens diagnostics ou enregistrements de référence.',
+    storageFull: 'Veuillez supprimer d\'anciennes vérifications ou enregistrements de référence.',
     networkError: 'Veuillez vérifier votre connexion internet.',
     technicalDetails: 'Détails techniques',
     noStackTrace: 'Aucune trace de pile disponible',
@@ -620,12 +620,12 @@ export const fr: TranslationDict = {
     level1Info: 'Niveau 1 : Les paramètres de fréquence et d\'amplitude ci-dessus sont actifs',
     dataManagement: 'Gestion des données', exportDatabase: 'Exporter la base de données', shareDatabase: 'Envoyer la base de données',
     importDatabase: 'Importer la base de données', statistics: 'Statistiques :',
-    machines: 'Machines', recordings: 'Enregistrements', diagnoses: 'Diagnostics',
+    machines: 'Machines', recordings: 'Enregistrements', diagnoses: 'Vérifications',
     clearAllData: 'Supprimer toutes les données', deleteAllData: 'Supprimer toutes les données',
     quickAccessDesc: 'Accès rapide aux machines récemment utilisées',
     noMachines: 'Aucune machine disponible', or: 'ou',
     selectMicrophone: 'Sélectionner un microphone',
-    microphoneAdvice: 'Sélectionnez le meilleur microphone pour le diagnostic machine. Évitez les casques et appareils Bluetooth car ils sont optimisés pour la parole.',
+    microphoneAdvice: 'Sélectionnez le meilleur microphone pour la vérification machine. Évitez les casques et appareils Bluetooth car ils sont optimisés pour la parole.',
     manualInput: 'Saisir manuellement', machineIdInput: 'Entrer l\'ID de la machine', continue: 'Continuer',
     qrHint: 'Placez le code QR ou le code-barres dans le cadre', codeRecognized: 'Code reconnu !',
     // Paramètres du banner
@@ -747,7 +747,7 @@ export const fr: TranslationDict = {
     saveAsReference: 'Sauvegarder comme référence',
   },
   diagnosisResults: {
-    title: 'Résultats du diagnostic',
+    title: 'Résultats de la vérification',
     fingerprintLabel: 'Empreinte',
     confidenceScoreLabel: 'Score de confiance',
     varianceTitle: 'Variance',
@@ -758,7 +758,7 @@ export const fr: TranslationDict = {
     referenceQualityDescription: 'L\'enregistrement respecte les conditions recommandées',
     featureModeLabel: 'Mode de caractéristiques',
     viewHistory: 'Voir l\'historique',
-    closeDialog: 'Fermer le diagnostic',
+    closeDialog: 'Fermer la vérification',
   },
   results: {
     envMatch: {
@@ -773,9 +773,9 @@ export const fr: TranslationDict = {
     dataPoints: 'Points de données',
     timeRange: 'Plage temporelle',
     xAxisLabel: 'Temps',
-    yAxisLabel: 'Score de santé (%)',
+    yAxisLabel: 'Score de similarité (%)',
     noData: 'Aucun historique disponible pour le moment',
-    noDataMessage: 'Aucun diagnostic n\'a encore été enregistré pour cette machine.',
+    noDataMessage: 'Aucune vérification n\'a encore été enregistrée pour cette machine.',
     errorMessage: 'Erreur lors du chargement de l\'historique.',
     closeDialog: 'Fermer l\'historique',
   },
@@ -837,7 +837,7 @@ export const fr: TranslationDict = {
     states: 'États',
     ariaLabel: 'Classement des états détectés de la machine',
     statusHealthy: 'Normal',
-    statusFaulty: 'Défaut',
+    statusFaulty: 'Anormal',
     noData: "Aucune donnée d'analyse disponible",
     rank: 'Rang',
     probability: 'Probabilité',
@@ -997,7 +997,7 @@ export const fr: TranslationDict = {
   migration: {
     title: 'Mise à jour de la base de données',
     dataCleared:
-      'La base de données a été réinitialisée suite à une mise à jour. Toutes les machines, enregistrements et diagnostics ont été supprimés.',
+      'La base de données a été réinitialisée suite à une mise à jour. Toutes les machines, enregistrements et vérifications ont été supprimés.',
   },
 
   // ============================================================================
@@ -1023,7 +1023,7 @@ export const fr: TranslationDict = {
     // Legal Position
     legalTitle: 'Position juridique et examen de la propriété intellectuelle',
     legalIntro: 'Zanobo a été développé de manière indépendante en tant que <strong>projet privé open-source non commercial</strong> sous <strong>licence MIT</strong>. Sa fonctionnalité est basée sur des <strong>procédures mathématiques décrites ouvertement</strong> (par ex., analyse de fréquence et comparaisons cosinus de type GMIA) et n\'intègre <strong>aucune logique système brevetée</strong>, <strong>aucun mécanisme de classification</strong> ni <strong>aucun modèle d\'apprentissage</strong>.',
-    legalReview: 'Avant la publication, une <strong>revue technique et de contenu</strong> a été effectuée pour s\'assurer que Zanobo n\'entre pas en conflit avec des brevets existants ou des approches de diagnostic industriel connues.',
+    legalReview: 'Avant la publication, une <strong>revue technique et de contenu</strong> a été effectuée pour s\'assurer que Zanobo n\'entre pas en conflit avec des brevets existants ou des approches de vérification industrielle connues.',
 
     // IP Table
     ipTableTitle: 'Propriété intellectuelle pertinente et différenciation technique',
@@ -1039,13 +1039,13 @@ export const fr: TranslationDict = {
           reference: '<strong>PAPDEOTT005125</strong><br><em>Procédure de diagnostic des machines</em>',
           source: 'Publication défensive, Siemens AG, 2016',
           protectedScope: 'Système de diagnostic basé sur le cloud utilisant des bases de données centrales et des capteurs mobiles',
-          zanoboDiff: 'Zanobo fonctionne entièrement localement, sans cloud, sans base de données centrale, sans diagnostic',
+          zanoboDiff: 'Zanobo fonctionne entièrement localement, sans cloud, sans base de données centrale, sans évaluation',
         },
         '1': {
           reference: '<strong>EP3701708B1</strong><br><em>Analyse à distance de l\'état de la machine</em>',
           source: 'Brevet européen, Siemens AG, 2022',
           protectedScope: 'Diagnostic à distance basé sur le ML avec des modèles entraînés et des capteurs',
-          zanoboDiff: 'Zanobo n\'utilise pas d\'apprentissage automatique, pas de cloud, pas de logique de diagnostic intégrée',
+          zanoboDiff: 'Zanobo n\'utilise pas d\'apprentissage automatique, pas de cloud, pas de logique de vérification intégrée',
         },
         '2': {
           reference: '<strong>US9263041B2</strong><br><em>Détection de canal dans le bruit utilisant GMIA</em>',
@@ -1069,7 +1069,7 @@ export const fr: TranslationDict = {
           reference: '<strong>ABB – Integration of Mobile Measurement</strong>',
           source: 'Présentation industrielle publique, ABB, 2015',
           protectedScope: 'Capteurs mobiles pour diagnostic ad-hoc avec intégration cloud et service',
-          zanoboDiff: 'Zanobo évite le diagnostic, les flux de travail de service et la connectivité cloud, en se concentrant sur la comparaison locale',
+          zanoboDiff: 'Zanobo évite toute évaluation, les flux de travail de service et la connectivité cloud, en se concentrant sur la comparaison locale',
         },
       },
     },
@@ -1116,7 +1116,7 @@ export const fr: TranslationDict = {
       hint: 'e.g. "Heating West" – machines in the same group are compared',
       recent24h: 'Last 24 hours',
       noMachines: 'No machines for fleet check',
-      noMachinesHint: 'Run diagnoses or assign machines to a fleet group.',
+      noMachinesHint: 'Run checks or assign machines to a fleet group.',
     },
     ranking: {
       noData: 'Non vérifié',
@@ -1205,8 +1205,8 @@ export const fr: TranslationDict = {
       notChecked: 'Not checked',
       save: 'Save results',
       discard: 'Discard',
-      discardConfirm: 'Delete diagnoses from this run? Machines and references will be kept.',
-      discardDone: '{{count}} diagnoses discarded',
+      discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
+      discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
     },
     history: {
@@ -1312,7 +1312,7 @@ export const fr: TranslationDict = {
     critical: 'anormal',
     unchecked: 'non v\u00E9rifi\u00E9',
     checkNow: 'V\u00E9rifier maintenant',
-    attentionPrefix: 'V\u00E9rification recommand\u00E9e',
+    attentionPrefix: 'V\u00E9rification \u00E0 envisager',
     lastCheck: 'Derni\u00E8re v\u00E9rification',
   },
 
@@ -1342,9 +1342,9 @@ export const fr: TranslationDict = {
   history: {
     openHistory: 'View history for {{name}}',
     viewHistory: 'History',
-    diagnosisCount: '{{count}} diagnoses',
-    noDiagnoses: '{{name}} has no diagnoses yet.',
-    noMatchingDiagnoses: 'No diagnoses match this filter.',
+    diagnosisCount: '{{count}} checks',
+    noDiagnoses: '{{name}} has no checks yet.',
+    noMatchingDiagnoses: 'No checks match this filter.',
     filterAll: 'All',
     filter7d: '7 days',
     filter30d: '30 days',
@@ -1378,7 +1378,7 @@ export const fr: TranslationDict = {
     colTrend: 'Tendance',
     colRecommendation: 'Recommandation',
     colDate: 'Date',
-    footer: 'Généré par Zanobo · Diagnostic acoustique de machines',
+    footer: 'Généré par Zanobo · Vérification acoustique de machines',
     exported: 'Rapport exporté',
   },
 
@@ -1398,7 +1398,7 @@ export const fr: TranslationDict = {
   // WELLE 4: TREND ANALYSIS (SV4)
   // ============================================================================
   trendAnalysis: {
-    criticalDecline: 'Score en forte baisse sur {{count}} contrôles ({{from}}% → {{to}}%). Inspection immédiate recommandée.',
+    criticalDecline: 'Score en forte baisse sur {{count}} contrôles ({{from}}% → {{to}}%). Inspection immédiate à envisager.',
     declining: 'Score en baisse sur {{count}} contrôles ({{from}}% → {{to}}%). À surveiller.',
     improving: 'Score en hausse sur {{count}} contrôles ({{from}}% → {{to}}%).',
   },
