@@ -140,6 +140,55 @@
             </div>
         </section>
 
+        <!-- Welle 2: Status Dashboard -->
+        <section class="status-dashboard" id="status-dashboard" style="display: none;">
+            <!-- Summary Row: Counts by status -->
+            <div class="dashboard-summary" id="dashboard-summary">
+                <div class="dashboard-stat" id="dashboard-stat-total">
+                    <span class="dashboard-stat-count" id="dashboard-count-total">0</span>
+                    <span class="dashboard-stat-label" data-i18n="dashboard.totalMachines">Maschinen</span>
+                </div>
+                <div class="dashboard-stat dashboard-stat-healthy" id="dashboard-stat-healthy">
+                    <span class="dashboard-stat-dot status-dot-healthy"></span>
+                    <span class="dashboard-stat-count" id="dashboard-count-healthy">0</span>
+                    <span class="dashboard-stat-label" data-i18n="dashboard.healthy">unauffällig</span>
+                </div>
+                <div class="dashboard-stat dashboard-stat-warning" id="dashboard-stat-warning">
+                    <span class="dashboard-stat-dot status-dot-warning"></span>
+                    <span class="dashboard-stat-count" id="dashboard-count-warning">0</span>
+                    <span class="dashboard-stat-label" data-i18n="dashboard.warning">Abweichung</span>
+                </div>
+                <div class="dashboard-stat dashboard-stat-critical" id="dashboard-stat-critical">
+                    <span class="dashboard-stat-dot status-dot-critical"></span>
+                    <span class="dashboard-stat-count" id="dashboard-count-critical">0</span>
+                    <span class="dashboard-stat-label" data-i18n="dashboard.critical">auffällig</span>
+                </div>
+                <div class="dashboard-stat dashboard-stat-unchecked" id="dashboard-stat-unchecked">
+                    <span class="dashboard-stat-dot status-dot-unknown"></span>
+                    <span class="dashboard-stat-count" id="dashboard-count-unchecked">0</span>
+                    <span class="dashboard-stat-label" data-i18n="dashboard.unchecked">nicht geprüft</span>
+                </div>
+            </div>
+
+            <!-- Attention Card: Most urgent machine (if any) -->
+            <div class="dashboard-attention" id="dashboard-attention" style="display: none;">
+                <div class="dashboard-attention-header">
+                    <span class="dashboard-attention-icon" id="dashboard-attention-icon">⚠</span>
+                    <span class="dashboard-attention-title" id="dashboard-attention-title"></span>
+                </div>
+                <div class="dashboard-attention-body">
+                    <div class="dashboard-attention-info">
+                        <span class="dashboard-attention-score" id="dashboard-attention-score"></span>
+                        <span class="dashboard-attention-time" id="dashboard-attention-time"></span>
+                        <span class="dashboard-attention-trend" id="dashboard-attention-trend"></span>
+                    </div>
+                    <button class="dashboard-attention-btn" id="dashboard-attention-btn" data-i18n="dashboard.checkNow">
+                        Jetzt prüfen
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <div class="main-actions">
             <!-- Container 2: Maschine auswählen -->
             <section class="main-container collapsible">
@@ -1087,6 +1136,21 @@
             </div>
             <div class="modal-body shell-content">
                 <div class="result-card">
+                    <!-- Welle 2: Ampel-Banner (oben im Ergebnis) -->
+                    <div class="result-ampel" id="result-ampel">
+                        <div class="result-ampel-signal" id="result-ampel-signal">
+                            <span class="result-ampel-icon" id="result-ampel-icon">✅</span>
+                            <span class="result-ampel-label" id="result-ampel-label">UNAUFFÄLLIG</span>
+                        </div>
+                        <p class="result-ampel-explanation" id="result-ampel-explanation">
+                            Die Maschine klingt wie bei der letzten Prüfung.
+                        </p>
+                        <div class="result-ampel-trend" id="result-ampel-trend" style="display: none;">
+                            <span class="result-ampel-trend-arrow" id="result-ampel-trend-arrow"></span>
+                            <span class="result-ampel-trend-text" id="result-ampel-trend-text"></span>
+                        </div>
+                        <p class="result-ampel-recommendation" id="result-ampel-recommendation"></p>
+                    </div>
                     <div class="result-barcode" data-view-level="advanced">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
                             <rect x="3" y="6" width="2" height="12"/>
@@ -1099,7 +1163,7 @@
                         </svg>
                         <span id="machine-barcode">1GB4-636A0-Ba1</span>
                     </div>
-                    <div class="result-fingerprint">
+                    <div class="result-fingerprint" data-view-level="advanced">
                         <h4 data-i18n="diagnosisResults.fingerprintLabel">Fingerprint</h4>
                         <p class="result-status status-healthy" id="result-status">UNAUFFÄLLIG</p>
                         <p class="result-verbal-status" id="result-verbal-status"></p>
@@ -1137,8 +1201,17 @@
                 </div>
             </div>
             <div class="modal-actions shell-footer">
-                <button class="modal-btn btn-secondary" id="view-history-btn" data-i18n="diagnosisResults.viewHistory">Verlauf anzeigen</button>
-                <button class="modal-btn btn-secondary" id="close-diagnosis-result-btn" data-i18n="buttons.close">Schließen</button>
+                <!-- Welle 2: Context-aware action buttons -->
+                <div class="result-actions" id="result-actions">
+                    <button class="result-action-btn result-action-secondary" id="result-btn-details" data-i18n="resultActions.details">
+                        Details
+                    </button>
+                    <button class="result-action-btn result-action-primary" id="result-btn-next" data-i18n="resultActions.newCheck">
+                        Neue Prüfung
+                    </button>
+                </div>
+                <button class="modal-btn btn-secondary" id="view-history-btn" data-i18n="diagnosisResults.viewHistory" data-view-level="advanced">Verlauf anzeigen</button>
+                <button class="modal-btn btn-secondary" id="close-diagnosis-result-btn" data-i18n="buttons.close" style="display: none;">Schließen</button>
             </div>
         </div>
     </div>

@@ -9644,3 +9644,291 @@ html[data-view-level="expert"] .diagnosis-recommendation {
     font-size: var(--font-xs);
     color: var(--text-muted);
 }
+
+/* ===================================
+   WELLE 2 UX: Status Dashboard
+   =================================== */
+.status-dashboard {
+    max-width: var(--content-max-width);
+    margin: 0 auto var(--space-card-gap) auto;
+    width: 100%;
+}
+
+.dashboard-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-xs);
+}
+
+.dashboard-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.dashboard-stat-count {
+    font-weight: 700;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+#dashboard-stat-total {
+    font-weight: 600;
+}
+
+#dashboard-stat-total .dashboard-stat-count {
+    font-size: var(--font-md);
+}
+
+/* Reuse Welle-1 status dots */
+.dashboard-stat .status-dot-healthy,
+.dashboard-stat .status-dot-warning,
+.dashboard-stat .status-dot-critical,
+.dashboard-stat .status-dot-unknown {
+    width: 8px;
+    height: 8px;
+}
+
+/* Attention Card */
+.dashboard-attention {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.dashboard-attention-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dashboard-attention-icon {
+    font-size: 1.2rem;
+}
+
+.dashboard-attention-title {
+    font-weight: 600;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+}
+
+.dashboard-attention-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.dashboard-attention-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+.dashboard-attention-score {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.dashboard-attention-score.score-critical {
+    color: var(--status-error, #ef4444);
+}
+
+.dashboard-attention-score.score-warning {
+    color: var(--status-warning, #ff9800);
+}
+
+.dashboard-attention-trend.trend-declining {
+    color: var(--status-warning, #ff9800);
+}
+
+.dashboard-attention-trend.trend-improving {
+    color: var(--status-healthy, #4caf50);
+}
+
+.dashboard-attention-trend.trend-stable {
+    color: var(--text-muted);
+}
+
+.dashboard-attention-btn {
+    flex-shrink: 0;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 36px;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.dashboard-attention-btn:active {
+    transform: scale(0.97);
+}
+
+.dashboard-attention-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Theme adjustments */
+[data-theme="neon"] .dashboard-attention {
+    background: rgba(17, 40, 64, 0.6);
+    border-color: rgba(0, 212, 255, 0.15);
+}
+
+[data-theme="neon"] .dashboard-attention-btn {
+    color: var(--bg-primary);
+}
+
+/* Responsive: Stack attention card on very small screens */
+@media (max-width: 360px) {
+    .dashboard-attention-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-attention-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ===================================
+   WELLE 2 UX: Ampel-Banner im Ergebnis
+   =================================== */
+.result-ampel {
+    text-align: center;
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.result-ampel.ampel-healthy {
+    background: rgba(76, 175, 80, 0.08);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.result-ampel.ampel-warning {
+    background: rgba(255, 152, 0, 0.08);
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.result-ampel.ampel-critical {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.result-ampel-signal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.result-ampel-icon {
+    font-size: 2rem;
+}
+
+.result-ampel-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+.ampel-healthy .result-ampel-label { color: var(--status-healthy, #4caf50); }
+.ampel-warning .result-ampel-label { color: var(--status-warning, #ff9800); }
+.ampel-critical .result-ampel-label { color: var(--status-error, #ef4444); }
+
+.result-ampel-explanation {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    margin: var(--spacing-xs) 0;
+}
+
+.result-ampel-trend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin: var(--spacing-xs) 0;
+}
+
+.result-ampel-trend-arrow {
+    font-size: 1.1rem;
+}
+
+.result-ampel-trend.trend-declining .result-ampel-trend-arrow { color: var(--status-warning, #ff9800); }
+.result-ampel-trend.trend-improving .result-ampel-trend-arrow { color: var(--status-healthy, #4caf50); }
+.result-ampel-trend.trend-stable .result-ampel-trend-arrow { color: var(--text-muted); }
+
+.result-ampel-recommendation {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Welle 2: Result Action Buttons */
+.result-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.result-action-btn {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    border: none;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.result-action-btn:active { transform: scale(0.97); }
+.result-action-btn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+
+.result-action-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.result-action-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.result-action-danger {
+    background: var(--status-error, #ef4444);
+    color: #fff;
+}
+
+/* Neon theme adjustments */
+[data-theme="neon"] .result-ampel.ampel-healthy { background: rgba(76, 175, 80, 0.12); }
+[data-theme="neon"] .result-ampel.ampel-warning { background: rgba(255, 152, 0, 0.12); }
+[data-theme="neon"] .result-ampel.ampel-critical { background: rgba(239, 68, 68, 0.12); }
+[data-theme="neon"] .result-ampel-recommendation { border-top-color: rgba(255, 255, 255, 0.08); }
+[data-theme="neon"] .result-action-primary { color: var(--bg-primary); }

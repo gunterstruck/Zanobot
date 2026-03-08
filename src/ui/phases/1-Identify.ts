@@ -103,6 +103,9 @@ export class IdentifyPhase {
   /** Sprint 8: Callback for quick compare count-only deep link (set by Router) */
   public onQuickCompareProvisioned: ((count: number) => void) | null = null;
 
+  /** Welle 2: Callback to start diagnosis for a specific machine (set by Router) */
+  public onStartDiagnosis: ((machine: Machine) => void) | null = null;
+
   // QR Code Generator UI
   private qrModal: HTMLElement | null = null;
   private qrCanvas: HTMLCanvasElement | null = null;
@@ -1170,6 +1173,147 @@ export class IdentifyPhase {
    */
   public async refreshMachineLists(): Promise<void> {
     await Promise.all([this.loadMachineOverview(), this.loadMachineHistory()]);
+    // Welle 2: Also update dashboard when machine lists refresh
+    await this.updateDashboard();
+  }
+
+  /**
+   * Welle 2 UX: Update the status dashboard on the start screen.
+   * Shows aggregated machine health status at a glance.
+   */
+  public async updateDashboard(): Promise<void> {
+    const dashboard = document.getElementById('status-dashboard');
+    if (!dashboard) return;
+
+    const machines = await getAllMachines();
+
+    // Hide dashboard if no machines exist (Empty State Guide handles this)
+    if (machines.length === 0) {
+      dashboard.style.display = 'none';
+      return;
+    }
+
+    dashboard.style.display = '';
+
+    // Collect status counts
+    let healthy = 0;
+    let warning = 0;
+    let critical = 0;
+    let unchecked = 0;
+    let mostUrgent: { machine: Machine; score: number; timestamp: number } | null = null;
+
+    for (const machine of machines) {
+      const diagnosis = await getLatestDiagnosis(machine.id);
+
+      if (!diagnosis) {
+        unchecked++;
+        continue;
+      }
+
+      const score = diagnosis.healthScore;
+      if (score >= 75) {
+        healthy++;
+      } else if (score >= 50) {
+        warning++;
+        if (!mostUrgent || score < mostUrgent.score) {
+          mostUrgent = { machine, score, timestamp: diagnosis.timestamp };
+        }
+      } else {
+        critical++;
+        if (!mostUrgent || score < mostUrgent.score) {
+          mostUrgent = { machine, score, timestamp: diagnosis.timestamp };
+        }
+      }
+    }
+
+    // Update counts
+    this.setDashboardCount('dashboard-count-total', machines.length);
+    this.setDashboardCount('dashboard-count-healthy', healthy);
+    this.setDashboardCount('dashboard-count-warning', warning);
+    this.setDashboardCount('dashboard-count-critical', critical);
+    this.setDashboardCount('dashboard-count-unchecked', unchecked);
+
+    // Hide zero-count stats to reduce visual noise
+    this.toggleDashboardStat('dashboard-stat-warning', warning > 0);
+    this.toggleDashboardStat('dashboard-stat-critical', critical > 0);
+    this.toggleDashboardStat('dashboard-stat-unchecked', unchecked > 0);
+
+    // Update attention card
+    const attentionCard = document.getElementById('dashboard-attention');
+    if (attentionCard && mostUrgent) {
+      attentionCard.style.display = '';
+
+      const icon = document.getElementById('dashboard-attention-icon');
+      const title = document.getElementById('dashboard-attention-title');
+      const scoreEl = document.getElementById('dashboard-attention-score');
+      const timeEl = document.getElementById('dashboard-attention-time');
+      const btn = document.getElementById('dashboard-attention-btn');
+
+      if (icon) icon.textContent = mostUrgent.score < 50 ? '❌' : '⚠';
+      if (title) title.textContent = mostUrgent.machine.name;
+      if (scoreEl) {
+        scoreEl.textContent = `${mostUrgent.score.toFixed(0)}%`;
+        scoreEl.className = `dashboard-attention-score ${
+          mostUrgent.score < 50 ? 'score-critical' : 'score-warning'
+        }`;
+      }
+      if (timeEl) timeEl.textContent = this.formatRelativeTime(mostUrgent.timestamp);
+
+      // Trend calculation (reuse Sprint 3 logic)
+      const trendEl = document.getElementById('dashboard-attention-trend');
+      if (trendEl) {
+        const diagnoses = await getDiagnosesForMachine(mostUrgent.machine.id, 6);
+        if (diagnoses.length >= 2) {
+          const olderScores = diagnoses.slice(1).map(d => d.healthScore);
+          const olderMedian = this.calculateMedian(olderScores);
+          const delta = mostUrgent.score - olderMedian;
+          if (Math.abs(delta) > 3) {
+            trendEl.textContent = delta > 0
+              ? `↗ +${delta.toFixed(0)}%`
+              : `↘ ${delta.toFixed(0)}%`;
+            trendEl.className = `dashboard-attention-trend ${delta > 0 ? 'trend-improving' : 'trend-declining'}`;
+          } else {
+            trendEl.textContent = '→';
+            trendEl.className = 'dashboard-attention-trend trend-stable';
+          }
+        } else {
+          trendEl.textContent = '';
+        }
+      }
+
+      // Wire up "Jetzt prüfen" button
+      if (btn) {
+        const capturedMachine = mostUrgent.machine;
+        const newBtn = btn.cloneNode(true) as HTMLElement;
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', () => {
+          if (this.onStartDiagnosis) {
+            this.onStartDiagnosis(capturedMachine);
+          }
+        });
+      }
+    } else if (attentionCard) {
+      attentionCard.style.display = 'none';
+    }
+  }
+
+  private setDashboardCount(elementId: string, value: number): void {
+    const el = document.getElementById(elementId);
+    if (el) el.textContent = String(value);
+  }
+
+  private toggleDashboardStat(elementId: string, visible: boolean): void {
+    const el = document.getElementById(elementId);
+    if (el) el.style.display = visible ? '' : 'none';
+  }
+
+  private calculateMedian(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
   }
 
   /**

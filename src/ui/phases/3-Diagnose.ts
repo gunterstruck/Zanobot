@@ -162,6 +162,9 @@ export class DiagnosePhase {
   /** Sprint 5 Fix: Optional callback fired when diagnosis fails to start (for fleet queue error recovery) */
   private onDiagnosisError: ((error: unknown) => void) | null = null;
 
+  /** Welle 2: Optional callback fired when result modal is closed (for dashboard refresh) */
+  private onResultModalClosed: (() => void) | null = null;
+
   /** Quick Compare context: gold standard machine name for UX hints */
   private qcGoldStandardName: string | null = null;
 
@@ -216,6 +219,13 @@ export class DiagnosePhase {
    */
   public setOnDiagnosisError(cb: (error: unknown) => void): void {
     this.onDiagnosisError = cb;
+  }
+
+  /**
+   * Welle 2: Set callback for when result modal is closed (for dashboard refresh)
+   */
+  public setOnResultModalClosed(cb: () => void): void {
+    this.onResultModalClosed = cb;
   }
 
   /**
@@ -2346,60 +2356,145 @@ export class DiagnosePhase {
       }
     }
 
-    // Sprint 3 UX: Calculate and show trend arrow
+    // Welle 2 UX: Ampel-Banner
+    const ampel = document.getElementById('result-ampel');
+    if (ampel) {
+      const ampelIcon = document.getElementById('result-ampel-icon');
+      const ampelLabel = document.getElementById('result-ampel-label');
+      const ampelExplanation = document.getElementById('result-ampel-explanation');
+      const ampelRecommendation = document.getElementById('result-ampel-recommendation');
+
+      const ampelScore = diagnosis.healthScore;
+
+      // Remove previous status classes
+      ampel.classList.remove('ampel-healthy', 'ampel-warning', 'ampel-critical');
+
+      if (ampelScore >= 75) {
+        ampel.classList.add('ampel-healthy');
+        if (ampelIcon) ampelIcon.textContent = '✅';
+        if (ampelLabel) ampelLabel.textContent = t('status.healthy').toUpperCase();
+        if (ampelExplanation) ampelExplanation.textContent = t('resultAmpel.explanationHealthy');
+        if (ampelRecommendation) ampelRecommendation.textContent = t('diagnose.recommendation.healthy');
+      } else if (ampelScore >= 50) {
+        ampel.classList.add('ampel-warning');
+        if (ampelIcon) ampelIcon.textContent = '⚠';
+        if (ampelLabel) ampelLabel.textContent = t('status.uncertain').toUpperCase();
+        if (ampelExplanation) ampelExplanation.textContent = t('resultAmpel.explanationWarning');
+        if (ampelRecommendation) ampelRecommendation.textContent = t('diagnose.recommendation.warning');
+      } else {
+        ampel.classList.add('ampel-critical');
+        if (ampelIcon) ampelIcon.textContent = '❌';
+        if (ampelLabel) ampelLabel.textContent = t('status.faulty').toUpperCase();
+        if (ampelExplanation) ampelExplanation.textContent = t('resultAmpel.explanationCritical');
+        if (ampelRecommendation) ampelRecommendation.textContent = t('diagnose.recommendation.critical');
+      }
+
+      // Welle 2: Trend with delta in ampel banner
+      const ampelTrendContainer = document.getElementById('result-ampel-trend');
+      const ampelTrendArrow = document.getElementById('result-ampel-trend-arrow');
+      const ampelTrendText = document.getElementById('result-ampel-trend-text');
+
+      if (ampelTrendContainer && ampelTrendArrow && ampelTrendText) {
+        try {
+          const ampelDiagnoses = await getDiagnosesForMachine(this.machine.id, 6);
+          const ampelOlder = ampelDiagnoses.filter(d => d.id !== diagnosis.id).slice(0, 5);
+
+          if (ampelOlder.length >= 2) {
+            const olderScores = ampelOlder.map(d => d.healthScore);
+            const sorted = [...olderScores].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            const median = sorted.length % 2 === 0
+              ? (sorted[mid - 1] + sorted[mid]) / 2
+              : sorted[mid];
+            const delta = ampelScore - median;
+
+            ampelTrendContainer.style.display = 'flex';
+
+            if (Math.abs(delta) <= 3) {
+              ampelTrendArrow.textContent = '→';
+              ampelTrendText.textContent = t('resultAmpel.trendStable', {
+                count: String(ampelOlder.length)
+              });
+              ampelTrendContainer.className = 'result-ampel-trend trend-stable';
+            } else if (delta > 0) {
+              ampelTrendArrow.textContent = '↗';
+              ampelTrendText.textContent = t('resultAmpel.trendImproving', {
+                delta: `+${delta.toFixed(0)}`,
+                count: String(ampelOlder.length)
+              });
+              ampelTrendContainer.className = 'result-ampel-trend trend-improving';
+            } else {
+              ampelTrendArrow.textContent = '↘';
+              ampelTrendText.textContent = t('resultAmpel.trendDeclining', {
+                delta: delta.toFixed(0),
+                count: String(ampelOlder.length)
+              });
+              ampelTrendContainer.className = 'result-ampel-trend trend-declining';
+            }
+          } else {
+            ampelTrendContainer.style.display = 'none';
+          }
+        } catch {
+          ampelTrendContainer.style.display = 'none';
+        }
+      }
+    }
+
+    // Welle 2 UX: Context-aware action buttons
+    const resultBtnNext = document.getElementById('result-btn-next');
+    const resultBtnDetails = document.getElementById('result-btn-details');
+    if (resultBtnNext) {
+      if (diagnosis.healthScore < 50) {
+        // Critical: Primary action becomes "Report maintenance"
+        resultBtnNext.textContent = t('resultActions.reportMaintenance');
+        resultBtnNext.className = 'result-action-btn result-action-danger';
+
+        const newNextBtn = resultBtnNext.cloneNode(true) as HTMLElement;
+        resultBtnNext.parentNode?.replaceChild(newNextBtn, resultBtnNext);
+        newNextBtn.addEventListener('click', () => {
+          this.copyMaintenanceReport(diagnosis);
+        });
+      } else {
+        // Normal: "New check"
+        resultBtnNext.textContent = t('resultActions.newCheck');
+        resultBtnNext.className = 'result-action-btn result-action-primary';
+
+        const newNextBtn = resultBtnNext.cloneNode(true) as HTMLElement;
+        resultBtnNext.parentNode?.replaceChild(newNextBtn, resultBtnNext);
+        newNextBtn.addEventListener('click', () => {
+          modal.style.display = 'none';
+          if (this.workPointRanking) {
+            this.workPointRanking.destroy();
+            this.workPointRanking = null;
+          }
+          if (this.onResultModalClosed) {
+            this.onResultModalClosed();
+          }
+          // Re-trigger diagnosis
+          const diagnoseBtn = document.getElementById('diagnose-btn');
+          if (diagnoseBtn) {
+            diagnoseBtn.click();
+          }
+        });
+      }
+    }
+
+    // Welle 2: Details button scrolls to technical details
+    if (resultBtnDetails) {
+      const newDetailsBtn = resultBtnDetails.cloneNode(true) as HTMLElement;
+      resultBtnDetails.parentNode?.replaceChild(newDetailsBtn, resultBtnDetails);
+      newDetailsBtn.addEventListener('click', () => {
+        const fingerprint = modal.querySelector('.result-fingerprint');
+        if (fingerprint) {
+          fingerprint.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // Sprint 3 UX: Old trend arrow (hidden - replaced by Welle 2 ampel trend)
     const trendEl = document.getElementById('result-trend');
     if (trendEl) {
-      try {
-        const recentDiagnoses = await getDiagnosesForMachine(this.machine.id, 6);
-        const olderDiagnoses = recentDiagnoses.filter(d => d.id !== diagnosis.id);
-
-        if (olderDiagnoses.length < 1) {
-          trendEl.style.display = 'flex';
-          const arrowEl = document.getElementById('trend-arrow');
-          const textEl = document.getElementById('trend-text');
-          if (arrowEl) arrowEl.textContent = '—';
-          if (textEl) textEl.textContent = t('trend.noTrend');
-          trendEl.className = 'result-trend trend-neutral';
-        } else if (olderDiagnoses.length <= 2) {
-          trendEl.style.display = 'flex';
-          const arrowEl = document.getElementById('trend-arrow');
-          const textEl = document.getElementById('trend-text');
-          if (arrowEl) arrowEl.textContent = '~';
-          if (textEl) textEl.textContent = t('trend.uncertain');
-          trendEl.className = 'result-trend trend-neutral';
-        } else {
-          const currentScore = diagnosis.healthScore;
-          const olderScores = olderDiagnoses
-            .slice(0, 5)
-            .map(d => d.healthScore)
-            .sort((a, b) => a - b);
-          const medianOlder = olderScores.length % 2 === 0
-            ? (olderScores[olderScores.length / 2 - 1] + olderScores[olderScores.length / 2]) / 2
-            : olderScores[Math.floor(olderScores.length / 2)];
-          const diff = currentScore - medianOlder;
-
-          const arrowEl = document.getElementById('trend-arrow');
-          const textEl = document.getElementById('trend-text');
-          trendEl.style.display = 'flex';
-
-          if (diff > 3) {
-            trendEl.className = 'result-trend trend-up';
-            if (arrowEl) arrowEl.textContent = '↗';
-            if (textEl) textEl.textContent = t('trend.improving');
-          } else if (diff < -3) {
-            trendEl.className = 'result-trend trend-down';
-            if (arrowEl) arrowEl.textContent = '↘';
-            if (textEl) textEl.textContent = t('trend.declining');
-          } else {
-            trendEl.className = 'result-trend trend-stable';
-            if (arrowEl) arrowEl.textContent = '→';
-            if (textEl) textEl.textContent = t('trend.stable');
-          }
-        }
-      } catch (error) {
-        logger.warn('Could not calculate trend:', error);
-        trendEl.style.display = 'none';
-      }
+      trendEl.style.display = 'none';
     }
 
     // Environment match hint (all view levels)
@@ -2482,6 +2577,10 @@ export class DiagnosePhase {
           this.workPointRanking.destroy();
           this.workPointRanking = null;
         }
+        // Welle 2: Notify router to refresh dashboard
+        if (this.onResultModalClosed) {
+          this.onResultModalClosed();
+        }
       };
     }
 
@@ -2494,6 +2593,10 @@ export class DiagnosePhase {
           this.workPointRanking.destroy();
           this.workPointRanking = null;
         }
+        // Welle 2: Notify router to refresh dashboard
+        if (this.onResultModalClosed) {
+          this.onResultModalClosed();
+        }
       };
     }
 
@@ -2503,6 +2606,30 @@ export class DiagnosePhase {
       viewHistoryBtn.onclick = () => {
         this.showHistoryChart();
       };
+    }
+  }
+
+  /**
+   * Welle 2: Copy a maintenance report summary to clipboard.
+   */
+  private async copyMaintenanceReport(diagnosis: DiagnosisResult): Promise<void> {
+    const lines = [
+      t('resultActions.maintenanceReportTitle'),
+      `${t('resultActions.machine')}: ${this.machine.name}`,
+      `${t('resultActions.score')}: ${diagnosis.healthScore.toFixed(0)}%`,
+      `${t('resultActions.status')}: ${diagnosis.status}`,
+      `${t('resultActions.date')}: ${new Date(diagnosis.timestamp).toLocaleString()}`,
+      `${t('resultActions.recommendation')}: ${t('diagnose.recommendation.critical')}`,
+    ];
+
+    const text = lines.join('\n');
+
+    try {
+      await navigator.clipboard.writeText(text);
+      notify.success(t('resultActions.copiedToClipboard'));
+    } catch {
+      // Fallback for older browsers
+      notify.info(text, { title: t('resultActions.maintenanceReportTitle'), duration: 10000 });
     }
   }
 

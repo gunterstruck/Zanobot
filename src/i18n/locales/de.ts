@@ -1696,4 +1696,40 @@ export const de: TranslationDict = {
       fleetSaveHint: 'Gespeicherte Flotten ermöglichen regelmäßige Checks mit Positionierhilfe.',
     },
   },
+
+  // Welle 2 UX: Status Dashboard
+  dashboard: {
+    totalMachines: 'Maschinen',
+    healthy: 'unauffällig',
+    warning: 'Abweichung',
+    critical: 'auffällig',
+    unchecked: 'nicht geprüft',
+    checkNow: 'Jetzt prüfen',
+    attentionPrefix: 'Prüfung empfohlen',
+    lastCheck: 'Letzte Prüfung',
+  },
+
+  // Welle 2 UX: Ampel-Banner im Ergebnis
+  resultAmpel: {
+    explanationHealthy: 'Die Maschine klingt wie erwartet.',
+    explanationWarning: 'Die Maschine klingt anders als beim Normalzustand.',
+    explanationCritical: 'Die Maschine weicht deutlich vom Normalzustand ab.',
+    trendStable: 'Stabil seit {{count}} Prüfungen',
+    trendImproving: '{{delta}}% seit {{count}} Prüfungen',
+    trendDeclining: '{{delta}}% seit {{count}} Prüfungen',
+  },
+
+  // Welle 2 UX: Result action buttons
+  resultActions: {
+    details: 'Details',
+    newCheck: 'Neue Prüfung',
+    reportMaintenance: 'Wartung melden',
+    copiedToClipboard: 'Wartungsbericht in Zwischenablage kopiert',
+    maintenanceReportTitle: 'Wartungsbericht',
+    machine: 'Maschine',
+    score: 'Score',
+    status: 'Status',
+    date: 'Datum',
+    recommendation: 'Empfehlung',
+  },
 };

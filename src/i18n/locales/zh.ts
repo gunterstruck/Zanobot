@@ -1299,4 +1299,38 @@ export const zh: TranslationDict = {
       fleetSaveHint: '\u4FDD\u5B58\u7684\u8F66\u961F\u53EF\u4EE5\u5B9A\u671F\u68C0\u67E5\u5E76\u63D0\u4F9B\u4F4D\u7F6E\u5F15\u5BFC\u3002',
     },
   },
+
+  // Welle 2 UX: Status Dashboard
+  dashboard: {
+    totalMachines: '\u53F0\u673A\u5668',
+    healthy: '\u6B63\u5E38',
+    warning: '\u504F\u5DEE',
+    critical: '\u5F02\u5E38',
+    unchecked: '\u672A\u68C0\u67E5',
+    checkNow: '\u7ACB\u5373\u68C0\u67E5',
+    attentionPrefix: '\u5EFA\u8BAE\u68C0\u67E5',
+    lastCheck: '\u4E0A\u6B21\u68C0\u67E5',
+  },
+
+  resultAmpel: {
+    explanationHealthy: '\u673A\u5668\u58F0\u97F3\u6B63\u5E38\u3002',
+    explanationWarning: '\u673A\u5668\u58F0\u97F3\u4E0E\u6B63\u5E38\u72B6\u6001\u4E0D\u540C\u3002',
+    explanationCritical: '\u673A\u5668\u4E0E\u6B63\u5E38\u72B6\u6001\u504F\u5DEE\u663E\u8457\u3002',
+    trendStable: '\u5728 {{count}} \u6B21\u68C0\u67E5\u4E2D\u4FDD\u6301\u7A33\u5B9A',
+    trendImproving: '{{delta}}% \u5728 {{count}} \u6B21\u68C0\u67E5\u4E2D',
+    trendDeclining: '{{delta}}% \u5728 {{count}} \u6B21\u68C0\u67E5\u4E2D',
+  },
+
+  resultActions: {
+    details: '\u8BE6\u60C5',
+    newCheck: '\u65B0\u68C0\u67E5',
+    reportMaintenance: '\u62A5\u544A\u7EF4\u62A4',
+    copiedToClipboard: '\u7EF4\u62A4\u62A5\u544A\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F',
+    maintenanceReportTitle: '\u7EF4\u62A4\u62A5\u544A',
+    machine: '\u673A\u5668',
+    score: '\u5206\u6570',
+    status: '\u72B6\u6001',
+    date: '\u65E5\u671F',
+    recommendation: '\u5EFA\u8BAE',
+  },
 };

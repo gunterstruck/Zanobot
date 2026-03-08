@@ -1303,4 +1303,38 @@ export const fr: TranslationDict = {
       fleetSaveHint: 'Les flottes sauvegard\u00E9es permettent des v\u00E9rifications r\u00E9guli\u00E8res avec aide au positionnement.',
     },
   },
+
+  // Welle 2 UX: Status Dashboard
+  dashboard: {
+    totalMachines: 'machines',
+    healthy: 'normal',
+    warning: 'd\u00E9viation',
+    critical: 'anormal',
+    unchecked: 'non v\u00E9rifi\u00E9',
+    checkNow: 'V\u00E9rifier maintenant',
+    attentionPrefix: 'V\u00E9rification recommand\u00E9e',
+    lastCheck: 'Derni\u00E8re v\u00E9rification',
+  },
+
+  resultAmpel: {
+    explanationHealthy: 'La machine semble normale.',
+    explanationWarning: 'La machine semble diff\u00E9rente de l\u2019\u00E9tat normal.',
+    explanationCritical: 'La machine d\u00E9vie significativement de l\u2019\u00E9tat normal.',
+    trendStable: 'Stable sur {{count}} v\u00E9rifications',
+    trendImproving: '{{delta}}% sur {{count}} v\u00E9rifications',
+    trendDeclining: '{{delta}}% sur {{count}} v\u00E9rifications',
+  },
+
+  resultActions: {
+    details: 'D\u00E9tails',
+    newCheck: 'Nouvelle v\u00E9rification',
+    reportMaintenance: 'Signaler maintenance',
+    copiedToClipboard: 'Rapport de maintenance copi\u00E9 dans le presse-papiers',
+    maintenanceReportTitle: 'Rapport de maintenance',
+    machine: 'Machine',
+    score: 'Score',
+    status: 'Statut',
+    date: 'Date',
+    recommendation: 'Recommandation',
+  },
 };

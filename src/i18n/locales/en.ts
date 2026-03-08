@@ -1653,4 +1653,40 @@ export const en: TranslationDict = {
       fleetSaveHint: 'Saved fleets enable regular checks with position guidance.',
     },
   },
+
+  // Welle 2 UX: Status Dashboard
+  dashboard: {
+    totalMachines: 'machines',
+    healthy: 'normal',
+    warning: 'deviation',
+    critical: 'abnormal',
+    unchecked: 'not checked',
+    checkNow: 'Check now',
+    attentionPrefix: 'Check recommended',
+    lastCheck: 'Last check',
+  },
+
+  // Welle 2 UX: Ampel-Banner im Ergebnis
+  resultAmpel: {
+    explanationHealthy: 'The machine sounds as expected.',
+    explanationWarning: 'The machine sounds different from the normal state.',
+    explanationCritical: 'The machine deviates significantly from the normal state.',
+    trendStable: 'Stable across {{count}} checks',
+    trendImproving: '{{delta}}% across {{count}} checks',
+    trendDeclining: '{{delta}}% across {{count}} checks',
+  },
+
+  // Welle 2 UX: Result action buttons
+  resultActions: {
+    details: 'Details',
+    newCheck: 'New check',
+    reportMaintenance: 'Report maintenance',
+    copiedToClipboard: 'Maintenance report copied to clipboard',
+    maintenanceReportTitle: 'Maintenance Report',
+    machine: 'Machine',
+    score: 'Score',
+    status: 'Status',
+    date: 'Date',
+    recommendation: 'Recommendation',
+  },
 };
