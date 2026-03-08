@@ -1303,4 +1303,38 @@ export const es: TranslationDict = {
       fleetSaveHint: 'Las flotas guardadas permiten revisiones regulares con gu\u00EDa de posici\u00F3n.',
     },
   },
+
+  // Welle 2 UX: Status Dashboard
+  dashboard: {
+    totalMachines: 'm\u00E1quinas',
+    healthy: 'normal',
+    warning: 'desviaci\u00F3n',
+    critical: 'anormal',
+    unchecked: 'no verificado',
+    checkNow: 'Verificar ahora',
+    attentionPrefix: 'Verificaci\u00F3n recomendada',
+    lastCheck: '\u00DAltima verificaci\u00F3n',
+  },
+
+  resultAmpel: {
+    explanationHealthy: 'La m\u00E1quina suena como se esperaba.',
+    explanationWarning: 'La m\u00E1quina suena diferente al estado normal.',
+    explanationCritical: 'La m\u00E1quina se desv\u00EDa significativamente del estado normal.',
+    trendStable: 'Estable en {{count}} verificaciones',
+    trendImproving: '{{delta}}% en {{count}} verificaciones',
+    trendDeclining: '{{delta}}% en {{count}} verificaciones',
+  },
+
+  resultActions: {
+    details: 'Detalles',
+    newCheck: 'Nueva verificaci\u00F3n',
+    reportMaintenance: 'Reportar mantenimiento',
+    copiedToClipboard: 'Informe de mantenimiento copiado al portapapeles',
+    maintenanceReportTitle: 'Informe de mantenimiento',
+    machine: 'M\u00E1quina',
+    score: 'Puntuaci\u00F3n',
+    status: 'Estado',
+    date: 'Fecha',
+    recommendation: 'Recomendaci\u00F3n',
+  },
 };

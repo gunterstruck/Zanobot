@@ -79,6 +79,18 @@ export class Router {
       this.handleQuickCompareCountDeepLink(count);
     };
 
+    // Welle 2: Wire up dashboard "Jetzt prüfen" to diagnosis
+    this.identifyPhase.onStartDiagnosis = (machine: Machine) => {
+      this.onMachineSelected(machine);
+      // Auto-start diagnosis after a short delay to let phases initialize
+      setTimeout(() => {
+        const diagnoseBtn = document.getElementById('diagnose-btn');
+        if (diagnoseBtn) {
+          diagnoseBtn.click();
+        }
+      }, 300);
+    };
+
     // Now initialize – deep link handler can safely invoke the callbacks above
     this.identifyPhase.init();
 
@@ -647,6 +659,11 @@ export class Router {
 
     this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
+
+    // Welle 2: Refresh dashboard when result modal closes
+    this.diagnosePhase.setOnResultModalClosed(() => {
+      this.identifyPhase.updateDashboard();
+    });
 
     // Sprint 5: Register fleet queue callbacks if queue is active
     if (this.isFleetQueueActive) {
