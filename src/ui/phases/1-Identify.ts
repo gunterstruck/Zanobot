@@ -1387,6 +1387,41 @@ export class IdentifyPhase {
   /**
    * Initialize machine detail modal event listeners
    */
+  /**
+   * Welle 3: Quick-create a machine with just a name (no SAP-ID, no extras).
+   * Returns the created machine or null on failure.
+   */
+  public async createMachineQuick(name: string): Promise<Machine | null> {
+    try {
+      const machine: Machine = {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        createdAt: Date.now(),
+        referenceModels: [],
+      };
+      await saveMachine(machine);
+      await this.refreshMachineLists();
+      logger.info(`Quick-created machine: ${machine.name} (${machine.id})`);
+      return machine;
+    } catch (error) {
+      logger.error('Failed to quick-create machine:', error);
+      notify.error(t('identify.errors.createFailed'));
+      return null;
+    }
+  }
+
+  /**
+   * Welle 3: Select a machine programmatically (used by unified flow).
+   */
+  public selectMachineById(machineId: string): void {
+    getMachine(machineId).then(machine => {
+      if (machine) {
+        this.setCurrentMachine(machine);
+        this.onMachineSelected(machine);
+      }
+    });
+  }
+
   private initMachineDetailModal(): void {
     const modal = document.getElementById('machine-detail-modal');
     const closeBtn = document.getElementById('close-machine-detail-modal');
@@ -4298,6 +4333,18 @@ export class IdentifyPhase {
     sparkContainer.dataset.machineId = machine.id;
     machineInfo.appendChild(sparkContainer);
 
+    // Welle 3: History link below sparkline (visible for machines with ≥ 1 diagnosis)
+    if (machine.lastDiagnosisAt) {
+      const historyLink = document.createElement('button');
+      historyLink.className = 'machine-history-link';
+      historyLink.textContent = t('history.viewHistory');
+      historyLink.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.showMachineHistoryModal(machine);
+      });
+      machineInfo.appendChild(historyLink);
+    }
+
     // Create chevron icon
     const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     chevron.setAttribute('class', 'chevron-right');
@@ -4485,6 +4532,19 @@ export class IdentifyPhase {
                 // Sprint 3 Polish: Clear container before appending to prevent duplicates
                 container.textContent = '';
                 container.appendChild(sparkline);
+
+                // Welle 3: Make sparkline tappable to open history
+                container.style.cursor = 'pointer';
+                container.setAttribute('role', 'button');
+                const machineItem = container.closest('.machine-item');
+                const machineName = machineItem?.querySelector('.machine-name')?.textContent || '';
+                container.setAttribute('aria-label', t('history.openHistory', { name: machineName }));
+                container.addEventListener('click', (e) => {
+                  e.stopPropagation(); // Don't trigger machine selection
+                  getMachine(machineId).then(machine => {
+                    if (machine) this.showMachineHistoryModal(machine);
+                  });
+                });
               }
             }
           } catch (error) {
@@ -4492,6 +4552,335 @@ export class IdentifyPhase {
           }
         })
       );
+    }
+  }
+
+  // ============================================================================
+  // WELLE 3: MACHINE HISTORY MODAL
+  // ============================================================================
+
+  /**
+   * Welle 3 UX: Show diagnosis history modal for a specific machine.
+   * Displays an SVG chart + scrollable diagnosis list with expandable details.
+   */
+  private async showMachineHistoryModal(machine: Machine): Promise<void> {
+    const diagnoses = await getDiagnosesForMachine(machine.id);
+
+    if (diagnoses.length === 0) {
+      notify.info(t('history.noDiagnoses', { name: machine.name }));
+      return;
+    }
+
+    // Build modal (dynamic DOM, consistent with Fleet-Result-Modal pattern)
+    const overlay = document.createElement('div');
+    overlay.className = 'fleet-result-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'fleet-result-modal history-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', t('history.viewHistory'));
+
+    // --- Header ---
+    const header = document.createElement('div');
+    header.className = 'fleet-result-header';
+
+    const titleContainer = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = machine.name;
+    const subtitle = document.createElement('p');
+    subtitle.className = 'history-subtitle';
+    subtitle.textContent = t('history.diagnosisCount', { count: String(diagnoses.length) });
+    titleContainer.appendChild(title);
+    titleContainer.appendChild(subtitle);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'fleet-result-close';
+    closeBtn.innerHTML = '\u2715';
+    closeBtn.setAttribute('aria-label', t('buttons.close'));
+
+    header.appendChild(titleContainer);
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // --- Body ---
+    const body = document.createElement('div');
+    body.className = 'fleet-result-body';
+
+    // Chart Section
+    const chartSection = document.createElement('div');
+    chartSection.className = 'history-chart-section';
+    const chartSvg = this.generateHistoryChart(diagnoses.slice(0, 30));
+    chartSection.appendChild(chartSvg);
+    body.appendChild(chartSection);
+
+    // Filter Section
+    const filterSection = document.createElement('div');
+    filterSection.className = 'history-filter-section';
+
+    const filters = [
+      { key: 'all', label: t('history.filterAll') },
+      { key: '7d', label: t('history.filter7d') },
+      { key: '30d', label: t('history.filter30d') },
+      { key: 'abnormal', label: t('history.filterAbnormal') },
+    ];
+
+    let activeFilter = 'all';
+
+    for (const filter of filters) {
+      const btn = document.createElement('button');
+      btn.className = `history-filter-btn ${filter.key === 'all' ? 'active' : ''}`;
+      btn.textContent = filter.label;
+      btn.addEventListener('click', () => {
+        filterSection.querySelectorAll('.history-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = filter.key;
+        this.renderHistoryList(listSection, diagnoses, activeFilter);
+      });
+      filterSection.appendChild(btn);
+    }
+    body.appendChild(filterSection);
+
+    // Diagnosis List
+    const listSection = document.createElement('div');
+    listSection.className = 'history-list-section';
+    this.renderHistoryList(listSection, diagnoses, 'all');
+    body.appendChild(listSection);
+
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    const closeModal = () => overlay.remove();
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { document.removeEventListener('keydown', escHandler); closeModal(); }
+    };
+    document.addEventListener('keydown', escHandler);
+    requestAnimationFrame(() => closeBtn.focus());
+  }
+
+  /**
+   * Welle 3: Generate an SVG time series chart for diagnosis history.
+   * Larger version of the sparkline with axes and interactive data points.
+   */
+  private generateHistoryChart(diagnoses: DiagnosisResult[]): SVGSVGElement {
+    const WIDTH = 320;
+    const HEIGHT = 160;
+    const PADDING = { top: 10, right: 15, bottom: 25, left: 35 };
+    const chartW = WIDTH - PADDING.left - PADDING.right;
+    const chartH = HEIGHT - PADDING.top - PADDING.bottom;
+
+    // Reverse to chronological order (oldest first for left-to-right display)
+    const data = [...diagnoses].reverse();
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
+    svg.setAttribute('class', 'history-chart-svg');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', t('history.chartAriaLabel', { count: String(data.length) }));
+
+    // Y-axis labels (0%, 50%, 100%)
+    for (const pct of [0, 50, 100]) {
+      const y = PADDING.top + chartH - (pct / 100) * chartH;
+
+      // Grid line
+      const gridLine = document.createElementNS(ns, 'line');
+      gridLine.setAttribute('x1', String(PADDING.left));
+      gridLine.setAttribute('x2', String(WIDTH - PADDING.right));
+      gridLine.setAttribute('y1', String(y));
+      gridLine.setAttribute('y2', String(y));
+      gridLine.setAttribute('class', 'history-chart-grid');
+      svg.appendChild(gridLine);
+
+      // Label
+      const label = document.createElementNS(ns, 'text');
+      label.setAttribute('x', String(PADDING.left - 5));
+      label.setAttribute('y', String(y + 3));
+      label.setAttribute('class', 'history-chart-label');
+      label.setAttribute('text-anchor', 'end');
+      label.textContent = `${pct}%`;
+      svg.appendChild(label);
+    }
+
+    // Threshold lines (75% healthy, 50% warning)
+    for (const threshold of [75, 50]) {
+      const y = PADDING.top + chartH - (threshold / 100) * chartH;
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', String(PADDING.left));
+      line.setAttribute('x2', String(WIDTH - PADDING.right));
+      line.setAttribute('y1', String(y));
+      line.setAttribute('y2', String(y));
+      line.setAttribute('class', threshold === 75 ? 'history-chart-threshold-ok' : 'history-chart-threshold-warn');
+      svg.appendChild(line);
+    }
+
+    // Data points + polyline
+    if (data.length > 0) {
+      const points: string[] = [];
+
+      for (let i = 0; i < data.length; i++) {
+        const x = PADDING.left + (data.length === 1 ? chartW / 2 : (i / (data.length - 1)) * chartW);
+        const y = PADDING.top + chartH - (data[i].healthScore / 100) * chartH;
+        points.push(`${x},${y}`);
+
+        // Data point circle
+        const circle = document.createElementNS(ns, 'circle');
+        circle.setAttribute('cx', String(x));
+        circle.setAttribute('cy', String(y));
+        circle.setAttribute('r', '4');
+        circle.setAttribute('class', `history-chart-point ${this.getHistoryStatusClass(data[i].healthScore)}`);
+        circle.setAttribute('tabindex', '0');
+        circle.setAttribute('role', 'button');
+        circle.setAttribute('aria-label', `${data[i].healthScore.toFixed(0)}% – ${new Date(data[i].timestamp).toLocaleDateString()}`);
+        svg.appendChild(circle);
+      }
+
+      // Polyline connecting data points
+      const polyline = document.createElementNS(ns, 'polyline');
+      polyline.setAttribute('points', points.join(' '));
+      polyline.setAttribute('class', 'history-chart-line');
+      svg.appendChild(polyline);
+    }
+
+    // X-axis: First and last date
+    if (data.length >= 2) {
+      const firstDate = document.createElementNS(ns, 'text');
+      firstDate.setAttribute('x', String(PADDING.left));
+      firstDate.setAttribute('y', String(HEIGHT - 3));
+      firstDate.setAttribute('class', 'history-chart-label');
+      firstDate.textContent = new Date(data[0].timestamp).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
+      svg.appendChild(firstDate);
+
+      const lastDate = document.createElementNS(ns, 'text');
+      lastDate.setAttribute('x', String(WIDTH - PADDING.right));
+      lastDate.setAttribute('y', String(HEIGHT - 3));
+      lastDate.setAttribute('class', 'history-chart-label');
+      lastDate.setAttribute('text-anchor', 'end');
+      lastDate.textContent = new Date(data[data.length - 1].timestamp).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
+      svg.appendChild(lastDate);
+    }
+
+    return svg;
+  }
+
+  /**
+   * Welle 3: Get CSS class for health score status coloring.
+   */
+  private getHistoryStatusClass(score: number): string {
+    if (score >= 75) return 'point-healthy';
+    if (score >= 50) return 'point-warning';
+    return 'point-critical';
+  }
+
+  /**
+   * Welle 3: Render filtered diagnosis list inside history modal.
+   */
+  private renderHistoryList(
+    container: HTMLElement,
+    allDiagnoses: DiagnosisResult[],
+    filter: string
+  ): void {
+    container.innerHTML = '';
+
+    const now = Date.now();
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+    const filtered = allDiagnoses.filter(d => {
+      switch (filter) {
+        case '7d': return (now - d.timestamp) <= SEVEN_DAYS;
+        case '30d': return (now - d.timestamp) <= THIRTY_DAYS;
+        case 'abnormal': return d.healthScore < 75;
+        default: return true;
+      }
+    });
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'history-list-empty';
+      empty.textContent = t('history.noMatchingDiagnoses');
+      container.appendChild(empty);
+      return;
+    }
+
+    for (let i = 0; i < filtered.length; i++) {
+      const d = filtered[i];
+      const item = document.createElement('div');
+      item.className = 'history-list-item';
+
+      // Header row (always visible): Date + Score + Status
+      const headerRow = document.createElement('div');
+      headerRow.className = 'history-item-header';
+
+      const dateEl = document.createElement('span');
+      dateEl.className = 'history-item-date';
+      dateEl.textContent = new Date(d.timestamp).toLocaleString(undefined, {
+        day: '2-digit', month: '2-digit', year: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+
+      const scoreEl = document.createElement('span');
+      scoreEl.className = `history-item-score ${this.getHistoryStatusClass(d.healthScore)}`;
+      scoreEl.textContent = `${d.healthScore.toFixed(0)}%`;
+
+      const statusEl = document.createElement('span');
+      statusEl.className = 'history-item-status';
+      statusEl.textContent = d.healthScore >= 75
+        ? t('status.healthy')
+        : d.healthScore >= 50
+          ? t('status.uncertain')
+          : t('status.faulty');
+
+      headerRow.appendChild(dateEl);
+      headerRow.appendChild(scoreEl);
+      headerRow.appendChild(statusEl);
+
+      // Detail row (expandable on tap)
+      const detailRow = document.createElement('div');
+      detailRow.className = 'history-item-detail';
+      detailRow.style.display = 'none';
+
+      // Trend to previous
+      if (i < filtered.length - 1) {
+        const prev = filtered[i + 1]; // Next older diagnosis
+        const delta = d.healthScore - prev.healthScore;
+        const trendEl = document.createElement('span');
+        trendEl.className = 'history-item-trend';
+        if (Math.abs(delta) <= 3) {
+          trendEl.textContent = `\u2192 ${t('history.stableVsPrevious')}`;
+        } else {
+          trendEl.textContent = delta > 0
+            ? `\u2197 +${delta.toFixed(0)}% ${t('history.vsPrevious')}`
+            : `\u2198 ${delta.toFixed(0)}% ${t('history.vsPrevious')}`;
+          trendEl.className += delta > 0 ? ' trend-improving' : ' trend-declining';
+        }
+        detailRow.appendChild(trendEl);
+      }
+
+      // Detected state (Multiclass label, if available)
+      const detectedState = (d.metadata as Record<string, unknown>)?.detectedState as string | undefined;
+      if (detectedState && detectedState !== 'UNKNOWN' && detectedState !== 'Baseline') {
+        const stateEl = document.createElement('span');
+        stateEl.className = 'history-item-state';
+        stateEl.textContent = `${t('history.detectedState')}: ${detectedState}`;
+        detailRow.appendChild(stateEl);
+      }
+
+      // Toggle expand on tap
+      headerRow.style.cursor = 'pointer';
+      headerRow.addEventListener('click', () => {
+        const isOpen = detailRow.style.display !== 'none';
+        detailRow.style.display = isOpen ? 'none' : 'flex';
+        item.classList.toggle('expanded', !isOpen);
+      });
+
+      item.appendChild(headerRow);
+      item.appendChild(detailRow);
+      container.appendChild(item);
     }
   }
 

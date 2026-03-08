@@ -447,13 +447,28 @@ export class Router {
 
   /**
    * Fall C: No match found (<40%)
-   * Show "unknown sound" modal with options
+   * Welle 3: Enhanced with unified flow - smart-routes based on machine state.
    */
-  private handleNoMatch(result: AutoDetectionResult): void {
-    logger.info('❌ No matching machine found');
+  private async handleNoMatch(result: AutoDetectionResult): Promise<void> {
+    logger.info('No matching machine found – unified flow');
 
-    // Show no-match modal
-    this.showNoMatchModal(result);
+    const machines = await getAllMachines();
+
+    // Check if any machine exists without reference models
+    const machinesWithoutRef = machines.filter(
+      m => !m.referenceModels || m.referenceModels.length === 0
+    );
+
+    if (machines.length === 0) {
+      // Case A: No machines at all → offer to create + record reference
+      this.showUnifiedFlowModal('no_machines', null, result);
+    } else if (machinesWithoutRef.length > 0) {
+      // Case B: Some machines exist without reference → offer to record for them
+      this.showUnifiedFlowModal('missing_reference', machinesWithoutRef, result);
+    } else {
+      // Case C: All machines have references, just no match → existing behavior
+      this.showNoMatchModal(result);
+    }
   }
 
   /**
@@ -633,6 +648,159 @@ export class Router {
   }
 
   /**
+   * Welle 3: Show unified flow modal for no-match scenarios.
+   * Guides the user to create a machine and/or record a reference
+   * without ever using the word "Referenz".
+   */
+  private showUnifiedFlowModal(
+    scenario: 'no_machines' | 'missing_reference',
+    machinesWithoutRef: Machine[] | null,
+    _result: AutoDetectionResult
+  ): void {
+    const overlay = document.createElement('div');
+    overlay.className = 'fleet-result-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'fleet-result-modal unified-flow-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    // --- Header ---
+    const header = document.createElement('div');
+    header.className = 'fleet-result-header';
+
+    const titleContainer = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = scenario === 'no_machines'
+      ? t('unifiedFlow.newMachineTitle')
+      : t('unifiedFlow.missingRefTitle');
+    titleContainer.appendChild(title);
+    header.appendChild(titleContainer);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'fleet-result-close';
+    closeBtn.innerHTML = '\u2715';
+    closeBtn.setAttribute('aria-label', t('buttons.close'));
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // --- Body ---
+    const body = document.createElement('div');
+    body.className = 'fleet-result-body';
+
+    if (scenario === 'no_machines') {
+      // Explanation
+      const explanation = document.createElement('p');
+      explanation.className = 'unified-flow-explanation';
+      explanation.textContent = t('unifiedFlow.noMachinesExplanation');
+      body.appendChild(explanation);
+
+      // Name input
+      const inputGroup = document.createElement('div');
+      inputGroup.className = 'unified-flow-input-group';
+
+      const label = document.createElement('label');
+      label.textContent = t('unifiedFlow.machineNameLabel');
+      label.className = 'unified-flow-label';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'machine-input unified-flow-input';
+      input.placeholder = t('unifiedFlow.machineNamePlaceholder');
+      input.setAttribute('autocomplete', 'off');
+
+      inputGroup.appendChild(label);
+      inputGroup.appendChild(input);
+      body.appendChild(inputGroup);
+
+      // CTA button
+      const ctaBtn = document.createElement('button');
+      ctaBtn.className = 'result-action-btn result-action-primary unified-flow-cta';
+      ctaBtn.textContent = t('unifiedFlow.createAndRecord');
+      ctaBtn.disabled = true;
+
+      input.addEventListener('input', () => {
+        ctaBtn.disabled = input.value.trim().length === 0;
+      });
+
+      ctaBtn.addEventListener('click', async () => {
+        const name = input.value.trim();
+        if (!name) return;
+
+        overlay.remove();
+
+        // Create machine via IdentifyPhase
+        const machine = await this.identifyPhase.createMachineQuick(name);
+        if (machine) {
+          // Select machine and start reference recording flow
+          this.onMachineSelected(machine);
+          // Auto-expand reference section and trigger recording
+          setTimeout(() => {
+            this.expandSection('record-reference-content');
+            const refSection = document.getElementById('record-reference-content');
+            refSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            notify.info(t('unifiedFlow.recordingStarted', { name }));
+          }, 300);
+        }
+      });
+
+      body.appendChild(ctaBtn);
+
+    } else if (scenario === 'missing_reference' && machinesWithoutRef) {
+      // Explanation
+      const explanation = document.createElement('p');
+      explanation.className = 'unified-flow-explanation';
+      explanation.textContent = t('unifiedFlow.missingRefExplanation');
+      body.appendChild(explanation);
+
+      // Machine selection (if multiple)
+      for (const machine of machinesWithoutRef.slice(0, 5)) {
+        const machineBtn = document.createElement('button');
+        machineBtn.className = 'unified-flow-machine-btn';
+        machineBtn.innerHTML = `<strong>${escapeHtml(machine.name)}</strong><span>${escapeHtml(t('unifiedFlow.recordNormalState'))}</span>`;
+
+        machineBtn.addEventListener('click', () => {
+          overlay.remove();
+          this.onMachineSelected(machine);
+          // Auto-expand reference section
+          setTimeout(() => {
+            this.expandSection('record-reference-content');
+            const refSection = document.getElementById('record-reference-content');
+            refSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            notify.info(t('unifiedFlow.recordingStarted', { name: machine.name }));
+          }, 300);
+        });
+
+        body.appendChild(machineBtn);
+      }
+    }
+
+    // Cancel option
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'result-action-btn result-action-secondary unified-flow-cancel';
+    cancelBtn.textContent = t('buttons.cancel');
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    body.appendChild(cancelBtn);
+
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    closeBtn.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { document.removeEventListener('keydown', escHandler); overlay.remove(); }
+    };
+    document.addEventListener('keydown', escHandler);
+    requestAnimationFrame(() => {
+      const firstInput = modal.querySelector('input');
+      if (firstInput) firstInput.focus();
+      else closeBtn.focus();
+    });
+  }
+
+  /**
    * Initialize Phase 2 (Reference) and Phase 3 (Diagnose)
    */
   private initializePhases(machine: Machine): void {
@@ -726,6 +894,13 @@ export class Router {
         });
         return; // Don't execute normal post-reference flow
       }
+
+      // Welle 3: Enhanced post-reference feedback + dashboard refresh
+      // (Only for normal flows, not Quick Compare)
+      this.identifyPhase.updateDashboard();
+      notify.info(t('unifiedFlow.referenceSavedHint', { name: updatedMachine.name }), {
+        duration: 5000,
+      });
     });
   }
 
@@ -767,6 +942,12 @@ export class Router {
 
       // Collapse machine selection section
       this.collapseSection('select-machine-content');
+
+      // Welle 3: Enhanced post-reference feedback + dashboard refresh
+      this.identifyPhase.updateDashboard();
+      notify.info(t('unifiedFlow.referenceSavedHint', { name: newMachine.name }), {
+        duration: 5000,
+      });
     });
 
     // Ensure reference button is always enabled for zero-friction

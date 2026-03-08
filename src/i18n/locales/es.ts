@@ -1337,4 +1337,35 @@ export const es: TranslationDict = {
     date: 'Fecha',
     recommendation: 'Recomendaci\u00F3n',
   },
+
+  // Welle 3: History Modal + Unified Flow
+  history: {
+    openHistory: 'View history for {{name}}',
+    viewHistory: 'History',
+    diagnosisCount: '{{count}} diagnoses',
+    noDiagnoses: '{{name}} has no diagnoses yet.',
+    noMatchingDiagnoses: 'No diagnoses match this filter.',
+    filterAll: 'All',
+    filter7d: '7 days',
+    filter30d: '30 days',
+    filterAbnormal: 'Abnormal',
+    chartAriaLabel: 'History chart with {{count}} data points',
+    stableVsPrevious: 'stable vs previous',
+    vsPrevious: 'vs previous',
+    detectedState: 'Detected state',
+  },
+
+  unifiedFlow: {
+    newMachineTitle: 'New Machine',
+    missingRefTitle: 'Normal State Missing',
+    noMachinesExplanation: 'No known machine detected. Create a new machine \u2013 the normal state will be recorded right away.',
+    missingRefExplanation: 'The following machines don\'t have a normal state yet. Select one to record it now.',
+    machineNameLabel: 'Machine name',
+    machineNamePlaceholder: 'e.g. Pump 3 \u2013 West Hall',
+    createAndRecord: 'Create & Record Normal State',
+    recordNormalState: 'Record normal state \u2192',
+    recordingStarted: 'Recording normal state for {{name}}...',
+    referenceSavedSuccess: 'Normal state saved for {{name}}.',
+    referenceSavedHint: 'Next time you check, {{name}} will be recognized automatically.',
+  },
 };
