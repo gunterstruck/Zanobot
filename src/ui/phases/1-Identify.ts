@@ -238,6 +238,9 @@ export class IdentifyPhase {
     // Load and render diagnosis history
     this.loadDiagnosisHistory();
 
+    // Welle 5: Initialize identify tile navigation
+    this.initIdentifyTiles();
+
     // "Neue Maschine" / "Neue Flotte" button handler (Sprint 5: mode-dependent)
     const addNewMachineBtn = document.getElementById('add-new-machine-btn');
     if (addNewMachineBtn) {
@@ -1177,6 +1180,57 @@ export class IdentifyPhase {
     await Promise.all([this.loadMachineOverview(), this.loadMachineHistory()]);
     // Welle 2: Also update dashboard when machine lists refresh
     await this.updateDashboard();
+    // Welle 5: Update tile badge count
+    this.updateIdentifyTileBadge();
+  }
+
+  /**
+   * Welle 5: Initialize tile navigation for "Maschine auswählen"
+   */
+  private initIdentifyTiles(): void {
+    const tiles = document.querySelectorAll('.identify-tile');
+    const sections = document.querySelectorAll('#select-machine-content .identify-section');
+
+    tiles.forEach(tile => {
+      tile.addEventListener('click', () => {
+        const targetId = (tile as HTMLElement).dataset.target;
+        if (!targetId) return;
+
+        const target = document.getElementById(targetId);
+
+        // Toggle: if already visible, hide it (go back to tiles)
+        if (target && target.style.display !== 'none') {
+          target.style.display = 'none';
+          tile.classList.remove('active');
+          return;
+        }
+
+        // Hide all sections
+        sections.forEach(s => (s as HTMLElement).style.display = 'none');
+        tiles.forEach(t => t.classList.remove('active'));
+
+        // Show target section
+        if (target) {
+          target.style.display = '';
+          tile.classList.add('active');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    });
+
+    // Update machine count badge
+    this.updateIdentifyTileBadge();
+  }
+
+  /**
+   * Welle 5: Update the machine count badge on the list tile
+   */
+  private async updateIdentifyTileBadge(): Promise<void> {
+    const badge = document.getElementById('identify-tile-count');
+    if (!badge) return;
+    const machines = await getAllMachines();
+    badge.textContent = machines.length > 0 ? String(machines.length) : '';
+    badge.style.display = machines.length > 0 ? '' : 'none';
   }
 
   /**

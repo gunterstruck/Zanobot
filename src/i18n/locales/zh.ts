@@ -109,6 +109,13 @@ export const zh: TranslationDict = {
     noMachines: '暂无可用机器',
     statesTrained: '{{count}} 个状态已训练',
 
+    // Welle 5: Identify tiles
+    tiles: {
+      savedMachines: '已保存的机器',
+      scanQR: 'QR / 条形码',
+      newMachine: '新建机器',
+    },
+
     machineDetail: {
       title: '机器',
       select: '加载机器',
