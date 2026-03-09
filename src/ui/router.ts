@@ -122,8 +122,15 @@ export class Router {
       onSelectRequested: () => this.handleDiagnoseSelectRequest(),
       onCreateRequested: () => this.handleDiagnoseCreateRequest(),
       onAutoDetectRequested: () => this.handleAutoDetectRequest(),
-      onFleetQuickCheckRequested: () => this.handleFleetQuickCheck(),
     });
+
+    // Sprint 9: Wire up Fleet Quick Check button (same pattern as Quick Compare button)
+    const fleetQcBtn = document.getElementById('fleet-quickcheck-btn');
+    if (fleetQcBtn) {
+      fleetQcBtn.addEventListener('click', () => {
+        this.handleFleetQuickCheck();
+      });
+    }
 
     // Initialize ReferenceCardController for state-based UI (mirrors DiagnoseCardController)
     this.referenceCardController = new ReferenceCardController();
