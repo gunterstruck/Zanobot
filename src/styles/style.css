@@ -9723,9 +9723,8 @@ html[data-view-level="expert"] .diagnosis-recommendation {
 
 .dashboard-attention-body {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-sm);
+    flex-direction: column;
+    gap: var(--spacing-xs);
 }
 
 .dashboard-attention-info {
@@ -9761,8 +9760,14 @@ html[data-view-level="expert"] .diagnosis-recommendation {
     color: var(--text-muted);
 }
 
+.dashboard-attention-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    width: 100%;
+}
+
 .dashboard-attention-btn {
-    flex-shrink: 0;
+    flex: 1;
     padding: var(--spacing-xs) var(--spacing-md);
     background: var(--primary-color);
     color: #fff;
@@ -9795,16 +9800,10 @@ html[data-view-level="expert"] .diagnosis-recommendation {
     color: var(--bg-primary);
 }
 
-/* Responsive: Stack attention card on very small screens */
+/* Responsive: Stack attention card buttons on very small screens */
 @media (max-width: 360px) {
-    .dashboard-attention-body {
+    .dashboard-attention-buttons {
         flex-direction: column;
-        align-items: stretch;
-    }
-
-    .dashboard-attention-btn {
-        width: 100%;
-        text-align: center;
     }
 }
 

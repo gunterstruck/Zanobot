@@ -76,6 +76,9 @@ export class ReferencePhase {
   // CRITICAL FIX: Store event listener reference for proper cleanup
   private recordButtonClickHandler: (() => void) | null = null;
 
+  // Bugfix: Track if recording tip toast was already shown (once per recording)
+  private recordingTipShown: boolean = false;
+
   // VISUAL POSITIONING: Reference image captured during recording
   private capturedReferenceImage: Blob | null = null;
   private reviewImageUrl: string | null = null;
@@ -380,6 +383,7 @@ export class ReferencePhase {
     this.isRecordingStarting = false;
     this.currentT60 = null;
     this.smartStartWasUsed = false; // Reset Smart Start flag for next recording
+    this.recordingTipShown = false; // Reset tip flag for next recording
 
     // Clear timer interval to prevent memory leaks
     if (this.timerInterval !== null) {
@@ -1230,6 +1234,14 @@ export class ReferencePhase {
           // Show countdown, hide MM:SS timer
           countdownContainer.style.display = 'flex';
           if (timerElement) timerElement.style.display = 'none';
+
+          // Bugfix: Show recording tip as toast (once per recording)
+          if (!this.recordingTipShown) {
+            notify.info(t('reference.recording.countdownTip'), {
+              duration: 5000,
+            });
+            this.recordingTipShown = true;
+          }
 
           // Update countdown number with tick animation
           countdownNumber.textContent = String(remaining);
