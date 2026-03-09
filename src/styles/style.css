@@ -10350,3 +10350,223 @@ html[data-view-level="expert"] .diagnosis-recommendation {
     border-color: var(--primary-color);
     background: rgba(0, 212, 255, 0.03);
 }
+
+/* ===================================
+   WELLE 5: UNIVERSAL CARD ORDERING
+   "Zustand prüfen" visually first in ALL themes
+   =================================== */
+
+/* "Zustand prüfen" (3rd child in HTML) → visually first */
+.main-actions > .main-container:nth-child(3) {
+    order: -1;
+}
+
+/* Secondary cards: Subtle visual recession in non-focus themes */
+/* Neon Theme */
+[data-theme="neon"] .main-actions > .main-container:nth-child(1),
+[data-theme="neon"] .main-actions > .main-container:nth-child(2) {
+    opacity: 0.88;
+    transition: opacity 0.2s ease;
+}
+
+[data-theme="neon"] .main-actions > .main-container:nth-child(1):hover,
+[data-theme="neon"] .main-actions > .main-container:nth-child(2):hover {
+    opacity: 1;
+}
+
+[data-theme="neon"] .main-actions > .main-container:nth-child(1) .container-title,
+[data-theme="neon"] .main-actions > .main-container:nth-child(2) .container-title {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 500;
+}
+
+/* Light Theme */
+[data-theme="light"] .main-actions > .main-container:nth-child(1),
+[data-theme="light"] .main-actions > .main-container:nth-child(2) {
+    opacity: 0.9;
+    box-shadow: var(--shadow-sm);
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="light"] .main-actions > .main-container:nth-child(1):hover,
+[data-theme="light"] .main-actions > .main-container:nth-child(2):hover {
+    opacity: 1;
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="light"] .main-actions > .main-container:nth-child(1) .container-title,
+[data-theme="light"] .main-actions > .main-container:nth-child(2) .container-title {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 500;
+}
+
+/* Brand Theme */
+[data-theme="brand"] .main-actions > .main-container:nth-child(1),
+[data-theme="brand"] .main-actions > .main-container:nth-child(2) {
+    opacity: 0.9;
+    box-shadow: var(--shadow-sm);
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="brand"] .main-actions > .main-container:nth-child(1):hover,
+[data-theme="brand"] .main-actions > .main-container:nth-child(2):hover {
+    opacity: 1;
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="brand"] .main-actions > .main-container:nth-child(1) .container-title,
+[data-theme="brand"] .main-actions > .main-container:nth-child(2) .container-title {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 500;
+}
+
+/* ===================================
+   WELLE 5: DASHBOARD COMPACT (Mobile)
+   Reduces vertical scroll on smartphones
+   =================================== */
+@media (max-width: 600px) {
+    .dashboard-summary {
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) 0;
+    }
+
+    .dashboard-stat-count {
+        font-size: var(--font-sm);
+    }
+
+    #dashboard-stat-total .dashboard-stat-count {
+        font-size: var(--font-sm);
+    }
+
+    .dashboard-stat-label {
+        font-size: 0.65rem;
+    }
+
+    .dashboard-attention {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .dashboard-attention-icon {
+        font-size: 1rem;
+    }
+
+    .dashboard-attention-title {
+        font-size: var(--font-xs);
+    }
+
+    .dashboard-report-link {
+        font-size: 0.7rem;
+        margin-top: 2px;
+    }
+}
+
+/* ===================================
+   WELLE 5: IDENTIFY TILES
+   Entry tiles for "Maschine auswählen"
+   =================================== */
+.identify-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+}
+
+.identify-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-xs);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    min-height: 90px;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    position: relative;
+}
+
+.identify-tile:hover {
+    border-color: var(--primary-color);
+}
+
+.identify-tile:active {
+    transform: scale(0.97);
+}
+
+.identify-tile.active {
+    border-color: var(--primary-color);
+    background: rgba(0, 212, 255, 0.04);
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.identify-tile-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.identify-tile-icon svg {
+    stroke: var(--text-secondary);
+    transition: stroke 0.2s;
+}
+
+.identify-tile:hover .identify-tile-icon svg,
+.identify-tile.active .identify-tile-icon svg {
+    stroke: var(--primary-color);
+}
+
+.identify-tile-label {
+    font-size: var(--font-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.identify-tile-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+/* Section transitions */
+.identify-section {
+    animation: fadeSlideIn 0.2s ease;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive: 2 columns on very small screens */
+@media (max-width: 320px) {
+    .identify-tiles {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Theme-specific tile backgrounds */
+[data-theme="neon"] .identify-tile {
+    background: rgba(17, 40, 64, 0.4);
+    border-color: rgba(0, 212, 255, 0.15);
+}
+
+[data-theme="neon"] .identify-tile:hover,
+[data-theme="neon"] .identify-tile.active {
+    background: rgba(17, 40, 64, 0.6);
+    border-color: var(--primary-color);
+}

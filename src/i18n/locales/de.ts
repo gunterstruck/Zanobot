@@ -111,6 +111,13 @@ export const de: TranslationDict = {
     noMachines: 'Keine Maschinen vorhanden',
     statesTrained: '{{count}} Zustände trainiert',
 
+    // Welle 5: Identify tiles
+    tiles: {
+      savedMachines: 'Gespeicherte Maschinen',
+      scanQR: 'QR / Barcode',
+      newMachine: 'Neue Maschine',
+    },
+
     // Machine detail modal
     machineDetail: {
       title: 'Maschine',

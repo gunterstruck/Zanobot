@@ -109,6 +109,13 @@ export const fr: TranslationDict = {
     noMachines: 'Aucune machine disponible',
     statesTrained: '{{count}} états entraînés',
 
+    // Welle 5: Identify tiles
+    tiles: {
+      savedMachines: 'Machines enregistrées',
+      scanQR: 'QR / Code-barres',
+      newMachine: 'Nouvelle machine',
+    },
+
     machineDetail: {
       title: 'Machine',
       select: 'Charger la machine',
