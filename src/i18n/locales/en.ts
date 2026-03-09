@@ -1806,4 +1806,7 @@ export const en: TranslationDict = {
     newQuickCompareHint: 'Compare machines without setup',
     singleMachineHint: 'Fleet "{{name}}" has only 1 machine. At least 2 required for comparison.',
   },
+  alerts: {
+    genericError: 'An error occurred. Please try again.',
+  },
 };

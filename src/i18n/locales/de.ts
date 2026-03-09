@@ -1849,4 +1849,7 @@ export const de: TranslationDict = {
     newQuickCompareHint: 'Maschinen ohne Setup vergleichen',
     singleMachineHint: 'Flotte \u201E{{name}}\u201C hat nur 1 Maschine. Mindestens 2 n\u00f6tig f\u00fcr einen Vergleich.',
   },
+  alerts: {
+    genericError: 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.',
+  },
 };
