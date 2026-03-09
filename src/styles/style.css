@@ -6921,6 +6921,141 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
 }
 
 /* ----------------------------------------
+   Sprint 9: Fleet Quick Check in Phase 3
+   ---------------------------------------- */
+.phase3-separator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+}
+
+.phase3-separator::before,
+.phase3-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.phase3-separator-text {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.phase3-fleet-action {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.phase3-fleet-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--surface-color);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    color: var(--primary-color);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.phase3-fleet-btn:hover,
+.phase3-fleet-btn:active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.phase3-fleet-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.phase3-fleet-btn svg {
+    flex-shrink: 0;
+}
+
+/* Fleet Selection Sheet */
+.fleet-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.fleet-select-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+}
+
+.fleet-select-item:hover,
+.fleet-select-item:active {
+    border-color: var(--primary-color);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.fleet-select-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.fleet-select-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.fleet-select-name {
+    font-weight: 600;
+    font-size: var(--font-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fleet-select-meta {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.fleet-select-separator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-sm) 0;
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+}
+
+.fleet-select-separator::before,
+.fleet-select-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+/* ----------------------------------------
    Responsive: Tablet and larger
    ---------------------------------------- */
 @media (min-width: 481px) {

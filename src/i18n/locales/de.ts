@@ -366,6 +366,11 @@ export const de: TranslationDict = {
     opHint: {
       changed: 'ℹ️ Betriebspunkt wich während der Messung ab – Score-Interpretation berücksichtigen',
     },
+
+    // Sprint 9: Fleet Quick Check in Phase 3
+    orFleet: 'oder',
+    fleetQuickCheck: 'Flotten-Schnellcheck',
+    fleetQuickCheckAria: 'Flotten-Schnellcheck: Mehrere Maschinen vergleichen',
   },
 
   // ============================================================================
@@ -1474,6 +1479,16 @@ export const de: TranslationDict = {
       title: 'Ranking verstehen',
       body: '<p>Jeder <strong>Balken</strong> zeigt den Ähnlichkeits-Score einer Maschine (0–100%). Maschinen sind sortiert: niedrigster Score oben.</p><p><strong>Orange markierte</strong> Maschinen weichen statistisch vom Rest ab. Orange heißt: „Diese Maschine klingt anders als ihre Geschwister."</p><p><strong>Median:</strong> Der mittlere Score aller Maschinen – robuster als ein Durchschnitt.</p><p><strong>Spannweite:</strong> Differenz zwischen bestem und schlechtestem Score. Große Spannweite = mindestens eine Maschine weicht deutlich ab.</p><p><strong>Tipp:</strong> Tippen Sie auf eine Maschine im Ranking, um deren Prüfung zu starten.</p>',
     },
+    // Sprint 9: Fleet Quick Check help
+    fleetQuickCheck: {
+      title: 'Flotten-Schnellcheck',
+      body: '<p><strong>Was ist das?</strong> Prüfen Sie mehrere baugleiche Maschinen in einem Durchgang. Die App vergleicht die Geräusche und zeigt Ihnen sofort, welche Maschine anders klingt – das „schwarze Schaf".</p>'
+          + '<p><strong>Wann nutze ich das?</strong> Wenn Sie vor mehreren gleichen Maschinen stehen (z.B. 5 Pumpen in einer Reihe) und schnell wissen wollen, ob eine davon auffällig ist.</p>'
+          + '<p><strong>Wie funktioniert es?</strong></p>'
+          + '<p>• <strong>Flotte vorhanden:</strong> Wählen Sie eine gespeicherte Flotte – die App führt Sie Maschine für Maschine durch.</p>'
+          + '<p>• <strong>Keine Flotte:</strong> Kein Problem! Die App erstellt automatisch Maschinen, Sie nehmen nur auf. Hinterher können Sie das Ergebnis als Flotte speichern.</p>'
+          + '<p><strong>Unterschied zur Einzelprüfung:</strong> „Jetzt prüfen" vergleicht eine Maschine mit ihrer eigenen Referenz (Trend über Zeit). Der Flotten-Schnellcheck vergleicht mehrere Maschinen untereinander (Ausreißer finden).</p>',
+    },
   },
 
   // Sprint 2 UX: Smart Start visual ready moment
@@ -1819,5 +1834,19 @@ export const de: TranslationDict = {
     recordingStarted: 'Normalzustand wird aufgenommen f\u00fcr {{name}}...',
     referenceSavedSuccess: 'Normalzustand f\u00fcr {{name}} gespeichert.',
     referenceSavedHint: 'Beim n\u00e4chsten Pr\u00fcfen wird {{name}} automatisch erkannt.',
+  },
+
+  // ============================================================================
+  // SPRINT 9: FLEET QUICK CHECK (Flotten-Schnellcheck)
+  // ============================================================================
+  fleetSelect: {
+    title: 'Flotte w\u00e4hlen',
+    machineCount: '{{count}} Maschinen',
+    machineCountSingular: '1 Maschine',
+    lastChecked: 'gepr\u00fcft {{time}}',
+    neverChecked: 'nie gepr\u00fcft',
+    newQuickCompare: 'Neuen Schnellvergleich',
+    newQuickCompareHint: 'Maschinen ohne Setup vergleichen',
+    singleMachineHint: 'Flotte \u201E{{name}}\u201C hat nur 1 Maschine. Mindestens 2 n\u00f6tig f\u00fcr einen Vergleich.',
   },
 };
