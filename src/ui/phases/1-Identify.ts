@@ -1368,7 +1368,7 @@ export class IdentifyPhase {
             exportMaintenanceJSON([entry], capturedMostUrgent.machine.name);
             notify.success(t('report.exported'));
           });
-          const btnContainer = attentionCard.querySelector('.dashboard-attention-body');
+          const btnContainer = attentionCard.querySelector('.dashboard-attention-buttons');
           if (btnContainer) btnContainer.appendChild(maintBtn);
         }
       }

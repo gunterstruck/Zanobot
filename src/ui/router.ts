@@ -1485,6 +1485,36 @@ export class Router {
   }
 
   /**
+   * Bugfix: Wait for reference record button to be ready and click it.
+   * Used in fleet queue context to skip the tile navigation and start recording directly.
+   * Tries both record-btn (State A) and record-reference-btn (State B / zero-friction).
+   */
+  private waitForRecordButton(): Promise<void> {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      const tryClick = () => {
+        attempts++;
+        const recordBtn = document.getElementById('record-btn') || document.getElementById('record-reference-btn');
+        if (recordBtn) {
+          recordBtn.click();
+          resolve();
+          return;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(tryClick, 100);
+        } else {
+          logger.warn(`Fleet queue: record button not found after ${maxAttempts} attempts`);
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(() => setTimeout(tryClick, 100));
+    });
+  }
+
+  /**
    * Sprint 6: Show guided fleet check prompt.
    * Large, clear UI telling the user which machine to go to,
    * with a manual start button for the recording.
@@ -1562,8 +1592,9 @@ export class Router {
       if (isQcGoldStandard) {
         // Gold standard: select machine for REFERENCE phase (Phase 2)
         this.onMachineSelected(machine);
-        // Don't click diagnose button – user records reference manually
-        // The fleet queue will advance after onReferenceComplete
+        // Bugfix: Start recording directly – skip tile navigation
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await this.waitForRecordButton();
       } else {
         // Normal comparison: select machine and auto-start diagnosis (Phase 3)
         this.onMachineSelected(machine);
