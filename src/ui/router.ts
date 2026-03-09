@@ -1459,6 +1459,17 @@ export class Router {
     const sheet = document.createElement('div');
     sheet.className = 'bottomsheet';
 
+    // escHandler placeholder – assigned below, captured by dismiss via closure
+    let escHandler: ((e: KeyboardEvent) => void) = () => { /* assigned below */ };
+
+    // Helper: animated dismissal (defined early so buttons can use it)
+    const dismiss = () => {
+      overlay.classList.remove('bottomsheet-overlay-visible');
+      sheet.classList.remove('bottomsheet-visible');
+      setTimeout(() => { overlay.remove(); }, 350);
+      document.removeEventListener('keydown', escHandler);
+    };
+
     // Handle
     const handle = document.createElement('div');
     handle.className = 'bottomsheet-handle';
@@ -1471,7 +1482,7 @@ export class Router {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'bottomsheet-close';
     closeBtn.innerHTML = '&times;';
-    closeBtn.addEventListener('click', () => overlay.remove());
+    closeBtn.addEventListener('click', () => dismiss());
     header.appendChild(closeBtn);
 
     const title = document.createElement('h3');
@@ -1516,7 +1527,7 @@ export class Router {
       item.appendChild(infoDiv);
 
       item.addEventListener('click', () => {
-        overlay.remove();
+        dismiss();
         if (info.machines.length < 2) {
           notify.info(t('fleetSelect.singleMachineHint', { name: info.name }));
           return;
@@ -1560,7 +1571,7 @@ export class Router {
     qcItem.appendChild(qcInfo);
 
     qcItem.addEventListener('click', () => {
-      overlay.remove();
+      dismiss();
       this.quickCompareController.start();
     });
 
@@ -1570,17 +1581,20 @@ export class Router {
     overlay.appendChild(sheet);
     document.body.appendChild(overlay);
 
-    // Close on overlay click
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
+    // Trigger CSS transitions (must run after DOM append)
+    requestAnimationFrame(() => {
+      overlay.classList.add('bottomsheet-overlay-visible');
+      sheet.classList.add('bottomsheet-visible');
     });
 
-    // Close on Escape
-    const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        overlay.remove();
-        document.removeEventListener('keydown', escHandler);
-      }
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) dismiss();
+    });
+
+    // Assign the Escape handler (captured by dismiss via closure)
+    escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dismiss();
     };
     document.addEventListener('keydown', escHandler);
   }

@@ -1449,4 +1449,7 @@ export const zh: TranslationDict = {
     newQuickCompareHint: 'Compare machines without setup',
     singleMachineHint: 'Fleet "{{name}}" has only 1 machine. At least 2 required for comparison.',
   },
+  alerts: {
+    genericError: '发生错误，请重试。',
+  },
 };
