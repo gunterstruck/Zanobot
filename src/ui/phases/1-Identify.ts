@@ -305,6 +305,16 @@ export class IdentifyPhase {
       });
     });
 
+    // Sprint 9: Fleet Quick Check help icon (next to fleet quick check button in Phase 3)
+    document.getElementById('help-fleet-quickcheck')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      InfoBottomSheet.show({
+        title: t('help.fleetQuickCheck.title'),
+        content: t('help.fleetQuickCheck.body'),
+        icon: '\u26A1',
+      });
+    });
+
     // Sprint 4 UX: Workflow mode toggle + fleet group autocomplete
     this.initWorkflowToggle();
     this.populateFleetGroupSuggestions();

@@ -16,7 +16,6 @@
 import type { Machine } from '@data/types.js';
 import { logger } from '@utils/logger.js';
 import { t } from '../../i18n/index.js';
-import { InfoBottomSheet } from '@ui/components/InfoBottomSheet.js';
 
 export class DiagnoseCardController {
   // State tracking
@@ -34,7 +33,6 @@ export class DiagnoseCardController {
   private onSelectRequested: (() => void) | null = null;
   private onCreateRequested: (() => void) | null = null;
   private onAutoDetectRequested: (() => void) | null = null;
-  private onFleetQuickCheckRequested: (() => void) | null = null;
 
   constructor() {
     // Elements will be initialized in init()
@@ -49,14 +47,12 @@ export class DiagnoseCardController {
     onSelectRequested: () => void;
     onCreateRequested: () => void;
     onAutoDetectRequested?: () => void;
-    onFleetQuickCheckRequested?: () => void;
   }): void {
     this.onMachineSelected = callbacks.onMachineSelected;
     this.onScanRequested = callbacks.onScanRequested;
     this.onSelectRequested = callbacks.onSelectRequested;
     this.onCreateRequested = callbacks.onCreateRequested;
     this.onAutoDetectRequested = callbacks.onAutoDetectRequested || null;
-    this.onFleetQuickCheckRequested = callbacks.onFleetQuickCheckRequested || null;
 
     // Get UI elements
     this.noMachineState = document.getElementById('diagnose-no-machine');
@@ -158,33 +154,6 @@ export class DiagnoseCardController {
         e.preventDefault();
         e.stopPropagation();
         this.toggleManualSelection();
-      });
-    }
-
-    // Sprint 9: Fleet Quick Check button
-    const fleetQuickCheckBtn = document.getElementById('fleet-quickcheck-btn');
-    if (fleetQuickCheckBtn) {
-      fleetQuickCheckBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        logger.debug('[DiagnoseCardController] Fleet Quick Check button clicked');
-        if (this.onFleetQuickCheckRequested) {
-          this.onFleetQuickCheckRequested();
-        }
-      });
-      logger.debug('[DiagnoseCardController] Fleet Quick Check button listener attached');
-    }
-
-    // Sprint 9: Fleet Quick Check help icon
-    const helpFleetQuickCheckBtn = document.getElementById('help-fleet-quickcheck');
-    if (helpFleetQuickCheckBtn) {
-      helpFleetQuickCheckBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        InfoBottomSheet.show({
-          title: t('help.fleetQuickCheck.title'),
-          content: t('help.fleetQuickCheck.body'),
-          icon: '\u26A1',
-        });
       });
     }
   }
