@@ -128,7 +128,7 @@ export class Router {
     const fleetQcBtn = document.getElementById('fleet-quickcheck-btn');
     if (fleetQcBtn) {
       fleetQcBtn.addEventListener('click', () => {
-        this.handleFleetQuickCheck();
+        void this.handleFleetQuickCheck();
       });
     }
 
@@ -1391,38 +1391,43 @@ export class Router {
    * Context-aware: starts Quick Compare, direct fleet check, or shows fleet selection.
    */
   private async handleFleetQuickCheck(): Promise<void> {
-    const allMachines = await getAllMachines();
-    const fleetGroups = new Map<string, Machine[]>();
+    try {
+      const allMachines = await getAllMachines();
+      const fleetGroups = new Map<string, Machine[]>();
 
-    for (const m of allMachines) {
-      if (m.fleetGroup) {
-        const group = fleetGroups.get(m.fleetGroup) || [];
-        group.push(m);
-        fleetGroups.set(m.fleetGroup, group);
+      for (const m of allMachines) {
+        if (m.fleetGroup) {
+          const group = fleetGroups.get(m.fleetGroup) || [];
+          group.push(m);
+          fleetGroups.set(m.fleetGroup, group);
+        }
       }
-    }
 
-    if (fleetGroups.size === 0) {
-      // No fleets → start Quick Compare directly
-      this.quickCompareController.start();
-      return;
-    }
-
-    if (fleetGroups.size === 1) {
-      const [fleetName, machines] = [...fleetGroups.entries()][0];
-      if (machines.length >= 2) {
-        // Exactly 1 fleet with ≥2 machines → start guided fleet check directly
-        this.startGuidedFleetCheckFromPhase3(fleetName, machines);
+      if (fleetGroups.size === 0) {
+        // No fleets → start Quick Compare directly
+        this.quickCompareController.start();
         return;
       }
-      // Only 1 machine in the fleet → show hint + offer Quick Compare
-      notify.info(t('fleetSelect.singleMachineHint', { name: fleetName }));
-      this.quickCompareController.start();
-      return;
-    }
 
-    // Multiple fleets → show selection sheet
-    this.showFleetSelectionSheet(fleetGroups);
+      if (fleetGroups.size === 1) {
+        const [fleetName, machines] = [...fleetGroups.entries()][0];
+        if (machines.length >= 2) {
+          // Exactly 1 fleet with ≥2 machines → start guided fleet check directly
+          this.startGuidedFleetCheckFromPhase3(fleetName, machines);
+          return;
+        }
+        // Only 1 machine in the fleet → show hint + offer Quick Compare
+        notify.info(t('fleetSelect.singleMachineHint', { name: fleetName }));
+        this.quickCompareController.start();
+        return;
+      }
+
+      // Multiple fleets → show selection sheet
+      await this.showFleetSelectionSheet(fleetGroups);
+    } catch (error) {
+      logger.error('[Router] Fleet quick check could not be started', error);
+      notify.error(t('alerts.genericError'));
+    }
   }
 
   /**
