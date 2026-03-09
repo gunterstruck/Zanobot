@@ -1043,6 +1043,10 @@ export class Router {
       if (btn.classList.contains('manual-selection-toggle')) {
         return;
       }
+      // Sprint 9: Fleet quick check (and inline help) must remain usable without machine pre-selection
+      if (btn.id === 'fleet-quickcheck-btn' || btn.id === 'help-fleet-quickcheck') {
+        return;
+      }
       // ZERO-FRICTION: Skip reference record button - always enabled for zero-friction recording
       if (btn.id === 'record-reference-btn') {
         return;
@@ -1091,6 +1095,8 @@ export class Router {
       'diagnose-scan-btn',
       'diagnose-select-btn',
       'diagnose-create-btn',
+      'fleet-quickcheck-btn',
+      'help-fleet-quickcheck',
     ];
 
     for (const id of tileIds) {
