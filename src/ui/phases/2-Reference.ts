@@ -1011,20 +1011,11 @@ export class ReferencePhase {
       }
     }
 
-    // Sprint 1 UX: Show reference explanation before recording
-    const modalBody = document.querySelector('#recording-modal .modal-body');
-    if (modalBody && !document.getElementById('reference-explain-banner')) {
-      const explainBanner = document.createElement('div');
-      explainBanner.id = 'reference-explain-banner';
-      explainBanner.className = 'reference-explain-banner';
-      explainBanner.innerHTML = `
-        <div class="explain-icon">\u2139\uFE0F</div>
-        <div class="explain-text">${t('reference.explainBefore')}</div>
-      `;
-      modalBody.insertBefore(explainBanner, modalBody.firstChild);
-    }
+    // Sprint 1 UX: Show reference explanation as toast notification
+    notify.info(t('reference.explainBefore'), { duration: 4000 });
 
     // Add existing models info and status message
+    const modalBody = document.querySelector('#recording-modal .modal-body');
     if (modalBody && !document.getElementById('recording-status')) {
       // Show existing models info
       const existingModels = this.machine?.referenceModels || [];
