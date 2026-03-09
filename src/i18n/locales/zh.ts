@@ -350,6 +350,11 @@ export const zh: TranslationDict = {
     opHint: {
       changed: 'ℹ️ Operating point differed during measurement – consider when interpreting score',
     },
+
+    // Sprint 9: Fleet Quick Check in Phase 3
+    orFleet: 'or',
+    fleetQuickCheck: 'Fleet Quick Check',
+    fleetQuickCheckAria: 'Fleet Quick Check: Compare multiple machines',
   },
 
   // ============================================================================
@@ -1418,5 +1423,30 @@ export const zh: TranslationDict = {
     recordingStarted: 'Recording normal state for {{name}}...',
     referenceSavedSuccess: 'Normal state saved for {{name}}.',
     referenceSavedHint: 'Next time you check, {{name}} will be recognized automatically.',
+  },
+
+  // Sprint 9: Fleet Quick Check help (English fallbacks)
+  help: {
+    fleetQuickCheck: {
+      title: 'Fleet Quick Check',
+      body: '<p><strong>What is this?</strong> Check multiple identical machines in one go. The app compares their sounds and instantly shows you which machine sounds different \u2013 the \u201Codd one out\u201D.</p>'
+          + '<p><strong>When should I use this?</strong> When you\'re standing in front of several identical machines (e.g. 5 pumps in a row) and want to quickly find out if one stands out.</p>'
+          + '<p><strong>How does it work?</strong></p>'
+          + '<p>\u2022 <strong>Fleet exists:</strong> Select a saved fleet \u2013 the app guides you through machine by machine.</p>'
+          + '<p>\u2022 <strong>No fleet:</strong> No problem! The app creates machines automatically, you just record. You can save the result as a fleet afterwards.</p>'
+          + '<p><strong>Difference from single check:</strong> \u201CCheck now\u201D compares one machine against its own reference (trend over time). The fleet quick check compares multiple machines against each other (find the outlier).</p>',
+    },
+  },
+
+  // Sprint 9: Fleet Quick Check
+  fleetSelect: {
+    title: 'Select Fleet',
+    machineCount: '{{count}} machines',
+    machineCountSingular: '1 machine',
+    lastChecked: 'checked {{time}}',
+    neverChecked: 'never checked',
+    newQuickCompare: 'New Quick Compare',
+    newQuickCompareHint: 'Compare machines without setup',
+    singleMachineHint: 'Fleet "{{name}}" has only 1 machine. At least 2 required for comparison.',
   },
 };

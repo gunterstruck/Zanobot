@@ -122,6 +122,7 @@ export class Router {
       onSelectRequested: () => this.handleDiagnoseSelectRequest(),
       onCreateRequested: () => this.handleDiagnoseCreateRequest(),
       onAutoDetectRequested: () => this.handleAutoDetectRequest(),
+      onFleetQuickCheckRequested: () => this.handleFleetQuickCheck(),
     });
 
     // Initialize ReferenceCardController for state-based UI (mirrors DiagnoseCardController)
@@ -1365,6 +1366,249 @@ export class Router {
         // Start the Quick Compare controller with count (creates machines + starts loop)
         this.quickCompareController.startWithCount(count);
       });
+    }
+  }
+
+  // ============================================================================
+  // SPRINT 9: FLEET QUICK CHECK FROM PHASE 3
+  // ============================================================================
+
+  /**
+   * Sprint 9: Handle fleet quick check button tap in Phase 3.
+   * Context-aware: starts Quick Compare, direct fleet check, or shows fleet selection.
+   */
+  private async handleFleetQuickCheck(): Promise<void> {
+    const allMachines = await getAllMachines();
+    const fleetGroups = new Map<string, Machine[]>();
+
+    for (const m of allMachines) {
+      if (m.fleetGroup) {
+        const group = fleetGroups.get(m.fleetGroup) || [];
+        group.push(m);
+        fleetGroups.set(m.fleetGroup, group);
+      }
+    }
+
+    if (fleetGroups.size === 0) {
+      // No fleets → start Quick Compare directly
+      this.quickCompareController.start();
+      return;
+    }
+
+    if (fleetGroups.size === 1) {
+      const [fleetName, machines] = [...fleetGroups.entries()][0];
+      if (machines.length >= 2) {
+        // Exactly 1 fleet with ≥2 machines → start guided fleet check directly
+        this.startGuidedFleetCheckFromPhase3(fleetName, machines);
+        return;
+      }
+      // Only 1 machine in the fleet → show hint + offer Quick Compare
+      notify.info(t('fleetSelect.singleMachineHint', { name: fleetName }));
+      this.quickCompareController.start();
+      return;
+    }
+
+    // Multiple fleets → show selection sheet
+    this.showFleetSelectionSheet(fleetGroups);
+  }
+
+  /**
+   * Sprint 9: Show fleet selection bottom sheet.
+   */
+  private async showFleetSelectionSheet(fleetGroups: Map<string, Machine[]>): Promise<void> {
+    // Remove existing sheet
+    document.getElementById('fleet-select-overlay')?.remove();
+
+    // Build fleet info with last-checked timestamps
+    const fleetInfos: Array<{ name: string; machines: Machine[]; lastChecked: number | null }> = [];
+    for (const [name, machines] of fleetGroups) {
+      let latestTimestamp: number | null = null;
+      for (const m of machines) {
+        const diag = await getLatestDiagnosis(m.id);
+        if (diag && (latestTimestamp === null || diag.timestamp > latestTimestamp)) {
+          latestTimestamp = diag.timestamp;
+        }
+      }
+      fleetInfos.push({ name, machines, lastChecked: latestTimestamp });
+    }
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'fleet-select-overlay';
+    overlay.className = 'bottomsheet-overlay';
+
+    // Create sheet
+    const sheet = document.createElement('div');
+    sheet.className = 'bottomsheet';
+
+    // Handle
+    const handle = document.createElement('div');
+    handle.className = 'bottomsheet-handle';
+    sheet.appendChild(handle);
+
+    // Header with close button
+    const header = document.createElement('div');
+    header.className = 'bottomsheet-header';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'bottomsheet-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    header.appendChild(closeBtn);
+
+    const title = document.createElement('h3');
+    title.className = 'bottomsheet-title';
+    title.textContent = t('fleetSelect.title');
+    header.appendChild(title);
+
+    sheet.appendChild(header);
+
+    // Fleet list
+    const list = document.createElement('div');
+    list.className = 'fleet-select-list';
+
+    for (const info of fleetInfos) {
+      const item = document.createElement('button');
+      item.className = 'fleet-select-item';
+
+      const icon = document.createElement('span');
+      icon.className = 'fleet-select-icon';
+      icon.textContent = '\uD83C\uDFED'; // 🏭
+      item.appendChild(icon);
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'fleet-select-info';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'fleet-select-name';
+      nameEl.textContent = info.name;
+      infoDiv.appendChild(nameEl);
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'fleet-select-meta';
+      const countText = info.machines.length === 1
+        ? t('fleetSelect.machineCountSingular')
+        : t('fleetSelect.machineCount', { count: String(info.machines.length) });
+      const timeText = info.lastChecked
+        ? t('fleetSelect.lastChecked', { time: this.formatRelativeTimeForSheet(info.lastChecked) })
+        : t('fleetSelect.neverChecked');
+      metaEl.textContent = `${countText} \u00B7 ${timeText}`;
+      infoDiv.appendChild(metaEl);
+
+      item.appendChild(infoDiv);
+
+      item.addEventListener('click', () => {
+        overlay.remove();
+        if (info.machines.length < 2) {
+          notify.info(t('fleetSelect.singleMachineHint', { name: info.name }));
+          return;
+        }
+        this.startGuidedFleetCheckFromPhase3(info.name, info.machines);
+      });
+
+      list.appendChild(item);
+    }
+
+    sheet.appendChild(list);
+
+    // Separator
+    const separator = document.createElement('div');
+    separator.className = 'fleet-select-separator';
+    separator.textContent = t('diagnose.orFleet');
+    sheet.appendChild(separator);
+
+    // Quick Compare option
+    const qcItem = document.createElement('button');
+    qcItem.className = 'fleet-select-item';
+
+    const qcIcon = document.createElement('span');
+    qcIcon.className = 'fleet-select-icon';
+    qcIcon.textContent = '\u26A1'; // ⚡
+    qcItem.appendChild(qcIcon);
+
+    const qcInfo = document.createElement('div');
+    qcInfo.className = 'fleet-select-info';
+
+    const qcName = document.createElement('div');
+    qcName.className = 'fleet-select-name';
+    qcName.textContent = t('fleetSelect.newQuickCompare');
+    qcInfo.appendChild(qcName);
+
+    const qcMeta = document.createElement('div');
+    qcMeta.className = 'fleet-select-meta';
+    qcMeta.textContent = t('fleetSelect.newQuickCompareHint');
+    qcInfo.appendChild(qcMeta);
+
+    qcItem.appendChild(qcInfo);
+
+    qcItem.addEventListener('click', () => {
+      overlay.remove();
+      this.quickCompareController.start();
+    });
+
+    sheet.appendChild(qcItem);
+
+    // Assemble
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    // Close on Escape
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  }
+
+  /**
+   * Sprint 9: Start a guided fleet check from Phase 3.
+   * Navigates to Phase 1, activates fleet mode, then starts the queue.
+   */
+  private startGuidedFleetCheckFromPhase3(fleetName: string, machines: Machine[]): void {
+    const machineIds = machines.map(m => m.id);
+
+    // Expand the machine section (Phase 1) so DOM is ready
+    this.expandSection('select-machine-content');
+
+    // Activate fleet mode and start the queue after a short delay for DOM readiness
+    this.identifyPhase.activateFleetMode(fleetName).then(() => {
+      // Small delay to ensure DOM is settled before starting the fleet queue
+      setTimeout(() => {
+        this.startFleetQueue(machineIds, fleetName);
+      }, 300);
+    });
+  }
+
+  /**
+   * Sprint 9: Format a timestamp as relative time (e.g., "vor 2h", "vor 1d").
+   */
+  private formatRelativeTimeForSheet(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+
+    if (seconds < 60) {
+      return t('identify.time.justNow');
+    } else if (minutes < 60) {
+      return t('identify.time.minutesAgo', { minutes: String(minutes) });
+    } else if (hours < 24) {
+      return t('identify.time.hoursAgo', { hours: String(hours) });
+    } else if (days < 7) {
+      return days === 1 ? t('identify.time.dayAgo') : t('identify.time.daysAgo', { days: String(days) });
+    } else {
+      return weeks === 1 ? t('identify.time.weekAgo') : t('identify.time.weeksAgo', { weeks: String(weeks) });
     }
   }
 
