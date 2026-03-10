@@ -1613,6 +1613,7 @@ export const de: TranslationDict = {
       discardConfirm: 'Prüfungen dieses Durchlaufs wirklich löschen? Die Maschinen und Referenzen bleiben erhalten.',
       discardDone: '{{count}} Prüfungen verworfen',
       viewHistory: 'Verlauf anzeigen',
+      closeAndContinue: 'Schließen und weiter',
     },
     // Fleet History Modal
     history: {

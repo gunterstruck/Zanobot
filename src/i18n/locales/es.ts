@@ -1220,6 +1220,7 @@ export const es: TranslationDict = {
       discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
       discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
+      closeAndContinue: 'Cerrar y continuar',
     },
     history: {
       title: 'Fleet Check History',

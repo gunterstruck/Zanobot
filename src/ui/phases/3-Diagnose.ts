@@ -1919,6 +1919,8 @@ export class DiagnosePhase {
     if (stopBtn) {
       stopBtn.textContent = BUTTON_TEXT.STOP_DIAGNOSE;
       stopBtn.onclick = () => this.stopRecording();
+      // Hide footer stop button – the dynamically created stop-diagnosis-btn is the primary control
+      stopBtn.style.display = 'none';
     }
 
     // Update modal title
@@ -2237,6 +2239,12 @@ export class DiagnosePhase {
     const recordingModal = document.getElementById('recording-modal');
     if (recordingModal) {
       recordingModal.style.display = 'none';
+
+      // Restore footer stop button visibility for reference recording mode
+      const stopBtn = document.getElementById('stop-recording-btn');
+      if (stopBtn) {
+        stopBtn.style.display = '';
+      }
 
       // Remove diagnosis-active class from body
       document.body.classList.remove('diagnosis-active');
