@@ -843,8 +843,11 @@ export class Router {
     });
 
     // UX-Fix: Reset to Grundansicht when explicit "Weiter" button is clicked
+    // Guard: in fleet queue mode the queue advances via onDiagnosisComplete – do not reset
     this.diagnosePhase.setOnResultContinue(() => {
-      this.resetToGrundansicht();
+      if (!this.isFleetQueueActive) {
+        this.resetToGrundansicht();
+      }
     });
 
     // Sprint 5: Register fleet queue callbacks if queue is active
@@ -2616,10 +2619,19 @@ export class Router {
     }
 
     // 2. Reset workflow mode to series (Übersicht)
-    // NOTE: Do NOT clear currentMachine – the machine info header stays for export context
     this.identifyPhase.setWorkflowMode('series');
 
-    // 3. Reset diagnose/reference button states to default
+    // 3. Clear machine from card controllers so the "no machine selected" state shows
+    this.diagnoseCardController.clearMachine();
+    this.referenceCardController.clearMachine();
+    this.currentMachine = null;
+
+    // 4. Reset section layout: collapse diagnosis/reference, re-expand machine selection
+    this.collapseSection('run-diagnosis-content');
+    this.collapseSection('record-reference-content');
+    this.expandSection('select-machine-content');
+
+    // 5. Reset diagnose/reference button states to default
     const diagnoseBtn = document.getElementById('diagnose-btn');
     const referenceBtn = document.getElementById('reference-btn');
     if (diagnoseBtn) {
@@ -2629,7 +2641,7 @@ export class Router {
       referenceBtn.classList.remove('active', 'ready');
     }
 
-    // 4. Refresh machine overview
+    // 6. Refresh machine overview
     this.identifyPhase.updateDashboard();
 
     logger.info('✅ Grundansicht restored');
