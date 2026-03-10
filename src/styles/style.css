@@ -9359,6 +9359,30 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
     background: rgba(0, 188, 212, 0.06);
 }
 
+.fleet-result-btn-close {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+    border-radius: var(--radius-md, 12px);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    min-height: 48px;
+    transition: background 0.15s;
+    margin-bottom: 8px;
+}
+
+.fleet-result-btn-close:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.fleet-result-btn-close:focus-visible {
+    outline: 2px solid var(--primary-color, #00bcd4);
+    outline-offset: 2px;
+}
+
 .fleet-result-btn-row {
     display: flex;
     gap: 10px;
@@ -10058,6 +10082,16 @@ html[data-view-level="expert"] .diagnosis-recommendation {
 .result-action-danger {
     background: var(--status-error, #ef4444);
     color: #fff;
+}
+
+/* Diagnosis result modal: full-width close button below action buttons */
+.modal-actions.shell-footer {
+    flex-wrap: wrap;
+}
+
+#close-diagnosis-result-btn {
+    width: 100%;
+    margin-top: 8px;
 }
 
 /* Neon theme adjustments */

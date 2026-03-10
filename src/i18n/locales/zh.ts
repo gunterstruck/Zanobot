@@ -1216,6 +1216,7 @@ export const zh: TranslationDict = {
       discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
       discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
+      closeAndContinue: '关闭并继续',
     },
     history: {
       title: 'Fleet Check History',

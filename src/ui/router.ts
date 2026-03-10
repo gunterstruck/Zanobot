@@ -2274,6 +2274,16 @@ export class Router {
     });
     actions.appendChild(reportBtn);
 
+    const closeAndContinueBtn = document.createElement('button');
+    closeAndContinueBtn.className = 'fleet-result-btn-close';
+    closeAndContinueBtn.textContent = t('fleet.result.closeAndContinue');
+    closeAndContinueBtn.setAttribute('aria-label', t('fleet.result.closeAndContinue'));
+    closeAndContinueBtn.addEventListener('click', () => {
+      overlay.remove();
+      this.identifyPhase.showFleetRanking();
+    });
+    actions.appendChild(closeAndContinueBtn);
+
     const btnRow = document.createElement('div');
     btnRow.className = 'fleet-result-btn-row';
 

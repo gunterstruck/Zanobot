@@ -1570,6 +1570,7 @@ export const en: TranslationDict = {
       discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
       discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
+      closeAndContinue: 'Close and continue',
     },
     // Fleet History Modal
     history: {
