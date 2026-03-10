@@ -24,6 +24,7 @@ export const zh: TranslationDict = {
     newMachine: '新建机器',
     stopRecording: '停止录制',
     saveReference: '保存正常状态',
+    continue: '继续',
   },
 
   // ============================================================================
@@ -1216,7 +1217,7 @@ export const zh: TranslationDict = {
       discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
       discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
-      closeAndContinue: '关闭并继续',
+      closeAndContinue: '继续',
     },
     history: {
       title: 'Fleet Check History',

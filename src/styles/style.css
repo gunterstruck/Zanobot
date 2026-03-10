@@ -9362,20 +9362,24 @@ html[data-view-level="expert"] .settings-divider[data-view-level="expert"] {
 .fleet-result-btn-close {
     width: 100%;
     padding: 14px;
-    background: transparent;
-    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+    background: var(--primary-color, #00bcd4);
+    border: none;
     border-radius: var(--radius-md, 12px);
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
-    min-height: 48px;
-    transition: background 0.15s;
+    min-height: 52px;
+    transition: background 0.15s, transform 0.1s;
     margin-bottom: 8px;
 }
 
 .fleet-result-btn-close:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--primary-color-dark, #0097a7);
+}
+
+.fleet-result-btn-close:active {
+    transform: scale(0.97);
 }
 
 .fleet-result-btn-close:focus-visible {

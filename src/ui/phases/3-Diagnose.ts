@@ -166,6 +166,9 @@ export class DiagnosePhase {
   /** Welle 2: Optional callback fired when result modal is closed (for dashboard refresh) */
   private onResultModalClosed: (() => void) | null = null;
 
+  /** UX-Fix: Optional callback fired when the explicit "Weiter" button is clicked (for Grundansicht reset) */
+  private onResultContinue: (() => void) | null = null;
+
   /** Quick Compare context: gold standard machine name for UX hints */
   private qcGoldStandardName: string | null = null;
 
@@ -227,6 +230,13 @@ export class DiagnosePhase {
    */
   public setOnResultModalClosed(cb: () => void): void {
     this.onResultModalClosed = cb;
+  }
+
+  /**
+   * UX-Fix: Set callback for when the explicit "Weiter" button is clicked (triggers Grundansicht reset)
+   */
+  public setOnResultContinue(cb: () => void): void {
+    this.onResultContinue = cb;
   }
 
   /**
@@ -2593,7 +2603,7 @@ export class DiagnosePhase {
       };
     }
 
-    // Setup footer close button
+    // Setup footer "Weiter" button – closes modal and triggers Grundansicht reset
     const closeResultBtn = document.getElementById('close-diagnosis-result-btn');
     if (closeResultBtn) {
       closeResultBtn.onclick = () => {
@@ -2602,9 +2612,9 @@ export class DiagnosePhase {
           this.workPointRanking.destroy();
           this.workPointRanking = null;
         }
-        // Welle 2: Notify router to refresh dashboard
-        if (this.onResultModalClosed) {
-          this.onResultModalClosed();
+        // UX-Fix: Notify router to reset to Grundansicht (explicit "Weiter" action)
+        if (this.onResultContinue) {
+          this.onResultContinue();
         }
       };
     }

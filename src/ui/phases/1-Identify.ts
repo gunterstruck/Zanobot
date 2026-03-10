@@ -3569,7 +3569,7 @@ export class IdentifyPhase {
   /**
    * Sprint 4 UX: Switch workflow mode and re-render machine list
    */
-  private async setWorkflowMode(mode: 'series' | 'fleet'): Promise<void> {
+  public async setWorkflowMode(mode: 'series' | 'fleet'): Promise<void> {
     if (this.currentWorkflowMode === mode) return;
 
     this.currentWorkflowMode = mode;

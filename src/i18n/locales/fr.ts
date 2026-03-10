@@ -24,6 +24,7 @@ export const fr: TranslationDict = {
     newMachine: 'Nouvelle machine',
     stopRecording: 'Arrêter l\'enregistrement',
     saveReference: 'Enregistrer l\'état normal',
+    continue: 'Continuer',
   },
 
   // ============================================================================
@@ -1220,7 +1221,7 @@ export const fr: TranslationDict = {
       discardConfirm: 'Delete checks from this run? Machines and references will be kept.',
       discardDone: '{{count}} checks discarded',
       viewHistory: 'View history',
-      closeAndContinue: 'Fermer et continuer',
+      closeAndContinue: 'Continuer',
     },
     history: {
       title: 'Fleet Check History',
