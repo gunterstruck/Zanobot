@@ -26,6 +26,7 @@ export const de: TranslationDict = {
     newMachine: 'Neue Maschine',
     stopRecording: 'Aufnahme stoppen',
     saveReference: 'Normalzustand speichern',
+    continue: 'Weiter',
   },
 
   // ============================================================================
@@ -1613,7 +1614,7 @@ export const de: TranslationDict = {
       discardConfirm: 'Prüfungen dieses Durchlaufs wirklich löschen? Die Maschinen und Referenzen bleiben erhalten.',
       discardDone: '{{count}} Prüfungen verworfen',
       viewHistory: 'Verlauf anzeigen',
-      closeAndContinue: 'Schließen und weiter',
+      closeAndContinue: 'Weiter',
     },
     // Fleet History Modal
     history: {

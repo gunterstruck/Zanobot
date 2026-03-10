@@ -837,9 +837,14 @@ export class Router {
     this.diagnosePhase = new DiagnosePhase(machine, selectedDeviceId);
     this.diagnosePhase.init();
 
-    // Welle 2: Refresh dashboard when result modal closes
+    // Welle 2: Refresh dashboard when result modal is dismissed (✕ button)
     this.diagnosePhase.setOnResultModalClosed(() => {
       this.identifyPhase.updateDashboard();
+    });
+
+    // UX-Fix: Reset to Grundansicht when explicit "Weiter" button is clicked
+    this.diagnosePhase.setOnResultContinue(() => {
+      this.resetToGrundansicht();
     });
 
     // Sprint 5: Register fleet queue callbacks if queue is active
@@ -2280,7 +2285,7 @@ export class Router {
     closeAndContinueBtn.setAttribute('aria-label', t('fleet.result.closeAndContinue'));
     closeAndContinueBtn.addEventListener('click', () => {
       overlay.remove();
-      this.identifyPhase.showFleetRanking();
+      this.resetToGrundansicht();
     });
     actions.appendChild(closeAndContinueBtn);
 
@@ -2594,6 +2599,40 @@ export class Router {
     }
 
     notify.info(t('fleet.queue.cancelled'));
+  }
+
+  /**
+   * UX-Fix: Reset app to clean Grundansicht after a completed check process.
+   *
+   * Preserves: Machine info header with export option (top bar).
+   * Resets: Workflow mode, fleet queue, active diagnosis state, button states.
+   */
+  private resetToGrundansicht(): void {
+    logger.info('🏠 Resetting to Grundansicht after completed check');
+
+    // 1. Reset any active fleet queue state
+    if (this.isFleetQueueActive) {
+      this.cleanupFleetQueue();
+    }
+
+    // 2. Reset workflow mode to series (Übersicht)
+    // NOTE: Do NOT clear currentMachine – the machine info header stays for export context
+    this.identifyPhase.setWorkflowMode('series');
+
+    // 3. Reset diagnose/reference button states to default
+    const diagnoseBtn = document.getElementById('diagnose-btn');
+    const referenceBtn = document.getElementById('reference-btn');
+    if (diagnoseBtn) {
+      diagnoseBtn.classList.remove('active', 'ready');
+    }
+    if (referenceBtn) {
+      referenceBtn.classList.remove('active', 'ready');
+    }
+
+    // 4. Refresh machine overview
+    this.identifyPhase.updateDashboard();
+
+    logger.info('✅ Grundansicht restored');
   }
 
   /**
