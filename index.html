@@ -803,22 +803,12 @@
                 <p class="modal-subtitle" data-i18n="review.subtitle">Qualitätskontrolle</p>
             </div>
             <div class="modal-body shell-content">
-                <!-- Audio Player -->
-                <div class="review-audio-player">
-                    <h4 class="review-section-title" data-i18n="review.listenTitle">Aufnahme anhören</h4>
-                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;">
-                        <source id="review-audio-source" type="audio/webm">
-                        Ihr Browser unterstützt keine Audio-Wiedergabe.
-                    </audio>
-                    <p class="review-info" id="review-recording-info">15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)</p>
-                </div>
-
-                <div class="review-reference-image" id="review-reference-image-container" style="display: none;">
-                    <h4 class="review-section-title" data-i18n="review.savedPositionImage">Gespeichertes Positionsbild</h4>
-                    <div class="review-image-frame">
-                        <img id="review-reference-image" alt="Gespeichertes Positionsbild der Maschine">
-                    </div>
-                    <p class="review-info" data-i18n="review.positionImageCheck">Prüfen Sie, ob das Bild die korrekte Position zeigt.</p>
+                <!-- Compact Recording Summary -->
+                <div class="review-recording-summary" id="review-recording-summary">
+                    <span class="recording-summary-icon">✓</span>
+                    <span class="recording-summary-text" id="review-recording-info">
+                        15 Sekunden Aufnahme (5s Stabilisierung + 10s Training)
+                    </span>
                 </div>
 
                 <!-- Quality Assessment -->
@@ -847,6 +837,23 @@
                             <!-- Issues will be added dynamically -->
                         </ul>
                     </div>
+                </div>
+
+                <div class="review-reference-image" id="review-reference-image-container" style="display: none;">
+                    <h4 class="review-section-title" data-i18n="review.savedPositionImage">Gespeichertes Positionsbild</h4>
+                    <div class="review-image-frame">
+                        <img id="review-reference-image" alt="Gespeichertes Positionsbild der Maschine">
+                    </div>
+                    <p class="review-info" data-i18n="review.positionImageCheck">Prüfen Sie, ob das Bild die korrekte Position zeigt.</p>
+                </div>
+
+                <!-- Audio Player -->
+                <div class="review-audio-player">
+                    <h4 class="review-section-title" data-i18n="review.listenTitle">Aufnahme anhören</h4>
+                    <audio id="review-audio" controls style="width: 100%; margin-bottom: 20px;">
+                        <source id="review-audio-source" type="audio/webm">
+                        Ihr Browser unterstützt keine Audio-Wiedergabe.
+                    </audio>
                 </div>
             </div>
 
