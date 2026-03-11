@@ -1355,20 +1355,31 @@ export class ReferencePhase {
       saveBtn.onclick = () => this.handleReviewSave();
     }
 
-    // Mount Pipeline Status Dashboard into review modal (Expert mode)
+    // Mount Pipeline Status Dashboard at end of modal-body (Expert mode)
     if (this.pipelineStatus) {
-      const qualitySection = modal.querySelector('.review-quality');
-      if (qualitySection && qualitySection.parentElement) {
-        this.pipelineStatus.mount(
-          qualitySection.parentElement,
-          qualitySection.nextSibling as HTMLElement
-        );
+      const modalBody = modal.querySelector('.modal-body');
+      if (modalBody) {
+        this.pipelineStatus.mount(modalBody as HTMLElement);
         this.pipelineStatus.show();
       }
     }
 
     // Show modal
     modal.style.display = 'flex';
+
+    // Scroll-Indikator: Fade-Out ausblenden wenn am Ende gescrollt
+    const shellContent = modal.querySelector('.shell-content');
+    if (shellContent) {
+      const checkScroll = () => {
+        const el = shellContent as HTMLElement;
+        const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 10;
+        const hasOverflow = el.scrollHeight > el.clientHeight + 10;
+        el.classList.toggle('scrolled-to-bottom', !hasOverflow || isAtBottom);
+      };
+
+      shellContent.addEventListener('scroll', checkScroll, { passive: true });
+      requestAnimationFrame(checkScroll);
+    }
 
     logger.info('🔍 Review modal displayed');
   }

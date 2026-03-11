@@ -5326,7 +5326,80 @@ select:focus-visible {
 }
 
 .review-quality {
-    margin-top: var(--spacing-lg);
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Review Modal: Kompakter Header – maximiert Scrollbereich für Qualitätsdaten */
+#review-modal .modal-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+#review-modal .modal-header h3 {
+    font-size: clamp(1.1rem, 4vw, 1.25rem);
+    margin-bottom: 0;
+}
+
+#review-modal .modal-subtitle {
+    font-size: clamp(0.7rem, 2.5vw, 0.8rem);
+}
+
+/* Review Modal: Kompaktere Section-Titles */
+#review-modal .review-section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 0 0 var(--spacing-xs) 0;
+    font-weight: 600;
+}
+
+/* Kompakte Aufnahme-Zusammenfassung – oben im Scrollbereich */
+.review-recording-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(34, 197, 94, 0.08);
+    border-left: 3px solid var(--status-healthy, #22c55e);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.recording-summary-icon {
+    color: var(--status-healthy, #22c55e);
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* Scroll-Indikator: Gradient am unteren Rand des Scrollbereichs */
+#review-modal .shell-content {
+    position: relative;
+}
+
+#review-modal .shell-content::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        var(--bg-modal, #1a1a2e)
+    );
+    pointer-events: none;
+    z-index: 1;
+    display: block;
+    transition: opacity 0.3s ease;
+}
+
+#review-modal .shell-content.scrolled-to-bottom::after {
+    opacity: 0;
 }
 
 /* Quality Indicator (Traffic Light) */
