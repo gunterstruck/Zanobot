@@ -762,6 +762,19 @@
                     <p class="recording-countdown-tip" id="recording-countdown-tip" style="display: none;" data-i18n="reference.recording.countdownTip">Halten Sie das Gerät nah an die Maschine</p>
                 </div>
                 <p class="recording-timer" id="recording-timer">00:00</p>
+
+                <!-- Live Signal Quality Indicator (visible only during reference training phase) -->
+                <div class="signal-quality-bar" id="ref-signal-quality" style="display: none;" aria-label="Signal quality">
+                    <div class="signal-quality-header">
+                        <span class="signal-quality-icon">📶</span>
+                        <span class="signal-quality-label" data-i18n="reference.signalQuality.label">Signal</span>
+                        <span class="signal-quality-status" id="ref-signal-status"></span>
+                    </div>
+                    <div class="signal-quality-track">
+                        <div class="signal-quality-fill" id="ref-signal-fill"></div>
+                    </div>
+                    <p class="signal-quality-hint" id="ref-signal-hint" style="display: none;"></p>
+                </div>
             </div>
             <div class="modal-actions">
                 <button class="modal-btn btn-secondary" id="stop-recording-btn" data-i18n="buttons.stopRecording">Stop Recording</button>

@@ -257,6 +257,15 @@ export const en: TranslationDict = {
       ariaLabel: 'Recording quality: {{rating}}',
     },
 
+    signalQuality: {
+      label: 'Signal',
+      good: 'Good',
+      ok: 'Sufficient',
+      weak: 'Too weak',
+      hintCloser: 'Hold smartphone closer to the machine',
+      hintTooWeak: 'Signal too weak – move closer to the sound source',
+    },
+
     errors: {
       tooShort: 'Recording too short: {{duration}}s total duration is shorter than the {{warmup}}s warmup phase. Minimum duration: {{minDuration}}s',
       trainingTooShort: 'Training data too short: {{duration}}s (after warmup phase). Minimum required: {{minDuration}}s. Please record at least {{totalDuration}}s.',
