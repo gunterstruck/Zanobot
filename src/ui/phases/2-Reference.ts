@@ -86,6 +86,14 @@ export class ReferencePhase {
   // Pipeline Status Dashboard (Expert mode, shows batch DSP results in review modal)
   private pipelineStatus: PipelineStatusDashboard | null = null;
 
+  // Live signal quality tracking during reference recording
+  private rmsHistory: number[] = [];
+  private signalQualityVisible: boolean = false;
+  private signalQualityInterval: ReturnType<typeof setInterval> | null = null;
+  private signalAnalyser: AnalyserNode | null = null;
+  private signalAnalyserData: Float32Array | null = null;
+  private lastSignalLevel: 'good' | 'ok' | 'weak' | null = null;
+
   // Reference environment data (for Session Bias Match + T60 environment comparison)
   private currentRefLogMean: number[] | null = null;
   private currentRefLogStd: number[] | null = null;
@@ -434,7 +442,147 @@ export class ReferencePhase {
     const fallbackTimer = document.getElementById('recording-timer');
     if (fallbackTimer) fallbackTimer.style.display = '';
 
+    // Reset live signal quality indicator
+    this.stopSignalQualityMonitor();
+
     logger.debug('🧹 Reference phase cleanup complete');
+  }
+
+  /**
+   * Start the live signal quality monitor during reference recording.
+   * Creates an AnalyserNode on the AudioContext to read RMS in real-time.
+   */
+  private startSignalQualityMonitor(): void {
+    if (!this.audioContext || !this.mediaStream) return;
+
+    // Create analyser for RMS measurement
+    this.signalAnalyser = this.audioContext.createAnalyser();
+    this.signalAnalyser.fftSize = 2048;
+    this.signalAnalyser.smoothingTimeConstant = 0;
+    this.signalAnalyserData = new Float32Array(this.signalAnalyser.fftSize);
+
+    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+    source.connect(this.signalAnalyser);
+
+    // Reset state
+    this.rmsHistory = [];
+    this.lastSignalLevel = null;
+
+    // Show the bar immediately
+    const container = document.getElementById('ref-signal-quality');
+    if (container) {
+      container.style.display = 'block';
+      this.signalQualityVisible = true;
+    }
+
+    // Poll every 300ms to compute RMS and update UI
+    this.signalQualityInterval = setInterval(() => {
+      if (!this.signalAnalyser || !this.signalAnalyserData) return;
+      this.signalAnalyser.getFloatTimeDomainData(this.signalAnalyserData as Float32Array<ArrayBuffer>);
+
+      // Compute RMS from raw time-domain samples
+      let sumSq = 0;
+      for (let i = 0; i < this.signalAnalyserData.length; i++) {
+        sumSq += this.signalAnalyserData[i] * this.signalAnalyserData[i];
+      }
+      const rms = Math.sqrt(sumSq / this.signalAnalyserData.length);
+      this.updateSignalQuality(rms);
+    }, 300);
+  }
+
+  /**
+   * Stop the live signal quality monitor and hide the bar.
+   */
+  private stopSignalQualityMonitor(): void {
+    if (this.signalQualityInterval !== null) {
+      clearInterval(this.signalQualityInterval);
+      this.signalQualityInterval = null;
+    }
+    if (this.signalAnalyser) {
+      this.signalAnalyser.disconnect();
+      this.signalAnalyser = null;
+    }
+    this.signalAnalyserData = null;
+    this.rmsHistory = [];
+    this.lastSignalLevel = null;
+    this.signalQualityVisible = false;
+
+    const container = document.getElementById('ref-signal-quality');
+    if (container) container.style.display = 'none';
+  }
+
+  /**
+   * Update the live signal quality indicator based on current RMS amplitude.
+   *
+   * Uses a rolling median of recent RMS values (last ~3s) to avoid flickering.
+   * Thresholds aligned with qualityCheck.ts QUALITY_THRESHOLDS:
+   *   - RMS < 0.01 (RMS_CRITICAL) → weak/red
+   *   - RMS 0.01–0.02 (RMS_WARNING range) → ok/yellow
+   *   - RMS >= 0.02 → good/green
+   */
+  private updateSignalQuality(rmsAmplitude: number): void {
+    // Rolling window of ~3 seconds (~9 chunks at 300ms)
+    this.rmsHistory.push(rmsAmplitude);
+    if (this.rmsHistory.length > 9) {
+      this.rmsHistory.shift();
+    }
+
+    // Median for stability
+    const sorted = [...this.rmsHistory].sort((a, b) => a - b);
+    const medianRms = sorted[Math.floor(sorted.length / 2)];
+
+    // Logarithmic scale: 0.005 → ~0%, 0.01 → ~30%, 0.02 → ~60%, 0.05+ → ~100%
+    const minRms = 0.005;
+    const maxRms = 0.05;
+    const clamped = Math.max(minRms, Math.min(maxRms, medianRms));
+    const percent = Math.round(
+      ((Math.log(clamped) - Math.log(minRms)) / (Math.log(maxRms) - Math.log(minRms))) * 100
+    );
+
+    let level: 'good' | 'ok' | 'weak';
+    if (percent >= 60) {
+      level = 'good';
+    } else if (percent >= 30) {
+      level = 'ok';
+    } else {
+      level = 'weak';
+    }
+
+    // Skip DOM update if level hasn't changed (performance optimisation)
+    if (level === this.lastSignalLevel) return;
+    this.lastSignalLevel = level;
+
+    const container = document.getElementById('ref-signal-quality');
+    const fill = document.getElementById('ref-signal-fill');
+    const status = document.getElementById('ref-signal-status');
+    const hint = document.getElementById('ref-signal-hint');
+    if (!container || !fill || !status) return;
+
+    fill.style.width = `${percent}%`;
+    fill.className = `signal-quality-fill level-${level}`;
+
+    const statusText =
+      level === 'good'
+        ? t('reference.signalQuality.good')
+        : level === 'ok'
+          ? t('reference.signalQuality.ok')
+          : t('reference.signalQuality.weak');
+    status.textContent = statusText;
+    status.className = `signal-quality-status status-${level}`;
+
+    container.setAttribute('aria-label', `${t('reference.signalQuality.label')}: ${statusText}`);
+
+    if (hint) {
+      if (level === 'ok') {
+        hint.textContent = t('reference.signalQuality.hintCloser');
+        hint.style.display = 'block';
+      } else if (level === 'weak') {
+        hint.textContent = t('reference.signalQuality.hintTooWeak');
+        hint.style.display = 'block';
+      } else {
+        hint.style.display = 'none';
+      }
+    }
   }
 
   /**
@@ -518,6 +666,9 @@ export class ReferencePhase {
       setTimeout(() => {
         this.captureReferenceSnapshot();
       }, snapshotDelay);
+
+      // Start live signal quality monitoring
+      this.startSignalQualityMonitor();
     };
 
     // Start recording (will trigger onstart event)

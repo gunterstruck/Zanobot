@@ -243,6 +243,15 @@ export const zh: TranslationDict = {
       ariaLabel: '录制质量：{{rating}}',
     },
 
+    signalQuality: {
+      label: '信号',
+      good: '良好',
+      ok: '足够',
+      weak: '太弱',
+      hintCloser: '将智能手机靠近机器',
+      hintTooWeak: '信号太弱 – 靠近声源',
+    },
+
     errors: {
       tooShort: '录制太短：{{duration}}秒总时长短于{{warmup}}秒预热阶段。最短时长：{{minDuration}}秒',
       trainingTooShort: '训练数据太短：{{duration}}秒（预热阶段后）。最低要求：{{minDuration}}秒。请至少录制{{totalDuration}}秒。',
