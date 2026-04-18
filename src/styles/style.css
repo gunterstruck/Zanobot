@@ -926,6 +926,11 @@ body {
 /* ===================================
    HERO BANNER TEXT OVERLAY
    =================================== */
+/* Hide overlay text when the user has uploaded a custom banner */
+.hero-header.has-custom-banner .hero-text-overlay {
+    display: none;
+}
+
 .hero-text-overlay {
     position: absolute;
     top: 0;
