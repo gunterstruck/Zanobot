@@ -44,8 +44,17 @@ export class BannerManager {
   private heroHeader: HTMLElement | null;
   private heroImage: HTMLImageElement | null;
   private currentObjectUrl: string | null = null;
-  private hasCustomBanner: boolean = false;
+  private _hasCustomBanner: boolean = false;
   private currentTheme: string = 'brand';
+
+  private get hasCustomBanner(): boolean {
+    return this._hasCustomBanner;
+  }
+
+  private set hasCustomBanner(value: boolean) {
+    this._hasCustomBanner = value;
+    this.heroHeader?.classList.toggle('has-custom-banner', value);
+  }
 
   static registerInstance(instance: BannerManager): void {
     bannerManagerInstance = instance;
