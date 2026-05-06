@@ -200,11 +200,13 @@ export class ReferencePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // VISUAL POSITIONING: Only request camera if Room Compensation is active
-      // Reference phase needs camera to capture the reference image for later ghost overlay
-      const roomCompSettings = getRoomCompSettings();
-
-      if (roomCompSettings.enabled) {
+      // VISUAL POSITIONING: Capture a reference image only on the FIRST
+      // reference recording for a machine. Subsequent recordings (good/bad)
+      // reuse the existing image so the ghost overlay stays consistent.
+      if (this.machine?.referenceImage) {
+        logger.debug('📷 Machine already has a reference image – skipping camera');
+        this.cameraStream = null;
+      } else {
         try {
           this.cameraStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' }, // Prefer back camera on mobile
@@ -221,9 +223,6 @@ export class ReferencePhase {
           });
           this.cameraStream = null;
         }
-      } else {
-        logger.debug('📷 Camera not requested (Room Comp. inactive)');
-        this.cameraStream = null;
       }
 
       // Drift Detector: Show info hint if change analysis is active
