@@ -104,6 +104,7 @@ export class BannerManager {
           await saveAppSetting(key, file);
           this.setHeroImage(objectUrl);
           this.hasCustomBanner = true;
+          this.updateOverlayVisibility();
           notify.success(t('settingsUI.bannerUpdated'));
           resolve(true);
         } catch (error) {
@@ -139,6 +140,7 @@ export class BannerManager {
       // Apply default banner
       this.hasCustomBanner = false;
       this.applyDefaultBanner();
+      this.updateOverlayVisibility();
 
       notify.success(t('settingsUI.bannerResetSuccess'));
       logger.info(`✅ Reset banner for theme: ${theme}`);
@@ -202,16 +204,19 @@ export class BannerManager {
       if (!stored?.value) {
         this.hasCustomBanner = false;
         this.applyDefaultBanner();
+        this.updateOverlayVisibility();
         return;
       }
 
       const objectUrl = URL.createObjectURL(stored.value);
       this.setHeroImage(objectUrl);
       this.hasCustomBanner = true;
+      this.updateOverlayVisibility();
     } catch (error) {
       logger.warn('⚠️ Failed to restore hero banner from storage', error);
       this.hasCustomBanner = false;
       this.applyDefaultBanner();
+      this.updateOverlayVisibility();
     }
   }
 
@@ -275,6 +280,7 @@ export class BannerManager {
         const objectUrl = URL.createObjectURL(stored.value);
         this.setHeroImage(objectUrl);
         this.hasCustomBanner = true;
+        this.updateOverlayVisibility();
         return;
       }
     } catch (error) {
@@ -284,5 +290,10 @@ export class BannerManager {
     // No custom banner for this theme, apply default
     this.hasCustomBanner = false;
     this.applyDefaultBanner();
+    this.updateOverlayVisibility();
+  }
+
+  private updateOverlayVisibility(): void {
+    this.heroHeader?.classList.toggle('has-custom-banner', this.hasCustomBanner);
   }
 }
