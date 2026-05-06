@@ -926,6 +926,10 @@ body {
 /* ===================================
    HERO BANNER TEXT OVERLAY
    =================================== */
+.hero-header.has-custom-banner .hero-text-overlay {
+    display: none;
+}
+
 .hero-text-overlay {
     position: absolute;
     top: 0;
