@@ -200,23 +200,29 @@ export class ReferencePhase {
       // Request microphone access using central helper with selected device
       this.mediaStream = await getRawAudioStream(this.selectedDeviceId);
 
-      // VISUAL POSITIONING: Always try to capture a reference image for the
-      // later ghost overlay during diagnosis. Independent of Room Compensation.
-      try {
-        this.cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }, // Prefer back camera on mobile
-          audio: false,
-        });
-        logger.info('📷 Camera access granted for reference image');
-      } catch (cameraError) {
-        logger.warn(
-          '⚠️ Camera access denied – continuing without reference image',
-          cameraError
-        );
-        notify.info(t('reference.recording.cameraNotAvailable'), {
-          title: t('modals.cameraOptional'),
-        });
+      // VISUAL POSITIONING: Capture a reference image only on the FIRST
+      // reference recording for a machine. Subsequent recordings (good/bad)
+      // reuse the existing image so the ghost overlay stays consistent.
+      if (this.machine?.referenceImage) {
+        logger.debug('📷 Machine already has a reference image – skipping camera');
         this.cameraStream = null;
+      } else {
+        try {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }, // Prefer back camera on mobile
+            audio: false,
+          });
+          logger.info('📷 Camera access granted for reference image');
+        } catch (cameraError) {
+          logger.warn(
+            '⚠️ Camera access denied – continuing without reference image',
+            cameraError
+          );
+          notify.info(t('reference.recording.cameraNotAvailable'), {
+            title: t('modals.cameraOptional'),
+          });
+          this.cameraStream = null;
+        }
       }
 
       // Drift Detector: Show info hint if change analysis is active
